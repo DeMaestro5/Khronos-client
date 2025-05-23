@@ -5,15 +5,29 @@ import { Plus, Filter } from 'lucide-react';
 import StatsCard from '@/src/components/stats-card';
 import ToggleView from '@/src/components/toggle-view';
 import Calendar from '@/src/components/calender/calendar';
+import CreateContentModal from '@/src/components/content/content-creation-modal';
+import { ContentItem, ContentFormData } from '@/src/types/modal';
 
 const CalendarPage = () => {
+  const [showModal, setShowModal] = useState(false);
   const [showFilters, setShowFilters] = useState(false);
-  //   const [selectedDate, setSelectedDate] = useState(new Date());
   const [animateStats, setAnimateStats] = useState(false);
 
   useEffect(() => {
     setAnimateStats(true);
   }, []);
+
+  const handleCreateContent = (contentData: ContentFormData) => {
+    // Add the new content to your state/database
+    const newContent: ContentItem = {
+      id: Date.now(),
+      ...contentData,
+      createdAt: new Date().toISOString(),
+    };
+
+    // You can also trigger notifications, refresh calendar, etc.
+    console.log('New content created:', newContent);
+  };
 
   return (
     <div className='min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 relative overflow-hidden'>
@@ -46,7 +60,10 @@ const CalendarPage = () => {
                 <span className='font-medium'>Filters</span>
               </button>
 
-              <button className='group flex items-center space-x-2 px-6 py-3 bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-500 hover:to-pink-500 rounded-2xl text-white font-medium transition-all duration-300 hover:scale-105 hover:shadow-lg hover:shadow-purple-500/50'>
+              <button
+                onClick={() => setShowModal(true)}
+                className='group flex items-center space-x-2 px-6 py-3 bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-500 hover:to-pink-500 rounded-2xl text-white font-medium transition-all duration-300 hover:scale-105 hover:shadow-lg hover:shadow-purple-500/50'
+              >
                 <Plus className='h-5 w-5 group-hover:rotate-90 transition-transform duration-300' />
                 <span>Create Content</span>
               </button>
@@ -61,6 +78,11 @@ const CalendarPage = () => {
           <Calendar />
         </div>
       </div>
+      <CreateContentModal
+        isOpen={showModal}
+        onClose={() => setShowModal(false)}
+        onSubmit={handleCreateContent}
+      />
 
       <style jsx>{`
         @keyframes fade-in {
