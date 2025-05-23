@@ -12,6 +12,18 @@ export interface AIContentSuggestion {
   generatedAt: string;
 }
 
+export interface AISuggestionButtonProps {
+  onSuggestion: (suggestion: AISuggestionResult) => void;
+  contentType?: string;
+  platforms?: string[];
+  disabled?: boolean;
+}
+
+export interface AISuggestionResult {
+  title: string;
+  description: string;
+  tags: string[];
+}
 export interface AITrendInsight {
   topic: string;
   score: number;
