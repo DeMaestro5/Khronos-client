@@ -4,7 +4,7 @@ import Link from 'next/link';
 import { Button } from '../components/ui/button';
 import { Card, CardContent } from '../components/ui/card';
 import { motion } from 'framer-motion';
-import ContentCalendar from '../components/ui/content-calender';
+import ContentCalendar from '../components/ui/content-calendar';
 
 // Animation variants
 const fadeInUp = {
@@ -52,7 +52,7 @@ export default function Home() {
               >
                 <Link href='/login'>Login</Link>
               </Button>
-              <Button className='bg-indigo-600 hover:bg-indigo-700'>
+              <Button className='bg-gradient-to-r from-indigo-600 to-purple-600 hover:bg-indigo-700'>
                 <Link href='/signup'>Get Started</Link>
               </Button>
             </div>
@@ -66,7 +66,7 @@ export default function Home() {
           <div className='grid lg:grid-cols-2 gap-12 items-center'>
             {/* Left Content */}
             <motion.div
-              className='space-y-8'
+              className='space-y-8 '
               initial={{ opacity: 0, x: -30 }}
               animate={{ opacity: 1, x: 0 }}
               transition={{ duration: 0.8 }}
