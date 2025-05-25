@@ -3,12 +3,13 @@
 import FloatingOrbs from '@/src/components/ui/floating-animation';
 import React, { useEffect, useState } from 'react';
 import LoginForm from '@/src/components/auth/LoginForm';
-import SocialLogin from '@/src/components/auth/SocialLogin';
+import SocialsAuth from '@/src/components/auth/SocialsAuth';
 import { Button } from '@/src/components/ui/button';
+import { useRouter } from 'next/navigation';
 
 export default function LoginPage() {
   const [mounted, setMounted] = useState(false);
-
+  const router = useRouter();
   useEffect(() => {
     setMounted(true);
   }, []);
@@ -16,7 +17,7 @@ export default function LoginPage() {
   if (!mounted) return null;
 
   return (
-    <div className='min-h-screen bg-gradient-to-br from-slate-50 via-indigo-50/30 to-purple-50/30 flex items-center justify-center p-4 relative overflow-hidden'>
+    <div className='h-screen bg-gradient-to-br from-slate-50 via-indigo-50/30 to-purple-50/30 flex items-center justify-center p-4 relative overflow-hidden'>
       {/* Floating Background Elements */}
       <FloatingOrbs />
 
@@ -26,34 +27,37 @@ export default function LoginPage() {
       {/* Main Content */}
       <div className='w-full max-w-md relative z-10'>
         {/* Header Section */}
-        <div className='text-center mb-4 animate-slideUp'>
+        <div className='text-center mb-2 animate-slideUp'>
           {/* Logo */}
-          <div className='flex items-center justify-center space-x-3 mb-2'>
-            <div className='w-14 h-14 bg-gradient-to-r from-indigo-600 via-purple-600 to-indigo-600 rounded-2xl flex items-center justify-center shadow-xl transform hover:scale-110 transition-all duration-300 animate-logoSpin'>
-              <span className='text-white font-bold text-xl'>K</span>
+          <div className='flex items-center justify-center space-x-2 mb-1'>
+            <div className='w-10 h-10 bg-gradient-to-r from-indigo-600 via-purple-600 to-indigo-600 rounded-2xl flex items-center justify-center shadow-xl transform hover:scale-110 transition-all duration-300 animate-logoSpin'>
+              <span className='text-white font-bold text-lg'>K</span>
             </div>
-            <div className='text-3xl font-bold bg-gradient-to-r from-indigo-600 to-purple-600 bg-clip-text text-transparent'>
+            <div
+              onClick={() => router.push('/')}
+              className='text-2xl font-bold bg-gradient-to-r from-indigo-600 to-purple-600 bg-clip-text text-transparent cursor-pointer'
+            >
               KHRONOS
             </div>
           </div>
 
           {/* Welcome Text */}
-          <div className='space-y-1'>
-            <h1 className='text-3xl font-bold text-slate-900'>Welcome back</h1>
-            <p className='bg-gradient-to-r from-indigo-600 to-purple-600 bg-clip-text text-transparent text-lg'>
+          <div className='space-y-0.5'>
+            <h1 className='text-2xl font-bold text-slate-900'>Welcome back</h1>
+            <p className='bg-gradient-to-r from-indigo-600 to-purple-600 bg-clip-text text-transparent text-base'>
               Sign in to your account to continue
             </p>
           </div>
         </div>
 
         {/* Login Card */}
-        <div className='bg-white/80  rounded-3xl shadow-2xl border border-white/20 p-8 animate-slideUp animation-delay-200'>
+        <div className='bg-white/80 rounded-3xl shadow-2xl border border-white/20 p-6 animate-slideUp animation-delay-200'>
           {/* Login Form */}
           <LoginForm />
 
           {/* Divider and Social Login */}
-          <div className='mt-8'>
-            <SocialLogin />
+          <div className='mt-4'>
+            <SocialsAuth />
           </div>
         </div>
 
@@ -63,7 +67,8 @@ export default function LoginPage() {
             Don&apos;t have an account?
             <Button
               variant='link'
-              className='text-indigo-600 hover:text-indigo-700 font-semibold transition-colors hover:underline cursor-pointer'
+              className='text-indigo-200 hover:text-indigo-500 font-semibold transition-colors hover:underline cursor-pointer'
+              onClick={() => router.push('/auth/signup')}
             >
               Sign up for free
             </Button>
@@ -71,7 +76,7 @@ export default function LoginPage() {
         </div>
 
         {/* Footer */}
-        <div className='text-center text-sm text-white animate-slideUp animation-delay-600'>
+        <div className='text-center text-xs text-white animate-slideUp animation-delay-600'>
           <p>© 2025 KHRONOS. All rights reserved.</p>
         </div>
       </div>

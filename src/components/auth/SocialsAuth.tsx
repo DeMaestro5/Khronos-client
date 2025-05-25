@@ -1,6 +1,6 @@
 import { useState } from 'react';
 
-export default function SocialLogin() {
+export default function SocialsAuth() {
   const [hoveredButton, setHoveredButton] = useState('');
 
   const socialProviders = [
