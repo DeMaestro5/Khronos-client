@@ -5,7 +5,7 @@ import './globals.css';
 const inter = Inter({ subsets: ['latin'] });
 
 export const metadata: Metadata = {
-  title: 'AI-Powered Content Calendar',
+  title: 'Khronos Content Calendar',
   description: 'Plan, create, and analyze your content with AI assistance',
 };
 

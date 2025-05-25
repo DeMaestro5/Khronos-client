@@ -50,7 +50,7 @@ export default function Home() {
                 variant='ghost'
                 className='text-slate-600 hover:text-slate-800'
               >
-                <Link href='/login'>Login</Link>
+                <Link href='/auth/login'>Login</Link>
               </Button>
               <Button className='bg-gradient-to-r from-indigo-600 to-purple-600 hover:bg-indigo-700'>
                 <Link href='/signup'>Get Started</Link>
