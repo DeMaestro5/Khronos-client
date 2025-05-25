@@ -53,7 +53,7 @@ export default function Home() {
                 <Link href='/auth/login'>Login</Link>
               </Button>
               <Button className='bg-gradient-to-r from-indigo-600 to-purple-600 hover:bg-indigo-700'>
-                <Link href='/signup'>Get Started</Link>
+                <Link href='/auth/signup'>Get Started</Link>
               </Button>
             </div>
           </div>
