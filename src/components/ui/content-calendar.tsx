@@ -183,7 +183,7 @@ const ContentCalendar = () => {
           <h3 className='text-lg font-semibold text-slate-800'>
             {monthNames[currentDate.getMonth()]} {currentDate.getFullYear()}
           </h3>
-          <p className='text-sm text-slate-500'>Content Calendar</p>
+          <p className='text-sm text-slate-500'>Khronos Calendar</p>
         </div>
         <div className='flex items-center space-x-2'>
           <div className='w-2 h-2 bg-green-400 rounded-full animate-pulse'></div>
