@@ -3,30 +3,117 @@
 import React, { useState, useEffect } from 'react';
 import { Plus, Filter } from 'lucide-react';
 import StatsCard from '@/src/components/stats-card';
-import ToggleView from '@/src/components/toggle-view';
 import Calendar from '@/src/components/calender/calendar';
 import CreateContentModal from '@/src/components/content/content-creation-modal';
-import { ContentItem, ContentFormData } from '@/src/types/modal';
+import { ContentFormData, Platform } from '@/src/types/modal';
+
+type ScheduledContent = {
+  [key: string]: {
+    id: number;
+    title: string;
+    platform: Platform['id'];
+    time: string;
+    type: string;
+    status: 'draft' | 'scheduled' | 'published';
+    description?: string;
+  }[];
+};
 
 const CalendarPage = () => {
   const [showModal, setShowModal] = useState(false);
   const [showFilters, setShowFilters] = useState(false);
   const [animateStats, setAnimateStats] = useState(false);
+  const [scheduledContent, setScheduledContent] = useState<ScheduledContent>(
+    {}
+  );
 
   useEffect(() => {
     setAnimateStats(true);
+
+    // Initialize with sample data
+    const sampleContent: ScheduledContent = {
+      '2025-05-22': [
+        {
+          id: 1,
+          title: 'Morning Motivation Post',
+          platform: 'instagram',
+          time: '09:00',
+          type: 'Image',
+          status: 'scheduled',
+        },
+        {
+          id: 2,
+          title: 'Tech Tutorial Video',
+          platform: 'youtube',
+          time: '14:30',
+          type: 'Video',
+          status: 'draft',
+        },
+      ],
+      '2025-05-25': [
+        {
+          id: 3,
+          title: 'Industry Insights',
+          platform: 'linkedin',
+          time: '10:00',
+          type: 'Article',
+          status: 'scheduled',
+        },
+      ],
+      '2025-05-28': [
+        {
+          id: 4,
+          title: 'Quick Tips Thread',
+          platform: 'twitter',
+          time: '16:00',
+          type: 'Text',
+          status: 'scheduled',
+        },
+        {
+          id: 5,
+          title: 'Behind the Scenes',
+          platform: 'tiktok',
+          time: '19:00',
+          type: 'Video',
+          status: 'draft',
+        },
+        {
+          id: 6,
+          title: 'Product Showcase',
+          platform: 'instagram',
+          time: '20:30',
+          type: 'Reel',
+          status: 'scheduled',
+        },
+      ],
+    };
+    setScheduledContent(sampleContent);
   }, []);
 
   const handleCreateContent = (contentData: ContentFormData) => {
-    // Add the new content to your state/database
-    const newContent: ContentItem = {
+    const newContent = {
       id: Date.now(),
-      ...contentData,
-      createdAt: new Date().toISOString(),
+      title: contentData.title,
+      platform: contentData.platforms[0], // Take the first platform for now
+      time: contentData.scheduledTime,
+      type: contentData.contentType,
+      status: contentData.status,
+      description: contentData.description,
     };
 
-    // You can also trigger notifications, refresh calendar, etc.
+    const dateKey = contentData.scheduledDate;
+
+    setScheduledContent((prev) => ({
+      ...prev,
+      [dateKey]: prev[dateKey] ? [...prev[dateKey], newContent] : [newContent],
+    }));
+
     console.log('New content created:', newContent);
+  };
+
+  const handleDateSelect = (dateKey: string) => {
+    console.log('Selected date:', dateKey);
+    // You can implement date selection logic here
   };
 
   return (
@@ -45,7 +132,7 @@ const CalendarPage = () => {
             <div className='flex flex-col lg:flex-row justify-between items-start lg:items-center mb-12'>
               <div className='mb-6 lg:mb-0'>
                 <h1 className='text-5xl font-bold bg-gradient-to-r from-white via-purple-200 to-pink-200 bg-clip-text text-transparent mb-2'>
-                  KHRONOS CALENDER
+                  KHRONOS CALENDAR
                 </h1>
                 <p className='text-slate-300 text-lg'>
                   Orchestrate your content strategy across all platforms
@@ -72,14 +159,21 @@ const CalendarPage = () => {
             </div>
 
             {/* Stats Cards */}
-            <StatsCard animateStats={animateStats} />
-            {/* View Toggle */}
-            <ToggleView />
-            {/* Main Content Grid */}
-            <Calendar />
+            <StatsCard
+              animateStats={animateStats}
+              scheduledContent={scheduledContent}
+            />
+
+            {/* Enhanced Calendar */}
+            <Calendar
+              scheduledContent={scheduledContent}
+              onDateSelect={handleDateSelect}
+              onCreateContent={() => setShowModal(true)}
+            />
           </div>
         </div>
       </div>
+
       <CreateContentModal
         isOpen={showModal}
         onClose={() => setShowModal(false)}
