@@ -9,11 +9,37 @@ export default function LeftSideSignUp({
   const [isVisible, setIsVisible] = useState(false);
   const [currentFeature, setCurrentFeature] = useState(0);
   const [glowIntensity, setGlowIntensity] = useState(0.5);
+  const [isLoading, setIsLoading] = useState(true);
+  const [floatingElements, setFloatingElements] = useState<
+    Array<{
+      id: number;
+      size: number;
+      x: number;
+      y: number;
+      delay: number;
+      duration: number;
+      opacity: number;
+    }>
+  >([]);
 
   const router = useRouter();
 
   useEffect(() => {
+    // Generate floating elements on client-side only
+    setFloatingElements(
+      Array.from({ length: 20 }, (_, i) => ({
+        id: i,
+        size: 2 + Math.random() * 4,
+        x: Math.random() * 100,
+        y: Math.random() * 100,
+        delay: Math.random() * 10,
+        duration: 15 + Math.random() * 20,
+        opacity: 0.1 + Math.random() * 0.3,
+      }))
+    );
+
     setIsVisible(true);
+    setIsLoading(false);
 
     // Cycle through features every 5 seconds
     const interval = setInterval(() => {
@@ -30,17 +56,6 @@ export default function LeftSideSignUp({
       clearInterval(glowInterval);
     };
   }, []);
-
-  // Enhanced floating elements
-  const floatingElements = Array.from({ length: 20 }, (_, i) => ({
-    id: i,
-    size: 2 + Math.random() * 4,
-    x: Math.random() * 100,
-    y: Math.random() * 100,
-    delay: Math.random() * 10,
-    duration: 15 + Math.random() * 20,
-    opacity: 0.1 + Math.random() * 0.3,
-  }));
 
   const features = [
     {
@@ -76,6 +91,12 @@ export default function LeftSideSignUp({
       accent: 'text-orange-300',
     },
   ];
+
+  if (isLoading) {
+    return (
+      <div className='flex-1 relative h-screen flex items-center justify-center bg-gradient-to-br from-slate-950 via-purple-950 to-slate-900' />
+    );
+  }
 
   return (
     <div

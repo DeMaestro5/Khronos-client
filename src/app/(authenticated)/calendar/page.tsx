@@ -127,33 +127,35 @@ const CalendarPage = () => {
 
       <div className='relative z-10 min-h-full w-full'>
         <div className='w-full'>
-          <div className='w-full bg-[#1a1333] shadow-2xl p-8 border-0'>
+          <div className='w-full bg-[#1a1333] shadow-2xl p-4 sm:p-6 md:p-8 border-0'>
             {/* Header Section */}
-            <div className='flex flex-col lg:flex-row justify-between items-start lg:items-center mb-12'>
+            <div className='flex flex-col lg:flex-row justify-between items-start lg:items-center mb-6 md:mb-12'>
               <div className='mb-6 lg:mb-0'>
-                <h1 className='text-5xl font-bold bg-gradient-to-r from-white via-purple-200 to-pink-200 bg-clip-text text-transparent mb-2'>
+                <h1 className='text-3xl sm:text-4xl md:text-5xl font-bold bg-gradient-to-r from-white via-purple-200 to-pink-200 bg-clip-text text-transparent mb-2'>
                   KHRONOS CALENDAR
                 </h1>
-                <p className='text-slate-300 text-lg'>
+                <p className='text-slate-300 text-base sm:text-lg'>
                   Orchestrate your content strategy across all platforms
                 </p>
               </div>
 
-              <div className='flex items-center space-x-4'>
+              <div className='flex flex-col sm:flex-row items-stretch sm:items-center space-y-3 sm:space-y-0 sm:space-x-4 w-full sm:w-auto'>
                 <button
                   onClick={() => setShowFilters(!showFilters)}
-                  className='group flex items-center space-x-2 px-6 py-3 bg-white/10 backdrop-blur-lg border border-white/20 rounded-2xl text-white hover:bg-white/20 transition-all duration-300 hover:scale-105 hover:shadow-lg hover:shadow-purple-500/25'
+                  className='group flex items-center justify-center space-x-2 px-4 sm:px-6 py-2 sm:py-3 bg-white/10 backdrop-blur-lg border border-white/20 rounded-xl sm:rounded-2xl text-white hover:bg-white/20 transition-all duration-300 hover:scale-105 hover:shadow-lg hover:shadow-purple-500/25'
                 >
-                  <Filter className='h-5 w-5 group-hover:rotate-12 transition-transform duration-300' />
-                  <span className='font-medium'>Filters</span>
+                  <Filter className='h-4 w-4 sm:h-5 sm:w-5 group-hover:rotate-12 transition-transform duration-300' />
+                  <span className='font-medium text-sm sm:text-base'>
+                    Filters
+                  </span>
                 </button>
 
                 <button
                   onClick={() => setShowModal(true)}
-                  className='group flex items-center space-x-2 px-6 py-3 bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-500 hover:to-pink-500 rounded-2xl text-white font-medium transition-all duration-300 hover:scale-105 hover:shadow-lg hover:shadow-purple-500/50'
+                  className='group flex items-center justify-center space-x-2 px-4 sm:px-6 py-2 sm:py-3 bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-500 hover:to-pink-500 rounded-xl sm:rounded-2xl text-white font-medium transition-all duration-300 hover:scale-105 hover:shadow-lg hover:shadow-purple-500/50'
                 >
-                  <Plus className='h-5 w-5 group-hover:rotate-90 transition-transform duration-300' />
-                  <span>Create Content</span>
+                  <Plus className='h-4 w-4 sm:h-5 sm:w-5 group-hover:rotate-90 transition-transform duration-300' />
+                  <span className='text-sm sm:text-base'>Create Content</span>
                 </button>
               </div>
             </div>

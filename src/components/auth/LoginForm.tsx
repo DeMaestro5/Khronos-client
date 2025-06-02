@@ -3,6 +3,9 @@
 import { useState, ChangeEvent, MouseEvent } from 'react';
 import { Button } from '../ui/button';
 import { Input } from '../ui/input';
+import { authAPI } from '@/src/lib/api';
+import { AxiosError } from 'axios';
+import { useRouter } from 'next/navigation';
 
 interface FormData {
   email: string;
@@ -16,6 +19,7 @@ interface FormErrors {
 }
 
 export default function LoginForm() {
+  const router = useRouter();
   const [isLoading, setIsLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [formData, setFormData] = useState<FormData>({
@@ -46,11 +50,46 @@ export default function LoginForm() {
       return;
     }
 
-    // Simulate API call
-    setTimeout(() => {
-      setIsLoading(false);
+    try {
       console.log('Login submitted:', formData);
-    }, 2000);
+
+      const response = await authAPI.login(formData.email, formData.password);
+      console.log('Login Response:', response.data);
+
+      // Handle success
+      if (response.data.data?.tokens) {
+        localStorage.setItem('token', response.data.data.tokens.accessToken);
+        router.replace('/dashboard');
+        // Force a refresh to ensure the new auth state is picked up
+        window.location.href = '/dashboard';
+      } else {
+        console.log('No tokens in response:', response.data);
+        setErrors({ email: 'Login failed. Please try again.' });
+      }
+    } catch (error) {
+      console.error('Login error:', error);
+
+      // Handle the error properly
+      if (error instanceof AxiosError) {
+        // Check for different error response structures
+        const errorMessage =
+          error.response?.data?.message ||
+          error.response?.data?.error ||
+          error.message ||
+          'Login failed. Please try again.';
+
+        // For authentication failures, show a generic message for security
+        if (error.response?.status === 401 || error.response?.status === 400) {
+          setErrors({ email: 'Incorrect email or password' });
+        } else {
+          setErrors({ email: errorMessage });
+        }
+      } else {
+        setErrors({ email: 'Login failed. Please try again.' });
+      }
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   const handleChange = (e: ChangeEvent<HTMLInputElement>) => {
@@ -91,7 +130,7 @@ export default function LoginForm() {
                 onChange={handleChange}
                 onFocus={() => setFocusedField('email')}
                 onBlur={() => setFocusedField('')}
-                className={`w-full px-4 py-3 border rounded-xl transition-all duration-300 bg-white hover:bg-gray-50 focus:bg-white focus:scale-[1.02] focus:shadow-lg placeholder:text-gray-500 placeholder:font-medium ${
+                className={`w-full px-4 py-3 border rounded-xl transition-all duration-300 bg-white text-black hover:bg-gray-50 focus:bg-white focus:scale-[1.02] focus:shadow-lg placeholder:text-gray-500 placeholder:font-medium ${
                   errors.email
                     ? 'border-red-300 focus:border-red-500 focus:ring-red-200'
                     : 'border-slate-200 focus:border-indigo-500 focus:ring-indigo-200'
@@ -137,7 +176,7 @@ export default function LoginForm() {
                 onChange={handleChange}
                 onFocus={() => setFocusedField('password')}
                 onBlur={() => setFocusedField('')}
-                className={`w-full px-4 py-3 pr-12 border rounded-xl transition-all duration-300 bg-white hover:bg-gray-50 focus:bg-white focus:scale-[1.02] focus:shadow-lg placeholder:text-gray-500 placeholder:font-medium ${
+                className={`w-full px-4 py-3 pr-12 border rounded-xl transition-all text-black duration-300 bg-white hover:bg-gray-50 focus:bg-white focus:scale-[1.02] focus:shadow-lg placeholder:text-gray-500 placeholder:font-medium ${
                   errors.password
                     ? 'border-red-300 focus:border-red-500 focus:ring-red-200'
                     : 'border-slate-200 focus:border-indigo-500 focus:ring-indigo-200'
@@ -272,11 +311,11 @@ export default function LoginForm() {
           {isLoading ? (
             <div className='flex items-center justify-center space-x-2'>
               <div className='w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin' />
-              <span>Signing you in...</span>
+              <span>Logging you in...</span>
             </div>
           ) : (
             <span className='flex items-center justify-center space-x-2'>
-              <span>Sign In</span>
+              <span>Login</span>
               <svg
                 className='w-4 h-4 transform group-hover:translate-x-1 transition-transform duration-200'
                 fill='none'

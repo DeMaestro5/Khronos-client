@@ -231,77 +231,77 @@ export default function CalendarComponent({
 
   return (
     <>
-      <div className='relative bg-white/10 backdrop-blur-lg border border-white/20 rounded-3xl overflow-hidden shadow-2xl'>
+      <div className='relative bg-white/10 backdrop-blur-lg border border-white/20 rounded-2xl sm:rounded-3xl overflow-hidden shadow-2xl'>
         {/* Header */}
-        <div className='p-6 bg-gradient-to-r from-purple-600/20 to-pink-600/20 border-b border-white/10'>
-          <div className='flex items-center justify-between mb-6'>
-            <h2 className='text-3xl font-bold text-white flex items-center space-x-3'>
-              <div className='p-3 bg-gradient-to-r from-purple-500 to-pink-500 rounded-xl shadow-lg'>
-                <Calendar className='w-7 h-7' />
+        <div className='p-4 sm:p-6 bg-gradient-to-r from-purple-600/20 to-pink-600/20 border-b border-white/10'>
+          <div className='flex flex-col sm:flex-row items-start sm:items-center justify-between mb-4 sm:mb-6'>
+            <h2 className='text-2xl sm:text-3xl font-bold text-white flex items-center space-x-2 sm:space-x-3 mb-4 sm:mb-0'>
+              <div className='p-2 sm:p-3 bg-gradient-to-r from-purple-500 to-pink-500 rounded-lg sm:rounded-xl shadow-lg'>
+                <Calendar className='w-5 h-5 sm:w-7 sm:h-7' />
               </div>
               <div>
                 <span>Content Calendar</span>
-                <p className='text-sm font-normal text-slate-300 mt-1'>
+                <p className='text-xs sm:text-sm font-normal text-slate-300 mt-1'>
                   Manage your social media schedule
                 </p>
               </div>
             </h2>
 
-            <div className='flex items-center space-x-4'>
-              <div className='flex items-center space-x-2 bg-white/10 rounded-2xl px-6 py-3 backdrop-blur-sm border border-white/20'>
+            <div className='flex items-center space-x-2 sm:space-x-4 w-full sm:w-auto'>
+              <div className='flex items-center space-x-1 sm:space-x-2 bg-white/10 rounded-xl sm:rounded-2xl px-3 sm:px-6 py-2 sm:py-3 backdrop-blur-sm border border-white/20'>
                 <button
                   onClick={() => navigateMonth(-1)}
-                  className='p-2 hover:bg-white/20 rounded-xl transition-all text-white hover:scale-110 active:scale-95'
+                  className='p-1 sm:p-2 hover:bg-white/20 rounded-lg sm:rounded-xl transition-all text-white hover:scale-110 active:scale-95'
                 >
-                  <ChevronLeft className='w-5 h-5' />
+                  <ChevronLeft className='w-4 h-4 sm:w-5 sm:h-5' />
                 </button>
 
-                <h3 className='text-xl font-semibold text-white min-w-[180px] text-center'>
+                <h3 className='text-base sm:text-xl font-semibold text-white min-w-[120px] sm:min-w-[180px] text-center'>
                   {monthYear}
                 </h3>
 
                 <button
                   onClick={() => navigateMonth(1)}
-                  className='p-2 hover:bg-white/20 rounded-xl transition-all text-white hover:scale-110 active:scale-95'
+                  className='p-1 sm:p-2 hover:bg-white/20 rounded-lg sm:rounded-xl transition-all text-white hover:scale-110 active:scale-95'
                 >
-                  <ChevronRight className='w-5 h-5' />
+                  <ChevronRight className='w-4 h-4 sm:w-5 sm:h-5' />
                 </button>
               </div>
             </div>
           </div>
 
           {/* Enhanced Legend */}
-          <div className='flex items-center justify-between'>
-            <div className='flex items-center space-x-8 text-sm'>
+          <div className='flex flex-col sm:flex-row items-start sm:items-center justify-between space-y-2 sm:space-y-0'>
+            <div className='flex flex-wrap items-center gap-4 sm:gap-8 text-xs sm:text-sm'>
               <div className='flex items-center space-x-2 group cursor-pointer'>
-                <div className='w-3 h-3 rounded-full bg-emerald-500 group-hover:animate-pulse shadow-lg'></div>
+                <div className='w-2 h-2 sm:w-3 sm:h-3 rounded-full bg-emerald-500 group-hover:animate-pulse shadow-lg'></div>
                 <span className='text-slate-300 group-hover:text-white transition-colors'>
                   Scheduled
                 </span>
               </div>
               <div className='flex items-center space-x-2 group cursor-pointer'>
-                <div className='w-3 h-3 rounded-full bg-amber-500 group-hover:animate-pulse shadow-lg'></div>
+                <div className='w-2 h-2 sm:w-3 sm:h-3 rounded-full bg-amber-500 group-hover:animate-pulse shadow-lg'></div>
                 <span className='text-slate-300 group-hover:text-white transition-colors'>
                   Draft
                 </span>
               </div>
               <div className='flex items-center space-x-2 group cursor-pointer'>
-                <div className='w-3 h-3 rounded-full bg-blue-500 group-hover:animate-pulse shadow-lg'></div>
+                <div className='w-2 h-2 sm:w-3 sm:h-3 rounded-full bg-blue-500 group-hover:animate-pulse shadow-lg'></div>
                 <span className='text-slate-300 group-hover:text-white transition-colors'>
                   Published
                 </span>
               </div>
             </div>
-            <div className='text-xs text-slate-400 bg-white/5 px-3 py-1 rounded-lg'>
+            <div className='text-[10px] sm:text-xs text-slate-400 bg-white/5 px-2 sm:px-3 py-1 rounded-lg'>
               Click on any date to view or add content
             </div>
           </div>
         </div>
 
         {/* Calendar Grid */}
-        <div className='p-8'>
+        <div className='p-4 sm:p-6 md:p-8'>
           {/* Day Headers */}
-          <div className='grid grid-cols-7 gap-3 mb-6'>
+          <div className='grid grid-cols-7 gap-1 sm:gap-2 md:gap-3 mb-4 sm:mb-6'>
             {[
               'Sunday',
               'Monday',
@@ -313,7 +313,7 @@ export default function CalendarComponent({
             ].map((day) => (
               <div
                 key={day}
-                className='text-center text-slate-300 font-semibold py-4 text-sm uppercase tracking-wider bg-white/5 rounded-xl'
+                className='text-center text-slate-300 font-semibold py-2 sm:py-4 text-xs sm:text-sm uppercase tracking-wider bg-white/5 rounded-lg sm:rounded-xl'
               >
                 {day.slice(0, 3)}
               </div>
@@ -321,7 +321,7 @@ export default function CalendarComponent({
           </div>
 
           {/* Calendar Days */}
-          <div className='grid grid-cols-7 gap-3'>
+          <div className='grid grid-cols-7 gap-1 sm:gap-2 md:gap-3'>
             {days.map((day, index) => {
               const content = getContentForDate(day as number);
               const dateKey = day
@@ -335,7 +335,7 @@ export default function CalendarComponent({
               return (
                 <div
                   key={index}
-                  className={`relative group aspect-square flex flex-col rounded-2xl cursor-pointer transition-all duration-300 border-2 ${
+                  className={`relative group aspect-square flex flex-col rounded-lg sm:rounded-2xl cursor-pointer transition-all duration-300 border-2 ${
                     !day
                       ? 'border-transparent opacity-40'
                       : isToday(day)
@@ -351,14 +351,14 @@ export default function CalendarComponent({
                   {day && (
                     <>
                       {/* Day Number */}
-                      <div className='flex-1 flex items-center justify-center p-2'>
+                      <div className='flex-1 flex items-center justify-center p-1 sm:p-2'>
                         <span
-                          className={`text-xl font-bold transition-all duration-200 ${
+                          className={`text-base sm:text-xl font-bold transition-all duration-200 ${
                             isToday(day)
-                              ? 'text-white text-2xl drop-shadow-lg'
+                              ? 'text-white text-lg sm:text-2xl drop-shadow-lg'
                               : content.length > 0
-                              ? 'text-white group-hover:text-2xl group-hover:drop-shadow-lg'
-                              : 'text-slate-400 group-hover:text-white group-hover:text-xl'
+                              ? 'text-white group-hover:text-lg sm:group-hover:text-2xl group-hover:drop-shadow-lg'
+                              : 'text-slate-400 group-hover:text-white group-hover:text-base sm:group-hover:text-xl'
                           }`}
                         >
                           {day}
@@ -367,16 +367,16 @@ export default function CalendarComponent({
 
                       {/* Content Indicators */}
                       {content.length > 0 && (
-                        <div className='absolute bottom-3 left-1/2 transform -translate-x-1/2 space-y-2'>
+                        <div className='absolute bottom-1 sm:bottom-3 left-1/2 transform -translate-x-1/2 space-y-1 sm:space-y-2'>
                           {/* Platform Icons Row */}
-                          <div className='flex items-center justify-center space-x-1'>
+                          <div className='flex items-center justify-center space-x-0.5 sm:space-x-1'>
                             {content.slice(0, 4).map((item, idx) => {
                               const IconComponent =
                                 PlatformIcons[item.platform];
                               return (
                                 <div
                                   key={idx}
-                                  className={`w-6 h-6 rounded-lg bg-gradient-to-r ${
+                                  className={`w-4 h-4 sm:w-6 sm:h-6 rounded-md sm:rounded-lg bg-gradient-to-r ${
                                     platformColors[item.platform]
                                   } flex items-center justify-center shadow-lg border border-white/30 transition-all duration-200 hover:scale-125 group-hover:shadow-xl`}
                                 >
@@ -385,8 +385,8 @@ export default function CalendarComponent({
                               );
                             })}
                             {content.length > 4 && (
-                              <div className='w-6 h-6 rounded-lg bg-white/30 backdrop-blur-sm flex items-center justify-center border border-white/30 shadow-lg'>
-                                <span className='text-xs text-white font-bold'>
+                              <div className='w-4 h-4 sm:w-6 sm:h-6 rounded-md sm:rounded-lg bg-white/30 backdrop-blur-sm flex items-center justify-center border border-white/30 shadow-lg'>
+                                <span className='text-[8px] sm:text-xs text-white font-bold'>
                                   +{content.length - 4}
                                 </span>
                               </div>
@@ -394,11 +394,11 @@ export default function CalendarComponent({
                           </div>
 
                           {/* Status indicators */}
-                          <div className='flex justify-center space-x-1'>
+                          <div className='flex justify-center space-x-0.5 sm:space-x-1'>
                             {content.slice(0, 6).map((item, idx) => (
                               <div
                                 key={idx}
-                                className={`w-2 h-2 rounded-full ${getStatusColor(
+                                className={`w-1.5 h-1.5 sm:w-2 sm:h-2 rounded-full ${getStatusColor(
                                   item.status
                                 )} shadow-sm border border-white/30 group-hover:animate-pulse`}
                               ></div>
@@ -409,7 +409,7 @@ export default function CalendarComponent({
 
                       {/* Hover Effect Overlay */}
                       {hoveredDate === dateKey && (
-                        <div className='absolute inset-0 bg-gradient-to-br from-purple-500/20 to-pink-500/20 rounded-2xl border-2 border-purple-400/50 animate-pulse' />
+                        <div className='absolute inset-0 bg-gradient-to-br from-purple-500/20 to-pink-500/20 rounded-lg sm:rounded-2xl border-2 border-purple-400/50 animate-pulse' />
                       )}
                     </>
                   )}
@@ -420,45 +420,45 @@ export default function CalendarComponent({
         </div>
 
         {/* Enhanced Stats Footer */}
-        <div className='p-8 bg-gradient-to-r from-white/5 to-white/10 border-t border-white/10'>
-          <div className='grid grid-cols-2 md:grid-cols-4 gap-6'>
-            <div className='text-center group cursor-pointer transition-all duration-300 hover:scale-110 bg-white/5 rounded-2xl p-4 hover:bg-white/10'>
-              <div className='text-4xl font-bold text-white group-hover:text-purple-400 transition-colors mb-2 drop-shadow-lg'>
+        <div className='p-4 sm:p-6 md:p-8 bg-gradient-to-r from-white/5 to-white/10 border-t border-white/10'>
+          <div className='grid grid-cols-2 md:grid-cols-4 gap-3 sm:gap-4 md:gap-6'>
+            <div className='text-center group cursor-pointer transition-all duration-300 hover:scale-110 bg-white/5 rounded-xl sm:rounded-2xl p-3 sm:p-4 hover:bg-white/10'>
+              <div className='text-2xl sm:text-3xl md:text-4xl font-bold text-white group-hover:text-purple-400 transition-colors mb-1 sm:mb-2 drop-shadow-lg'>
                 {Object.values(scheduledContent).flat().length}
               </div>
-              <div className='text-sm text-slate-400 group-hover:text-slate-300 font-medium'>
+              <div className='text-xs sm:text-sm text-slate-400 group-hover:text-slate-300 font-medium'>
                 Total Posts
               </div>
             </div>
-            <div className='text-center group cursor-pointer transition-all duration-300 hover:scale-110 bg-white/5 rounded-2xl p-4 hover:bg-white/10'>
-              <div className='text-4xl font-bold text-emerald-400 group-hover:text-emerald-300 transition-colors mb-2 drop-shadow-lg'>
+            <div className='text-center group cursor-pointer transition-all duration-300 hover:scale-110 bg-white/5 rounded-xl sm:rounded-2xl p-3 sm:p-4 hover:bg-white/10'>
+              <div className='text-2xl sm:text-3xl md:text-4xl font-bold text-emerald-400 group-hover:text-emerald-300 transition-colors mb-1 sm:mb-2 drop-shadow-lg'>
                 {
                   Object.values(scheduledContent)
                     .flat()
                     .filter((item) => item.status === 'scheduled').length
                 }
               </div>
-              <div className='text-sm text-slate-400 group-hover:text-slate-300 font-medium'>
+              <div className='text-xs sm:text-sm text-slate-400 group-hover:text-slate-300 font-medium'>
                 Scheduled
               </div>
             </div>
-            <div className='text-center group cursor-pointer transition-all duration-300 hover:scale-110 bg-white/5 rounded-2xl p-4 hover:bg-white/10'>
-              <div className='text-4xl font-bold text-amber-400 group-hover:text-amber-300 transition-colors mb-2 drop-shadow-lg'>
+            <div className='text-center group cursor-pointer transition-all duration-300 hover:scale-110 bg-white/5 rounded-xl sm:rounded-2xl p-3 sm:p-4 hover:bg-white/10'>
+              <div className='text-2xl sm:text-3xl md:text-4xl font-bold text-amber-400 group-hover:text-amber-300 transition-colors mb-1 sm:mb-2 drop-shadow-lg'>
                 {
                   Object.values(scheduledContent)
                     .flat()
                     .filter((item) => item.status === 'draft').length
                 }
               </div>
-              <div className='text-sm text-slate-400 group-hover:text-slate-300 font-medium'>
+              <div className='text-xs sm:text-sm text-slate-400 group-hover:text-slate-300 font-medium'>
                 Drafts
               </div>
             </div>
-            <div className='text-center group cursor-pointer transition-all duration-300 hover:scale-110 bg-white/5 rounded-2xl p-4 hover:bg-white/10'>
-              <div className='text-4xl font-bold text-purple-400 group-hover:text-purple-300 transition-colors mb-2 drop-shadow-lg'>
+            <div className='text-center group cursor-pointer transition-all duration-300 hover:scale-110 bg-white/5 rounded-xl sm:rounded-2xl p-3 sm:p-4 hover:bg-white/10'>
+              <div className='text-2xl sm:text-3xl md:text-4xl font-bold text-purple-400 group-hover:text-purple-300 transition-colors mb-1 sm:mb-2 drop-shadow-lg'>
                 {Object.keys(scheduledContent).length}
               </div>
-              <div className='text-sm text-slate-400 group-hover:text-slate-300 font-medium'>
+              <div className='text-xs sm:text-sm text-slate-400 group-hover:text-slate-300 font-medium'>
                 Active Days
               </div>
             </div>
