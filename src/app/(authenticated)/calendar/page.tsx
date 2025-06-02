@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { Plus, Filter } from 'lucide-react';
+import { Plus } from 'lucide-react';
 import StatsCard from '@/src/components/stats-card';
 import Calendar from '@/src/components/calender/calendar';
 import CreateContentModal from '@/src/components/content/content-creation-modal';
@@ -21,7 +21,7 @@ type ScheduledContent = {
 
 const CalendarPage = () => {
   const [showModal, setShowModal] = useState(false);
-  const [showFilters, setShowFilters] = useState(false);
+
   const [animateStats, setAnimateStats] = useState(false);
   const [scheduledContent, setScheduledContent] = useState<ScheduledContent>(
     {}
@@ -140,16 +140,6 @@ const CalendarPage = () => {
               </div>
 
               <div className='flex flex-col sm:flex-row items-stretch sm:items-center space-y-3 sm:space-y-0 sm:space-x-4 w-full sm:w-auto'>
-                <button
-                  onClick={() => setShowFilters(!showFilters)}
-                  className='group flex items-center justify-center space-x-2 px-4 sm:px-6 py-2 sm:py-3 bg-white/10 backdrop-blur-lg border border-white/20 rounded-xl sm:rounded-2xl text-white hover:bg-white/20 transition-all duration-300 hover:scale-105 hover:shadow-lg hover:shadow-purple-500/25'
-                >
-                  <Filter className='h-4 w-4 sm:h-5 sm:w-5 group-hover:rotate-12 transition-transform duration-300' />
-                  <span className='font-medium text-sm sm:text-base'>
-                    Filters
-                  </span>
-                </button>
-
                 <button
                   onClick={() => setShowModal(true)}
                   className='group flex items-center justify-center space-x-2 px-4 sm:px-6 py-2 sm:py-3 bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-500 hover:to-pink-500 rounded-xl sm:rounded-2xl text-white font-medium transition-all duration-300 hover:scale-105 hover:shadow-lg hover:shadow-purple-500/50'
