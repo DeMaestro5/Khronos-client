@@ -5,9 +5,10 @@ import { AIChatMessage } from '../types/ai';
 
 // Create axios instance with base configuration
 const api = axios.create({
-  baseURL: process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000/api/v1',
+  baseURL: process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000',
   headers: {
     'Content-Type': 'application/json',
+    'x-api-key': process.env.NEXT_PUBLIC_API_KEY,
   },
 });
 
@@ -34,10 +35,15 @@ api.interceptors.response.use(
   (error) => {
     // Handle authentication errors
     if (error.response?.status === 401) {
-      // Clear local storage and redirect to login if unauthenticated
-      if (typeof window !== 'undefined') {
+      // Only redirect to login if we're not already on the login page
+      // and the error is not from a login attempt
+      if (
+        typeof window !== 'undefined' &&
+        !window.location.pathname.includes('/auth/login') &&
+        !error.config.url.includes('/api/v1/login')
+      ) {
         localStorage.removeItem('token');
-        window.location.href = '/login';
+        window.location.href = '/auth/login';
       }
     }
 
@@ -48,13 +54,21 @@ api.interceptors.response.use(
 // Auth API methods
 export const authAPI = {
   login: (email: string, password: string) =>
-    api.post('/auth/login', { email, password }),
+    api.post('/api/v1/login', { email, password }),
 
-  register: (name: string, email: string, password: string) =>
-    api.post('/auth/register', { name, email, password }),
+  signup: (name: string, email: string, password: string) => {
+    const [firstName, lastName] = name.split(' ');
+    return api.post('/api/v1/signup', {
+      firstName,
+      lastName,
+      email,
+      password,
+      role: 'CONTENT_CREATOR',
+    });
+  },
 
   forgotPassword: (email: string) =>
-    api.post('/auth/forgot-password', { email }),
+    api.post('/api/v1/forgot-password', { email }),
 };
 
 // Content API methods

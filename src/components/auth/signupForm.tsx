@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Button } from '../ui/button';
 import {
   ChevronRight,
@@ -12,6 +12,9 @@ import {
 } from 'lucide-react';
 import PasswordStrength from './password-strength-ind';
 import SocialLogin from './SocialsAuth';
+import { useRouter } from 'next/navigation';
+import { AxiosError } from 'axios';
+import { authAPI } from '@/src/lib/api';
 
 interface SignupFormProps {
   formData: {
@@ -55,6 +58,112 @@ export default function SignupForm({
   setShowPassword,
   setShowConfirmPassword,
 }: SignupFormProps) {
+  const [isLoading, setIsLoading] = useState(false);
+  const [formErrors, setFormErrors] = useState(errors);
+  const router = useRouter();
+
+  const handleSignupSubmit = async (e: React.MouseEvent<HTMLButtonElement>) => {
+    e.preventDefault();
+    setIsLoading(true);
+    setFormErrors({});
+
+    // Validation
+    const newErrors: typeof errors = {};
+
+    // Name validation
+    if (!formData.firstName) newErrors.firstName = 'First name is required';
+    if (!formData.lastName) newErrors.lastName = 'Last name is required';
+
+    // Email validation
+    if (!formData.email) newErrors.email = 'Email is required';
+    else if (!/\S+@\S+\.\S+/.test(formData.email))
+      newErrors.email = 'Email is invalid';
+
+    // Password validation
+    if (!formData.password) newErrors.password = 'Password is required';
+    else if (formData.password.length < 8)
+      newErrors.password = 'Password must be at least 8 characters';
+
+    // Confirm password validation
+    if (!formData.confirmPassword)
+      newErrors.confirmPassword = 'Please confirm your password';
+    else if (formData.password !== formData.confirmPassword)
+      newErrors.confirmPassword = 'Passwords do not match';
+
+    // Terms validation
+    if (!formData.agreeToTerms)
+      newErrors.agreeToTerms = 'You must agree to the terms and conditions';
+
+    if (Object.keys(newErrors).length > 0) {
+      setFormErrors(newErrors);
+      setIsLoading(false);
+      return;
+    }
+
+    try {
+      console.log('Signup request payload:', {
+        firstName: formData.firstName,
+        lastName: formData.lastName,
+        email: formData.email,
+        password: '[REDACTED]', // Don't log actual password
+      });
+
+      const response = await authAPI.signup(
+        `${formData.firstName} ${formData.lastName}`.trim(),
+        formData.email,
+        formData.password
+      );
+
+      console.log('Signup Response:', response.data);
+
+      if (response.data.data?.tokens) {
+        localStorage.setItem('token', response.data.data.tokens.accessToken);
+        router.replace('/dashboard');
+      } else if (response.data.data?.user) {
+        router.replace('/verify-email');
+      } else {
+        setFormErrors({
+          email: 'Account created but login failed. Please try logging in.',
+        });
+      }
+    } catch (error) {
+      console.error('Signup error:', error);
+
+      if (error instanceof AxiosError) {
+        // Log the full error response for debugging
+        console.error('Error response data:', error.response?.data);
+        console.error('Error response status:', error.response?.status);
+        console.error('Error response headers:', error.response?.headers);
+
+        const errorMessage =
+          error.response?.data?.message ||
+          error.response?.data?.error ||
+          error.message ||
+          'Signup failed. Please try again.';
+
+        if (error.response?.status === 409 || error.response?.status === 400) {
+          if (errorMessage.toLowerCase().includes('email')) {
+            setFormErrors({
+              email: 'An account with this email already exists',
+            });
+          } else if (errorMessage.toLowerCase().includes('password')) {
+            setFormErrors({ password: errorMessage });
+          } else {
+            setFormErrors({ email: errorMessage });
+          }
+        } else if (error.response?.status === 422) {
+          setFormErrors({ email: errorMessage });
+        } else {
+          setFormErrors({ email: errorMessage });
+        }
+      } else {
+        setFormErrors({ email: 'Signup failed. Please try again.' });
+      }
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   return (
     <div className='bg-white/80 rounded-3xl shadow-2xl border border-white/20 p-8 animate-slideUp animation-delay-400'>
       <form>
@@ -76,17 +185,17 @@ export default function SignupForm({
                         handleInputChange('firstName', e.target.value)
                       }
                       className={`w-full pl-12 pr-4 py-3 border rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-all duration-200 ${
-                        errors.firstName
+                        formErrors.firstName
                           ? 'border-red-300 bg-red-50'
                           : 'border-slate-300'
                       } placeholder:text-slate-400 text-slate-900`}
                       placeholder='First name'
                     />
                   </div>
-                  {errors.firstName && (
+                  {formErrors.firstName && (
                     <p className='text-red-500 text-xs mt-1 flex items-center'>
                       <X className='w-3 h-3 mr-1' />
-                      {errors.firstName}
+                      {formErrors.firstName}
                     </p>
                   )}
                 </div>
@@ -103,17 +212,17 @@ export default function SignupForm({
                         handleInputChange('lastName', e.target.value)
                       }
                       className={`w-full pl-12 pr-4 py-3 border rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-all duration-200 ${
-                        errors.lastName
+                        formErrors.lastName
                           ? 'border-red-300 bg-red-50'
                           : 'border-slate-300'
                       } placeholder:text-slate-400 text-slate-900`}
                       placeholder='Last name'
                     />
                   </div>
-                  {errors.lastName && (
+                  {formErrors.lastName && (
                     <p className='text-red-500 text-xs mt-1 flex items-center'>
                       <X className='w-3 h-3 mr-1' />
-                      {errors.lastName}
+                      {formErrors.lastName}
                     </p>
                   )}
                 </div>
@@ -130,17 +239,17 @@ export default function SignupForm({
                     value={formData.email}
                     onChange={(e) => handleInputChange('email', e.target.value)}
                     className={`w-full pl-12 pr-4 py-3 border rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-all duration-200 ${
-                      errors.email
+                      formErrors.email
                         ? 'border-red-300 bg-red-50'
                         : 'border-slate-300'
                     } placeholder:text-slate-400 text-slate-900`}
                     placeholder='Email address'
                   />
                 </div>
-                {errors.email && (
+                {formErrors.email && (
                   <p className='text-red-500 text-xs mt-1 flex items-center'>
                     <X className='w-3 h-3 mr-1' />
-                    {errors.email}
+                    {formErrors.email}
                   </p>
                 )}
               </div>
@@ -173,7 +282,7 @@ export default function SignupForm({
                       handleInputChange('password', e.target.value)
                     }
                     className={`w-full pl-12 pr-12 py-3 border rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-all duration-200 ${
-                      errors.password
+                      formErrors.password
                         ? 'border-red-300 bg-red-50'
                         : 'border-slate-300'
                     } placeholder:text-slate-400 text-slate-900`}
@@ -192,10 +301,10 @@ export default function SignupForm({
                   </button>
                 </div>
                 <PasswordStrength password={formData.password} />
-                {errors.password && (
+                {formErrors.password && (
                   <p className='text-red-500 text-xs mt-1 flex items-center'>
                     <X className='w-3 h-3 mr-1' />
-                    {errors.password}
+                    {formErrors.password}
                   </p>
                 )}
               </div>
@@ -213,7 +322,7 @@ export default function SignupForm({
                       handleInputChange('confirmPassword', e.target.value)
                     }
                     className={`w-full pl-12 pr-12 py-3 border rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-all duration-200 ${
-                      errors.confirmPassword
+                      formErrors.confirmPassword
                         ? 'border-red-300 bg-red-50'
                         : 'border-slate-300'
                     } placeholder:text-slate-400 text-slate-900`}
@@ -231,10 +340,10 @@ export default function SignupForm({
                     )}
                   </button>
                 </div>
-                {errors.confirmPassword && (
+                {formErrors.confirmPassword && (
                   <p className='text-red-500 text-xs mt-1 flex items-center'>
                     <X className='w-3 h-3 mr-1' />
-                    {errors.confirmPassword}
+                    {formErrors.confirmPassword}
                   </p>
                 )}
               </div>
@@ -266,10 +375,10 @@ export default function SignupForm({
                   </button>
                 </label>
               </div>
-              {errors.agreeToTerms && (
+              {formErrors.agreeToTerms && (
                 <p className='text-red-500 text-xs flex items-center'>
                   <X className='w-3 h-3 mr-1' />
-                  {errors.agreeToTerms}
+                  {formErrors.agreeToTerms}
                 </p>
               )}
 
@@ -284,9 +393,11 @@ export default function SignupForm({
                 </button>
                 <button
                   type='submit'
-                  className='flex-1 bg-gradient-to-r from-indigo-600 to-purple-600 text-white py-3 px-4 rounded-xl font-semibold hover:from-indigo-700 hover:to-purple-700 focus:ring-4 focus:ring-indigo-300 transition-all duration-200 flex items-center justify-center'
+                  onClick={handleSignupSubmit}
+                  disabled={isLoading}
+                  className='flex-1 bg-gradient-to-r from-indigo-600 to-purple-600 text-white py-3 px-4 rounded-xl font-semibold hover:from-indigo-700 hover:to-purple-700 focus:ring-4 focus:ring-indigo-300 transition-all duration-200 flex items-center justify-center disabled:opacity-50 disabled:cursor-not-allowed'
                 >
-                  Create Account
+                  {isLoading ? 'Creating Account...' : 'Create Account'}
                 </button>
               </div>
             </div>

@@ -103,7 +103,7 @@ export default function Home() {
                   className='bg-indigo-600 hover:bg-indigo-700 px-8 py-4 text-lg'
                 >
                   <Link
-                    href='/dashboard'
+                    href='/auth/login'
                     className='flex items-center space-x-2'
                   >
                     <span>Start Now</span>
