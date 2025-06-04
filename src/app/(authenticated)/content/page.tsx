@@ -8,9 +8,29 @@ import { ContentCard } from '@/src/components/content/content-card';
 import { ContentListItem } from '@/src/components/content/content-list-items';
 import CreateContentModal from '@/src/components/content/content-creation-modal';
 import { ContentFormData } from '@/src/types/modal';
+import { contentAPI } from '@/src/lib/api';
+import AuthDebug from '@/src/components/debug/AuthDebug';
 
 type ViewMode = 'grid' | 'list';
 type FilterType = 'all' | ContentStatus | ContentType;
+
+interface ContentCreatePayload {
+  metadata: {
+    title: string;
+    description: string;
+    type: string;
+    status: string;
+    platform: string[];
+    tags: string[];
+    language: string;
+  };
+  title: string;
+  description: string;
+  type: string;
+  status: string;
+  platform: string[];
+  tags: string[];
+}
 
 export default function ContentPage() {
   const [contents, setContents] = useState<Content[]>([]);
@@ -22,156 +42,97 @@ export default function ContentPage() {
   const [showFilters, setShowFilters] = useState(false);
   const [showModal, setShowModal] = useState(false);
 
-  // Mock data for development - replace with API call
-  const mockContents: Content[] = [
-    {
-      id: '1',
-      title: 'The Future of Content Creation with AI',
-      description:
-        'Exploring how artificial intelligence is revolutionizing the way we create and distribute content across platforms.',
-      body: 'Full content body...',
-      status: ContentStatus.PUBLISHED,
-      type: ContentType.BLOG_POST,
-      platforms: [
-        { id: 'linkedin', name: 'LinkedIn', icon: 'linkedin' },
-        { id: 'twitter', name: 'Twitter', icon: 'twitter' },
-      ],
-      scheduledDate: '2025-01-20T10:00:00Z',
-      publishedDate: '2025-01-20T10:00:00Z',
-      author: {
-        id: 'user1',
-        name: 'John Doe',
-        avatar:
-          'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=32&h=32&fit=crop&crop=face',
-      },
-      tags: ['AI', 'Content Creation', 'Technology'],
-      createdAt: '2025-01-15T09:00:00Z',
-      updatedAt: '2025-01-20T10:00:00Z',
-      aiGenerated: true,
-    },
-    {
-      id: '2',
-      title: 'Social Media Strategy for 2025',
-      description:
-        'Key strategies and trends that will shape social media marketing this year.',
-      status: ContentStatus.SCHEDULED,
-      type: ContentType.SOCIAL_POST,
-      platforms: [
-        { id: 'instagram', name: 'Instagram', icon: 'instagram' },
-        { id: 'facebook', name: 'Facebook', icon: 'facebook' },
-      ],
-      scheduledDate: '2025-01-25T14:00:00Z',
-      author: {
-        id: 'user1',
-        name: 'John Doe',
-      },
-      tags: ['Social Media', 'Marketing', 'Strategy'],
-      createdAt: '2025-01-18T11:00:00Z',
-      updatedAt: '2025-01-18T11:00:00Z',
-      aiGenerated: false,
-    },
-    {
-      id: '3',
-      title: 'Email Marketing Best Practices',
-      description:
-        'Comprehensive guide to effective email marketing campaigns.',
-      status: ContentStatus.DRAFT,
-      type: ContentType.EMAIL,
-      platforms: [{ id: 'mailchimp', name: 'Mailchimp', icon: 'mail' }],
-      author: {
-        id: 'user1',
-        name: 'John Doe',
-      },
-      tags: ['Email Marketing', 'Campaign', 'Conversion'],
-      createdAt: '2025-01-19T16:00:00Z',
-      updatedAt: '2025-01-19T16:30:00Z',
-      aiGenerated: true,
-    },
-    {
-      id: '4',
-      title: 'Product Launch Video',
-      description: 'Exciting video announcing our latest product features.',
-      status: ContentStatus.PUBLISHED,
-      type: ContentType.VIDEO,
-      platforms: [
-        { id: 'youtube', name: 'YouTube', icon: 'youtube' },
-        { id: 'tiktok', name: 'TikTok', icon: 'video' },
-      ],
-      publishedDate: '2025-01-18T12:00:00Z',
-      author: {
-        id: 'user1',
-        name: 'John Doe',
-      },
-      tags: ['Product Launch', 'Video', 'Announcement'],
-      createdAt: '2025-01-16T10:00:00Z',
-      updatedAt: '2025-01-18T12:00:00Z',
-      aiGenerated: false,
-    },
-    {
-      id: '5',
-      title: 'Industry Podcast Episode 12',
-      description:
-        'Deep dive discussion on industry trends and future predictions.',
-      status: ContentStatus.ARCHIVED,
-      type: ContentType.PODCAST,
-      platforms: [{ id: 'spotify', name: 'Spotify', icon: 'music' }],
-      publishedDate: '2024-12-15T08:00:00Z',
-      author: {
-        id: 'user1',
-        name: 'John Doe',
-      },
-      tags: ['Podcast', 'Industry', 'Trends'],
-      createdAt: '2024-12-10T14:00:00Z',
-      updatedAt: '2024-12-15T08:00:00Z',
-      aiGenerated: false,
-    },
-  ];
-
-  const handleCreateContent = (contentData: ContentFormData) => {
-    const newContent = {
-      id: Date.now(),
-      title: contentData.title,
-      platform: contentData.platforms[0], // Take the first platform for now
-      time: contentData.scheduledTime,
-      type: contentData.contentType,
-      status: contentData.status,
-      description: contentData.description,
-    };
-
-    // const dateKey = contentData.scheduledDate;
-
-    // setScheduledContent((prev) => ({
-    //   ...prev,
-    //   [dateKey]: prev[dateKey] ? [...prev[dateKey], newContent] : [newContent],
-    // }));
-
-    console.log('New content created:', newContent);
-  };
   useEffect(() => {
-    // Simulate API call
     const fetchContents = async () => {
       setIsLoading(true);
       try {
-        // Replace with actual API call
-        // const response = await contentAPI.getAll();
-        // setContents(response.data);
+        // Debug: Check if token exists
+        const token = localStorage.getItem('token');
+        console.log('Token exists:', !!token);
 
-        // For now, use mock data
-        setTimeout(() => {
-          setContents(mockContents);
-          setFilteredContents(mockContents);
-          setIsLoading(false);
-        }, 1000);
-      } catch (error) {
+        if (!token) {
+          console.error('No authentication token found');
+          window.location.href = '/auth/login';
+          return;
+        }
+
+        const response = await contentAPI.getAll();
+        console.log('Content API Response:', response.data);
+
+        if (response.data?.statusCode === '10000' && response.data?.data) {
+          setContents(response.data.data);
+          setFilteredContents(response.data.data);
+        } else {
+          console.error('Failed to fetch contents', response.data);
+          setContents([]);
+          setFilteredContents([]);
+        }
+      } catch (error: unknown) {
         console.error('Failed to fetch contents:', error);
-        setContents(mockContents);
-        setFilteredContents(mockContents);
+
+        const errorObj = error as {
+          response?: { status?: number; data?: unknown };
+        };
+        if (errorObj?.response?.status === 401) {
+          console.error('Authentication failed - redirecting to login');
+          localStorage.removeItem('token');
+          window.location.href = '/auth/login';
+          return;
+        }
+
+        console.error('Error response:', errorObj?.response?.data);
+        console.error('Error status:', errorObj?.response?.status);
+        setContents([]);
+        setFilteredContents([]);
+      } finally {
         setIsLoading(false);
       }
     };
 
     fetchContents();
   }, []);
+
+  const handleCreateContent = async (contentData: ContentFormData) => {
+    try {
+      const newContentPayload = {
+        metadata: {
+          title: contentData.title,
+          description: contentData.description,
+          type: contentData.contentType,
+          status: contentData.status,
+          platform: contentData.platforms,
+          tags: contentData.tags,
+          language: 'en',
+        },
+        title: contentData.title,
+        description: contentData.description,
+        type: contentData.contentType,
+        status: contentData.status,
+        platform: contentData.platforms,
+        tags: contentData.tags,
+      };
+
+      // Use proper type for creation payload
+      const response = await contentAPI.create(
+        newContentPayload as ContentCreatePayload
+      );
+      console.log('Content created:', response.data);
+
+      if (response.data?.statusCode === '10000') {
+        // Refresh the content list
+        const refreshResponse = await contentAPI.getAll();
+        if (
+          refreshResponse.data?.statusCode === '10000' &&
+          refreshResponse.data?.data
+        ) {
+          setContents(refreshResponse.data.data);
+          setFilteredContents(refreshResponse.data.data);
+        }
+      }
+    } catch (error) {
+      console.error('Failed to create content:', error);
+    }
+  };
 
   useEffect(() => {
     let filtered = contents;
@@ -376,7 +337,7 @@ export default function ContentPage() {
           >
             <AnimatePresence>
               {filteredContents.map((content) => (
-                <ContentCard key={content.id} content={content} />
+                <ContentCard key={content._id} content={content} />
               ))}
             </AnimatePresence>
           </motion.div>
@@ -389,7 +350,7 @@ export default function ContentPage() {
           >
             <AnimatePresence>
               {filteredContents.map((content) => (
-                <ContentListItem key={content.id} content={content} />
+                <ContentListItem key={content._id} content={content} />
               ))}
             </AnimatePresence>
           </motion.div>
@@ -400,6 +361,9 @@ export default function ContentPage() {
         onClose={() => setShowModal(false)}
         onSubmit={handleCreateContent}
       />
+
+      {/* Debug Component - Remove in production */}
+      <AuthDebug />
     </div>
   );
 }

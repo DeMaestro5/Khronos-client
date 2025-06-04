@@ -20,185 +20,420 @@ import {
   ExternalLink,
   BookOpen,
   Zap,
+  Play,
+  Mic,
+  Mail,
+  Hash,
 } from 'lucide-react';
-import { useRouter } from 'next/navigation';
+import { useRouter, useParams } from 'next/navigation';
 import Image from 'next/image';
+import { contentAPI } from '@/src/lib/api';
 
-// Type definitions
-interface Platform {
+// Updated type definitions to match backend structure
+interface ContentSection {
+  type: 'heading' | 'paragraph' | 'list' | 'callout' | 'section';
+  level?: number;
+  content?: string | ContentSection[];
+  style?: string;
+  title?: string;
+  items?: string[];
+}
+
+interface ContentBody {
+  sections: ContentSection[];
+  wordCount?: number;
+  readingTime?: string;
+  summary?: string;
+}
+
+interface ContentPlatform {
   id: string;
   name: string;
   icon: string;
   color: string;
+  _id?: string;
 }
 
-interface Author {
+interface ContentAuthor {
   id: string;
   name: string;
-  avatar: string;
-  role: string;
+  avatar?: string;
+  role?: string;
 }
 
-interface Attachment {
+interface ContentAttachment {
   name: string;
-  type: string;
+  type: 'image' | 'document' | 'video' | 'audio';
   size: string;
+  url?: string;
 }
 
-interface Stats {
+interface ContentStats {
   views: number;
   engagement: number;
   shares: number;
+  saves?: number;
+  clicks?: number;
 }
 
-interface AISuggestions {
+interface AIContentSuggestions {
+  title?: string;
+  description?: string;
+  keywords?: string[];
+  improvements?: string[];
+  hashtags?: string[];
+  optimalPostingTimes?: string[];
+  estimatedReach?: number;
+  competitorAnalysis?: string[];
+}
+
+interface ContentIdea {
   title: string;
   description: string;
-  keywords: string[];
-  improvements: string[];
+  excerpt?: string;
+  targetAudience?: string;
+  keyPoints?: string[];
+  callToAction?: string;
+  estimatedEngagement?: number;
+  difficulty?: 'easy' | 'moderate' | 'advanced';
+  timeToCreate?: string;
+  trendingScore?: number;
+  body?: ContentBody;
 }
 
 interface ContentData {
-  id: string;
+  _id: string;
+  userId: string;
+  metadata: {
+    title: string;
+    description: string;
+    type:
+      | 'article'
+      | 'video'
+      | 'social'
+      | 'podcast'
+      | 'blog_post'
+      | 'newsletter';
+    status: 'draft' | 'scheduled' | 'published' | 'archived';
+    scheduledDate?: string;
+    publishedDate?: string;
+    platform: string[];
+    tags: string[];
+    category?: string;
+    language?: string;
+    targetAudience?: string[];
+    contentPillars?: string[];
+  };
   title: string;
-  excerpt: string;
-  body: string;
-  status: string;
-  type: string;
-  platforms: Platform[];
-  scheduledDate: string;
-  publishedDate: string;
-  author: Author;
+  description: string;
+  excerpt?: string;
+  body?: ContentBody;
+  type: 'article' | 'video' | 'social' | 'podcast' | 'blog_post' | 'newsletter';
+  status: 'draft' | 'scheduled' | 'published' | 'archived';
+  platform: string[];
   tags: string[];
-  attachments: Attachment[];
+  platforms?: ContentPlatform[];
+  author?: ContentAuthor;
+  attachments?: ContentAttachment[];
+  stats?: ContentStats;
+  aiSuggestions?: AIContentSuggestions;
+  aiGenerated?: boolean;
+  contentIdeas?: ContentIdea[];
+  optimizedContent?: Record<string, string>;
+  recommendations?: ContentIdea[];
+  engagement?: {
+    likes?: number;
+    shares?: number;
+    comments?: number;
+    views?: number;
+    saves?: number;
+    clicks?: number;
+  };
+  seo?: {
+    metaTitle?: string;
+    metaDescription?: string;
+    keywords?: string[];
+    canonicalUrl?: string;
+  };
+  scheduling?: {
+    timezone?: string;
+    optimalTimes?: string[];
+    frequency?: 'once' | 'daily' | 'weekly' | 'monthly';
+  };
+  analytics?: {
+    impressions?: number;
+    reach?: number;
+    clickThroughRate?: number;
+    conversionRate?: number;
+    engagementRate?: number;
+  };
   createdAt: string;
   updatedAt: string;
-  aiGenerated: boolean;
-  stats: Stats;
-  aiSuggestions: AISuggestions;
 }
+
+// Content renderer component
+const ContentRenderer = ({ body }: { body: ContentBody | undefined }) => {
+  if (!body?.sections || body.sections.length === 0) {
+    return (
+      <div className='text-gray-500 text-center py-8'>
+        <FileText className='w-12 h-12 mx-auto mb-4 text-gray-300' />
+        <p>No content available</p>
+      </div>
+    );
+  }
+
+  return (
+    <div className='space-y-6'>
+      {body.sections.map((section, index) => {
+        switch (section.type) {
+          case 'heading':
+            const level = section.level || 2;
+            if (level === 1) {
+              return (
+                <h1 key={index} className='text-3xl font-bold text-gray-900'>
+                  {typeof section.content === 'string' ? section.content : ''}
+                </h1>
+              );
+            } else if (level === 2) {
+              return (
+                <h2 key={index} className='text-2xl font-bold text-gray-900'>
+                  {typeof section.content === 'string' ? section.content : ''}
+                </h2>
+              );
+            } else if (level === 3) {
+              return (
+                <h3 key={index} className='text-xl font-bold text-gray-900'>
+                  {typeof section.content === 'string' ? section.content : ''}
+                </h3>
+              );
+            } else {
+              return (
+                <h4 key={index} className='text-lg font-bold text-gray-900'>
+                  {typeof section.content === 'string' ? section.content : ''}
+                </h4>
+              );
+            }
+
+          case 'paragraph':
+            return (
+              <p key={index} className='text-gray-700 leading-relaxed'>
+                {typeof section.content === 'string' ? section.content : ''}
+              </p>
+            );
+
+          case 'list':
+            const ListTag = section.style === 'numbered' ? 'ol' : 'ul';
+            return (
+              <ListTag
+                key={index}
+                className={`space-y-2 text-gray-700 ${
+                  section.style === 'numbered' ? 'list-decimal' : 'list-disc'
+                } pl-6`}
+              >
+                {section.items?.map((item, itemIndex) => (
+                  <li key={itemIndex}>{item}</li>
+                ))}
+              </ListTag>
+            );
+
+          case 'callout':
+            return (
+              <div
+                key={index}
+                className={`p-4 rounded-xl border ${
+                  section.style === 'tip'
+                    ? 'bg-blue-50 border-blue-200'
+                    : section.style === 'warning'
+                    ? 'bg-amber-50 border-amber-200'
+                    : 'bg-gray-50 border-gray-200'
+                }`}
+              >
+                {section.title && (
+                  <h4 className='font-semibold text-gray-900 mb-2 flex items-center gap-2'>
+                    {section.style === 'tip' && (
+                      <Sparkles className='w-4 h-4 text-blue-600' />
+                    )}
+                    {section.title}
+                  </h4>
+                )}
+                <p className='text-gray-700'>
+                  {typeof section.content === 'string' ? section.content : ''}
+                </p>
+              </div>
+            );
+
+          case 'section':
+            return (
+              <section key={index} className='space-y-4'>
+                {section.title && (
+                  <h3 className='text-xl font-bold text-gray-900'>
+                    {section.title}
+                  </h3>
+                )}
+                {typeof section.content === 'string' ? (
+                  <p className='text-gray-700 leading-relaxed'>
+                    {section.content}
+                  </p>
+                ) : (
+                  section.content &&
+                  Array.isArray(section.content) && (
+                    <div className='space-y-4'>
+                      {(section.content as ContentSection[]).map(
+                        (subSection: ContentSection, subIndex: number) => (
+                          <ContentRenderer
+                            key={subIndex}
+                            body={{ sections: [subSection] }}
+                          />
+                        )
+                      )}
+                    </div>
+                  )
+                )}
+              </section>
+            );
+
+          default:
+            return null;
+        }
+      })}
+
+      {body.wordCount && body.readingTime && (
+        <div className='border-t pt-6 mt-8'>
+          <div className='flex items-center gap-4 text-sm text-gray-500'>
+            <span>{body.wordCount} words</span>
+            <span>•</span>
+            <span>{body.readingTime}</span>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+};
+
+const getContentTypeIcon = (type: string) => {
+  switch (type) {
+    case 'video':
+      return <Play className='w-5 h-5' />;
+    case 'podcast':
+      return <Mic className='w-5 h-5' />;
+    case 'newsletter':
+      return <Mail className='w-5 h-5' />;
+    case 'social':
+      return <Hash className='w-5 h-5' />;
+    case 'article':
+    case 'blog_post':
+    default:
+      return <FileText className='w-5 h-5' />;
+  }
+};
+
+const getContentTypeGradient = (type: string) => {
+  switch (type) {
+    case 'video':
+      return 'from-red-600 via-pink-600 to-purple-600';
+    case 'podcast':
+      return 'from-green-600 via-teal-600 to-blue-600';
+    case 'newsletter':
+      return 'from-orange-600 via-red-600 to-pink-600';
+    case 'social':
+      return 'from-purple-600 via-pink-600 to-indigo-600';
+    case 'article':
+    case 'blog_post':
+    default:
+      return 'from-blue-600 via-purple-600 to-indigo-600';
+  }
+};
 
 const ContentDetailPage = () => {
   const [content, setContent] = useState<ContentData | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [activeTab, setActiveTab] = useState('content');
   const router = useRouter();
-  // Mock data
-  const mockContent: ContentData = {
-    id: '1',
-    title: 'The Future of Content Creation with AI',
-    excerpt:
-      'Exploring how artificial intelligence is revolutionizing the way we create and distribute content across platforms.',
-    body: `
-      <div class="space-y-6">
-        <div>
-          <h2 class="text-2xl font-bold text-gray-900 mb-4">Introduction</h2>
-          <p class="text-gray-700 leading-relaxed">Artificial Intelligence is transforming the landscape of content creation in unprecedented ways. From automated writing tools to smart content curation, AI is becoming an indispensable partner for content creators worldwide.</p>
-        </div>
-        
-        <div>
-          <h2 class="text-2xl font-bold text-gray-900 mb-4">The Current State of AI in Content Creation</h2>
-          <p class="text-gray-700 leading-relaxed">Today's AI-powered content tools can generate high-quality text, create stunning visuals, and even produce engaging videos. These technologies are not replacing human creativity but augmenting it, allowing creators to focus on strategy and storytelling while AI handles the heavy lifting.</p>
-        </div>
-        
-        <div>
-          <h2 class="text-2xl font-bold text-gray-900 mb-4">Key Benefits</h2>
-          <ul class="space-y-2 text-gray-700">
-            <li class="flex items-start gap-2"><span class="text-green-500 mt-1">•</span>Increased productivity and efficiency</li>
-            <li class="flex items-start gap-2"><span class="text-green-500 mt-1">•</span>Consistent content quality</li>
-            <li class="flex items-start gap-2"><span class="text-green-500 mt-1">•</span>Data-driven content optimization</li>
-            <li class="flex items-start gap-2"><span class="text-green-500 mt-1">•</span>Personalization at scale</li>
-            <li class="flex items-start gap-2"><span class="text-green-500 mt-1">•</span>Cost-effective content production</li>
-          </ul>
-        </div>
-        
-        <div>
-          <h2 class="text-2xl font-bold text-gray-900 mb-4">Future Outlook</h2>
-          <p class="text-gray-700 leading-relaxed">As AI technology continues to evolve, we can expect even more sophisticated tools that understand context, brand voice, and audience preferences. The future of content creation lies in the seamless collaboration between human creativity and artificial intelligence.</p>
-        </div>
-        
-        <div>
-          <h2 class="text-2xl font-bold text-gray-900 mb-4">Conclusion</h2>
-          <p class="text-gray-700 leading-relaxed">Embracing AI in content creation is no longer optional—it's essential for staying competitive in today's fast-paced digital landscape. The key is finding the right balance between automation and human touch.</p>
-        </div>
-      </div>
-    `,
-    status: 'PUBLISHED',
-    type: 'BLOG_POST',
-    platforms: [
-      {
-        id: 'linkedin',
-        name: 'LinkedIn',
-        icon: 'linkedin',
-        color: 'bg-blue-600',
-      },
-      { id: 'twitter', name: 'Twitter', icon: 'twitter', color: 'bg-sky-500' },
-      { id: 'medium', name: 'Medium', icon: 'medium', color: 'bg-gray-800' },
-    ],
-    scheduledDate: '2025-01-20T10:00:00Z',
-    publishedDate: '2025-01-20T10:00:00Z',
-    author: {
-      id: 'user1',
-      name: 'John Doe',
-      avatar:
-        'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=100&h=100&fit=crop&crop=face',
-      role: 'Content Strategist',
-    },
-    tags: ['AI', 'Content Creation', 'Technology', 'Future', 'Automation'],
-    attachments: [
-      { name: 'ai-content-infographic.png', type: 'image', size: '2.4 MB' },
-      {
-        name: 'content-strategy-template.pdf',
-        type: 'document',
-        size: '1.2 MB',
-      },
-    ],
-    createdAt: '2025-01-15T09:00:00Z',
-    updatedAt: '2025-01-20T10:00:00Z',
-    aiGenerated: true,
-    stats: {
-      views: 1247,
-      engagement: 8.4,
-      shares: 23,
-    },
-    aiSuggestions: {
-      title: 'AI-Powered Content: The Creative Revolution',
-      description:
-        'Discover how artificial intelligence is reshaping content creation',
-      keywords: [
-        'AI content',
-        'automation',
-        'creative tools',
-        'digital marketing',
-      ],
-      improvements: [
-        'Consider adding more case studies',
-        'Include statistics about AI adoption',
-        'Add section about ethical considerations',
-      ],
-    },
-  };
+  const params = useParams();
+  const contentId = params.id as string;
 
   useEffect(() => {
     const fetchContent = async () => {
+      if (!contentId) return;
+
+      console.log('Fetching content with ID:', contentId);
+
+      // Debug: Check if token exists
+      const token = localStorage.getItem('token');
+      console.log('Token exists:', !!token);
+      console.log('Token preview:', token?.substring(0, 20) + '...');
+
       setIsLoading(true);
-      setTimeout(() => {
-        setContent(mockContent);
+
+      try {
+        const response = await contentAPI.getById(contentId);
+        console.log('API Response:', response.data);
+        console.log('Full response object:', response);
+
+        // Try different response structures
+        let contentData = null;
+
+        if (response.data?.statusCode === '10000') {
+          // Structure 1: response.data.data.content (nested) + other fields
+          if (response.data?.data?.content) {
+            // Merge the content object with other fields at the same level
+            contentData = {
+              ...response.data.data.content,
+              contentIdeas: response.data.data.contentIdeas,
+              optimizedContent: response.data.data.optimizedContent,
+              aiSuggestions: response.data.data.aiSuggestions,
+              platforms: response.data.data.platforms,
+              author: response.data.data.author,
+              recommendations: response.data.data.recommendations,
+              insights: response.data.data.insights,
+            };
+          }
+          // Structure 2: response.data.data (direct content object)
+          else if (response.data?.data) {
+            contentData = response.data.data;
+          }
+        }
+        // Structure 3: Direct content object in response.data
+        else if (response.data && response.data._id) {
+          contentData = response.data;
+        }
+
+        if (contentData) {
+          setContent(contentData);
+          console.log('Content loaded successfully:', contentData);
+        } else {
+          console.error(
+            'Content not found. Response structure:',
+            response.data
+          );
+        }
+      } catch (error) {
+        console.error('Failed to fetch content:', error);
+        const errorObj = error as {
+          response?: { data?: unknown; status?: number };
+        };
+        console.error('Error response:', errorObj?.response?.data);
+        console.error('Error status:', errorObj?.response?.status);
+        if (error && typeof error === 'object' && 'response' in error) {
+          console.error('Error details:', errorObj.response?.data);
+        }
+      } finally {
         setIsLoading(false);
-      }, 800);
+      }
     };
+
     fetchContent();
-  }, []);
+  }, [contentId]);
 
   const getStatusIcon = (status: string) => {
-    switch (status) {
-      case 'PUBLISHED':
+    switch (status.toLowerCase()) {
+      case 'published':
         return <CheckCircle className='w-5 h-5 text-emerald-500' />;
-      case 'SCHEDULED':
+      case 'scheduled':
         return <Clock className='w-5 h-5 text-blue-500' />;
-      case 'DRAFT':
+      case 'draft':
         return <Edit className='w-5 h-5 text-amber-500' />;
-      case 'ARCHIVED':
+      case 'archived':
         return <Archive className='w-5 h-5 text-gray-500' />;
       default:
         return <AlertCircle className='w-5 h-5 text-gray-400' />;
@@ -206,14 +441,14 @@ const ContentDetailPage = () => {
   };
 
   const getStatusStyle = (status: string) => {
-    switch (status) {
-      case 'PUBLISHED':
+    switch (status.toLowerCase()) {
+      case 'published':
         return 'bg-emerald-50 text-emerald-700 border-emerald-200';
-      case 'SCHEDULED':
+      case 'scheduled':
         return 'bg-blue-50 text-blue-700 border-blue-200';
-      case 'DRAFT':
+      case 'draft':
         return 'bg-amber-50 text-amber-700 border-amber-200';
-      case 'ARCHIVED':
+      case 'archived':
         return 'bg-gray-50 text-gray-700 border-gray-200';
       default:
         return 'bg-gray-50 text-gray-700 border-gray-200';
@@ -305,7 +540,11 @@ const ContentDetailPage = () => {
 
         {/* Hero Section */}
         <div className='bg-white rounded-2xl shadow-sm border border-white/20 backdrop-blur-sm mb-8 overflow-hidden'>
-          <div className='bg-gradient-to-r from-blue-600 via-purple-600 to-indigo-600 p-8 text-white'>
+          <div
+            className={`bg-gradient-to-r ${getContentTypeGradient(
+              content.type
+            )} p-8 text-white`}
+          >
             <div className='flex items-start justify-between mb-6'>
               <div className='flex items-center gap-3'>
                 {getStatusIcon(content.status)}
@@ -316,7 +555,8 @@ const ContentDetailPage = () => {
                 >
                   {content.status.replace('_', ' ')}
                 </span>
-                <span className='px-4 py-2 bg-white/20 text-white rounded-full text-sm font-semibold backdrop-blur-sm'>
+                <span className='px-4 py-2 bg-white/20 text-white rounded-full text-sm font-semibold backdrop-blur-sm flex items-center gap-2'>
+                  {getContentTypeIcon(content.type)}
                   {content.type.replace('_', ' ')}
                 </span>
                 {content.aiGenerated && (
@@ -344,7 +584,7 @@ const ContentDetailPage = () => {
                 </div>
                 <div>
                   <div className='text-2xl font-bold text-gray-900'>
-                    {content.stats.views.toLocaleString()}
+                    {content.stats?.views.toLocaleString()}
                   </div>
                   <div className='text-sm text-gray-600'>Views</div>
                 </div>
@@ -355,7 +595,7 @@ const ContentDetailPage = () => {
                 </div>
                 <div>
                   <div className='text-2xl font-bold text-gray-900'>
-                    {content.stats.engagement}%
+                    {content.stats?.engagement}%
                   </div>
                   <div className='text-sm text-gray-600'>Engagement</div>
                 </div>
@@ -366,7 +606,7 @@ const ContentDetailPage = () => {
                 </div>
                 <div>
                   <div className='text-2xl font-bold text-gray-900'>
-                    {content.stats.shares}
+                    {content.stats?.shares}
                   </div>
                   <div className='text-sm text-gray-600'>Shares</div>
                 </div>
@@ -381,7 +621,7 @@ const ContentDetailPage = () => {
             {/* Content Tabs */}
             <div className='bg-white rounded-2xl shadow-sm border border-white/20 overflow-hidden'>
               <div className='border-b border-gray-100'>
-                <div className='flex'>
+                <div className='flex flex-wrap'>
                   <button
                     onClick={() => setActiveTab('content')}
                     className={`px-6 py-4 font-medium transition-all duration-200 ${
@@ -410,15 +650,55 @@ const ContentDetailPage = () => {
                       </div>
                     </button>
                   )}
+                  {content.optimizedContent && (
+                    <button
+                      onClick={() => setActiveTab('optimized-content')}
+                      className={`px-6 py-4 font-medium transition-all duration-200 ${
+                        activeTab === 'optimized-content'
+                          ? 'text-green-600 border-b-2 border-green-600 bg-green-50/50'
+                          : 'text-gray-600 hover:text-gray-900 hover:bg-gray-50'
+                      }`}
+                    >
+                      <div className='flex items-center gap-2'>
+                        <TrendingUp className='w-4 h-4' />
+                        Platform Content
+                      </div>
+                    </button>
+                  )}
+                  {content.contentIdeas && content.contentIdeas.length > 0 && (
+                    <button
+                      onClick={() => setActiveTab('content-ideas')}
+                      className={`px-6 py-4 font-medium transition-all duration-200 ${
+                        activeTab === 'content-ideas'
+                          ? 'text-orange-600 border-b-2 border-orange-600 bg-orange-50/50'
+                          : 'text-gray-600 hover:text-gray-900 hover:bg-gray-50'
+                      }`}
+                    >
+                      <div className='flex items-center gap-2'>
+                        <Sparkles className='w-4 h-4' />
+                        Content Ideas ({content.contentIdeas.length})
+                      </div>
+                    </button>
+                  )}
+                  <button
+                    onClick={() => setActiveTab('analytics')}
+                    className={`px-6 py-4 font-medium transition-all duration-200 ${
+                      activeTab === 'analytics'
+                        ? 'text-indigo-600 border-b-2 border-indigo-600 bg-indigo-50/50'
+                        : 'text-gray-600 hover:text-gray-900 hover:bg-gray-50'
+                    }`}
+                  >
+                    <div className='flex items-center gap-2'>
+                      <TrendingUp className='w-4 h-4' />
+                      Analytics
+                    </div>
+                  </button>
                 </div>
               </div>
 
               <div className='p-8'>
                 {activeTab === 'content' && (
-                  <div
-                    className='prose prose-lg max-w-none prose-headings:text-gray-900 prose-p:text-gray-700 prose-li:text-gray-700'
-                    dangerouslySetInnerHTML={{ __html: content.body }}
-                  />
+                  <ContentRenderer body={content.body} />
                 )}
 
                 {activeTab === 'ai-suggestions' && content.aiSuggestions && (
@@ -467,6 +747,27 @@ const ContentDetailPage = () => {
                         </div>
                       )}
 
+                    {content.aiSuggestions.hashtags &&
+                      content.aiSuggestions.hashtags.length > 0 && (
+                        <div>
+                          <h3 className='font-bold text-gray-900 mb-4'>
+                            Suggested Hashtags
+                          </h3>
+                          <div className='flex flex-wrap gap-2'>
+                            {content.aiSuggestions.hashtags.map(
+                              (hashtag: string, index: number) => (
+                                <span
+                                  key={index}
+                                  className='px-3 py-2 bg-gradient-to-r from-pink-100 to-purple-100 text-pink-800 rounded-lg text-sm font-medium'
+                                >
+                                  {hashtag}
+                                </span>
+                              )
+                            )}
+                          </div>
+                        </div>
+                      )}
+
                     {content.aiSuggestions.improvements &&
                       content.aiSuggestions.improvements.length > 0 && (
                         <div>
@@ -492,6 +793,401 @@ const ContentDetailPage = () => {
                           </div>
                         </div>
                       )}
+
+                    {content.aiSuggestions.estimatedReach && (
+                      <div className='bg-gradient-to-r from-green-50 to-teal-50 rounded-xl p-6 border border-green-100'>
+                        <h3 className='font-bold text-gray-900 mb-3'>
+                          Estimated Reach
+                        </h3>
+                        <p className='text-2xl font-bold text-green-600'>
+                          {content.aiSuggestions.estimatedReach.toLocaleString()}{' '}
+                          people
+                        </p>
+                      </div>
+                    )}
+
+                    {content.aiSuggestions.competitorAnalysis &&
+                      content.aiSuggestions.competitorAnalysis.length > 0 && (
+                        <div>
+                          <h3 className='font-bold text-gray-900 mb-4'>
+                            Competitor Analysis
+                          </h3>
+                          <div className='space-y-3'>
+                            {content.aiSuggestions.competitorAnalysis.map(
+                              (analysis: string, index: number) => (
+                                <div
+                                  key={index}
+                                  className='p-4 bg-slate-50 rounded-xl border border-slate-100'
+                                >
+                                  <p className='text-gray-700'>{analysis}</p>
+                                </div>
+                              )
+                            )}
+                          </div>
+                        </div>
+                      )}
+                  </div>
+                )}
+
+                {activeTab === 'optimized-content' &&
+                  content.optimizedContent && (
+                    <div className='space-y-8'>
+                      <div className='grid gap-6'>
+                        {Object.entries(content.optimizedContent).map(
+                          ([platform, optimizedText]) => (
+                            <div
+                              key={platform}
+                              className='bg-gradient-to-r from-gray-50 to-slate-50 rounded-xl p-6 border border-gray-100'
+                            >
+                              <div className='flex items-center gap-3 mb-4'>
+                                <div className='w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center text-white font-bold text-sm'>
+                                  {platform.charAt(0).toUpperCase()}
+                                </div>
+                                <h3 className='font-bold text-gray-900 capitalize'>
+                                  {platform} Optimized Content
+                                </h3>
+                              </div>
+                              <div className='bg-white rounded-lg p-4 border border-gray-200'>
+                                <pre className='whitespace-pre-wrap text-sm text-gray-700 font-mono'>
+                                  {optimizedText}
+                                </pre>
+                              </div>
+                            </div>
+                          )
+                        )}
+                      </div>
+                    </div>
+                  )}
+
+                {activeTab === 'content-ideas' &&
+                  content.contentIdeas &&
+                  content.contentIdeas.length > 0 && (
+                    <div className='space-y-8'>
+                      <div className='grid gap-6'>
+                        {content.contentIdeas.map(
+                          (idea: ContentIdea, index: number) => (
+                            <div
+                              key={index}
+                              className='bg-gradient-to-r from-orange-50 to-amber-50 rounded-xl p-6 border border-orange-100'
+                            >
+                              <div className='flex items-start gap-4 mb-4'>
+                                <div className='w-8 h-8 bg-orange-500 rounded-full flex items-center justify-center text-white font-bold text-sm'>
+                                  {index + 1}
+                                </div>
+                                <div className='flex-1'>
+                                  <h3 className='font-bold text-gray-900 text-lg mb-2'>
+                                    {idea.title}
+                                  </h3>
+                                  <p className='text-gray-700 mb-4'>
+                                    {idea.description}
+                                  </p>
+                                  {idea.excerpt && (
+                                    <div className='bg-white rounded-lg p-4 border border-orange-200 mb-4'>
+                                      <h4 className='font-semibold text-gray-900 mb-2'>
+                                        Excerpt
+                                      </h4>
+                                      <p className='text-gray-700 text-sm italic'>
+                                        {idea.excerpt}
+                                      </p>
+                                    </div>
+                                  )}
+                                  <div className='grid grid-cols-1 md:grid-cols-2 gap-4 text-sm'>
+                                    {idea.targetAudience && (
+                                      <div>
+                                        <span className='font-semibold text-gray-900'>
+                                          Target Audience:
+                                        </span>
+                                        <p className='text-gray-700'>
+                                          {idea.targetAudience}
+                                        </p>
+                                      </div>
+                                    )}
+                                    {idea.difficulty && (
+                                      <div>
+                                        <span className='font-semibold text-gray-900'>
+                                          Difficulty:
+                                        </span>
+                                        <span
+                                          className={`ml-2 px-2 py-1 rounded-full text-xs font-medium ${
+                                            idea.difficulty === 'easy'
+                                              ? 'bg-green-100 text-green-800'
+                                              : idea.difficulty === 'moderate'
+                                              ? 'bg-yellow-100 text-yellow-800'
+                                              : 'bg-red-100 text-red-800'
+                                          }`}
+                                        >
+                                          {idea.difficulty}
+                                        </span>
+                                      </div>
+                                    )}
+                                    {idea.timeToCreate && (
+                                      <div>
+                                        <span className='font-semibold text-gray-900'>
+                                          Time to Create:
+                                        </span>
+                                        <p className='text-gray-700'>
+                                          {idea.timeToCreate}
+                                        </p>
+                                      </div>
+                                    )}
+                                    {idea.estimatedEngagement && (
+                                      <div>
+                                        <span className='font-semibold text-gray-900'>
+                                          Est. Engagement:
+                                        </span>
+                                        <p className='text-gray-700'>
+                                          {idea.estimatedEngagement}/10
+                                        </p>
+                                      </div>
+                                    )}
+                                  </div>
+                                  {idea.keyPoints &&
+                                    idea.keyPoints.length > 0 && (
+                                      <div className='mt-4'>
+                                        <h4 className='font-semibold text-gray-900 mb-2'>
+                                          Key Points
+                                        </h4>
+                                        <div className='flex flex-wrap gap-1'>
+                                          {idea.keyPoints
+                                            .slice(0, 5)
+                                            .map(
+                                              (
+                                                point: string,
+                                                pointIndex: number
+                                              ) => (
+                                                <span
+                                                  key={pointIndex}
+                                                  className='px-2 py-1 bg-orange-100 text-orange-800 text-xs rounded-md'
+                                                >
+                                                  {point}
+                                                </span>
+                                              )
+                                            )}
+                                          {idea.keyPoints.length > 5 && (
+                                            <span className='px-2 py-1 bg-gray-100 text-gray-600 text-xs rounded-md'>
+                                              +{idea.keyPoints.length - 5} more
+                                            </span>
+                                          )}
+                                        </div>
+                                      </div>
+                                    )}
+                                </div>
+                              </div>
+                            </div>
+                          )
+                        )}
+                      </div>
+                    </div>
+                  )}
+
+                {activeTab === 'analytics' && (
+                  <div className='space-y-8'>
+                    {/* Performance Metrics */}
+                    <div>
+                      <h3 className='font-bold text-gray-900 mb-4 flex items-center gap-2'>
+                        <TrendingUp className='w-5 h-5 text-blue-600' />
+                        Performance Metrics
+                      </h3>
+                      <div className='grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4'>
+                        {content.analytics && (
+                          <>
+                            <div className='bg-blue-50 rounded-xl p-4 border border-blue-100'>
+                              <div className='text-2xl font-bold text-blue-600'>
+                                {content.analytics.impressions?.toLocaleString() ||
+                                  0}
+                              </div>
+                              <div className='text-sm text-blue-800'>
+                                Impressions
+                              </div>
+                            </div>
+                            <div className='bg-green-50 rounded-xl p-4 border border-green-100'>
+                              <div className='text-2xl font-bold text-green-600'>
+                                {content.analytics.reach?.toLocaleString() || 0}
+                              </div>
+                              <div className='text-sm text-green-800'>
+                                Reach
+                              </div>
+                            </div>
+                            <div className='bg-purple-50 rounded-xl p-4 border border-purple-100'>
+                              <div className='text-2xl font-bold text-purple-600'>
+                                {content.analytics.engagementRate?.toFixed(2) ||
+                                  0}
+                                %
+                              </div>
+                              <div className='text-sm text-purple-800'>
+                                Engagement Rate
+                              </div>
+                            </div>
+                          </>
+                        )}
+                      </div>
+                    </div>
+
+                    {/* Engagement Breakdown */}
+                    {content.engagement && (
+                      <div>
+                        <h3 className='font-bold text-gray-900 mb-4'>
+                          Engagement Breakdown
+                        </h3>
+                        <div className='grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4'>
+                          <div className='bg-red-50 rounded-xl p-4 border border-red-100 text-center'>
+                            <div className='text-2xl font-bold text-red-600'>
+                              {content.engagement.likes || 0}
+                            </div>
+                            <div className='text-sm text-red-800'>Likes</div>
+                          </div>
+                          <div className='bg-blue-50 rounded-xl p-4 border border-blue-100 text-center'>
+                            <div className='text-2xl font-bold text-blue-600'>
+                              {content.engagement.shares || 0}
+                            </div>
+                            <div className='text-sm text-blue-800'>Shares</div>
+                          </div>
+                          <div className='bg-green-50 rounded-xl p-4 border border-green-100 text-center'>
+                            <div className='text-2xl font-bold text-green-600'>
+                              {content.engagement.comments || 0}
+                            </div>
+                            <div className='text-sm text-green-800'>
+                              Comments
+                            </div>
+                          </div>
+                          <div className='bg-yellow-50 rounded-xl p-4 border border-yellow-100 text-center'>
+                            <div className='text-2xl font-bold text-yellow-600'>
+                              {content.engagement.saves || 0}
+                            </div>
+                            <div className='text-sm text-yellow-800'>Saves</div>
+                          </div>
+                          <div className='bg-indigo-50 rounded-xl p-4 border border-indigo-100 text-center'>
+                            <div className='text-2xl font-bold text-indigo-600'>
+                              {content.engagement.clicks || 0}
+                            </div>
+                            <div className='text-sm text-indigo-800'>
+                              Clicks
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    )}
+
+                    {/* SEO Information */}
+                    {content.seo && (
+                      <div>
+                        <h3 className='font-bold text-gray-900 mb-4'>
+                          SEO Information
+                        </h3>
+                        <div className='bg-gradient-to-r from-green-50 to-teal-50 rounded-xl p-6 border border-green-100'>
+                          <div className='space-y-4'>
+                            {content.seo.metaTitle && (
+                              <div>
+                                <h4 className='font-semibold text-gray-900'>
+                                  Meta Title
+                                </h4>
+                                <p className='text-gray-700'>
+                                  {content.seo.metaTitle}
+                                </p>
+                              </div>
+                            )}
+                            {content.seo.metaDescription && (
+                              <div>
+                                <h4 className='font-semibold text-gray-900'>
+                                  Meta Description
+                                </h4>
+                                <p className='text-gray-700'>
+                                  {content.seo.metaDescription}
+                                </p>
+                              </div>
+                            )}
+                            {content.seo.keywords &&
+                              content.seo.keywords.length > 0 && (
+                                <div>
+                                  <h4 className='font-semibold text-gray-900 mb-2'>
+                                    SEO Keywords
+                                  </h4>
+                                  <div className='flex flex-wrap gap-2'>
+                                    {content.seo.keywords.map(
+                                      (keyword: string, index: number) => (
+                                        <span
+                                          key={index}
+                                          className='px-3 py-1 bg-green-100 text-green-800 text-sm rounded-full'
+                                        >
+                                          {keyword}
+                                        </span>
+                                      )
+                                    )}
+                                  </div>
+                                </div>
+                              )}
+                            {content.seo.canonicalUrl && (
+                              <div>
+                                <h4 className='font-semibold text-gray-900'>
+                                  Canonical URL
+                                </h4>
+                                <a
+                                  href={content.seo.canonicalUrl}
+                                  className='text-blue-600 hover:text-blue-800 underline'
+                                  target='_blank'
+                                  rel='noopener noreferrer'
+                                >
+                                  {content.seo.canonicalUrl}
+                                </a>
+                              </div>
+                            )}
+                          </div>
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Scheduling Information */}
+                    {content.scheduling && (
+                      <div>
+                        <h3 className='font-bold text-gray-900 mb-4'>
+                          Scheduling Information
+                        </h3>
+                        <div className='bg-gradient-to-r from-blue-50 to-indigo-50 rounded-xl p-6 border border-blue-100'>
+                          <div className='grid grid-cols-1 md:grid-cols-3 gap-4'>
+                            {content.scheduling.timezone && (
+                              <div>
+                                <h4 className='font-semibold text-gray-900'>
+                                  Timezone
+                                </h4>
+                                <p className='text-gray-700'>
+                                  {content.scheduling.timezone}
+                                </p>
+                              </div>
+                            )}
+                            {content.scheduling.frequency && (
+                              <div>
+                                <h4 className='font-semibold text-gray-900'>
+                                  Frequency
+                                </h4>
+                                <p className='text-gray-700 capitalize'>
+                                  {content.scheduling.frequency}
+                                </p>
+                              </div>
+                            )}
+                            {content.scheduling.optimalTimes &&
+                              content.scheduling.optimalTimes.length > 0 && (
+                                <div>
+                                  <h4 className='font-semibold text-gray-900'>
+                                    Optimal Times
+                                  </h4>
+                                  <div className='space-y-1'>
+                                    {content.scheduling.optimalTimes.map(
+                                      (time: string, index: number) => (
+                                        <p
+                                          key={index}
+                                          className='text-gray-700 text-sm'
+                                        >
+                                          {new Date(time).toLocaleString()}
+                                        </p>
+                                      )
+                                    )}
+                                  </div>
+                                </div>
+                              )}
+                          </div>
+                        </div>
+                      </div>
+                    )}
                   </div>
                 )}
               </div>
@@ -507,21 +1203,25 @@ const ContentDetailPage = () => {
                 Author
               </h3>
               <div className='flex items-center gap-4'>
-                <Image
-                  src={content.author.avatar}
-                  alt={content.author.name}
-                  className='w-14 h-14 rounded-full object-cover ring-2 ring-blue-100'
-                  width={56}
-                  height={56}
-                />
-                <div>
-                  <div className='font-semibold text-gray-900'>
-                    {content.author.name}
-                  </div>
-                  <div className='text-sm text-gray-600'>
-                    {content.author.role}
-                  </div>
-                </div>
+                {content.author && (
+                  <>
+                    <Image
+                      src={content.author.avatar || ''}
+                      alt={content.author.name}
+                      className='w-14 h-14 rounded-full object-cover ring-2 ring-blue-100'
+                      width={56}
+                      height={56}
+                    />
+                    <div>
+                      <div className='font-semibold text-gray-900'>
+                        {content.author.name}
+                      </div>
+                      <div className='text-sm text-gray-600'>
+                        {content.author.role}
+                      </div>
+                    </div>
+                  </>
+                )}
               </div>
             </div>
 
@@ -543,7 +1243,7 @@ const ContentDetailPage = () => {
                     </div>
                   </div>
                 </div>
-                {content.publishedDate && (
+                {content.metadata.publishedDate && (
                   <div className='flex items-start gap-3'>
                     <Eye className='w-4 h-4 text-green-500 mt-1 flex-shrink-0' />
                     <div>
@@ -551,7 +1251,7 @@ const ContentDetailPage = () => {
                         Published
                       </div>
                       <div className='text-sm text-gray-600'>
-                        {formatDate(content.publishedDate)}
+                        {formatDate(content.metadata.publishedDate)}
                       </div>
                     </div>
                   </div>
@@ -583,24 +1283,26 @@ const ContentDetailPage = () => {
                 Publishing Platforms
               </h3>
               <div className='space-y-3'>
-                {content.platforms.map((platform: Platform, index: number) => (
-                  <div
-                    key={index}
-                    className='flex items-center gap-3 p-3 bg-gray-50 rounded-xl hover:bg-gray-100 transition-colors'
-                  >
+                {content.platforms?.map(
+                  (platform: ContentPlatform, index: number) => (
                     <div
-                      className={`w-10 h-10 ${platform.color} rounded-lg flex items-center justify-center text-white font-bold`}
+                      key={index}
+                      className='flex items-center gap-3 p-3 bg-gray-50 rounded-xl hover:bg-gray-100 transition-colors'
                     >
-                      {platform.name.charAt(0)}
-                    </div>
-                    <div className='flex-1'>
-                      <div className='font-medium text-gray-900'>
-                        {platform.name}
+                      <div
+                        className={`w-10 h-10 ${platform.color} rounded-lg flex items-center justify-center text-white font-bold`}
+                      >
+                        {platform.name.charAt(0)}
                       </div>
+                      <div className='flex-1'>
+                        <div className='font-medium text-gray-900'>
+                          {platform.name}
+                        </div>
+                      </div>
+                      <ExternalLink className='w-4 h-4 text-gray-400' />
                     </div>
-                    <ExternalLink className='w-4 h-4 text-gray-400' />
-                  </div>
-                ))}
+                  )
+                )}
               </div>
             </div>
 
@@ -610,7 +1312,7 @@ const ContentDetailPage = () => {
                 <h3 className='font-bold text-gray-900 mb-4'>Attachments</h3>
                 <div className='space-y-3'>
                   {content.attachments.map(
-                    (attachment: Attachment, index: number) => (
+                    (attachment: ContentAttachment, index: number) => (
                       <div
                         key={index}
                         className='flex items-center gap-3 p-3 bg-gray-50 rounded-xl hover:bg-gray-100 transition-colors group'
@@ -633,6 +1335,61 @@ const ContentDetailPage = () => {
                         </button>
                       </div>
                     )
+                  )}
+                </div>
+              </div>
+            )}
+
+            {/* Recommendations */}
+            {content.recommendations && content.recommendations.length > 0 && (
+              <div className='bg-white rounded-2xl shadow-sm border border-white/20 p-6'>
+                <h3 className='font-bold text-gray-900 mb-4 flex items-center gap-2'>
+                  <Sparkles className='w-5 h-5 text-purple-600' />
+                  Recommended Content Ideas
+                </h3>
+                <div className='space-y-4'>
+                  {content.recommendations
+                    .slice(0, 3)
+                    .map((rec: ContentIdea, index: number) => (
+                      <div
+                        key={index}
+                        className='p-4 bg-gradient-to-r from-purple-50 to-pink-50 rounded-xl border border-purple-100 hover:shadow-md transition-all duration-200'
+                      >
+                        <h4 className='font-semibold text-gray-900 mb-2 text-sm'>
+                          {rec.title}
+                        </h4>
+                        <p className='text-gray-700 text-xs mb-3 line-clamp-2'>
+                          {rec.description}
+                        </p>
+                        <div className='flex items-center justify-between text-xs'>
+                          {rec.difficulty && (
+                            <span
+                              className={`px-2 py-1 rounded-full font-medium ${
+                                rec.difficulty === 'easy'
+                                  ? 'bg-green-100 text-green-800'
+                                  : rec.difficulty === 'moderate'
+                                  ? 'bg-yellow-100 text-yellow-800'
+                                  : 'bg-red-100 text-red-800'
+                              }`}
+                            >
+                              {rec.difficulty}
+                            </span>
+                          )}
+                          {rec.estimatedEngagement && (
+                            <span className='text-gray-600'>
+                              {rec.estimatedEngagement}/10 engagement
+                            </span>
+                          )}
+                        </div>
+                      </div>
+                    ))}
+                  {content.recommendations.length > 3 && (
+                    <div className='text-center'>
+                      <span className='text-sm text-gray-500'>
+                        +{content.recommendations.length - 3} more
+                        recommendations
+                      </span>
+                    </div>
                   )}
                 </div>
               </div>

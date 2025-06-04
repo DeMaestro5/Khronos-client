@@ -3,6 +3,24 @@ import axios from 'axios';
 import { Content } from '../types/content';
 import { AIChatMessage } from '../types/ai';
 
+interface ContentCreateRequest {
+  metadata: {
+    title: string;
+    description: string;
+    type: string;
+    status: string;
+    platform: string[];
+    tags: string[];
+    language?: string;
+  };
+  title: string;
+  description: string;
+  type: string;
+  status: string;
+  platform: string[];
+  tags: string[];
+}
+
 // Create axios instance with base configuration
 const api = axios.create({
   baseURL: process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000',
@@ -73,16 +91,17 @@ export const authAPI = {
 
 // Content API methods
 export const contentAPI = {
-  getAll: (filters = {}) => api.get('/content', { params: filters }),
+  getAll: (filters = {}) => api.get('/api/v1/content', { params: filters }),
 
-  getById: (id: string) => api.get(`/content/${id}`),
+  getById: (id: string) => api.get(`/api/v1/content/${id}`),
 
-  create: (contentData: Content) => api.post('/content', contentData),
+  create: (contentData: ContentCreateRequest) =>
+    api.post('/api/v1/content', contentData),
 
   update: (id: string, contentData: Content) =>
-    api.put(`/content/${id}`, contentData),
+    api.put(`/api/v1/content/${id}`, contentData),
 
-  delete: (id: string) => api.delete(`/content/${id}`),
+  delete: (id: string) => api.delete(`/api/v1/content/${id}`),
 };
 
 // Calendar API methods

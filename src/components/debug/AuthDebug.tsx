@@ -1,0 +1,64 @@
+'use client';
+
+import { useState, useEffect } from 'react';
+
+export default function AuthDebug() {
+  const [token, setToken] = useState<string | null>(null);
+  const [apiUrl, setApiUrl] = useState<string>('');
+
+  useEffect(() => {
+    // Get token from localStorage
+    const storedToken = localStorage.getItem('token');
+    setToken(storedToken);
+
+    // Get API URL
+    const url = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000';
+    setApiUrl(url);
+  }, []);
+
+  const testApiConnection = async () => {
+    try {
+      const response = await fetch(`${apiUrl}/api/v1/content`, {
+        headers: {
+          Authorization: token ? `Bearer ${token}` : '',
+          'Content-Type': 'application/json',
+        },
+      });
+
+      console.log('API Test Response Status:', response.status);
+      console.log('API Test Response:', await response.text());
+    } catch (error) {
+      console.error('API Test Error:', error);
+    }
+  };
+
+  return (
+    <div className='fixed bottom-4 right-4 bg-white p-4 rounded-lg shadow-lg border max-w-sm'>
+      <h3 className='font-bold text-sm mb-2'>Auth Debug</h3>
+      <div className='space-y-2 text-xs'>
+        <div>
+          <strong>Token:</strong>{' '}
+          {token ? `${token.substring(0, 20)}...` : 'None'}
+        </div>
+        <div>
+          <strong>API URL:</strong> {apiUrl}
+        </div>
+        <button
+          onClick={testApiConnection}
+          className='px-2 py-1 bg-blue-500 text-white rounded text-xs'
+        >
+          Test API
+        </button>
+        <button
+          onClick={() => {
+            localStorage.removeItem('token');
+            window.location.href = '/auth/login';
+          }}
+          className='px-2 py-1 bg-red-500 text-white rounded text-xs ml-2'
+        >
+          Force Login
+        </button>
+      </div>
+    </div>
+  );
+}
