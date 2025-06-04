@@ -15,21 +15,12 @@ type ViewMode = 'grid' | 'list';
 type FilterType = 'all' | ContentStatus | ContentType;
 
 interface ContentCreatePayload {
-  metadata: {
-    title: string;
-    description: string;
-    type: string;
-    status: string;
-    platform: string[];
-    tags: string[];
-    language: string;
-  };
   title: string;
-  description: string;
+  description?: string;
   type: string;
-  status: string;
   platform: string[];
-  tags: string[];
+  tags?: string[];
+  scheduledDate?: string;
 }
 
 export default function ContentPage() {
@@ -41,6 +32,7 @@ export default function ContentPage() {
   const [isLoading, setIsLoading] = useState(true);
   const [showFilters, setShowFilters] = useState(false);
   const [showModal, setShowModal] = useState(false);
+  const [isCreating, setIsCreating] = useState(false);
 
   useEffect(() => {
     const fetchContents = async () => {
@@ -93,44 +85,99 @@ export default function ContentPage() {
   }, []);
 
   const handleCreateContent = async (contentData: ContentFormData) => {
+    setIsCreating(true);
+
     try {
-      const newContentPayload = {
-        metadata: {
-          title: contentData.title,
-          description: contentData.description,
-          type: contentData.contentType,
-          status: contentData.status,
-          platform: contentData.platforms,
-          tags: contentData.tags,
-          language: 'en',
-        },
-        title: contentData.title,
-        description: contentData.description,
+      // Validate required fields
+      if (!contentData.title.trim()) {
+        throw new Error('Content title is required');
+      }
+
+      if (contentData.platforms.length === 0) {
+        throw new Error('Please select at least one platform');
+      }
+
+      // Prepare the payload according to the server schema
+      const newContentPayload: ContentCreatePayload = {
+        title: contentData.title.trim(),
         type: contentData.contentType,
-        status: contentData.status,
         platform: contentData.platforms,
-        tags: contentData.tags,
       };
 
-      // Use proper type for creation payload
-      const response = await contentAPI.create(
-        newContentPayload as ContentCreatePayload
-      );
-      console.log('Content created:', response.data);
+      // Add optional fields only if they have values
+      if (contentData.description?.trim()) {
+        newContentPayload.description = contentData.description.trim();
+      }
 
-      if (response.data?.statusCode === '10000') {
-        // Refresh the content list
+      if (contentData.tags.length > 0) {
+        newContentPayload.tags = contentData.tags.filter((tag) => tag.trim());
+      }
+
+      // Combine scheduled date and time if both are provided
+      if (contentData.scheduledDate && contentData.scheduledTime) {
+        const scheduledDateTime = `${contentData.scheduledDate}T${contentData.scheduledTime}:00.000Z`;
+        newContentPayload.scheduledDate = scheduledDateTime;
+      } else if (contentData.scheduledDate) {
+        // If only date is provided, use it as is
+        newContentPayload.scheduledDate = new Date(
+          contentData.scheduledDate
+        ).toISOString();
+      }
+
+      console.log('Creating content with payload:', newContentPayload);
+
+      // Call the API to create content
+      const response = await contentAPI.create(newContentPayload);
+
+      console.log('Content creation response:', response.data);
+
+      // Check if the creation was successful
+      if (
+        response.data?.statusCode === '10000' ||
+        response.status === 200 ||
+        response.status === 201
+      ) {
+        // Show success notification (you can replace this with a toast notification)
+        alert('Content created successfully!');
+
+        // Close the modal
+        setShowModal(false);
+
+        // Refresh the content list to show the new content
         const refreshResponse = await contentAPI.getAll();
         if (
-          refreshResponse.data?.statusCode === '10000' &&
+          (refreshResponse.data?.statusCode === '10000' ||
+            refreshResponse.status === 200) &&
           refreshResponse.data?.data
         ) {
           setContents(refreshResponse.data.data);
           setFilteredContents(refreshResponse.data.data);
         }
+      } else {
+        throw new Error(response.data?.message || 'Failed to create content');
       }
-    } catch (error) {
+    } catch (error: unknown) {
       console.error('Failed to create content:', error);
+
+      // Show error notification with specific message
+      let errorMessage = 'Failed to create content. Please try again.';
+
+      if (error instanceof Error) {
+        errorMessage = error.message;
+      } else if (
+        typeof error === 'object' &&
+        error !== null &&
+        'response' in error
+      ) {
+        const axiosError = error as {
+          response?: { data?: { message?: string } };
+        };
+        errorMessage = axiosError.response?.data?.message || errorMessage;
+      }
+
+      alert(`Error: ${errorMessage}`);
+    } finally {
+      setIsCreating(false);
     }
   };
 
@@ -358,8 +405,9 @@ export default function ContentPage() {
       </AnimatePresence>
       <CreateContentModal
         isOpen={showModal}
-        onClose={() => setShowModal(false)}
+        onClose={() => !isCreating && setShowModal(false)}
         onSubmit={handleCreateContent}
+        isCreating={isCreating}
       />
 
       {/* Debug Component - Remove in production */}

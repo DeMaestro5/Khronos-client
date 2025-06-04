@@ -4,21 +4,12 @@ import { Content } from '../types/content';
 import { AIChatMessage } from '../types/ai';
 
 interface ContentCreateRequest {
-  metadata: {
-    title: string;
-    description: string;
-    type: string;
-    status: string;
-    platform: string[];
-    tags: string[];
-    language?: string;
-  };
   title: string;
-  description: string;
+  description?: string;
   type: string;
-  status: string;
   platform: string[];
-  tags: string[];
+  tags?: string[];
+  scheduledDate?: string;
 }
 
 // Create axios instance with base configuration
