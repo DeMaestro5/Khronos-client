@@ -1,11 +1,11 @@
 'use client';
 
-import React from 'react';
+import React, { useState } from 'react';
 import { Calendar, MoreHorizontal } from 'lucide-react';
 import Link from 'next/link';
 import { motion } from 'framer-motion';
 import Image from 'next/image';
-import { Content } from '@/src/types/content';
+import { Content, ContentStatus, ContentType } from '@/src/types/content';
 import {
   Card,
   CardContent,
@@ -23,6 +23,31 @@ interface ContentCardProps {
   content: Content;
 }
 
+const Avatar = ({ src, name }: { src?: string; name: string }) => {
+  const [imageError, setImageError] = useState(false);
+
+  if (!src || imageError) {
+    return (
+      <div className='w-6 h-6 rounded-full bg-gray-200 flex items-center justify-center'>
+        <span className='text-xs font-medium text-gray-600'>
+          {name.charAt(0).toUpperCase()}
+        </span>
+      </div>
+    );
+  }
+
+  return (
+    <Image
+      src={src}
+      alt={name}
+      className='w-6 h-6 rounded-full'
+      width={24}
+      height={24}
+      onError={() => setImageError(true)}
+    />
+  );
+};
+
 export const ContentCard = ({ content }: ContentCardProps) => (
   <motion.div
     layout
@@ -33,21 +58,21 @@ export const ContentCard = ({ content }: ContentCardProps) => (
     transition={{ duration: 0.2 }}
   >
     <Card className='h-full hover:shadow-lg transition-all duration-200 cursor-pointer group'>
-      <Link href={`/content/${content.id}`}>
+      <Link href={`/content/${content._id}`}>
         <CardHeader className='pb-3'>
           <div className='flex items-start justify-between'>
             <div className='flex items-center gap-2 mb-2'>
-              {getStatusIcon(content.status)}
+              {getStatusIcon(content.status as ContentStatus)}
               <span
                 className={`px-2 py-1 rounded-full text-xs font-medium border ${getStatusColor(
-                  content.status
+                  content.status as ContentStatus
                 )}`}
               >
                 {content.status.replace('_', ' ').toUpperCase()}
               </span>
               <span
                 className={`px-2 py-1 rounded-full text-xs font-medium ${getTypeColor(
-                  content.type
+                  content.type as ContentType
                 )}`}
               >
                 {content.type.replace('_', ' ')}
@@ -87,21 +112,27 @@ export const ContentCard = ({ content }: ContentCardProps) => (
           <div className='flex items-center gap-2 mb-4'>
             <span className='text-xs text-gray-500'>Platforms:</span>
             <div className='flex gap-1'>
-              {content.platforms.slice(0, 3).map((platform, index) => (
-                <div
-                  key={index}
-                  className='w-6 h-6 bg-gray-100 rounded flex items-center justify-center'
-                  title={platform.name}
-                >
-                  <span className='text-[10px] font-medium text-gray-600'>
-                    {platform.name.charAt(0).toUpperCase()}
-                  </span>
-                </div>
-              ))}
-              {content.platforms.length > 3 && (
+              {(content.platforms || content.platform || [])
+                .slice(0, 3)
+                .map((platform, index) => (
+                  <div
+                    key={index}
+                    className='w-6 h-6 bg-gray-100 rounded flex items-center justify-center'
+                    title={
+                      typeof platform === 'string' ? platform : platform.name
+                    }
+                  >
+                    <span className='text-[10px] font-medium text-gray-600'>
+                      {(typeof platform === 'string' ? platform : platform.name)
+                        .charAt(0)
+                        .toUpperCase()}
+                    </span>
+                  </div>
+                ))}
+              {(content.platforms || content.platform || []).length > 3 && (
                 <div className='w-6 h-6 bg-gray-50 rounded flex items-center justify-center'>
                   <span className='text-[10px] text-gray-500'>
-                    +{content.platforms.length - 3}
+                    +{(content.platforms || content.platform || []).length - 3}
                   </span>
                 </div>
               )}
@@ -111,23 +142,28 @@ export const ContentCard = ({ content }: ContentCardProps) => (
           {/* Footer */}
           <div className='flex items-center justify-between pt-2 border-t'>
             <div className='flex items-center gap-2'>
-              {content.author.avatar && (
-                <Image
-                  src={content.author.avatar}
-                  alt={content.author.name}
-                  className='w-6 h-6 rounded-full'
-                  width={24}
-                  height={24}
+              {(content.author?.avatar || content.userId) && (
+                <Avatar
+                  src={content.author?.avatar}
+                  name={
+                    content.author?.name || content.userId?.name || 'Author'
+                  }
                 />
               )}
               <span className='text-xs text-gray-500'>
-                {content.author.name}
+                {content.author?.name ||
+                  content.userId?.name ||
+                  'Unknown Author'}
               </span>
             </div>
             <div className='flex items-center gap-2 text-xs text-gray-500'>
               <Calendar className='w-3 h-3' />
-              {content.publishedDate
-                ? formatDate(content.publishedDate)
+              {content.publishedDate || content.metadata?.publishedDate
+                ? formatDate(
+                    content.publishedDate ||
+                      content.metadata?.publishedDate ||
+                      ''
+                  )
                 : formatDate(content.createdAt)}
             </div>
           </div>
