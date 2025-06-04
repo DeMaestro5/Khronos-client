@@ -18,7 +18,7 @@ export interface ContentPlatform {
   id: string;
   name: string;
   icon: string;
-  color?: string;
+  color: string;
   _id?: string;
 }
 
@@ -31,6 +31,20 @@ export interface ContentSection {
   items?: string[];
 }
 
+export interface ContentBody {
+  sections: ContentSection[];
+  wordCount?: number;
+  readingTime?: string;
+  summary?: string;
+}
+
+export interface ContentAuthor {
+  id: string;
+  name: string;
+  avatar?: string;
+  role?: string;
+}
+
 export interface ContentAttachment {
   name: string;
   type: 'image' | 'document' | 'video' | 'audio';
@@ -38,76 +52,84 @@ export interface ContentAttachment {
   url?: string;
 }
 
-export interface Content {
+export interface ContentStats {
+  views: number;
+  engagement: number;
+  shares: number;
+  saves?: number;
+  clicks?: number;
+}
+
+export interface AIContentSuggestions {
+  title?: string;
+  description?: string;
+  keywords?: string[];
+  improvements?: string[];
+  hashtags?: string[];
+  optimalPostingTimes?: string[];
+  estimatedReach?: number;
+  competitorAnalysis?: string[];
+}
+
+export interface ContentIdea {
+  title: string;
+  description: string;
+  excerpt?: string;
+  targetAudience?: string;
+  keyPoints?: string[];
+  callToAction?: string;
+  estimatedEngagement?: number;
+  difficulty?: 'easy' | 'moderate' | 'advanced';
+  timeToCreate?: string;
+  trendingScore?: number;
+  body?: ContentBody;
+}
+
+export interface ContentData {
   _id: string;
-  id?: string; // For backward compatibility
-  userId: {
-    _id: string;
-    name: string;
-    email: string;
-  };
+  userId: string;
   metadata: {
     title: string;
     description: string;
-    type: string;
-    status: string;
+    type:
+      | 'article'
+      | 'video'
+      | 'social'
+      | 'podcast'
+      | 'blog_post'
+      | 'newsletter';
+    status: 'draft' | 'scheduled' | 'published' | 'archived';
+    scheduledDate?: string;
+    publishedDate?: string;
     platform: string[];
     tags: string[];
     category?: string;
     language?: string;
     targetAudience?: string[];
     contentPillars?: string[];
-    scheduledDate?: string;
-    publishedDate?: string;
   };
   title: string;
   description: string;
   excerpt?: string;
-  body?: {
-    sections: ContentSection[];
-    wordCount?: number;
-    readingTime?: string;
-    summary?: string;
-  };
-  status: string;
-  type: string;
+  body?: ContentBody;
+  type: 'article' | 'video' | 'social' | 'podcast' | 'blog_post' | 'newsletter';
+  status: 'draft' | 'scheduled' | 'published' | 'archived';
   platform: string[];
-  platforms?: ContentPlatform[];
-  scheduledDate?: string;
-  publishedDate?: string;
-  author?: {
-    id: string;
-    name: string;
-    avatar?: string;
-    role?: string;
-  };
   tags: string[];
+  platforms?: ContentPlatform[];
+  author?: ContentAuthor;
   attachments?: ContentAttachment[];
-  createdAt: string;
-  updatedAt: string;
+  stats?: ContentStats;
+  aiSuggestions?: AIContentSuggestions;
   aiGenerated?: boolean;
-  aiSuggestions?: {
-    title?: string;
-    description?: string;
-    keywords?: string[];
-    improvements?: string[];
-    hashtags?: string[];
-    optimalPostingTimes?: string[];
-    estimatedReach?: number;
-    competitorAnalysis?: string[];
-  };
+  contentIdeas?: ContentIdea[];
+  optimizedContent?: Record<string, string>;
+  recommendations?: ContentIdea[];
   engagement?: {
     likes?: number;
     shares?: number;
     comments?: number;
     views?: number;
-    saves?: number;
-    clicks?: number;
-  };
-  stats?: {
-    views: number;
-    engagement: number;
-    shares: number;
     saves?: number;
     clicks?: number;
   };
@@ -129,6 +151,9 @@ export interface Content {
     conversionRate?: number;
     engagementRate?: number;
   };
-  optimizedContent?: Record<string, string>;
-  contentIdeas?: ContentSection[];
+  createdAt: string;
+  updatedAt: string;
 }
+
+// Type alias for backward compatibility
+export type Content = ContentData;

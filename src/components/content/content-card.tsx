@@ -142,28 +142,20 @@ export const ContentCard = ({ content }: ContentCardProps) => (
           {/* Footer */}
           <div className='flex items-center justify-between pt-2 border-t'>
             <div className='flex items-center gap-2'>
-              {(content.author?.avatar || content.userId) && (
+              {content.author?.avatar && (
                 <Avatar
                   src={content.author?.avatar}
-                  name={
-                    content.author?.name || content.userId?.name || 'Author'
-                  }
+                  name={content.author?.name || 'Author'}
                 />
               )}
               <span className='text-xs text-gray-500'>
-                {content.author?.name ||
-                  content.userId?.name ||
-                  'Unknown Author'}
+                {content.author?.name || 'Unknown Author'}
               </span>
             </div>
             <div className='flex items-center gap-2 text-xs text-gray-500'>
               <Calendar className='w-3 h-3' />
-              {content.publishedDate || content.metadata?.publishedDate
-                ? formatDate(
-                    content.publishedDate ||
-                      content.metadata?.publishedDate ||
-                      ''
-                  )
+              {content.metadata?.publishedDate
+                ? formatDate(content.metadata.publishedDate)
                 : formatDate(content.createdAt)}
             </div>
           </div>

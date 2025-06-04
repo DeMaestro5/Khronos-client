@@ -10,7 +10,6 @@ import {
 } from '../../types/modal';
 import {
   FileText,
-  Image,
   Video,
   Instagram,
   Twitter,
@@ -20,6 +19,9 @@ import {
   Hash,
   Tag,
   X,
+  Mail,
+  Podcast,
+  Share,
 } from 'lucide-react';
 import { Modal } from '../modal';
 import AISuggestionButton from '../ai/ai-suggestion-button';
@@ -34,11 +36,12 @@ export default function CreateContentModal({
   isOpen,
   onClose,
   onSubmit,
+  isCreating = false,
 }: CreateContentModalProps) {
   const [formData, setFormData] = useState<ContentFormData>({
     title: '',
     description: '',
-    contentType: 'post',
+    contentType: 'article',
     platforms: [],
     scheduledDate: '',
     scheduledTime: '',
@@ -56,7 +59,7 @@ export default function CreateContentModal({
       setFormData({
         title: '',
         description: '',
-        contentType: 'post',
+        contentType: 'article',
         platforms: [],
         scheduledDate: '',
         scheduledTime: '',
@@ -88,13 +91,13 @@ export default function CreateContentModal({
     }));
   };
 
-  // AI Suggestion Generation
-
   const contentTypes: ContentType[] = [
-    { id: 'post', label: 'Social Post', icon: FileText },
-    { id: 'story', label: 'Story', icon: Image },
-    { id: 'video', label: 'Video', icon: Video },
     { id: 'article', label: 'Article', icon: FileText },
+    { id: 'blog_post', label: 'Blog Post', icon: FileText },
+    { id: 'video', label: 'Video', icon: Video },
+    { id: 'social', label: 'Social Post', icon: Share },
+    { id: 'podcast', label: 'Podcast', icon: Podcast },
+    { id: 'newsletter', label: 'Newsletter', icon: Mail },
   ];
 
   const platforms: Platform[] = [
@@ -142,12 +145,12 @@ export default function CreateContentModal({
     { id: 'high', label: 'High', color: 'bg-red-500' },
   ];
 
-  const handleInputChange = <K extends keyof ContentFormData>(
-    field: K,
-    value: ContentFormData[K]
+  const handleInputChange = (
+    field: keyof ContentFormData,
+    value: string | string[]
   ) => {
     setFormData((prev) => ({ ...prev, [field]: value }));
-    if (errors[field]) {
+    if (field in errors) {
       setErrors((prev) => ({ ...prev, [field]: undefined }));
     }
   };
@@ -192,22 +195,10 @@ export default function CreateContentModal({
       newErrors.title = 'Title is required';
     }
 
-    if (!formData.description.trim()) {
-      newErrors.description = 'Description is required';
-    }
-
     if (formData.platforms.length === 0) {
       newErrors.platforms = [
         'Select at least one platform',
       ] as unknown as Platform['id'][];
-    }
-
-    if (!formData.scheduledDate) {
-      newErrors.scheduledDate = 'Scheduled date is required';
-    }
-
-    if (!formData.scheduledTime) {
-      newErrors.scheduledTime = 'Scheduled time is required';
     }
 
     setErrors(newErrors);
@@ -217,14 +208,13 @@ export default function CreateContentModal({
   const handleSubmit = (e: React.MouseEvent<HTMLButtonElement>) => {
     e.preventDefault();
 
-    if (validateForm()) {
+    if (!isCreating && validateForm()) {
       const contentItem: ContentItem = {
         ...formData,
         id: Date.now(), // Generate a temporary ID
         createdAt: new Date().toISOString(),
       };
       onSubmit(contentItem);
-      onClose();
     }
   };
 
@@ -259,7 +249,7 @@ export default function CreateContentModal({
 
             <div>
               <label className='block text-sm font-medium text-slate-300 mb-2'>
-                Description *
+                Description
               </label>
               <textarea
                 value={formData.description}
@@ -270,7 +260,7 @@ export default function CreateContentModal({
                 className={`w-full px-4 py-3 bg-slate-700/50 border ${
                   errors.description ? 'border-red-500' : 'border-slate-600'
                 } rounded-xl text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all duration-200 resize-none`}
-                placeholder='Describe your content...'
+                placeholder='Describe your content... (AI will generate if left empty)'
               />
               {errors.description && (
                 <p className='text-red-400 text-sm mt-1'>
@@ -285,7 +275,7 @@ export default function CreateContentModal({
             <label className='block text-sm font-medium text-slate-300 mb-3'>
               Content Type
             </label>
-            <div className='grid grid-cols-2 md:grid-cols-4 gap-3'>
+            <div className='grid grid-cols-2 md:grid-cols-3 gap-3'>
               {contentTypes.map((type) => {
                 const Icon = type.icon;
                 return (
@@ -346,7 +336,7 @@ export default function CreateContentModal({
           <div className='grid grid-cols-1 md:grid-cols-2 gap-4'>
             <div>
               <label className='block text-sm font-medium text-slate-300 mb-2'>
-                Scheduled Date *
+                Scheduled Date
               </label>
               <input
                 type='date'
@@ -367,7 +357,7 @@ export default function CreateContentModal({
 
             <div>
               <label className='block text-sm font-medium text-slate-300 mb-2'>
-                Scheduled Time *
+                Scheduled Time
               </label>
               <input
                 type='time'
@@ -461,16 +451,29 @@ export default function CreateContentModal({
             <button
               type='button'
               onClick={onClose}
-              className='px-6 py-3 bg-slate-700 hover:bg-slate-600 rounded-xl text-white transition-colors duration-200'
+              disabled={isCreating}
+              className={`px-6 py-3 rounded-xl text-white transition-colors duration-200 ${
+                isCreating
+                  ? 'bg-slate-800 cursor-not-allowed opacity-50'
+                  : 'bg-slate-700 hover:bg-slate-600'
+              }`}
             >
               Cancel
             </button>
             <button
               type='button'
               onClick={handleSubmit}
-              className='px-6 py-3 bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-500 hover:to-pink-500 rounded-xl text-white font-medium transition-all duration-200'
+              disabled={isCreating}
+              className={`px-6 py-3 rounded-xl text-white font-medium transition-all duration-200 flex items-center space-x-2 ${
+                isCreating
+                  ? 'bg-slate-600 cursor-not-allowed opacity-75'
+                  : 'bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-500 hover:to-pink-500'
+              }`}
             >
-              Create Content
+              {isCreating && (
+                <div className='animate-spin rounded-full h-4 w-4 border-2 border-white border-t-transparent'></div>
+              )}
+              <span>{isCreating ? 'Creating...' : 'Create Content'}</span>
             </button>
           </div>
         </div>

@@ -1,6 +1,5 @@
 import { ReactNode } from 'react';
-
-type LucideIcon = React.ComponentType<{ className?: string }>;
+import { LucideIcon } from 'lucide-react';
 
 export interface ModalProps {
   isOpen: boolean;
@@ -11,12 +10,6 @@ export interface ModalProps {
   showCloseButton?: boolean;
   closeOnOverlayClick?: boolean;
   closeOnEscape?: boolean;
-}
-
-export interface ContentType {
-  id: 'post' | 'story' | 'video' | 'article';
-  label: string;
-  icon: LucideIcon;
 }
 
 export interface Platform {
@@ -30,6 +23,12 @@ export interface Priority {
   id: 'low' | 'medium' | 'high';
   label: string;
   color: string;
+}
+
+export interface ContentType {
+  id: 'article' | 'video' | 'social' | 'podcast' | 'newsletter' | 'blog_post';
+  label: string;
+  icon: LucideIcon;
 }
 
 export interface ContentFormData {
@@ -49,10 +48,20 @@ export interface ContentItem extends ContentFormData {
   createdAt: string;
 }
 
-export type FormErrors = Partial<ContentFormData>;
+export interface FormErrors {
+  title?: string;
+  description?: string;
+  contentType?: string;
+  platforms?: Platform['id'][];
+  scheduledDate?: string;
+  scheduledTime?: string;
+  tags?: string[];
+  priority?: string;
+}
 
 export interface CreateContentModalProps {
   isOpen: boolean;
   onClose: () => void;
   onSubmit: (data: ContentFormData) => void;
+  isCreating?: boolean;
 }
