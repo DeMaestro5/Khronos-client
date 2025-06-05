@@ -63,5 +63,4 @@ export interface CreateContentModalProps {
   isOpen: boolean;
   onClose: () => void;
   onSubmit: (data: ContentFormData) => void;
-  isCreating?: boolean;
 }

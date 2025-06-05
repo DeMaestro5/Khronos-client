@@ -3,13 +3,15 @@
 import React, { useState, useEffect } from 'react';
 import { Search, Filter, Grid3X3, List, Plus, FileText } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
+import toast from 'react-hot-toast';
+import confetti from 'canvas-confetti';
 import { Content, ContentStatus, ContentType } from '@/src/types/content';
 import { ContentCard } from '@/src/components/content/content-card';
 import { ContentListItem } from '@/src/components/content/content-list-items';
 import CreateContentModal from '@/src/components/content/content-creation-modal';
 import { ContentFormData } from '@/src/types/modal';
 import { contentAPI } from '@/src/lib/api';
-import AuthDebug from '@/src/components/debug/AuthDebug';
+// import AuthDebug from '@/src/components/debug/AuthDebug';
 
 type ViewMode = 'grid' | 'list';
 type FilterType = 'all' | ContentStatus | ContentType;
@@ -32,7 +34,6 @@ export default function ContentPage() {
   const [isLoading, setIsLoading] = useState(true);
   const [showFilters, setShowFilters] = useState(false);
   const [showModal, setShowModal] = useState(false);
-  const [isCreating, setIsCreating] = useState(false);
 
   useEffect(() => {
     const fetchContents = async () => {
@@ -84,19 +85,96 @@ export default function ContentPage() {
     fetchContents();
   }, []);
 
+  // Celebratory confetti function
+  const celebrateWithConfetti = () => {
+    // First burst - colorful confetti from center
+    confetti({
+      particleCount: 100,
+      spread: 70,
+      origin: { y: 0.6 },
+      colors: [
+        '#667eea',
+        '#764ba2',
+        '#f093fb',
+        '#f5576c',
+        '#4facfe',
+        '#00f2fe',
+      ],
+    });
+
+    // Second burst - stars from left
+    setTimeout(() => {
+      confetti({
+        particleCount: 50,
+        angle: 60,
+        spread: 55,
+        origin: { x: 0, y: 0.8 },
+        colors: ['#ffd700', '#ffed4e', '#ff6b6b', '#4ecdc4'],
+        shapes: ['star'],
+      });
+    }, 250);
+
+    // Third burst - stars from right
+    setTimeout(() => {
+      confetti({
+        particleCount: 50,
+        angle: 120,
+        spread: 55,
+        origin: { x: 1, y: 0.8 },
+        colors: ['#ffd700', '#ffed4e', '#ff6b6b', '#4ecdc4'],
+        shapes: ['star'],
+      });
+    }, 400);
+
+    // Fourth burst - glitter rain
+    setTimeout(() => {
+      confetti({
+        particleCount: 150,
+        spread: 180,
+        startVelocity: 45,
+        scalar: 0.8,
+        origin: { y: 0.1 },
+        colors: [
+          '#667eea',
+          '#764ba2',
+          '#f093fb',
+          '#f5576c',
+          '#ffd700',
+          '#4facfe',
+        ],
+      });
+    }, 600);
+  };
+
   const handleCreateContent = async (contentData: ContentFormData) => {
-    setIsCreating(true);
+    // Validate required fields first
+    if (!contentData.title.trim()) {
+      toast.error('Content title is required');
+      return;
+    }
+
+    if (contentData.platforms.length === 0) {
+      toast.error('Please select at least one platform');
+      return;
+    }
+
+    // Close modal immediately and reset states
+    setShowModal(false);
+
+    // Show creating toast with loading indicator
+    const creatingToastId = toast.loading(
+      '🚀 Creating your content... AI is working its magic!',
+      {
+        style: {
+          background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+          color: 'white',
+          border: 'none',
+          fontWeight: '500',
+        },
+      }
+    );
 
     try {
-      // Validate required fields
-      if (!contentData.title.trim()) {
-        throw new Error('Content title is required');
-      }
-
-      if (contentData.platforms.length === 0) {
-        throw new Error('Please select at least one platform');
-      }
-
       // Prepare the payload according to the server schema
       const newContentPayload: ContentCreatePayload = {
         title: contentData.title.trim(),
@@ -137,11 +215,29 @@ export default function ContentPage() {
         response.status === 200 ||
         response.status === 201
       ) {
-        // Show success notification (you can replace this with a toast notification)
-        alert('Content created successfully!');
+        // Dismiss the creating toast
+        toast.dismiss(creatingToastId);
 
-        // Close the modal
-        setShowModal(false);
+        // Show celebratory success toast
+        toast.success(
+          '🎉 Content created successfully! Your masterpiece is ready!',
+          {
+            duration: 5000,
+            style: {
+              background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+              color: 'white',
+              border: 'none',
+              fontWeight: '500',
+              fontSize: '16px',
+            },
+            icon: '✨',
+          }
+        );
+
+        // Celebrate with confetti immediately after toast
+        setTimeout(() => {
+          celebrateWithConfetti();
+        }, 100);
 
         // Refresh the content list to show the new content
         const refreshResponse = await contentAPI.getAll();
@@ -159,6 +255,9 @@ export default function ContentPage() {
     } catch (error: unknown) {
       console.error('Failed to create content:', error);
 
+      // Dismiss the creating toast
+      toast.dismiss(creatingToastId);
+
       // Show error notification with specific message
       let errorMessage = 'Failed to create content. Please try again.';
 
@@ -175,10 +274,26 @@ export default function ContentPage() {
         errorMessage = axiosError.response?.data?.message || errorMessage;
       }
 
-      alert(`Error: ${errorMessage}`);
-    } finally {
-      setIsCreating(false);
+      toast.error(`❌ ${errorMessage}`, {
+        duration: 6000,
+        style: {
+          background: '#ef4444',
+          color: 'white',
+          border: 'none',
+          fontWeight: '500',
+        },
+      });
     }
+  };
+
+  const handleContentDeleted = (deletedContentId: string) => {
+    // Remove the deleted content from both contents and filteredContents arrays
+    setContents((prev) =>
+      prev.filter((content) => content._id !== deletedContentId)
+    );
+    setFilteredContents((prev) =>
+      prev.filter((content) => content._id !== deletedContentId)
+    );
   };
 
   useEffect(() => {
@@ -211,12 +326,30 @@ export default function ContentPage() {
 
   if (isLoading) {
     return (
-      <div className='p-6'>
-        <div className='animate-pulse space-y-6'>
-          <div className='h-8 bg-gray-200 rounded w-64'></div>
-          <div className='grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6'>
-            {[...Array(6)].map((_, i) => (
-              <div key={i} className='h-64 bg-gray-200 rounded-lg'></div>
+      <div className='p-3 sm:p-4 lg:p-6'>
+        <div className='animate-pulse space-y-4 sm:space-y-6'>
+          {/* Header skeleton */}
+          <div className='space-y-3'>
+            <div className='h-6 sm:h-8 bg-gray-200 rounded w-48 sm:w-64'></div>
+            <div className='h-4 bg-gray-200 rounded w-64 sm:w-80'></div>
+          </div>
+
+          {/* Controls skeleton */}
+          <div className='flex flex-col space-y-3 md:flex-row md:space-y-0 gap-3 sm:gap-4'>
+            <div className='h-10 sm:h-12 bg-gray-200 rounded flex-1'></div>
+            <div className='flex gap-2'>
+              <div className='h-10 sm:h-12 w-20 sm:w-24 bg-gray-200 rounded'></div>
+              <div className='h-10 sm:h-12 w-20 bg-gray-200 rounded'></div>
+            </div>
+          </div>
+
+          {/* Content grid skeleton */}
+          <div className='grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 sm:gap-6'>
+            {[...Array(8)].map((_, i) => (
+              <div
+                key={i}
+                className='h-48 sm:h-64 bg-gray-200 rounded-lg'
+              ></div>
             ))}
           </div>
         </div>
@@ -225,19 +358,21 @@ export default function ContentPage() {
   }
 
   return (
-    <div className='p-6 space-y-6'>
+    <div className='p-3 sm:p-4 lg:p-6 space-y-4 sm:space-y-6'>
       {/* Header */}
-      <div className='flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4'>
-        <div>
-          <h1 className='text-2xl font-bold text-gray-900'>Content Library</h1>
-          <p className='text-gray-600'>
+      <div className='flex flex-col space-y-3 sm:space-y-4 lg:flex-row lg:items-center lg:justify-between lg:space-y-0 gap-4'>
+        <div className='text-center sm:text-left'>
+          <h1 className='text-xl sm:text-2xl lg:text-3xl font-bold text-gray-900'>
+            Content Library
+          </h1>
+          <p className='text-sm sm:text-base text-gray-600 mt-1'>
             Manage and organize all your content in one place
           </p>
         </div>
 
         <button
           onClick={() => setShowModal(true)}
-          className='group flex items-center justify-center space-x-2 px-4 sm:px-6 py-2 sm:py-3 bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-500 hover:to-pink-500 rounded-xl sm:rounded-2xl text-white font-medium transition-all duration-300 hover:scale-105 hover:shadow-lg hover:shadow-purple-500/50'
+          className='group flex items-center justify-center space-x-2 px-4 sm:px-6 py-2.5 sm:py-3 bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-500 hover:to-pink-500 rounded-xl sm:rounded-2xl text-white font-medium transition-all duration-300 hover:scale-105 hover:shadow-lg hover:shadow-purple-500/50 w-full sm:w-auto'
         >
           <Plus className='h-4 w-4 sm:h-5 sm:w-5 group-hover:rotate-90 transition-transform duration-300' />
           <span className='text-sm sm:text-base'>Create Content</span>
@@ -245,52 +380,54 @@ export default function ContentPage() {
       </div>
 
       {/* Controls */}
-      <div className='flex flex-col sm:flex-row gap-4'>
+      <div className='flex flex-col space-y-3 sm:space-y-4 md:flex-row md:space-y-0 gap-3 sm:gap-4'>
         {/* Search */}
         <div className='relative flex-1'>
-          <Search className='absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-900' />
+          <Search className='absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400' />
           <input
             type='text'
             placeholder='Search content...'
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className='w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 text-gray-900 focus:ring-blue-500 focus:border-transparent placeholder:text-gray-500'
+            className='w-full pl-10 pr-4 py-2.5 sm:py-2 border border-gray-300 rounded-lg focus:ring-2 text-gray-900 focus:ring-blue-500 focus:border-transparent placeholder:text-gray-500 text-sm sm:text-base'
           />
         </div>
 
-        {/* Filters */}
-        <div className='flex items-center gap-2'>
+        {/* Filters and View Toggle */}
+        <div className='flex items-center gap-2 sm:gap-3'>
           <button
             onClick={() => setShowFilters(!showFilters)}
-            className={`flex items-center gap-2 px-3 py-2 border rounded-lg transition-colors text-gray-500 ${
+            className={`flex items-center gap-2 px-3 sm:px-4 py-2.5 sm:py-2 border rounded-lg transition-colors text-sm sm:text-base ${
               showFilters
                 ? 'bg-blue-50 border-blue-200 text-blue-700'
-                : 'border-gray-300 hover:bg-gray-50'
+                : 'border-gray-300 hover:bg-gray-50 text-gray-600'
             }`}
           >
-            <Filter className='w-4 h-4 text-gray-500' />
-            Filter
+            <Filter className='w-4 h-4' />
+            <span className='hidden sm:inline'>Filter</span>
           </button>
 
           {/* View Mode Toggle */}
           <div className='flex border border-gray-300 rounded-lg overflow-hidden'>
             <button
               onClick={() => setViewMode('grid')}
-              className={`p-2 transition-colors text-gray-500 ${
+              className={`p-2 sm:p-2.5 transition-colors ${
                 viewMode === 'grid'
                   ? 'bg-blue-600 text-white'
-                  : 'hover:bg-gray-50'
+                  : 'hover:bg-gray-50 text-gray-500'
               }`}
+              title='Grid View'
             >
               <Grid3X3 className='w-4 h-4' />
             </button>
             <button
               onClick={() => setViewMode('list')}
-              className={`p-2 transition-colors text-gray-500 ${
+              className={`p-2 sm:p-2.5 transition-colors ${
                 viewMode === 'list'
                   ? 'bg-blue-600 text-white'
-                  : 'hover:bg-gray-50'
+                  : 'hover:bg-gray-50 text-gray-500'
               }`}
+              title='List View'
             >
               <List className='w-4 h-4' />
             </button>
@@ -303,14 +440,14 @@ export default function ContentPage() {
         <motion.div
           initial={{ opacity: 0, y: -10 }}
           animate={{ opacity: 1, y: 0 }}
-          className='p-4 bg-gray-50 rounded-lg'
+          className='p-3 sm:p-4 bg-gray-50 rounded-lg'
         >
           <div className='flex flex-wrap gap-2'>
             <button
               onClick={() => setSelectedFilter('all')}
-              className={`px-3 py-1 rounded-full text-sm transition-colors ${
+              className={`px-3 py-1.5 rounded-full text-xs sm:text-sm transition-colors ${
                 selectedFilter === 'all'
-                  ? 'bg-blue-600 text-gray-900'
+                  ? 'bg-blue-600 text-white'
                   : 'bg-white text-gray-700 hover:bg-gray-100'
               }`}
             >
@@ -320,9 +457,9 @@ export default function ContentPage() {
               <button
                 key={status}
                 onClick={() => setSelectedFilter(status)}
-                className={`px-3 py-1 rounded-full text-sm transition-colors ${
+                className={`px-3 py-1.5 rounded-full text-xs sm:text-sm transition-colors ${
                   selectedFilter === status
-                    ? 'bg-blue-600 text-gray-900'
+                    ? 'bg-blue-600 text-white'
                     : 'bg-white text-gray-700 hover:bg-gray-100'
                 }`}
               >
@@ -333,9 +470,9 @@ export default function ContentPage() {
               <button
                 key={type}
                 onClick={() => setSelectedFilter(type)}
-                className={`px-3 py-1 rounded-full text-sm transition-colors ${
+                className={`px-3 py-1.5 rounded-full text-xs sm:text-sm transition-colors ${
                   selectedFilter === type
-                    ? 'bg-blue-600 text-gray-900'
+                    ? 'bg-blue-600 text-white'
                     : 'bg-white text-gray-700 hover:bg-gray-100'
                 }`}
               >
@@ -348,7 +485,7 @@ export default function ContentPage() {
 
       {/* Content Count */}
       <div className='flex items-center justify-between'>
-        <p className='text-sm text-gray-600'>
+        <p className='text-xs sm:text-sm text-gray-600'>
           Showing {filteredContents.length} of {contents.length} content items
         </p>
       </div>
@@ -359,16 +496,16 @@ export default function ContentPage() {
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
-            className='text-center py-12'
+            className='text-center py-8 sm:py-12'
           >
-            <div className='max-w-md mx-auto'>
-              <div className='w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4'>
-                <FileText className='w-8 h-8 text-gray-400' />
+            <div className='max-w-md mx-auto px-4'>
+              <div className='w-12 h-12 sm:w-16 sm:h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4'>
+                <FileText className='w-6 h-6 sm:w-8 sm:h-8 text-gray-400' />
               </div>
-              <h3 className='text-lg font-medium text-gray-900 mb-2'>
+              <h3 className='text-base sm:text-lg font-medium text-gray-900 mb-2'>
                 No content found
               </h3>
-              <p className='text-gray-600 mb-4'>
+              <p className='text-sm sm:text-base text-gray-600 mb-4'>
                 {searchQuery || selectedFilter !== 'all'
                   ? 'Try adjusting your search or filters'
                   : 'Get started by creating your first piece of content'}
@@ -380,11 +517,15 @@ export default function ContentPage() {
             key='grid'
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
-            className='grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6'
+            className='grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 sm:gap-6'
           >
             <AnimatePresence>
               {filteredContents.map((content) => (
-                <ContentCard key={content._id} content={content} />
+                <ContentCard
+                  key={content._id}
+                  content={content}
+                  onContentDeleted={handleContentDeleted}
+                />
               ))}
             </AnimatePresence>
           </motion.div>
@@ -393,7 +534,7 @@ export default function ContentPage() {
             key='list'
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
-            className='space-y-4'
+            className='space-y-3 sm:space-y-4'
           >
             <AnimatePresence>
               {filteredContents.map((content) => (
@@ -403,15 +544,12 @@ export default function ContentPage() {
           </motion.div>
         )}
       </AnimatePresence>
+
       <CreateContentModal
         isOpen={showModal}
-        onClose={() => !isCreating && setShowModal(false)}
+        onClose={() => setShowModal(false)}
         onSubmit={handleCreateContent}
-        isCreating={isCreating}
       />
-
-      {/* Debug Component - Remove in production */}
-      <AuthDebug />
     </div>
   );
 }

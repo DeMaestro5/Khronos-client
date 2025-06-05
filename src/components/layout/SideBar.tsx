@@ -60,7 +60,7 @@ export default function Sidebar() {
   const navigation = [
     { name: 'Dashboard', href: '/dashboard', icon: <FiHome /> },
     { name: 'Calendar', href: '/calendar', icon: <FiCalendar /> },
-    { name: 'Content', href: '/content', icon: <FiFileText /> },
+    { name: 'Contents', href: '/content', icon: <FiFileText /> },
     { name: 'AI Chat', href: '/ai-chat', icon: <FiMessageSquare /> },
     { name: 'Analytics', href: '/analytics', icon: <FiBarChart2 /> },
     {
