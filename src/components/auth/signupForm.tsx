@@ -15,6 +15,7 @@ import SocialLogin from './SocialsAuth';
 import { useRouter } from 'next/navigation';
 import { AxiosError } from 'axios';
 import { authAPI } from '@/src/lib/api';
+import { AuthUtils } from '@/src/lib/auth-utils';
 
 interface SignupFormProps {
   formData: {
@@ -117,7 +118,13 @@ export default function SignupForm({
       console.log('Signup Response:', response.data);
 
       if (response.data.data?.tokens) {
-        localStorage.setItem('token', response.data.data.tokens.accessToken);
+        AuthUtils.storeTokens(response.data.data.tokens);
+
+        // Store user data if available
+        if (response.data.data.user) {
+          AuthUtils.storeUser(response.data.data.user);
+        }
+
         router.replace('/dashboard');
       } else if (response.data.data?.user) {
         router.replace('/verify-email');

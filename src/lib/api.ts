@@ -1,7 +1,8 @@
 // src/lib/api.ts
-import axios from 'axios';
+import axios, { AxiosError, InternalAxiosRequestConfig } from 'axios';
 import { Content } from '../types/content';
 import { AIChatMessage } from '../types/ai';
+import { AuthUtils } from './auth-utils';
 
 interface ContentCreateRequest {
   title: string;
@@ -11,6 +12,25 @@ interface ContentCreateRequest {
   tags?: string[];
   scheduledDate?: string;
 }
+
+// Track if we're currently refreshing to avoid multiple refresh attempts
+let isRefreshing = false;
+let failedQueue: Array<{
+  resolve: (value?: unknown) => void;
+  reject: (error?: unknown) => void;
+}> = [];
+
+const processQueue = (error: AxiosError | null) => {
+  failedQueue.forEach(({ resolve, reject }) => {
+    if (error) {
+      reject(error);
+    } else {
+      resolve();
+    }
+  });
+
+  failedQueue = [];
+};
 
 // Create axios instance with base configuration
 const api = axios.create({
@@ -23,10 +43,9 @@ const api = axios.create({
 
 // Request interceptor for adding auth token
 api.interceptors.request.use(
-  (config) => {
-    // Get token from local storage
-    const token =
-      typeof window !== 'undefined' ? localStorage.getItem('token') : null;
+  (config: InternalAxiosRequestConfig) => {
+    // Get token from AuthUtils instead of localStorage directly
+    const token = AuthUtils.getAccessToken();
 
     // If token exists, add it to request headers
     if (token) {
@@ -38,21 +57,113 @@ api.interceptors.request.use(
   (error) => Promise.reject(error)
 );
 
-// Response interceptor for handling errors
+// Response interceptor for handling errors and automatic token refresh
 api.interceptors.response.use(
   (response) => response,
-  (error) => {
+  async (error: AxiosError) => {
+    const originalRequest = error.config as InternalAxiosRequestConfig & {
+      _retry?: boolean;
+    };
+
     // Handle authentication errors
-    if (error.response?.status === 401) {
-      // Only redirect to login if we're not already on the login page
-      // and the error is not from a login attempt
+    if (error.response?.status === 401 && originalRequest) {
+      // Avoid infinite refresh loops
+      if (originalRequest._retry) {
+        AuthUtils.clearTokens();
+        if (typeof window !== 'undefined') {
+          window.location.href = '/auth/login';
+        }
+        return Promise.reject(error);
+      }
+
+      // Don't try to refresh token for login/signup requests
       if (
-        typeof window !== 'undefined' &&
-        !window.location.pathname.includes('/auth/login') &&
-        !error.config.url.includes('/api/v1/login')
+        originalRequest.url?.includes('/api/v1/login') ||
+        originalRequest.url?.includes('/api/v1/signup') ||
+        originalRequest.url?.includes('/api/v1/token/refresh-token')
       ) {
-        localStorage.removeItem('token');
-        window.location.href = '/auth/login';
+        return Promise.reject(error);
+      }
+
+      // If we have a refresh token, try to refresh
+      const refreshToken = AuthUtils.getRefreshToken();
+      if (refreshToken && !isRefreshing) {
+        if (isRefreshing) {
+          // If already refreshing, queue this request
+          return new Promise((resolve, reject) => {
+            failedQueue.push({ resolve, reject });
+          })
+            .then(() => {
+              originalRequest.headers.Authorization = `Bearer ${AuthUtils.getAccessToken()}`;
+              return api(originalRequest);
+            })
+            .catch((err) => {
+              return Promise.reject(err);
+            });
+        }
+
+        originalRequest._retry = true;
+        isRefreshing = true;
+
+        try {
+          console.log('Attempting to refresh access token...');
+
+          // Create a separate axios instance for refresh to avoid interceptors
+          const refreshResponse = await axios.post(
+            `${
+              process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000'
+            }/api/v1/token/refresh-token`,
+            { refreshToken },
+            {
+              headers: {
+                'Content-Type': 'application/json',
+                'x-api-key': process.env.NEXT_PUBLIC_API_KEY,
+              },
+            }
+          );
+
+          if (refreshResponse.data?.data?.tokens) {
+            const newTokens = refreshResponse.data.data.tokens;
+            AuthUtils.storeTokens(newTokens);
+
+            // Update the authorization header
+            originalRequest.headers.Authorization = `Bearer ${newTokens.accessToken}`;
+
+            processQueue(null);
+
+            console.log('Access token refreshed successfully');
+
+            // Retry the original request
+            return api(originalRequest);
+          } else {
+            throw new Error('Invalid refresh response');
+          }
+        } catch (refreshError) {
+          console.error('Token refresh failed:', refreshError);
+          processQueue(refreshError as AxiosError);
+          AuthUtils.clearTokens();
+
+          // Only redirect to login if we're not already on the login page
+          if (
+            typeof window !== 'undefined' &&
+            !window.location.pathname.includes('/auth/login')
+          ) {
+            window.location.href = '/auth/login';
+          }
+
+          return Promise.reject(refreshError);
+        } finally {
+          isRefreshing = false;
+        }
+      } else {
+        // No refresh token available, redirect to login
+        AuthUtils.clearTokens();
+        if (
+          typeof window !== 'undefined' &&
+          !window.location.pathname.includes('/auth/login')
+        ) {
+          window.location.href = '/auth/login';
+        }
       }
     }
 
@@ -76,6 +187,20 @@ export const authAPI = {
     });
   },
 
+  refreshToken: (refreshToken: string) =>
+    api.post('/api/v1/token/refresh-token', { refreshToken }),
+
+  logout: () => {
+    const refreshToken = AuthUtils.getRefreshToken();
+    if (refreshToken) {
+      // Optional: notify server about logout
+      api.post('/api/v1/logout', { refreshToken }).catch(() => {
+        // Ignore logout errors
+      });
+    }
+    AuthUtils.clearTokens();
+  },
+
   forgotPassword: (email: string) =>
     api.post('/api/v1/forgot-password', { email }),
 };
@@ -83,6 +208,62 @@ export const authAPI = {
 // Content API methods
 export const contentAPI = {
   getAll: (filters = {}) => api.get('/api/v1/content', { params: filters }),
+
+  getAllByUser: (userId?: string, filters = {}) => {
+    const currentUserId = userId || AuthUtils.getUserId();
+    if (!currentUserId) {
+      console.warn('No user ID available for content filtering');
+      return Promise.resolve({
+        data: {
+          statusCode: '10000',
+          message: 'No user authenticated',
+          data: [],
+        },
+      });
+    }
+    // Use the correct backend endpoint: /api/v1/content/user/:userId
+    return api.get(`/api/v1/content/user/${currentUserId}`, {
+      params: filters,
+    });
+  },
+
+  getUserContent: async (filters = {}) => {
+    const userId = AuthUtils.getUserId();
+    if (!userId) {
+      console.warn('No user ID available for content filtering');
+      // Return empty response structure to match expected format
+      return Promise.resolve({
+        data: {
+          statusCode: '10000',
+          message: 'No user authenticated',
+          data: [],
+        },
+      });
+    }
+
+    console.log('Fetching user content for userId:', userId);
+
+    // Use the correct backend endpoint: /api/v1/content/user/:userId
+    try {
+      return await api.get(`/api/v1/content/user/${userId}`, {
+        params: filters,
+      });
+    } catch (error) {
+      console.error('Failed to fetch user content:', error);
+      // If there's an error, return empty array rather than all content
+      return Promise.resolve({
+        data: {
+          statusCode: '10000',
+          message: 'Failed to fetch user content',
+          data: [],
+        },
+      });
+    }
+  },
+
+  getMyContent: (filters = {}) => {
+    return contentAPI.getUserContent(filters);
+  },
 
   getById: (id: string) => api.get(`/api/v1/content/${id}`),
 

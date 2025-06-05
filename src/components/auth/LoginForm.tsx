@@ -4,6 +4,7 @@ import { useState, ChangeEvent, MouseEvent } from 'react';
 import { Button } from '../ui/button';
 import { Input } from '../ui/input';
 import { authAPI } from '@/src/lib/api';
+import { AuthUtils } from '@/src/lib/auth-utils';
 import { AxiosError } from 'axios';
 import { useRouter } from 'next/navigation';
 
@@ -58,7 +59,14 @@ export default function LoginForm() {
 
       // Handle success
       if (response.data.data?.tokens) {
-        localStorage.setItem('token', response.data.data.tokens.accessToken);
+        // Use AuthUtils to store tokens and user data properly
+        AuthUtils.storeTokens(response.data.data.tokens);
+
+        // Store user data if available
+        if (response.data.data.user) {
+          AuthUtils.storeUser(response.data.data.user);
+        }
+
         router.replace('/dashboard');
         // Force a refresh to ensure the new auth state is picked up
         window.location.href = '/dashboard';

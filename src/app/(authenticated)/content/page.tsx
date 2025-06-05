@@ -11,6 +11,7 @@ import { ContentListItem } from '@/src/components/content/content-list-items';
 import CreateContentModal from '@/src/components/content/content-creation-modal';
 import { ContentFormData } from '@/src/types/modal';
 import { contentAPI } from '@/src/lib/api';
+import { AuthUtils } from '@/src/lib/auth-utils';
 // import AuthDebug from '@/src/components/debug/AuthDebug';
 
 type ViewMode = 'grid' | 'list';
@@ -39,17 +40,23 @@ export default function ContentPage() {
     const fetchContents = async () => {
       setIsLoading(true);
       try {
-        // Debug: Check if token exists
-        const token = localStorage.getItem('token');
-        console.log('Token exists:', !!token);
+        // Debug: Check if valid tokens exist using AuthUtils
+        const hasValidTokens = AuthUtils.hasValidTokens();
+        const currentUser = AuthUtils.getUser();
+        const userId = AuthUtils.getUserId();
+        console.log('Has valid tokens:', hasValidTokens);
+        console.log('Current user:', currentUser);
+        console.log('User ID from getUserId():', userId);
+        console.log('User object id field:', currentUser?.id);
+        console.log('User object _id field:', currentUser?._id);
 
-        if (!token) {
-          console.error('No authentication token found');
+        if (!hasValidTokens) {
+          console.error('No valid authentication tokens found');
           window.location.href = '/auth/login';
           return;
         }
 
-        const response = await contentAPI.getAll();
+        const response = await contentAPI.getUserContent();
         console.log('Content API Response:', response.data);
 
         if (response.data?.statusCode === '10000' && response.data?.data) {
@@ -68,7 +75,9 @@ export default function ContentPage() {
         };
         if (errorObj?.response?.status === 401) {
           console.error('Authentication failed - redirecting to login');
-          localStorage.removeItem('token');
+          // Automatic token refresh will be handled by axios interceptors
+          // If we get here, it means refresh failed, so clear tokens and redirect
+          AuthUtils.clearTokens();
           window.location.href = '/auth/login';
           return;
         }
@@ -240,10 +249,9 @@ export default function ContentPage() {
         }, 100);
 
         // Refresh the content list to show the new content
-        const refreshResponse = await contentAPI.getAll();
+        const refreshResponse = await contentAPI.getUserContent();
         if (
-          (refreshResponse.data?.statusCode === '10000' ||
-            refreshResponse.status === 200) &&
+          refreshResponse.data?.statusCode === '10000' &&
           refreshResponse.data?.data
         ) {
           setContents(refreshResponse.data.data);
@@ -508,7 +516,7 @@ export default function ContentPage() {
               <p className='text-sm sm:text-base text-gray-600 mb-4'>
                 {searchQuery || selectedFilter !== 'all'
                   ? 'Try adjusting your search or filters'
-                  : 'Get started by creating your first piece of content'}
+                  : 'Get started by creating your first piece of content. You will only see content that you have created.'}
               </p>
             </div>
           </motion.div>
