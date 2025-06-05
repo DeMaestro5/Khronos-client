@@ -12,6 +12,7 @@ import CreateContentModal from '@/src/components/content/content-creation-modal'
 import { ContentFormData } from '@/src/types/modal';
 import { contentAPI } from '@/src/lib/api';
 import { AuthUtils } from '@/src/lib/auth-utils';
+import ContentLoading from '@/src/components/ui/content-loading';
 // import AuthDebug from '@/src/components/debug/AuthDebug';
 
 type ViewMode = 'grid' | 'list';
@@ -333,36 +334,7 @@ export default function ContentPage() {
   }, [contents, searchQuery, selectedFilter]);
 
   if (isLoading) {
-    return (
-      <div className='p-3 sm:p-4 lg:p-6'>
-        <div className='animate-pulse space-y-4 sm:space-y-6'>
-          {/* Header skeleton */}
-          <div className='space-y-3'>
-            <div className='h-6 sm:h-8 bg-gray-200 rounded w-48 sm:w-64'></div>
-            <div className='h-4 bg-gray-200 rounded w-64 sm:w-80'></div>
-          </div>
-
-          {/* Controls skeleton */}
-          <div className='flex flex-col space-y-3 md:flex-row md:space-y-0 gap-3 sm:gap-4'>
-            <div className='h-10 sm:h-12 bg-gray-200 rounded flex-1'></div>
-            <div className='flex gap-2'>
-              <div className='h-10 sm:h-12 w-20 sm:w-24 bg-gray-200 rounded'></div>
-              <div className='h-10 sm:h-12 w-20 bg-gray-200 rounded'></div>
-            </div>
-          </div>
-
-          {/* Content grid skeleton */}
-          <div className='grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 sm:gap-6'>
-            {[...Array(8)].map((_, i) => (
-              <div
-                key={i}
-                className='h-48 sm:h-64 bg-gray-200 rounded-lg'
-              ></div>
-            ))}
-          </div>
-        </div>
-      </div>
-    );
+    return <ContentLoading />;
   }
 
   return (

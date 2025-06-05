@@ -59,7 +59,7 @@ export default function Navbar() {
   };
 
   return (
-    <nav className='relative bg-gradient-to-r from-white via-slate-50/90 to-white/95 backdrop-blur-2xl border-b border-slate-200/60 shadow-lg sticky top-0 z-50'>
+    <nav className=' bg-gradient-to-r from-white via-slate-50/90 to-white/95 backdrop-blur-2xl border-b border-slate-200/60 shadow-lg sticky top-0 z-50'>
       {/* Subtle gradient overlay */}
       <div className='absolute inset-0 bg-gradient-to-r from-indigo-500/5 via-purple-500/5 to-pink-500/5 pointer-events-none'></div>
 

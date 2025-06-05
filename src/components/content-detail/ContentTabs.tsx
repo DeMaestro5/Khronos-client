@@ -17,10 +17,10 @@ export const ContentTabs: React.FC<ContentTabsProps> = ({ content }) => {
   return (
     <div className='bg-white rounded-2xl shadow-sm border border-white/20 overflow-hidden'>
       <div className='border-b border-gray-100'>
-        <div className='flex flex-wrap'>
+        <div className='flex overflow-x-auto scrollbar-hide'>
           <button
             onClick={() => setActiveTab('content')}
-            className={`px-6 py-4 font-medium transition-all duration-200 ${
+            className={`flex-shrink-0 px-4 lg:px-6 py-4 font-medium transition-all duration-200 whitespace-nowrap ${
               activeTab === 'content'
                 ? 'text-blue-600 border-b-2 border-blue-600 bg-blue-50/50'
                 : 'text-gray-600 hover:text-gray-900 hover:bg-gray-50'
@@ -34,7 +34,7 @@ export const ContentTabs: React.FC<ContentTabsProps> = ({ content }) => {
           {content.aiSuggestions && (
             <button
               onClick={() => setActiveTab('ai-suggestions')}
-              className={`px-6 py-4 font-medium transition-all duration-200 ${
+              className={`flex-shrink-0 px-4 lg:px-6 py-4 font-medium transition-all duration-200 whitespace-nowrap ${
                 activeTab === 'ai-suggestions'
                   ? 'text-purple-600 border-b-2 border-purple-600 bg-purple-50/50'
                   : 'text-gray-600 hover:text-gray-900 hover:bg-gray-50'
@@ -49,7 +49,7 @@ export const ContentTabs: React.FC<ContentTabsProps> = ({ content }) => {
           {content.optimizedContent && (
             <button
               onClick={() => setActiveTab('optimized-content')}
-              className={`px-6 py-4 font-medium transition-all duration-200 ${
+              className={`flex-shrink-0 px-4 lg:px-6 py-4 font-medium transition-all duration-200 whitespace-nowrap ${
                 activeTab === 'optimized-content'
                   ? 'text-green-600 border-b-2 border-green-600 bg-green-50/50'
                   : 'text-gray-600 hover:text-gray-900 hover:bg-gray-50'
@@ -64,7 +64,7 @@ export const ContentTabs: React.FC<ContentTabsProps> = ({ content }) => {
           {content.contentIdeas && content.contentIdeas.length > 0 && (
             <button
               onClick={() => setActiveTab('content-ideas')}
-              className={`px-6 py-4 font-medium transition-all duration-200 ${
+              className={`flex-shrink-0 px-4 lg:px-6 py-4 font-medium transition-all duration-200 whitespace-nowrap ${
                 activeTab === 'content-ideas'
                   ? 'text-orange-600 border-b-2 border-orange-600 bg-orange-50/50'
                   : 'text-gray-600 hover:text-gray-900 hover:bg-gray-50'
@@ -78,7 +78,7 @@ export const ContentTabs: React.FC<ContentTabsProps> = ({ content }) => {
           )}
           <button
             onClick={() => setActiveTab('analytics')}
-            className={`px-6 py-4 font-medium transition-all duration-200 ${
+            className={`flex-shrink-0 px-4 lg:px-6 py-4 font-medium transition-all duration-200 whitespace-nowrap ${
               activeTab === 'analytics'
                 ? 'text-indigo-600 border-b-2 border-indigo-600 bg-indigo-50/50'
                 : 'text-gray-600 hover:text-gray-900 hover:bg-gray-50'
