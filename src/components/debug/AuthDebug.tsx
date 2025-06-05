@@ -1,15 +1,27 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import { AuthUtils } from '@/src/lib/auth-utils';
 
 export default function AuthDebug() {
-  const [token, setToken] = useState<string | null>(null);
+  const [tokens, setTokens] = useState<{
+    accessToken: string | null;
+    refreshToken: string | null;
+    expiry: number | null;
+  } | null>(null);
   const [apiUrl, setApiUrl] = useState<string>('');
 
   useEffect(() => {
-    // Get token from localStorage
-    const storedToken = localStorage.getItem('token');
-    setToken(storedToken);
+    // Get tokens from AuthUtils
+    const accessToken = AuthUtils.getAccessToken();
+    const refreshToken = AuthUtils.getRefreshToken();
+    const expiry = AuthUtils.getTokenExpiry();
+
+    setTokens({
+      accessToken,
+      refreshToken,
+      expiry,
+    });
 
     // Get API URL
     const url = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000';
@@ -20,7 +32,9 @@ export default function AuthDebug() {
     try {
       const response = await fetch(`${apiUrl}/api/v1/content`, {
         headers: {
-          Authorization: token ? `Bearer ${token}` : '',
+          Authorization: tokens?.accessToken
+            ? `Bearer ${tokens.accessToken}`
+            : '',
           'Content-Type': 'application/json',
         },
       });
@@ -32,13 +46,42 @@ export default function AuthDebug() {
     }
   };
 
+  const isTokenExpired = AuthUtils.isTokenExpired();
+  const hasValidTokens = AuthUtils.hasValidTokens();
+
   return (
     <div className='fixed bottom-4 right-4 bg-white p-4 rounded-lg shadow-lg border max-w-sm'>
       <h3 className='font-bold text-sm mb-2'>Auth Debug</h3>
       <div className='space-y-2 text-xs'>
         <div>
-          <strong>Token:</strong>{' '}
-          {token ? `${token.substring(0, 20)}...` : 'None'}
+          <strong>Access Token:</strong>{' '}
+          {tokens?.accessToken
+            ? `${tokens.accessToken.substring(0, 20)}...`
+            : 'None'}
+        </div>
+        <div>
+          <strong>Refresh Token:</strong>{' '}
+          {tokens?.refreshToken
+            ? `${tokens.refreshToken.substring(0, 20)}...`
+            : 'None'}
+        </div>
+        <div>
+          <strong>Token Expiry:</strong>{' '}
+          {tokens?.expiry
+            ? new Date(tokens.expiry).toLocaleString()
+            : 'Unknown'}
+        </div>
+        <div>
+          <strong>Is Expired:</strong>{' '}
+          <span className={isTokenExpired ? 'text-red-600' : 'text-green-600'}>
+            {isTokenExpired ? 'Yes' : 'No'}
+          </span>
+        </div>
+        <div>
+          <strong>Has Valid Tokens:</strong>{' '}
+          <span className={hasValidTokens ? 'text-green-600' : 'text-red-600'}>
+            {hasValidTokens ? 'Yes' : 'No'}
+          </span>
         </div>
         <div>
           <strong>API URL:</strong> {apiUrl}
@@ -51,7 +94,7 @@ export default function AuthDebug() {
         </button>
         <button
           onClick={() => {
-            localStorage.removeItem('token');
+            AuthUtils.clearTokens();
             window.location.href = '/auth/login';
           }}
           className='px-2 py-1 bg-red-500 text-white rounded text-xs ml-2'

@@ -11,6 +11,8 @@ import {
   FiBarChart2,
   FiSettings,
   FiTrendingUp,
+  FiChevronLeft,
+  FiChevronRight,
 } from 'react-icons/fi';
 import Image from 'next/image';
 
@@ -19,6 +21,7 @@ interface SidebarLinkProps {
   icon: React.ReactNode;
   label: string;
   isActive: boolean;
+  collapsed: boolean;
   onClick?: () => void;
 }
 
@@ -27,28 +30,40 @@ const SidebarLink: React.FC<SidebarLinkProps> = ({
   icon,
   label,
   isActive,
+  collapsed,
   onClick,
 }) => {
   return (
     <Link
       href={href}
-      className={`flex items-center px-4 py-3 text-sm font-medium rounded-md group ${
+      className={`relative flex items-center px-3 py-3 mx-2 text-sm font-medium rounded-xl group transition-all duration-300 ease-in-out ${
         isActive
-          ? 'bg-indigo-50 text-indigo-700'
-          : 'text-gray-700 hover:bg-gray-50 hover:text-gray-900'
+          ? 'bg-gradient-to-r from-indigo-500 to-purple-600 text-white shadow-lg transform scale-105'
+          : 'text-gray-600 hover:bg-white/80 hover:shadow-md hover:text-gray-900 backdrop-blur-sm'
       }`}
       onClick={onClick}
     >
       <span
-        className={`mr-3 h-5 w-5 ${
-          isActive
-            ? 'text-indigo-500'
-            : 'text-gray-500 group-hover:text-gray-600'
+        className={`flex-shrink-0 h-5 w-5 transition-colors duration-200 ${
+          isActive ? 'text-white' : 'text-gray-500 group-hover:text-indigo-600'
         }`}
       >
         {icon}
       </span>
-      {label}
+      {!collapsed && (
+        <span
+          className={`ml-3 transition-all duration-300 whitespace-nowrap ${
+            isActive ? 'text-white' : 'group-hover:text-gray-900'
+          }`}
+        >
+          {label}
+        </span>
+      )}
+      {isActive && (
+        <div className='absolute right-2 top-1/2 transform -translate-y-1/2'>
+          <div className='w-2 h-2 bg-white rounded-full opacity-80'></div>
+        </div>
+      )}
     </Link>
   );
 };
@@ -73,55 +88,83 @@ export default function Sidebar() {
 
   return (
     <div
-      className={`w-16 flex flex-col border-r border-gray-200 bg-white ${
-        collapsed ? 'w-16' : 'w-64'
-      } transition-all duration-300`}
+      className={`${
+        collapsed ? 'w-20' : 'w-72'
+      } flex flex-col bg-gradient-to-b from-slate-50 via-white to-slate-50 border-r border-slate-200/60 shadow-lg backdrop-blur-xl transition-all duration-300 ease-in-out relative`}
     >
-      <div className='h-0 flex-1 flex flex-col pt-5 pb-4 overflow-y-auto'>
-        <div className='flex items-center justify-between flex-shrink-0 px-4'>
+      {/* Background decoration */}
+      <div className='absolute inset-0 bg-gradient-to-br from-indigo-50/50 via-transparent to-purple-50/50 pointer-events-none'></div>
+
+      <div className='relative h-full flex flex-col'>
+        {/* Header */}
+        <div className='flex items-center justify-between p-6 border-b border-slate-200/60'>
           {!collapsed && (
-            <span className='text-lg font-semibold text-gray-700'>KHRONOS</span>
+            <div className='flex items-center space-x-3'>
+              <div className='w-8 h-8 bg-gradient-to-br from-indigo-600 to-purple-600 rounded-lg flex items-center justify-center shadow-lg'>
+                <span className='text-white font-bold text-sm'>KH</span>
+              </div>
+              <span className='text-xl font-bold bg-gradient-to-r from-indigo-600 to-purple-600 bg-clip-text text-transparent'>
+                KHRONOS
+              </span>
+            </div>
+          )}
+          {collapsed && (
+            <div className='w-8 h-8 bg-gradient-to-br from-indigo-600 to-purple-600 rounded-lg flex items-center justify-center shadow-lg mx-auto'>
+              <span className='text-white font-bold text-sm'>KH</span>
+            </div>
           )}
           <button
             onClick={() => setCollapsed(!collapsed)}
-            className='p-1 rounded-full text-gray-400 hover:text-gray-500 focus:outline-none focus:ring-2 focus:ring-indigo-500'
+            className='p-2 rounded-lg text-gray-400 hover:text-gray-600 hover:bg-white/80 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 transition-all duration-200 shadow-sm hover:shadow-md'
           >
-            {collapsed ? '→' : '←'}
+            {collapsed ? (
+              <FiChevronRight className='h-4 w-4' />
+            ) : (
+              <FiChevronLeft className='h-4 w-4' />
+            )}
           </button>
         </div>
-        <nav className='mt-5 flex-1 px-2 space-y-1'>
+
+        {/* Navigation */}
+        <nav className='flex-1 py-6 space-y-2 overflow-y-auto'>
           {navigation.map((item) => (
             <SidebarLink
               key={item.name}
               href={item.href}
               icon={item.icon}
-              label={collapsed ? '' : item.name}
+              label={item.name}
+              collapsed={collapsed}
               isActive={
                 pathname === item.href || pathname?.startsWith(`${item.href}/`)
               }
             />
           ))}
         </nav>
-      </div>
-      <div className='flex-shrink-0 flex border-t border-gray-200 p-4'>
-        <div className='flex-shrink-0 w-full group block'>
-          <div className='flex items-center'>
-            <div>
+
+        {/* User Profile */}
+        <div className='border-t border-slate-200/60 p-4'>
+          <div
+            className={`flex items-center ${
+              collapsed ? 'justify-center' : 'space-x-3'
+            } p-3 rounded-xl bg-white/60 backdrop-blur-sm shadow-sm hover:shadow-md transition-all duration-200 cursor-pointer group`}
+          >
+            <div className='relative'>
               <Image
-                className='h-8 w-8 rounded-full'
+                className='h-10 w-10 rounded-xl object-cover ring-2 ring-white shadow-lg'
                 src='https://via.placeholder.com/40'
                 alt='User avatar'
                 width={40}
                 height={40}
               />
+              <div className='absolute -bottom-1 -right-1 w-4 h-4 bg-green-500 rounded-full border-2 border-white shadow-sm'></div>
             </div>
             {!collapsed && (
-              <div className='ml-3 w-50'>
-                <p className='text-sm font-medium text-gray-700 group-hover:text-gray-900'>
+              <div className='flex-1 min-w-0'>
+                <p className='text-sm font-semibold text-gray-900 group-hover:text-indigo-600 transition-colors duration-200 truncate'>
                   Jane Doe
                 </p>
-                <p className='text-xs font-medium text-gray-500 group-hover:text-gray-700'>
-                  View profile
+                <p className='text-xs text-gray-500 group-hover:text-gray-600 transition-colors duration-200'>
+                  Content Creator
                 </p>
               </div>
             )}
