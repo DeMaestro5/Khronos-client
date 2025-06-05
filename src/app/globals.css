@@ -1,5 +1,15 @@
 @import 'tailwindcss';
 
+/* Hide Next.js development indicators */
+.__next-dev-overlay-logo,
+.__next-dev-overlay,
+[data-nextjs-dev-overlay],
+.__next-build-watcher,
+.next-build-activity {
+  display: none !important;
+  visibility: hidden !important;
+}
+
 :root {
   --background: #ffffff;
   --foreground: #171717;
