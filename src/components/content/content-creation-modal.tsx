@@ -36,7 +36,6 @@ export default function CreateContentModal({
   isOpen,
   onClose,
   onSubmit,
-  isCreating = false,
 }: CreateContentModalProps) {
   const [formData, setFormData] = useState<ContentFormData>({
     title: '',
@@ -56,20 +55,25 @@ export default function CreateContentModal({
   // Reset form when modal opens
   useEffect(() => {
     if (isOpen) {
-      setFormData({
-        title: '',
-        description: '',
-        contentType: 'article',
-        platforms: [],
-        scheduledDate: '',
-        scheduledTime: '',
-        tags: [],
-        priority: 'medium',
-        status: 'draft',
-      });
-      setErrors({});
+      resetForm();
     }
   }, [isOpen]);
+
+  const resetForm = () => {
+    setFormData({
+      title: '',
+      description: '',
+      contentType: 'article',
+      platforms: [],
+      scheduledDate: '',
+      scheduledTime: '',
+      tags: [],
+      priority: 'medium',
+      status: 'draft',
+    });
+    setErrors({});
+    setNewTag('');
+  };
 
   // AI Suggestion Handler
   const handleAISuggestion = (suggestion: AISuggestionResult) => {
@@ -208,13 +212,15 @@ export default function CreateContentModal({
   const handleSubmit = (e: React.MouseEvent<HTMLButtonElement>) => {
     e.preventDefault();
 
-    if (!isCreating && validateForm()) {
+    if (validateForm()) {
       const contentItem: ContentItem = {
         ...formData,
         id: Date.now(), // Generate a temporary ID
         createdAt: new Date().toISOString(),
       };
       onSubmit(contentItem);
+      // Modal will be closed by parent component
+      // Form will be reset when modal reopens
     }
   };
 
@@ -451,29 +457,16 @@ export default function CreateContentModal({
             <button
               type='button'
               onClick={onClose}
-              disabled={isCreating}
-              className={`px-6 py-3 rounded-xl text-white transition-colors duration-200 ${
-                isCreating
-                  ? 'bg-slate-800 cursor-not-allowed opacity-50'
-                  : 'bg-slate-700 hover:bg-slate-600'
-              }`}
+              className='px-6 py-3 bg-slate-700 hover:bg-slate-600 rounded-xl text-white transition-colors duration-200'
             >
               Cancel
             </button>
             <button
               type='button'
               onClick={handleSubmit}
-              disabled={isCreating}
-              className={`px-6 py-3 rounded-xl text-white font-medium transition-all duration-200 flex items-center space-x-2 ${
-                isCreating
-                  ? 'bg-slate-600 cursor-not-allowed opacity-75'
-                  : 'bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-500 hover:to-pink-500'
-              }`}
+              className='px-6 py-3 bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-500 hover:to-pink-500 rounded-xl text-white font-medium transition-all duration-200'
             >
-              {isCreating && (
-                <div className='animate-spin rounded-full h-4 w-4 border-2 border-white border-t-transparent'></div>
-              )}
-              <span>{isCreating ? 'Creating...' : 'Create Content'}</span>
+              Create Content
             </button>
           </div>
         </div>

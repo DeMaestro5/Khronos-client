@@ -3,6 +3,8 @@
 import React, { useState, useEffect } from 'react';
 import { Search, Filter, Grid3X3, List, Plus, FileText } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
+import toast from 'react-hot-toast';
+import confetti from 'canvas-confetti';
 import { Content, ContentStatus, ContentType } from '@/src/types/content';
 import { ContentCard } from '@/src/components/content/content-card';
 import { ContentListItem } from '@/src/components/content/content-list-items';
@@ -32,7 +34,6 @@ export default function ContentPage() {
   const [isLoading, setIsLoading] = useState(true);
   const [showFilters, setShowFilters] = useState(false);
   const [showModal, setShowModal] = useState(false);
-  const [isCreating, setIsCreating] = useState(false);
 
   useEffect(() => {
     const fetchContents = async () => {
@@ -84,19 +85,96 @@ export default function ContentPage() {
     fetchContents();
   }, []);
 
+  // Celebratory confetti function
+  const celebrateWithConfetti = () => {
+    // First burst - colorful confetti from center
+    confetti({
+      particleCount: 100,
+      spread: 70,
+      origin: { y: 0.6 },
+      colors: [
+        '#667eea',
+        '#764ba2',
+        '#f093fb',
+        '#f5576c',
+        '#4facfe',
+        '#00f2fe',
+      ],
+    });
+
+    // Second burst - stars from left
+    setTimeout(() => {
+      confetti({
+        particleCount: 50,
+        angle: 60,
+        spread: 55,
+        origin: { x: 0, y: 0.8 },
+        colors: ['#ffd700', '#ffed4e', '#ff6b6b', '#4ecdc4'],
+        shapes: ['star'],
+      });
+    }, 250);
+
+    // Third burst - stars from right
+    setTimeout(() => {
+      confetti({
+        particleCount: 50,
+        angle: 120,
+        spread: 55,
+        origin: { x: 1, y: 0.8 },
+        colors: ['#ffd700', '#ffed4e', '#ff6b6b', '#4ecdc4'],
+        shapes: ['star'],
+      });
+    }, 400);
+
+    // Fourth burst - glitter rain
+    setTimeout(() => {
+      confetti({
+        particleCount: 150,
+        spread: 180,
+        startVelocity: 45,
+        scalar: 0.8,
+        origin: { y: 0.1 },
+        colors: [
+          '#667eea',
+          '#764ba2',
+          '#f093fb',
+          '#f5576c',
+          '#ffd700',
+          '#4facfe',
+        ],
+      });
+    }, 600);
+  };
+
   const handleCreateContent = async (contentData: ContentFormData) => {
-    setIsCreating(true);
+    // Validate required fields first
+    if (!contentData.title.trim()) {
+      toast.error('Content title is required');
+      return;
+    }
+
+    if (contentData.platforms.length === 0) {
+      toast.error('Please select at least one platform');
+      return;
+    }
+
+    // Close modal immediately and reset states
+    setShowModal(false);
+
+    // Show creating toast with loading indicator
+    const creatingToastId = toast.loading(
+      '🚀 Creating your content... AI is working its magic!',
+      {
+        style: {
+          background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+          color: 'white',
+          border: 'none',
+          fontWeight: '500',
+        },
+      }
+    );
 
     try {
-      // Validate required fields
-      if (!contentData.title.trim()) {
-        throw new Error('Content title is required');
-      }
-
-      if (contentData.platforms.length === 0) {
-        throw new Error('Please select at least one platform');
-      }
-
       // Prepare the payload according to the server schema
       const newContentPayload: ContentCreatePayload = {
         title: contentData.title.trim(),
@@ -137,11 +215,29 @@ export default function ContentPage() {
         response.status === 200 ||
         response.status === 201
       ) {
-        // Show success notification (you can replace this with a toast notification)
-        alert('Content created successfully!');
+        // Dismiss the creating toast
+        toast.dismiss(creatingToastId);
 
-        // Close the modal
-        setShowModal(false);
+        // Show celebratory success toast
+        toast.success(
+          '🎉 Content created successfully! Your masterpiece is ready!',
+          {
+            duration: 5000,
+            style: {
+              background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+              color: 'white',
+              border: 'none',
+              fontWeight: '500',
+              fontSize: '16px',
+            },
+            icon: '✨',
+          }
+        );
+
+        // Celebrate with confetti immediately after toast
+        setTimeout(() => {
+          celebrateWithConfetti();
+        }, 100);
 
         // Refresh the content list to show the new content
         const refreshResponse = await contentAPI.getAll();
@@ -159,6 +255,9 @@ export default function ContentPage() {
     } catch (error: unknown) {
       console.error('Failed to create content:', error);
 
+      // Dismiss the creating toast
+      toast.dismiss(creatingToastId);
+
       // Show error notification with specific message
       let errorMessage = 'Failed to create content. Please try again.';
 
@@ -175,9 +274,15 @@ export default function ContentPage() {
         errorMessage = axiosError.response?.data?.message || errorMessage;
       }
 
-      alert(`Error: ${errorMessage}`);
-    } finally {
-      setIsCreating(false);
+      toast.error(`❌ ${errorMessage}`, {
+        duration: 6000,
+        style: {
+          background: '#ef4444',
+          color: 'white',
+          border: 'none',
+          fontWeight: '500',
+        },
+      });
     }
   };
 
@@ -405,9 +510,8 @@ export default function ContentPage() {
       </AnimatePresence>
       <CreateContentModal
         isOpen={showModal}
-        onClose={() => !isCreating && setShowModal(false)}
+        onClose={() => setShowModal(false)}
         onSubmit={handleCreateContent}
-        isCreating={isCreating}
       />
 
       {/* Debug Component - Remove in production */}
