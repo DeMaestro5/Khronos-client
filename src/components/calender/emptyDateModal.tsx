@@ -1,103 +1,166 @@
 import React from 'react';
-import { Plus, Calendar, X } from 'lucide-react';
+import { X, Calendar, Plus, Clock } from 'lucide-react';
 
-export default function EmptyDateModal({
-  isOpen,
-  onClose,
-  selectedDate,
-  onCreateContent,
-  animatingOut,
-}: {
+interface EmptyDateModalProps {
   isOpen: boolean;
   onClose: () => void;
   selectedDate: string | null;
   onCreateContent?: () => void;
   animatingOut: boolean;
-}) {
+}
+
+const EmptyDateModal: React.FC<EmptyDateModalProps> = ({
+  isOpen,
+  onClose,
+  selectedDate,
+  onCreateContent,
+  animatingOut,
+}) => {
   if (!isOpen || !selectedDate) return null;
 
-  const date = new Date(selectedDate);
-  const formattedDate = date.toLocaleDateString('en-US', {
-    weekday: 'long',
-    year: 'numeric',
-    month: 'long',
-    day: 'numeric',
-  });
+  // Check if the selected date is in the past
+  const isPastDate = () => {
+    const today = new Date();
+    const selectedDateObj = new Date(selectedDate);
+
+    // Set time to beginning of day for accurate comparison
+    today.setHours(0, 0, 0, 0);
+    selectedDateObj.setHours(0, 0, 0, 0);
+
+    return selectedDateObj < today;
+  };
+
+  const isToday = () => {
+    const today = new Date();
+    const selectedDateObj = new Date(selectedDate);
+
+    return (
+      today.getDate() === selectedDateObj.getDate() &&
+      today.getMonth() === selectedDateObj.getMonth() &&
+      today.getFullYear() === selectedDateObj.getFullYear()
+    );
+  };
+
+  const formatDisplayDate = (dateString: string) => {
+    return new Date(dateString).toLocaleDateString('en-US', {
+      weekday: 'long',
+      year: 'numeric',
+      month: 'long',
+      day: 'numeric',
+    });
+  };
+
+  const pastDate = isPastDate();
+  const todayDate = isToday();
 
   return (
-    <div
-      className={`fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm transition-all duration-300 ${
-        animatingOut ? 'opacity-0' : 'opacity-100'
-      }`}
-    >
+    <div className='fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4'>
       <div
-        className={`bg-gray-900/95 backdrop-blur-xl border border-white/20 rounded-3xl shadow-2xl max-w-md w-full overflow-hidden transform transition-all duration-300 ${
+        className={`bg-white rounded-2xl sm:rounded-3xl shadow-2xl max-w-md w-full mx-4 transform transition-all duration-300 ${
           animatingOut
-            ? 'scale-90 opacity-0 translate-y-8'
+            ? 'scale-95 opacity-0 translate-y-4'
             : 'scale-100 opacity-100 translate-y-0'
         }`}
       >
-        {/* Modal Header */}
-        <div className='flex items-center justify-between p-6 bg-gradient-to-r from-slate-600/20 to-slate-500/20 border-b border-white/10'>
+        {/* Header */}
+        <div className='flex items-center justify-between p-4 sm:p-6 border-b border-gray-100'>
           <div className='flex items-center space-x-3'>
-            <div className='p-2 bg-gradient-to-r from-slate-500 to-slate-600 rounded-xl'>
-              <Calendar className='w-5 h-5 text-white' />
+            <div
+              className={`p-2 sm:p-3 rounded-xl shadow-lg ${
+                pastDate
+                  ? 'bg-gray-100'
+                  : 'bg-gradient-to-r from-purple-500 to-pink-500'
+              }`}
+            >
+              {pastDate ? (
+                <Clock className={`w-5 h-5 sm:w-6 sm:h-6 text-gray-500`} />
+              ) : (
+                <Calendar className={`w-5 h-5 sm:w-6 sm:h-6 text-white`} />
+              )}
             </div>
             <div>
-              <h2 className='text-xl font-bold text-white'>{formattedDate}</h2>
-              <p className='text-sm text-slate-400'>No content scheduled</p>
+              <h3 className='text-lg sm:text-xl font-bold text-gray-900'>
+                {pastDate
+                  ? 'Past Date'
+                  : todayDate
+                  ? 'Today'
+                  : 'Schedule Content'}
+              </h3>
+              <p className='text-xs sm:text-sm text-gray-500'>
+                {formatDisplayDate(selectedDate)}
+              </p>
             </div>
           </div>
+
           <button
             onClick={onClose}
-            className='p-2 hover:bg-white/10 rounded-xl transition-all duration-200 text-slate-400 hover:text-white hover:scale-110'
+            className='p-1 sm:p-2 hover:bg-gray-100 rounded-lg transition-colors'
           >
-            <X className='w-5 h-5' />
+            <X className='w-5 h-5 sm:w-6 sm:h-6 text-gray-500' />
           </button>
         </div>
 
-        {/* Modal Content */}
-        <div className='p-8 text-center'>
-          {/* Empty State Animation */}
-          <div className='mb-6 relative'>
-            <div className='w-24 h-24 mx-auto bg-gradient-to-br from-slate-600/20 to-slate-700/20 rounded-full flex items-center justify-center border-2 border-slate-500/30 relative overflow-hidden'>
-              <Calendar className='w-12 h-12 text-slate-400' />
+        {/* Content */}
+        <div className='p-4 sm:p-6'>
+          {pastDate ? (
+            <div className='text-center space-y-4'>
+              <div className='w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto'>
+                <Clock className='w-8 h-8 text-gray-400' />
+              </div>
+              <div>
+                <h4 className='font-semibold text-gray-900 mb-2'>
+                  Cannot Schedule Past Content
+                </h4>
+                <p className='text-sm text-gray-600 leading-relaxed'>
+                  You cannot create new content for past dates. Content can only
+                  be scheduled for today or future dates.
+                </p>
+              </div>
 
-              {/* Animated ripple effect */}
-              <div className='absolute inset-0 rounded-full border-2 border-slate-400/20 animate-ping'></div>
-              <div className='absolute inset-2 rounded-full border border-slate-400/10 animate-pulse delay-100'></div>
+              <div className='bg-gray-50 rounded-xl p-4'>
+                <p className='text-xs text-gray-500 text-center'>
+                  💡 You can still view any existing content that was scheduled
+                  for this date
+                </p>
+              </div>
             </div>
-          </div>
+          ) : (
+            <div className='text-center space-y-4'>
+              <div className='w-16 h-16 bg-gradient-to-r from-purple-500 to-pink-500 rounded-full flex items-center justify-center mx-auto'>
+                <Plus className='w-8 h-8 text-white' />
+              </div>
+              <div>
+                <h4 className='font-semibold text-gray-900 mb-2'>
+                  No Content Scheduled
+                </h4>
+                <p className='text-sm text-gray-600 leading-relaxed'>
+                  {todayDate
+                    ? "You don't have any content scheduled for today. Ready to create something amazing?"
+                    : "You don't have any content scheduled for this date. Ready to plan ahead?"}
+                </p>
+              </div>
 
-          <h3 className='text-2xl font-bold text-white mb-3'>
-            No Content Scheduled
-          </h3>
+              <button
+                onClick={() => {
+                  onClose();
+                  onCreateContent?.();
+                }}
+                className='w-full bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-500 hover:to-pink-500 text-white font-medium py-3 px-6 rounded-xl transition-all duration-200 hover:scale-105 hover:shadow-lg'
+              >
+                Create Content
+              </button>
 
-          <p className='text-slate-400 mb-8 leading-relaxed'>
-            You haven&apos;t scheduled any content for this date yet.
-            <br />
-            Start creating engaging posts for your audience!
-          </p>
-
-          {/* Action Button */}
-          <button
-            onClick={onCreateContent}
-            className='group flex items-center justify-center space-x-3 w-full px-6 py-4 bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-500 hover:to-pink-500 rounded-2xl text-white font-semibold transition-all duration-300 hover:scale-105 hover:shadow-lg hover:shadow-purple-500/25 active:scale-95'
-          >
-            <div className='p-2 bg-white/20 rounded-lg group-hover:bg-white/30 transition-all duration-200 group-hover:scale-110'>
-              <Plus className='w-5 h-5' />
+              <div className='bg-blue-50 rounded-xl p-4'>
+                <p className='text-xs text-blue-600 text-center'>
+                  💡 Schedule your content in advance to maintain consistency
+                </p>
+              </div>
             </div>
-            <span className='text-lg'>Add Content</span>
-          </button>
-
-          {/* Decorative Elements */}
-          <div className='mt-6 flex items-center justify-center space-x-2'>
-            <div className='w-2 h-2 bg-purple-500/40 rounded-full animate-pulse'></div>
-            <div className='w-2 h-2 bg-pink-500/40 rounded-full animate-pulse delay-100'></div>
-            <div className='w-2 h-2 bg-purple-500/40 rounded-full animate-pulse delay-200'></div>
-          </div>
+          )}
         </div>
       </div>
     </div>
   );
-}
+};
+
+export default EmptyDateModal;

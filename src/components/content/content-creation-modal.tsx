@@ -193,16 +193,28 @@ export default function CreateContentModal({
   };
 
   const validateForm = (): boolean => {
-    const newErrors: FormErrors = {};
+    const newErrors: Record<string, string> = {};
 
     if (!formData.title.trim()) {
       newErrors.title = 'Title is required';
     }
 
     if (formData.platforms.length === 0) {
-      newErrors.platforms = [
-        'Select at least one platform',
-      ] as unknown as Platform['id'][];
+      newErrors.platforms = 'Please select at least one platform';
+    }
+
+    // Validate scheduled date is not in the past
+    if (formData.scheduledDate) {
+      const today = new Date();
+      const scheduledDate = new Date(formData.scheduledDate);
+
+      // Set time to beginning of day for accurate comparison
+      today.setHours(0, 0, 0, 0);
+      scheduledDate.setHours(0, 0, 0, 0);
+
+      if (scheduledDate < today) {
+        newErrors.scheduledDate = 'Cannot schedule content for past dates';
+      }
     }
 
     setErrors(newErrors);
@@ -353,6 +365,7 @@ export default function CreateContentModal({
               <input
                 type='date'
                 value={formData.scheduledDate}
+                min={new Date().toISOString().split('T')[0]}
                 onChange={(e) =>
                   handleInputChange('scheduledDate', e.target.value)
                 }

@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import {
   Plus,
   Calendar,
@@ -9,24 +9,18 @@ import {
   Eye,
   MoreHorizontal,
 } from 'lucide-react';
-
-type Platform = {
-  id: 'instagram' | 'youtube' | 'twitter' | 'linkedin' | 'tiktok' | 'facebook';
-};
-
-type ContentItem = {
-  platform: Platform['id'];
-  title: string;
-  time: string;
-  type: string;
-  status: string;
-};
+import { useRouter } from 'next/navigation';
+import toast from 'react-hot-toast';
+import { Platform } from '@/src/types/modal';
+import { ScheduledContentItem } from '@/src/context/CalendarContext';
+import { contentAPI } from '@/src/lib/api';
+import DeleteConfirmationModal from '../content/delete-confirmation-modal';
 
 interface ContentModalProps {
   isOpen: boolean;
   onClose: () => void;
   selectedDate: string | null;
-  content: ContentItem[];
+  content: ScheduledContentItem[];
   onCreateContent?: () => void;
   animatingOut: boolean;
 }
@@ -87,6 +81,15 @@ export default function ContentModal({
   onCreateContent,
   animatingOut,
 }: ContentModalProps) {
+  const router = useRouter();
+  const [deleteModalOpen, setDeleteModalOpen] = useState(false);
+  const [deletingContentId, setDeletingContentId] = useState<string | null>(
+    null
+  );
+  const [contentToDelete, setContentToDelete] =
+    useState<ScheduledContentItem | null>(null);
+  const [isDeleting, setIsDeleting] = useState(false);
+
   if (!isOpen || !selectedDate) return null;
 
   const date = new Date(selectedDate);
@@ -96,6 +99,60 @@ export default function ContentModal({
     month: 'long',
     day: 'numeric',
   });
+
+  // Check if the selected date is in the past
+  const isPastDate = () => {
+    const today = new Date();
+    const selectedDateObj = new Date(selectedDate);
+
+    // Set time to beginning of day for accurate comparison
+    today.setHours(0, 0, 0, 0);
+    selectedDateObj.setHours(0, 0, 0, 0);
+
+    return selectedDateObj < today;
+  };
+
+  const isDateInPast = isPastDate();
+
+  // Handle view content (eye icon click)
+  const handleViewContent = (contentId: string) => {
+    router.push(`/content/${contentId}`);
+  };
+
+  // Handle delete content
+  const handleDeleteClick = (item: ScheduledContentItem) => {
+    setContentToDelete(item);
+    setDeletingContentId(item.id);
+    setDeleteModalOpen(true);
+  };
+
+  const handleDeleteConfirm = async () => {
+    if (!deletingContentId || !contentToDelete) return;
+
+    setIsDeleting(true);
+    try {
+      await contentAPI.delete(deletingContentId);
+      toast.success('Content deleted successfully!');
+      setDeleteModalOpen(false);
+      setContentToDelete(null);
+      setDeletingContentId(null);
+
+      // Optionally refresh the content or close modal
+      // You might want to add a callback to refresh calendar data
+      onClose();
+    } catch (error) {
+      console.error('Error deleting content:', error);
+      toast.error('Failed to delete content. Please try again.');
+    } finally {
+      setIsDeleting(false);
+    }
+  };
+
+  const handleDeleteCancel = () => {
+    setDeleteModalOpen(false);
+    setContentToDelete(null);
+    setDeletingContentId(null);
+  };
 
   return (
     <div
@@ -197,18 +254,44 @@ export default function ContentModal({
 
                     {/* Action Buttons */}
                     <div className='flex items-center space-x-2 opacity-0 group-hover:opacity-100 transition-opacity duration-200'>
-                      <button className='p-2 hover:bg-white/10 rounded-lg transition-all duration-200 text-slate-400 hover:text-white hover:scale-110'>
+                      <button
+                        onClick={() => handleViewContent(item.id)}
+                        className='p-2 hover:bg-white/10 rounded-lg transition-all duration-200 text-slate-400 hover:text-white hover:scale-110'
+                        title='View Content'
+                      >
                         <Eye className='w-4 h-4' />
                       </button>
-                      <button className='p-2 hover:bg-white/10 rounded-lg transition-all duration-200 text-slate-400 hover:text-white hover:scale-110'>
-                        <Edit3 className='w-4 h-4' />
-                      </button>
-                      <button className='p-2 hover:bg-white/10 rounded-lg transition-all duration-200 text-slate-400 hover:text-red-400 hover:scale-110'>
+
+                      {/* Only show edit button for present/future dates */}
+                      {!isDateInPast && (
+                        <button
+                          onClick={() =>
+                            router.push(`/content/${item.id}/edit`)
+                          }
+                          className='p-2 hover:bg-white/10 rounded-lg transition-all duration-200 text-slate-400 hover:text-white hover:scale-110'
+                          title='Edit Content'
+                        >
+                          <Edit3 className='w-4 h-4' />
+                        </button>
+                      )}
+
+                      <button
+                        onClick={() => handleDeleteClick(item)}
+                        className='p-2 hover:bg-white/10 rounded-lg transition-all duration-200 text-slate-400 hover:text-red-400 hover:scale-110'
+                        title='Delete Content'
+                      >
                         <Trash2 className='w-4 h-4' />
                       </button>
-                      <button className='p-2 hover:bg-white/10 rounded-lg transition-all duration-200 text-slate-400 hover:text-white hover:scale-110'>
-                        <MoreHorizontal className='w-4 h-4' />
-                      </button>
+
+                      {/* Only show options button for present/future dates */}
+                      {!isDateInPast && (
+                        <button
+                          className='p-2 hover:bg-white/10 rounded-lg transition-all duration-200 text-slate-400 hover:text-white hover:scale-110'
+                          title='More Options'
+                        >
+                          <MoreHorizontal className='w-4 h-4' />
+                        </button>
+                      )}
                     </div>
                   </div>
                 </div>
@@ -226,15 +309,29 @@ export default function ContentModal({
           </div>
           <div className='flex items-center space-x-3'>
             <button
-              onClick={onCreateContent}
-              className='flex items-center space-x-2 px-4 py-2 bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-500 hover:to-pink-500 rounded-xl text-white font-medium transition-all duration-300 hover:scale-105'
+              onClick={isDateInPast ? undefined : onCreateContent}
+              disabled={isDateInPast}
+              className={`flex items-center space-x-2 px-4 py-2 rounded-xl font-medium transition-all duration-300 ${
+                isDateInPast
+                  ? 'bg-gray-600 text-gray-400 cursor-not-allowed opacity-50'
+                  : 'bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-500 hover:to-pink-500 text-white hover:scale-105'
+              }`}
             >
               <Plus className='w-4 h-4' />
-              <span>Add More</span>
+              <span>{isDateInPast ? 'Past Date' : 'Add More'}</span>
             </button>
           </div>
         </div>
       </div>
+
+      {/* Delete Confirmation Modal */}
+      <DeleteConfirmationModal
+        isOpen={deleteModalOpen}
+        onClose={handleDeleteCancel}
+        onConfirm={handleDeleteConfirm}
+        contentTitle={contentToDelete?.title || ''}
+        isDeleting={isDeleting}
+      />
     </div>
   );
 }
