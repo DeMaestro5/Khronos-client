@@ -11,10 +11,12 @@ import {
   ContentTabs,
   Sidebar,
 } from '@/src/components/content-detail';
+import ContentEditModal from '@/src/components/content/content-edit-modal';
 
 const ContentDetailPage = () => {
   const [content, setContent] = useState<ContentData | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const router = useRouter();
   const params = useParams();
   const contentId = params.id as string;
@@ -92,6 +94,27 @@ const ContentDetailPage = () => {
     fetchContent();
   }, [contentId]);
 
+  const handleEditClick = () => {
+    setIsEditModalOpen(true);
+  };
+
+  const handleEditSuccess = async () => {
+    setIsEditModalOpen(false);
+    // Refresh the content data
+    try {
+      const response = await contentAPI.getById(contentId);
+      if (response.data?.data) {
+        setContent(response.data.data);
+      }
+    } catch (error) {
+      console.error('Failed to refresh content after edit:', error);
+    }
+  };
+
+  const handleEditCancel = () => {
+    setIsEditModalOpen(false);
+  };
+
   if (isLoading) {
     return (
       <div className='min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50'>
@@ -157,7 +180,10 @@ const ContentDetailPage = () => {
             <button className='p-3 text-gray-600 hover:text-gray-900 hover:bg-white/60 rounded-xl transition-all duration-200 backdrop-blur-sm'>
               <Share2 className='w-5 h-5' />
             </button>
-            <button className='inline-flex items-center gap-2 px-5 py-3 bg-blue-600 text-white hover:bg-blue-700 rounded-xl transition-all duration-200 shadow-lg hover:shadow-xl'>
+            <button
+              onClick={handleEditClick}
+              className='inline-flex items-center gap-2 px-5 py-3 bg-blue-600 text-white hover:bg-blue-700 rounded-xl transition-all duration-200 shadow-lg hover:shadow-xl'
+            >
               <Edit className='w-4 h-4' />
               <span className='font-medium'>Edit Content</span>
             </button>
@@ -181,6 +207,22 @@ const ContentDetailPage = () => {
           {/* Sidebar */}
           <Sidebar content={content} />
         </div>
+
+        {/* Edit Modal */}
+        {content && (
+          <ContentEditModal
+            isOpen={isEditModalOpen}
+            onClose={handleEditCancel}
+            contentId={content._id}
+            currentStatus={
+              content.status as 'draft' | 'scheduled' | 'published'
+            }
+            currentPriority='medium' // Default since priority isn't in the content type
+            currentScheduledDate={content.metadata?.scheduledDate}
+            contentTitle={content.title}
+            onSuccess={handleEditSuccess}
+          />
+        )}
       </div>
     </div>
   );

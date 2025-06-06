@@ -16,6 +16,7 @@ import { ScheduledContentItem } from '@/src/context/CalendarContext';
 import { contentAPI } from '@/src/lib/api';
 import { useCalendar } from '@/src/context/CalendarContext';
 import DeleteConfirmationModal from '../content/delete-confirmation-modal';
+import ContentEditModal from '../content/content-edit-modal';
 
 interface ContentModalProps {
   isOpen: boolean;
@@ -85,9 +86,12 @@ export default function ContentModal({
   const router = useRouter();
   const { loadScheduledContent } = useCalendar();
   const [deleteModalOpen, setDeleteModalOpen] = useState(false);
+  const [editModalOpen, setEditModalOpen] = useState(false);
   const [deletingContentId, setDeletingContentId] = useState<string | null>(
     null
   );
+  const [editingContent, setEditingContent] =
+    useState<ScheduledContentItem | null>(null);
   const [contentToDelete, setContentToDelete] =
     useState<ScheduledContentItem | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
@@ -119,6 +123,12 @@ export default function ContentModal({
   // Handle view content (eye icon click)
   const handleViewContent = (contentId: string) => {
     router.push(`/content/${contentId}`);
+  };
+
+  // Handle edit content
+  const handleEditClick = (item: ScheduledContentItem) => {
+    setEditingContent(item);
+    setEditModalOpen(true);
   };
 
   // Handle delete content
@@ -156,6 +166,18 @@ export default function ContentModal({
     setDeleteModalOpen(false);
     setContentToDelete(null);
     setDeletingContentId(null);
+  };
+
+  const handleEditSuccess = async () => {
+    // Refresh the calendar content after successful edit
+    await loadScheduledContent();
+    setEditModalOpen(false);
+    setEditingContent(null);
+  };
+
+  const handleEditCancel = () => {
+    setEditModalOpen(false);
+    setEditingContent(null);
   };
 
   return (
@@ -269,9 +291,7 @@ export default function ContentModal({
                       {/* Only show edit button for present/future dates */}
                       {!isDateInPast && (
                         <button
-                          onClick={() =>
-                            router.push(`/content/${item.id}/edit`)
-                          }
+                          onClick={() => handleEditClick(item)}
                           className='p-2 hover:bg-white/10 rounded-lg transition-all duration-200 text-slate-400 hover:text-white hover:scale-110'
                           title='Edit Content'
                         >
@@ -327,6 +347,22 @@ export default function ContentModal({
           </div>
         </div>
       </div>
+
+      {/* Edit Modal */}
+      {editingContent && (
+        <ContentEditModal
+          isOpen={editModalOpen}
+          onClose={handleEditCancel}
+          contentId={editingContent.id}
+          currentStatus={editingContent.status}
+          currentPriority='medium' // Default since we don't have priority in ScheduledContentItem
+          currentScheduledDate={
+            selectedDate ? `${selectedDate}T${editingContent.time}:00.000Z` : ''
+          }
+          contentTitle={editingContent.title}
+          onSuccess={handleEditSuccess}
+        />
+      )}
 
       {/* Delete Confirmation Modal */}
       <DeleteConfirmationModal

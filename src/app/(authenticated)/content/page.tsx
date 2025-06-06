@@ -261,6 +261,24 @@ export default function ContentPage() {
     );
   };
 
+  const handleContentUpdated = async () => {
+    // Refresh the content list when content is updated
+    setIsLoading(true);
+    try {
+      const response = await contentAPI.getUserContent();
+      console.log('Updated content response:', response.data);
+
+      if (response.data?.statusCode === '10000' && response.data?.data) {
+        setContents(response.data.data);
+        setFilteredContents(response.data.data);
+      }
+    } catch (error) {
+      console.error('Failed to refresh content after update:', error);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   useEffect(() => {
     let filtered = contents;
 
@@ -545,6 +563,7 @@ export default function ContentPage() {
                   key={content._id}
                   content={content}
                   onContentDeleted={handleContentDeleted}
+                  onContentUpdated={handleContentUpdated}
                 />
               ))}
             </AnimatePresence>

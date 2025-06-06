@@ -270,8 +270,16 @@ export const contentAPI = {
   create: (contentData: ContentCreateRequest) =>
     api.post('/api/v1/content', contentData),
 
-  update: (id: string, contentData: Content) =>
+  update: (id: string, contentData: Partial<Content>) =>
     api.put(`/api/v1/content/${id}`, contentData),
+
+  updateSchedule: (
+    id: string,
+    scheduleData: { scheduledDate: string; priority?: string }
+  ) => api.put(`/api/v1/content/${id}/schedule`, scheduleData),
+
+  updatePriority: (id: string, priorityData: { priority: string }) =>
+    api.put(`/api/v1/content/${id}/priority`, priorityData),
 
   delete: (id: string) => api.delete(`/api/v1/content/${id}`),
 };
