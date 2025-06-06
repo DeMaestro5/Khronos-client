@@ -1,98 +1,27 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { Plus } from 'lucide-react';
 import StatsCard from '@/src/components/stats-card';
 import Calendar from '@/src/components/calender/calendar';
 import CreateContentModal from '@/src/components/content/content-creation-modal';
-import { ContentFormData, Platform } from '@/src/types/modal';
-
-type ScheduledContent = {
-  [key: string]: {
-    id: number;
-    title: string;
-    platform: Platform['id'];
-    time: string;
-    type: string;
-    status: 'draft' | 'scheduled' | 'published';
-    description?: string;
-  }[];
-};
+import { ContentFormData } from '@/src/types/modal';
+import { useCalendar } from '@/src/context/CalendarContext';
 
 const CalendarPage = () => {
   const [showModal, setShowModal] = useState(false);
-
   const [animateStats, setAnimateStats] = useState(false);
-  const [scheduledContent, setScheduledContent] = useState<ScheduledContent>(
-    {}
-  );
 
-  useEffect(() => {
+  const { scheduledContent, addScheduledContent } = useCalendar();
+
+  // Animation trigger on mount
+  React.useEffect(() => {
     setAnimateStats(true);
-
-    // Initialize with sample data
-    const sampleContent: ScheduledContent = {
-      '2025-05-22': [
-        {
-          id: 1,
-          title: 'Morning Motivation Post',
-          platform: 'instagram',
-          time: '09:00',
-          type: 'Image',
-          status: 'scheduled',
-        },
-        {
-          id: 2,
-          title: 'Tech Tutorial Video',
-          platform: 'youtube',
-          time: '14:30',
-          type: 'Video',
-          status: 'draft',
-        },
-      ],
-      '2025-05-25': [
-        {
-          id: 3,
-          title: 'Industry Insights',
-          platform: 'linkedin',
-          time: '10:00',
-          type: 'Article',
-          status: 'scheduled',
-        },
-      ],
-      '2025-05-28': [
-        {
-          id: 4,
-          title: 'Quick Tips Thread',
-          platform: 'twitter',
-          time: '16:00',
-          type: 'Text',
-          status: 'scheduled',
-        },
-        {
-          id: 5,
-          title: 'Behind the Scenes',
-          platform: 'tiktok',
-          time: '19:00',
-          type: 'Video',
-          status: 'draft',
-        },
-        {
-          id: 6,
-          title: 'Product Showcase',
-          platform: 'instagram',
-          time: '20:30',
-          type: 'Reel',
-          status: 'scheduled',
-        },
-      ],
-    };
-    setScheduledContent(sampleContent);
   }, []);
 
   const handleCreateContent = (contentData: ContentFormData) => {
     const newContent = {
-      id: Date.now(),
+      id: contentData.title,
       title: contentData.title,
       platform: contentData.platforms[0], // Take the first platform for now
       time: contentData.scheduledTime,
@@ -103,12 +32,11 @@ const CalendarPage = () => {
 
     const dateKey = contentData.scheduledDate;
 
-    setScheduledContent((prev) => ({
-      ...prev,
-      [dateKey]: prev[dateKey] ? [...prev[dateKey], newContent] : [newContent],
-    }));
+    // Use the calendar context to add the content
+    addScheduledContent(newContent, dateKey);
 
     console.log('New content created:', newContent);
+    setShowModal(false);
   };
 
   const handleDateSelect = (dateKey: string) => {
@@ -147,6 +75,22 @@ const CalendarPage = () => {
                   <Plus className='h-4 w-4 sm:h-5 sm:w-5 group-hover:rotate-90 transition-transform duration-300' />
                   <span className='text-sm sm:text-base'>Create Content</span>
                 </button>
+
+                {/* Demo buttons */}
+                {/* <div className='flex space-x-2'>
+                  <button
+                    onClick={addSampleData}
+                    className='px-3 py-2 bg-green-600 hover:bg-green-500 rounded-lg text-white text-xs font-medium transition-all duration-300'
+                  >
+                    Add Demo Data
+                  </button>
+                  <button
+                    onClick={clearAllData}
+                    className='px-3 py-2 bg-red-600 hover:bg-red-500 rounded-lg text-white text-xs font-medium transition-all duration-300'
+                  >
+                    Clear All
+                  </button>
+                </div> */}
               </div>
             </div>
 
@@ -166,6 +110,7 @@ const CalendarPage = () => {
         </div>
       </div>
 
+      {/* Create Content Modal */}
       <CreateContentModal
         isOpen={showModal}
         onClose={() => setShowModal(false)}

@@ -3,86 +3,14 @@ import { Calendar, ChevronLeft, ChevronRight } from 'lucide-react';
 import ContentModal from './content-modal';
 import EmptyDateModal from './emptyDateModal';
 import { Platform } from '@/src/types/modal';
+import { ScheduledContent } from '@/src/context/CalendarContext';
 
 export default function CalendarComponent({
-  scheduledContent = {
-    '2025-05-22': [
-      {
-        platform: 'instagram',
-        title: 'Summer Collection Launch',
-        time: '10:00 AM',
-        type: 'Post',
-        status: 'scheduled',
-      },
-      {
-        platform: 'twitter',
-        title: 'Behind the scenes content',
-        time: '2:00 PM',
-        type: 'Tweet',
-        status: 'draft',
-      },
-    ],
-    '2025-05-25': [
-      {
-        platform: 'youtube',
-        title: 'Product Review Video',
-        time: '5:00 PM',
-        type: 'Video',
-        status: 'scheduled',
-      },
-    ],
-    '2025-05-27': [
-      {
-        platform: 'linkedin',
-        title: 'Industry Insights Article',
-        time: '9:00 AM',
-        type: 'Article',
-        status: 'published',
-      },
-    ],
-    '2025-05-28': [
-      {
-        platform: 'instagram',
-        title: 'Quick Tips Thread',
-        time: '4:00 PM',
-        type: 'Carousel',
-        status: 'scheduled',
-      },
-      {
-        platform: 'tiktok',
-        title: 'Dance Challenge Video',
-        time: '7:00 PM',
-        type: 'Video',
-        status: 'draft',
-      },
-      {
-        platform: 'facebook',
-        title: 'Community Update Post',
-        time: '12:00 PM',
-        type: 'Post',
-        status: 'scheduled',
-      },
-      {
-        platform: 'twitter',
-        title: 'Live Tweet Event Coverage',
-        time: '8:00 PM',
-        type: 'Thread',
-        status: 'draft',
-      },
-    ],
-  },
+  scheduledContent = {},
   onDateSelect,
   onCreateContent,
 }: {
-  scheduledContent?: {
-    [key: string]: {
-      platform: Platform['id'];
-      title: string;
-      time: string;
-      type: string;
-      status: string;
-    }[];
-  };
+  scheduledContent?: ScheduledContent;
   onDateSelect?: (dateKey: string) => void;
   onCreateContent?: () => void;
 }) {
@@ -170,6 +98,26 @@ export default function CalendarComponent({
     );
   };
 
+  const isPastDate = (day: number) => {
+    if (!day) return false;
+    const today = new Date();
+    const dateToCheck = new Date(
+      currentDate.getFullYear(),
+      currentDate.getMonth(),
+      day
+    );
+
+    // Set time to beginning of day for accurate comparison
+    today.setHours(0, 0, 0, 0);
+    dateToCheck.setHours(0, 0, 0, 0);
+
+    return dateToCheck < today;
+  };
+
+  const canCreateContent = (day: number) => {
+    return !isPastDate(day);
+  };
+
   const navigateMonth = (direction: number) => {
     setCurrentDate((prev) => {
       const newDate = new Date(prev);
@@ -201,11 +149,17 @@ export default function CalendarComponent({
     );
 
     const content = getContentForDate(day);
+    const isContentCreationAllowed = canCreateContent(day);
     setSelectedDate(dateKey);
 
     if (content.length > 0) {
+      // Always show existing content, regardless of date
       setIsContentModalOpen(true);
+    } else if (isContentCreationAllowed) {
+      // Only allow content creation for present/future dates
+      setIsEmptyModalOpen(true);
     } else {
+      // Show a message for past dates with no content
       setIsEmptyModalOpen(true);
     }
 
@@ -340,6 +294,10 @@ export default function CalendarComponent({
                       ? 'border-transparent opacity-40'
                       : isToday(day)
                       ? 'border-purple-500 bg-gradient-to-br from-purple-600/40 to-pink-600/40 shadow-lg shadow-purple-500/25 ring-2 ring-purple-400/30'
+                      : isPastDate(day)
+                      ? content.length > 0
+                        ? 'border-white/20 bg-white/5 opacity-70 hover:opacity-90 hover:border-white/30 cursor-pointer'
+                        : 'border-white/10 bg-white/5 opacity-50 cursor-not-allowed'
                       : content.length > 0
                       ? 'border-white/30 bg-white/10 hover:bg-white/20 hover:border-white/50 hover:scale-105 hover:shadow-xl hover:shadow-white/10 cursor-pointer'
                       : 'border-white/10 hover:border-white/20 hover:bg-white/5 hover:scale-102'
@@ -356,6 +314,10 @@ export default function CalendarComponent({
                           className={`text-base sm:text-xl font-bold transition-all duration-200 ${
                             isToday(day)
                               ? 'text-white text-lg sm:text-2xl drop-shadow-lg'
+                              : isPastDate(day)
+                              ? content.length > 0
+                                ? 'text-slate-300 group-hover:text-white'
+                                : 'text-slate-500'
                               : content.length > 0
                               ? 'text-white group-hover:text-lg sm:group-hover:text-2xl group-hover:drop-shadow-lg'
                               : 'text-slate-400 group-hover:text-white group-hover:text-base sm:group-hover:text-xl'

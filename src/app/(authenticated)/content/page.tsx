@@ -13,6 +13,7 @@ import { ContentFormData } from '@/src/types/modal';
 import { contentAPI } from '@/src/lib/api';
 import { AuthUtils } from '@/src/lib/auth-utils';
 import ContentLoading from '@/src/components/ui/content-loading';
+import { useCalendar } from '@/src/context/CalendarContext';
 // import AuthDebug from '@/src/components/debug/AuthDebug';
 
 type ViewMode = 'grid' | 'list';
@@ -36,6 +37,9 @@ export default function ContentPage() {
   const [isLoading, setIsLoading] = useState(true);
   const [showFilters, setShowFilters] = useState(false);
   const [showModal, setShowModal] = useState(false);
+
+  // Get calendar context to add scheduled content
+  const { addScheduledContent } = useCalendar();
 
   useEffect(() => {
     const fetchContents = async () => {
@@ -228,21 +232,51 @@ export default function ContentPage() {
         // Dismiss the creating toast
         toast.dismiss(creatingToastId);
 
-        // Show celebratory success toast
-        toast.success(
-          '🎉 Content created successfully! Your masterpiece is ready!',
-          {
-            duration: 5000,
-            style: {
-              background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
-              color: 'white',
-              border: 'none',
-              fontWeight: '500',
-              fontSize: '16px',
-            },
-            icon: '✨',
-          }
-        );
+        // If content has a scheduled date, add it to the calendar
+        if (contentData.scheduledDate) {
+          const calendarContent = {
+            id: contentData.title,
+            title: contentData.title,
+            platform: contentData.platforms[0], // Take the first platform
+            time: contentData.scheduledTime || '09:00', // Default time if not specified
+            type: contentData.contentType,
+            status: contentData.status,
+            description: contentData.description,
+          };
+
+          addScheduledContent(calendarContent, contentData.scheduledDate);
+
+          toast.success(
+            '🎉 Content created and scheduled successfully! Check your calendar!',
+            {
+              duration: 5000,
+              style: {
+                background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+                color: 'white',
+                border: 'none',
+                fontWeight: '500',
+                fontSize: '16px',
+              },
+              icon: '📅',
+            }
+          );
+        } else {
+          // Show regular success toast
+          toast.success(
+            '🎉 Content created successfully! Your masterpiece is ready!',
+            {
+              duration: 5000,
+              style: {
+                background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+                color: 'white',
+                border: 'none',
+                fontWeight: '500',
+                fontSize: '16px',
+              },
+              icon: '✨',
+            }
+          );
+        }
 
         // Celebrate with confetti immediately after toast
         setTimeout(() => {
