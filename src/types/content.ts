@@ -7,11 +7,11 @@ export enum ContentStatus {
 
 export enum ContentType {
   BLOG_POST = 'blog_post',
-  SOCIAL_POST = 'social_post',
-  EMAIL = 'email',
+  SOCIAL = 'social',
+  NEWSLETTER = 'newsletter',
   VIDEO = 'video',
   PODCAST = 'podcast',
-  OTHER = 'other',
+  ARTICLE = 'article',
 }
 
 export interface ContentPlatform {

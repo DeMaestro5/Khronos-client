@@ -32,6 +32,7 @@ import {
 import { contentAPI } from '@/src/lib/api';
 import DeleteConfirmationModal from './delete-confirmation-modal';
 import ContentEditModal from './content-edit-modal';
+import ArchiveConfirmationModal from './archive-confirmation-modal';
 
 interface ContentCardProps {
   content: Content;
@@ -77,12 +78,14 @@ const ContentDropdown = ({
   onClose,
   onDeleteClick,
   onEditClick,
+  onArchiveClick,
 }: {
   content: Content;
   isOpen: boolean;
   onClose: () => void;
   onDeleteClick: () => void;
   onEditClick: () => void;
+  onArchiveClick: () => void;
 }) => {
   const dropdownRef = useRef<HTMLDivElement>(null);
 
@@ -108,7 +111,7 @@ const ContentDropdown = ({
   const options: DropdownOption[] = [
     {
       icon: Edit,
-      label: 'Edit Content',
+      label: 'Edit',
       action: () => {
         onEditClick();
       },
@@ -124,10 +127,11 @@ const ContentDropdown = ({
     },
     {
       icon: BarChart,
-      label: 'View Analytics',
+      label: 'Analytics',
       action: () => {
-        // Navigate to analytics
-        window.location.href = `/content/${content._id}/analytics`;
+        // Handle analytics logic
+        console.log('Viewing analytics for:', content._id);
+        toast.success('Opening analytics...');
       },
     },
     {
@@ -136,17 +140,17 @@ const ContentDropdown = ({
       action: () => {
         // Handle share logic
         navigator.clipboard.writeText(
-          `${window.location.origin}/content/${content._id}`
+          window.location.origin + `/content/${content._id}`
         );
-        toast.success('Content link copied to clipboard!');
+        toast.success('Link copied to clipboard!');
       },
     },
     {
       icon: Star,
-      label: 'Mark as Featured',
+      label: 'Feature',
       action: () => {
-        // Handle feature toggle
-        console.log('Toggling featured status:', content._id);
+        // Handle feature logic
+        console.log('Featuring content:', content._id);
         toast.success('Content marked as featured!');
       },
     },
@@ -161,22 +165,22 @@ const ContentDropdown = ({
     },
     {
       icon: Archive,
-      label: 'Archive',
-      action: () => {
-        // Handle archive logic
-        console.log('Archiving content:', content._id);
-        toast.success('Content archived successfully!');
-      },
+      label: content.status === 'archived' ? 'Unarchive' : 'Archive',
+      action: onArchiveClick,
     },
-    {
+  ];
+
+  // Only show delete option for non-archived content
+  if (content.status !== 'archived') {
+    options.push({
       icon: Trash2,
       label: 'Delete',
       action: () => {
         onDeleteClick();
       },
       variant: 'danger',
-    },
-  ];
+    });
+  }
 
   if (!isOpen) return null;
 
@@ -222,7 +226,9 @@ export const ContentCard = ({
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+  const [isArchiveModalOpen, setIsArchiveModalOpen] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
+  const [isArchiving, setIsArchiving] = useState(false);
 
   const handleMoreClick = (e: React.MouseEvent) => {
     e.preventDefault();
@@ -276,6 +282,42 @@ export const ContentCard = ({
     }
   };
 
+  const handleArchive = async () => {
+    setIsArchiving(true);
+    try {
+      if (content.status === 'archived') {
+        // Unarchive
+        await contentAPI.unarchive(content._id, {
+          restoreStatus: 'draft', // Default restore status
+          restoreCalendarEvents: true,
+        });
+        toast.success('Content unarchived successfully!');
+      } else {
+        // Archive
+        await contentAPI.archive(content._id, {
+          preserveCalendarEvents: false, // Default behavior
+        });
+        toast.success('Content archived successfully!');
+      }
+      setIsArchiveModalOpen(false);
+      onContentUpdated?.();
+    } catch (error) {
+      console.error('Archive operation failed:', error);
+      toast.error('Operation failed. Please try again.');
+    } finally {
+      setIsArchiving(false);
+    }
+  };
+
+  const handleArchiveClick = () => {
+    setIsDropdownOpen(false);
+    setIsArchiveModalOpen(true);
+  };
+
+  const handleArchiveCancel = () => {
+    setIsArchiveModalOpen(false);
+  };
+
   return (
     <>
       <motion.div
@@ -286,28 +328,32 @@ export const ContentCard = ({
         whileHover={{ y: -4 }}
         transition={{ duration: 0.2 }}
       >
-        <Card className='h-full hover:shadow-lg transition-all duration-200 cursor-pointer group relative'>
+        <Card
+          className={`h-full hover:shadow-lg transition-all duration-200 cursor-pointer group relative ${
+            content.status === 'archived' ? 'opacity-60 bg-gray-50' : ''
+          }`}
+        >
           <div onClick={handleCardClick}>
             <CardHeader className='pb-2 sm:pb-3 p-3 sm:p-6'>
               <div className='flex items-start justify-between'>
-                <div className='flex items-center gap-1.5 sm:gap-2 mb-2 flex-wrap'>
+                <div className='flex items-center gap-1.5 sm:gap-2 mb-2 min-w-0 flex-1'>
                   {getStatusIcon(content.status as ContentStatus)}
                   <span
-                    className={`px-2 py-0.5 sm:py-1 rounded-full text-xs font-medium border ${getStatusColor(
+                    className={`px-2 py-0.5 sm:py-1 rounded-full text-xs font-medium border flex-shrink-0 max-w-[80px] truncate ${getStatusColor(
                       content.status as ContentStatus
                     )}`}
                   >
                     {content.status.replace('_', ' ').toUpperCase()}
                   </span>
                   <span
-                    className={`px-2 py-0.5 sm:py-1 rounded-full text-xs font-medium ${getTypeColor(
+                    className={`px-2 py-0.5 sm:py-1 rounded-full text-xs font-medium flex-shrink-0 max-w-[80px] truncate ${getTypeColor(
                       content.type as ContentType
                     )}`}
                   >
                     {content.type.replace('_', ' ')}
                   </span>
                 </div>
-                <div className='relative flex-shrink-0'>
+                <div className='relative flex-shrink-0 ml-2'>
                   <button
                     onClick={handleMoreClick}
                     className='opacity-0 group-hover:opacity-100 transition-opacity duration-200 p-1 hover:bg-gray-100 rounded z-10 relative'
@@ -430,6 +476,7 @@ export const ContentCard = ({
             onClose={() => setIsDropdownOpen(false)}
             onDeleteClick={handleDeleteClick}
             onEditClick={handleEditClick}
+            onArchiveClick={handleArchiveClick}
           />
         </Card>
       </motion.div>
@@ -444,6 +491,16 @@ export const ContentCard = ({
         currentScheduledDate={content.metadata?.scheduledDate}
         contentTitle={content.title}
         onSuccess={handleEditSuccess}
+      />
+
+      {/* Archive Confirmation Modal */}
+      <ArchiveConfirmationModal
+        isOpen={isArchiveModalOpen}
+        onClose={handleArchiveCancel}
+        onConfirm={handleArchive}
+        contentTitle={content.title}
+        isArchiving={content.status !== 'archived' && isArchiving}
+        isUnarchiving={content.status === 'archived' && isArchiving}
       />
 
       {/* Delete Confirmation Modal */}
