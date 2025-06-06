@@ -14,6 +14,7 @@ import toast from 'react-hot-toast';
 import { Platform } from '@/src/types/modal';
 import { ScheduledContentItem } from '@/src/context/CalendarContext';
 import { contentAPI } from '@/src/lib/api';
+import { useCalendar } from '@/src/context/CalendarContext';
 import DeleteConfirmationModal from '../content/delete-confirmation-modal';
 
 interface ContentModalProps {
@@ -82,6 +83,7 @@ export default function ContentModal({
   animatingOut,
 }: ContentModalProps) {
   const router = useRouter();
+  const { loadScheduledContent } = useCalendar();
   const [deleteModalOpen, setDeleteModalOpen] = useState(false);
   const [deletingContentId, setDeletingContentId] = useState<string | null>(
     null
@@ -137,8 +139,10 @@ export default function ContentModal({
       setContentToDelete(null);
       setDeletingContentId(null);
 
-      // Optionally refresh the content or close modal
-      // You might want to add a callback to refresh calendar data
+      // Refresh the calendar to remove the deleted content
+      await loadScheduledContent();
+
+      // Close the content modal since the content is now deleted
       onClose();
     } catch (error) {
       console.error('Error deleting content:', error);

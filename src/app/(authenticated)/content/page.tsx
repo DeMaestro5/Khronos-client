@@ -1,10 +1,10 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { Search, Filter, Grid3X3, List, Plus, FileText } from 'lucide-react';
+import { Search, Plus, FileText, Grid3X3, List } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import toast from 'react-hot-toast';
-import confetti from 'canvas-confetti';
+import { useGlobalConfetti } from '@/src/context/ConfettiContext';
 import { Content, ContentStatus, ContentType } from '@/src/types/content';
 import { ContentCard } from '@/src/components/content/content-card';
 import { ContentListItem } from '@/src/components/content/content-list-items';
@@ -13,7 +13,6 @@ import { ContentFormData } from '@/src/types/modal';
 import { contentAPI } from '@/src/lib/api';
 import { AuthUtils } from '@/src/lib/auth-utils';
 import ContentLoading from '@/src/components/ui/content-loading';
-import { useCalendar } from '@/src/context/CalendarContext';
 // import AuthDebug from '@/src/components/debug/AuthDebug';
 
 type ViewMode = 'grid' | 'list';
@@ -31,15 +30,15 @@ interface ContentCreatePayload {
 export default function ContentPage() {
   const [contents, setContents] = useState<Content[]>([]);
   const [filteredContents, setFilteredContents] = useState<Content[]>([]);
-  const [viewMode, setViewMode] = useState<ViewMode>('grid');
   const [searchQuery, setSearchQuery] = useState('');
-  const [selectedFilter, setSelectedFilter] = useState<FilterType>('all');
-  const [isLoading, setIsLoading] = useState(true);
-  const [showFilters, setShowFilters] = useState(false);
+  const [filterType, setFilterType] = useState<FilterType>('all');
   const [showModal, setShowModal] = useState(false);
+  const [viewMode, setViewMode] = useState<ViewMode>('grid');
+  const [isLoading, setIsLoading] = useState(true);
 
-  // Get calendar context to add scheduled content
-  const { addScheduledContent } = useCalendar();
+  const { triggerContentCreationCelebration } = useGlobalConfetti();
+
+  // No calendar context needed in this component
 
   useEffect(() => {
     const fetchContents = async () => {
@@ -99,67 +98,6 @@ export default function ContentPage() {
     fetchContents();
   }, []);
 
-  // Celebratory confetti function
-  const celebrateWithConfetti = () => {
-    // First burst - colorful confetti from center
-    confetti({
-      particleCount: 100,
-      spread: 70,
-      origin: { y: 0.6 },
-      colors: [
-        '#667eea',
-        '#764ba2',
-        '#f093fb',
-        '#f5576c',
-        '#4facfe',
-        '#00f2fe',
-      ],
-    });
-
-    // Second burst - stars from left
-    setTimeout(() => {
-      confetti({
-        particleCount: 50,
-        angle: 60,
-        spread: 55,
-        origin: { x: 0, y: 0.8 },
-        colors: ['#ffd700', '#ffed4e', '#ff6b6b', '#4ecdc4'],
-        shapes: ['star'],
-      });
-    }, 250);
-
-    // Third burst - stars from right
-    setTimeout(() => {
-      confetti({
-        particleCount: 50,
-        angle: 120,
-        spread: 55,
-        origin: { x: 1, y: 0.8 },
-        colors: ['#ffd700', '#ffed4e', '#ff6b6b', '#4ecdc4'],
-        shapes: ['star'],
-      });
-    }, 400);
-
-    // Fourth burst - glitter rain
-    setTimeout(() => {
-      confetti({
-        particleCount: 150,
-        spread: 180,
-        startVelocity: 45,
-        scalar: 0.8,
-        origin: { y: 0.1 },
-        colors: [
-          '#667eea',
-          '#764ba2',
-          '#f093fb',
-          '#f5576c',
-          '#ffd700',
-          '#4facfe',
-        ],
-      });
-    }, 600);
-  };
-
   const handleCreateContent = async (contentData: ContentFormData) => {
     // Validate required fields first
     if (!contentData.title.trim()) {
@@ -189,7 +127,12 @@ export default function ContentPage() {
     );
 
     try {
-      // Prepare the payload according to the server schema
+      // Determine status based on whether scheduled date/time is provided
+      const hasScheduledDateTime = !!(
+        contentData.scheduledDate && contentData.scheduledTime
+      );
+
+      // Prepare the payload for API
       const newContentPayload: ContentCreatePayload = {
         title: contentData.title.trim(),
         type: contentData.contentType,
@@ -205,20 +148,15 @@ export default function ContentPage() {
         newContentPayload.tags = contentData.tags.filter((tag) => tag.trim());
       }
 
-      // Combine scheduled date and time if both are provided
-      if (contentData.scheduledDate && contentData.scheduledTime) {
+      // Add scheduled date if both date and time are provided
+      if (hasScheduledDateTime) {
         const scheduledDateTime = `${contentData.scheduledDate}T${contentData.scheduledTime}:00.000Z`;
         newContentPayload.scheduledDate = scheduledDateTime;
-      } else if (contentData.scheduledDate) {
-        // If only date is provided, use it as is
-        newContentPayload.scheduledDate = new Date(
-          contentData.scheduledDate
-        ).toISOString();
       }
 
       console.log('Creating content with payload:', newContentPayload);
 
-      // Call the API to create content
+      // ALWAYS call the API to create content
       const response = await contentAPI.create(newContentPayload);
 
       console.log('Content creation response:', response.data);
@@ -232,20 +170,8 @@ export default function ContentPage() {
         // Dismiss the creating toast
         toast.dismiss(creatingToastId);
 
-        // If content has a scheduled date, add it to the calendar
-        if (contentData.scheduledDate) {
-          const calendarContent = {
-            id: contentData.title,
-            title: contentData.title,
-            platform: contentData.platforms[0], // Take the first platform
-            time: contentData.scheduledTime || '09:00', // Default time if not specified
-            type: contentData.contentType,
-            status: contentData.status,
-            description: contentData.description,
-          };
-
-          addScheduledContent(calendarContent, contentData.scheduledDate);
-
+        // Show appropriate success message based on whether it's scheduled or draft
+        if (hasScheduledDateTime) {
           toast.success(
             '🎉 Content created and scheduled successfully! Check your calendar!',
             {
@@ -261,26 +187,22 @@ export default function ContentPage() {
             }
           );
         } else {
-          // Show regular success toast
-          toast.success(
-            '🎉 Content created successfully! Your masterpiece is ready!',
-            {
-              duration: 5000,
-              style: {
-                background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
-                color: 'white',
-                border: 'none',
-                fontWeight: '500',
-                fontSize: '16px',
-              },
-              icon: '✨',
-            }
-          );
+          toast.success('🎉 Content created as draft successfully!', {
+            duration: 5000,
+            style: {
+              background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+              color: 'white',
+              border: 'none',
+              fontWeight: '500',
+              fontSize: '16px',
+            },
+            icon: '📝',
+          });
         }
 
         // Celebrate with confetti immediately after toast
         setTimeout(() => {
-          celebrateWithConfetti();
+          triggerContentCreationCelebration();
         }, 100);
 
         // Refresh the content list to show the new content
@@ -357,15 +279,15 @@ export default function ContentPage() {
     }
 
     // Apply status/type filter
-    if (selectedFilter !== 'all') {
+    if (filterType !== 'all') {
       filtered = filtered.filter(
         (content) =>
-          content.status === selectedFilter || content.type === selectedFilter
+          content.status === filterType || content.type === filterType
       );
     }
 
     setFilteredContents(filtered);
-  }, [contents, searchQuery, selectedFilter]);
+  }, [contents, searchQuery, filterType]);
 
   if (isLoading) {
     return <ContentLoading />;
@@ -393,115 +315,199 @@ export default function ContentPage() {
         </button>
       </div>
 
-      {/* Controls */}
-      <div className='flex flex-col space-y-3 sm:space-y-4 md:flex-row md:space-y-0 gap-3 sm:gap-4'>
-        {/* Search */}
-        <div className='relative flex-1'>
+      {/* Enhanced Controls Section */}
+      <div className='space-y-4'>
+        {/* Search Bar */}
+        <div className='relative max-w-md'>
           <Search className='absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400' />
           <input
             type='text'
             placeholder='Search content...'
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className='w-full pl-10 pr-4 py-2.5 sm:py-2 border border-gray-300 rounded-lg focus:ring-2 text-gray-900 focus:ring-blue-500 focus:border-transparent placeholder:text-gray-500 text-sm sm:text-base'
+            className='w-full pl-10 pr-4 py-3 border border-gray-300 rounded-xl focus:ring-2 text-gray-900 focus:ring-purple-500 focus:border-transparent placeholder:text-gray-500 text-sm bg-white shadow-sm transition-all duration-200'
           />
         </div>
 
-        {/* Filters and View Toggle */}
-        <div className='flex items-center gap-2 sm:gap-3'>
-          <button
-            onClick={() => setShowFilters(!showFilters)}
-            className={`flex items-center gap-2 px-3 sm:px-4 py-2.5 sm:py-2 border rounded-lg transition-colors text-sm sm:text-base ${
-              showFilters
-                ? 'bg-blue-50 border-blue-200 text-blue-700'
-                : 'border-gray-300 hover:bg-gray-50 text-gray-600'
-            }`}
-          >
-            <Filter className='w-4 h-4' />
-            <span className='hidden sm:inline'>Filter</span>
-          </button>
+        {/* Modern Filter Section */}
+        <div className='bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden'>
+          {/* Filter Header */}
+          <div className='px-6 py-4 border-b border-gray-100 bg-gray-50/50'>
+            <div className='flex items-center justify-between'>
+              <h3 className='text-sm font-semibold text-gray-900'>
+                Filter Content
+              </h3>
+              <div className='flex items-center gap-3'>
+                <span className='text-xs text-gray-500'>View:</span>
+                <div className='flex bg-gray-100 rounded-lg p-0.5'>
+                  <button
+                    onClick={() => setViewMode('grid')}
+                    className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-md text-xs font-medium transition-all duration-200 ${
+                      viewMode === 'grid'
+                        ? 'bg-white text-gray-900 shadow-sm'
+                        : 'text-gray-600 hover:text-gray-900'
+                    }`}
+                    title='Grid View'
+                  >
+                    <Grid3X3 className='w-3.5 h-3.5' />
+                    <span>Grid</span>
+                  </button>
+                  <button
+                    onClick={() => setViewMode('list')}
+                    className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-md text-xs font-medium transition-all duration-200 ${
+                      viewMode === 'list'
+                        ? 'bg-white text-gray-900 shadow-sm'
+                        : 'text-gray-600 hover:text-gray-900'
+                    }`}
+                    title='List View'
+                  >
+                    <List className='w-3.5 h-3.5' />
+                    <span>List</span>
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
 
-          {/* View Mode Toggle */}
-          <div className='flex border border-gray-300 rounded-lg overflow-hidden'>
-            <button
-              onClick={() => setViewMode('grid')}
-              className={`p-2 sm:p-2.5 transition-colors ${
-                viewMode === 'grid'
-                  ? 'bg-blue-600 text-white'
-                  : 'hover:bg-gray-50 text-gray-500'
-              }`}
-              title='Grid View'
-            >
-              <Grid3X3 className='w-4 h-4' />
-            </button>
-            <button
-              onClick={() => setViewMode('list')}
-              className={`p-2 sm:p-2.5 transition-colors ${
-                viewMode === 'list'
-                  ? 'bg-blue-600 text-white'
-                  : 'hover:bg-gray-50 text-gray-500'
-              }`}
-              title='List View'
-            >
-              <List className='w-4 h-4' />
-            </button>
+          {/* Filter Content */}
+          <div className='p-6'>
+            <div className='flex flex-wrap items-center gap-6'>
+              {/* Status Section */}
+              <div className='flex items-center gap-3'>
+                <div className='flex items-center gap-2'>
+                  <div className='w-2 h-2 rounded-full bg-purple-500'></div>
+                  <span className='text-sm font-medium text-gray-700'>
+                    Status
+                  </span>
+                </div>
+                <div className='flex items-center gap-2'>
+                  <button
+                    onClick={() => setFilterType('all')}
+                    className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-all duration-200 ${
+                      filterType === 'all'
+                        ? 'bg-purple-100 text-purple-700 border border-purple-200'
+                        : 'text-gray-600 hover:text-gray-900 hover:bg-gray-50'
+                    }`}
+                  >
+                    All
+                  </button>
+                  {Object.values(ContentStatus).map((status) => (
+                    <button
+                      key={status}
+                      onClick={() => setFilterType(status)}
+                      className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-all duration-200 ${
+                        filterType === status
+                          ? 'bg-purple-100 text-purple-700 border border-purple-200'
+                          : 'text-gray-600 hover:text-gray-900 hover:bg-gray-50'
+                      }`}
+                    >
+                      {status.charAt(0).toUpperCase() +
+                        status.slice(1).toLowerCase()}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {/* Vertical Separator */}
+              <div className='h-8 w-px bg-gray-200'></div>
+
+              {/* Type Section */}
+              <div className='flex items-center gap-3'>
+                <div className='flex items-center gap-2'>
+                  <div className='w-2 h-2 rounded-full bg-blue-500'></div>
+                  <span className='text-sm font-medium text-gray-700'>
+                    Type
+                  </span>
+                </div>
+                <div className='flex items-center gap-2'>
+                  {Object.values(ContentType).map((type) => {
+                    const getTypeIcon = (contentType: string) => {
+                      switch (contentType) {
+                        case 'blog_post':
+                          return '📝';
+                        case 'social_post':
+                          return '📱';
+                        case 'video':
+                          return '🎥';
+                        case 'podcast':
+                          return '🎧';
+                        case 'email':
+                          return '📧';
+                        case 'other':
+                          return '📋';
+                        default:
+                          return '📄';
+                      }
+                    };
+
+                    const getTypeName = (contentType: string) => {
+                      switch (contentType) {
+                        case 'blog_post':
+                          return 'Blog';
+                        case 'social_post':
+                          return 'Social';
+                        case 'video':
+                          return 'Video';
+                        case 'podcast':
+                          return 'Podcast';
+                        case 'email':
+                          return 'Email';
+                        case 'other':
+                          return 'Other';
+                        default:
+                          return 'Article';
+                      }
+                    };
+
+                    return (
+                      <button
+                        key={type}
+                        onClick={() => setFilterType(type)}
+                        className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-medium transition-all duration-200 ${
+                          filterType === type
+                            ? 'bg-blue-100 text-blue-700 border border-blue-200'
+                            : 'text-gray-600 hover:text-gray-900 hover:bg-gray-50'
+                        }`}
+                      >
+                        <span className='text-xs'>{getTypeIcon(type)}</span>
+                        <span>{getTypeName(type)}</span>
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+            </div>
           </div>
         </div>
       </div>
 
-      {/* Filter Options */}
-      {showFilters && (
-        <motion.div
-          initial={{ opacity: 0, y: -10 }}
-          animate={{ opacity: 1, y: 0 }}
-          className='p-3 sm:p-4 bg-gray-50 rounded-lg'
-        >
-          <div className='flex flex-wrap gap-2'>
-            <button
-              onClick={() => setSelectedFilter('all')}
-              className={`px-3 py-1.5 rounded-full text-xs sm:text-sm transition-colors ${
-                selectedFilter === 'all'
-                  ? 'bg-blue-600 text-white'
-                  : 'bg-white text-gray-700 hover:bg-gray-100'
-              }`}
-            >
-              All Content
-            </button>
-            {Object.values(ContentStatus).map((status) => (
-              <button
-                key={status}
-                onClick={() => setSelectedFilter(status)}
-                className={`px-3 py-1.5 rounded-full text-xs sm:text-sm transition-colors ${
-                  selectedFilter === status
-                    ? 'bg-blue-600 text-white'
-                    : 'bg-white text-gray-700 hover:bg-gray-100'
-                }`}
-              >
-                {status.replace('_', ' ').toUpperCase()}
-              </button>
-            ))}
-            {Object.values(ContentType).map((type) => (
-              <button
-                key={type}
-                onClick={() => setSelectedFilter(type)}
-                className={`px-3 py-1.5 rounded-full text-xs sm:text-sm transition-colors ${
-                  selectedFilter === type
-                    ? 'bg-blue-600 text-white'
-                    : 'bg-white text-gray-700 hover:bg-gray-100'
-                }`}
-              >
-                {type.replace('_', ' ')}
-              </button>
-            ))}
-          </div>
-        </motion.div>
-      )}
-
-      {/* Content Count */}
-      <div className='flex items-center justify-between'>
-        <p className='text-xs sm:text-sm text-gray-600'>
-          Showing {filteredContents.length} of {contents.length} content items
-        </p>
+      {/* Content Count and Stats */}
+      <div className='flex items-center justify-between bg-gray-50 rounded-lg px-4 py-3'>
+        <div className='flex items-center gap-4'>
+          <p className='text-sm font-medium text-gray-700'>
+            Showing{' '}
+            <span className='text-purple-600 font-semibold'>
+              {filteredContents.length}
+            </span>{' '}
+            of{' '}
+            <span className='text-gray-900 font-semibold'>
+              {contents.length}
+            </span>{' '}
+            content items
+          </p>
+          {filterType !== 'all' && (
+            <span className='px-2 py-1 bg-purple-100 text-purple-700 text-xs font-medium rounded-full'>
+              Filtered by:{' '}
+              {filterType.charAt(0).toUpperCase() +
+                filterType.slice(1).replace('_', ' ')}
+            </span>
+          )}
+        </div>
+        {searchQuery && (
+          <span className='px-2 py-1 bg-blue-100 text-blue-700 text-xs font-medium rounded-full'>
+            Search: &ldquo;{searchQuery}&rdquo;
+          </span>
+        )}
       </div>
 
       {/* Content Grid/List */}
@@ -520,7 +526,7 @@ export default function ContentPage() {
                 No content found
               </h3>
               <p className='text-sm sm:text-base text-gray-600 mb-4'>
-                {searchQuery || selectedFilter !== 'all'
+                {searchQuery || filterType !== 'all'
                   ? 'Try adjusting your search or filters'
                   : 'Get started by creating your first piece of content. You will only see content that you have created.'}
               </p>
