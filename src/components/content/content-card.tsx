@@ -31,10 +31,12 @@ import {
 } from './content-helpers';
 import { contentAPI } from '@/src/lib/api';
 import DeleteConfirmationModal from './delete-confirmation-modal';
+import ContentEditModal from './content-edit-modal';
 
 interface ContentCardProps {
   content: Content;
   onContentDeleted?: (contentId: string) => void;
+  onContentUpdated?: () => void;
 }
 
 interface DropdownOption {
@@ -74,11 +76,13 @@ const ContentDropdown = ({
   isOpen,
   onClose,
   onDeleteClick,
+  onEditClick,
 }: {
   content: Content;
   isOpen: boolean;
   onClose: () => void;
   onDeleteClick: () => void;
+  onEditClick: () => void;
 }) => {
   const dropdownRef = useRef<HTMLDivElement>(null);
 
@@ -106,8 +110,7 @@ const ContentDropdown = ({
       icon: Edit,
       label: 'Edit Content',
       action: () => {
-        // Navigate to edit page
-        window.location.href = `/content/${content._id}/edit`;
+        onEditClick();
       },
     },
     {
@@ -214,15 +217,31 @@ const ContentDropdown = ({
 export const ContentCard = ({
   content,
   onContentDeleted,
+  onContentUpdated,
 }: ContentCardProps) => {
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
 
   const handleMoreClick = (e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
     setIsDropdownOpen(!isDropdownOpen);
+  };
+
+  const handleEditClick = () => {
+    setIsDropdownOpen(false);
+    setIsEditModalOpen(true);
+  };
+
+  const handleEditSuccess = () => {
+    setIsEditModalOpen(false);
+    onContentUpdated?.();
+  };
+
+  const handleEditCancel = () => {
+    setIsEditModalOpen(false);
   };
 
   const handleDeleteClick = () => {
@@ -410,9 +429,22 @@ export const ContentCard = ({
             isOpen={isDropdownOpen}
             onClose={() => setIsDropdownOpen(false)}
             onDeleteClick={handleDeleteClick}
+            onEditClick={handleEditClick}
           />
         </Card>
       </motion.div>
+
+      {/* Edit Modal */}
+      <ContentEditModal
+        isOpen={isEditModalOpen}
+        onClose={handleEditCancel}
+        contentId={content._id}
+        currentStatus={content.status as 'draft' | 'scheduled' | 'published'}
+        currentPriority='medium' // Default since priority isn't in the content type
+        currentScheduledDate={content.metadata?.scheduledDate}
+        contentTitle={content.title}
+        onSuccess={handleEditSuccess}
+      />
 
       {/* Delete Confirmation Modal */}
       <DeleteConfirmationModal
