@@ -282,6 +282,19 @@ export const contentAPI = {
     api.put(`/api/v1/content/${id}/priority`, priorityData),
 
   delete: (id: string) => api.delete(`/api/v1/content/${id}`),
+
+  archive: (
+    id: string,
+    archiveData: { reason?: string; preserveCalendarEvents?: boolean }
+  ) => api.put(`/api/v1/content/${id}/archive`, archiveData),
+
+  unarchive: (
+    id: string,
+    unarchiveData: {
+      restoreStatus?: 'draft' | 'scheduled' | 'published';
+      restoreCalendarEvents?: boolean;
+    }
+  ) => api.put(`/api/v1/content/${id}/unarchive`, unarchiveData),
 };
 
 // Calendar API methods

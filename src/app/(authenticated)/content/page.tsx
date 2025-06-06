@@ -1,14 +1,15 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
-import { Search, Plus, FileText, Grid3X3, List } from 'lucide-react';
+import React, { useState, useEffect, useRef } from 'react';
+import { Search, Plus, FileText } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import toast from 'react-hot-toast';
-import { useGlobalConfetti } from '@/src/context/ConfettiContext';
+import { useContentCreation } from '@/src/context/ContentCreationContext';
 import { Content, ContentStatus, ContentType } from '@/src/types/content';
 import { ContentCard } from '@/src/components/content/content-card';
 import { ContentListItem } from '@/src/components/content/content-list-items';
 import CreateContentModal from '@/src/components/content/content-creation-modal';
+import ContentFilter from '@/src/components/content/content-filter';
 import { ContentFormData } from '@/src/types/modal';
 import { contentAPI } from '@/src/lib/api';
 import { AuthUtils } from '@/src/lib/auth-utils';
@@ -16,7 +17,8 @@ import ContentLoading from '@/src/components/ui/content-loading';
 // import AuthDebug from '@/src/components/debug/AuthDebug';
 
 type ViewMode = 'grid' | 'list';
-type FilterType = 'all' | ContentStatus | ContentType;
+type StatusFilter = 'all' | ContentStatus;
+type TypeFilter = 'all' | ContentType;
 
 interface ContentCreatePayload {
   title: string;
@@ -31,12 +33,20 @@ export default function ContentPage() {
   const [contents, setContents] = useState<Content[]>([]);
   const [filteredContents, setFilteredContents] = useState<Content[]>([]);
   const [searchQuery, setSearchQuery] = useState('');
-  const [filterType, setFilterType] = useState<FilterType>('all');
+  const [statusFilter, setStatusFilter] = useState<StatusFilter>('all');
+  const [typeFilter, setTypeFilter] = useState<TypeFilter>('all');
   const [showModal, setShowModal] = useState(false);
   const [viewMode, setViewMode] = useState<ViewMode>('grid');
   const [isLoading, setIsLoading] = useState(true);
+  const previouslyCreatingRef = useRef(false);
 
-  const { triggerContentCreationCelebration } = useGlobalConfetti();
+  const {
+    startContentCreation,
+    failContentCreation,
+    completeContentCreation,
+    setContentId,
+    isCreating,
+  } = useContentCreation();
 
   // No calendar context needed in this component
 
@@ -98,147 +108,138 @@ export default function ContentPage() {
     fetchContents();
   }, []);
 
-  const handleCreateContent = async (contentData: ContentFormData) => {
-    // Validate required fields first
-    if (!contentData.title.trim()) {
-      toast.error('Content title is required');
-      return;
-    }
-
-    if (contentData.platforms.length === 0) {
-      toast.error('Please select at least one platform');
-      return;
-    }
-
-    // Close modal immediately and reset states
-    setShowModal(false);
-
-    // Show creating toast with loading indicator
-    const creatingToastId = toast.loading(
-      '🚀 Creating your content... AI is working its magic!',
-      {
-        style: {
-          background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
-          color: 'white',
-          border: 'none',
-          fontWeight: '500',
-        },
+  // Refresh content when creation completes (user might have navigated away and back)
+  useEffect(() => {
+    const refreshContents = async () => {
+      try {
+        const response = await contentAPI.getUserContent();
+        if (response.data?.statusCode === '10000' && response.data?.data) {
+          setContents(response.data.data);
+          setFilteredContents(response.data.data);
+        }
+      } catch (error) {
+        console.error('Failed to refresh content after creation:', error);
       }
-    );
+    };
 
+    // If we were creating content and now we're not, refresh the list
+    if (previouslyCreatingRef.current && !isCreating) {
+      refreshContents();
+    }
+
+    previouslyCreatingRef.current = isCreating;
+  }, [isCreating]);
+
+  const handleCreateContent = async (contentData: ContentFormData) => {
     try {
+      // Validate required fields first
+      if (!contentData.title.trim()) {
+        toast.error('Content title is required');
+        return;
+      }
+
+      if (contentData.platforms.length === 0) {
+        toast.error('Please select at least one platform');
+        return;
+      }
+
+      // Close modal immediately and reset states
+      setShowModal(false);
+
       // Determine status based on whether scheduled date/time is provided
       const hasScheduledDateTime = !!(
         contentData.scheduledDate && contentData.scheduledTime
       );
 
-      // Prepare the payload for API
-      const newContentPayload: ContentCreatePayload = {
-        title: contentData.title.trim(),
-        type: contentData.contentType,
-        platform: contentData.platforms,
-      };
+      // Start the global content creation process
+      startContentCreation(contentData.title.trim(), hasScheduledDateTime);
 
-      // Add optional fields only if they have values
-      if (contentData.description?.trim()) {
-        newContentPayload.description = contentData.description.trim();
-      }
+      try {
+        // Prepare the payload for API
+        const newContentPayload: ContentCreatePayload = {
+          title: contentData.title.trim(),
+          type: contentData.contentType,
+          platform: contentData.platforms,
+        };
 
-      if (contentData.tags.length > 0) {
-        newContentPayload.tags = contentData.tags.filter((tag) => tag.trim());
-      }
+        // Add optional fields only if they have values
+        if (contentData.description?.trim()) {
+          newContentPayload.description = contentData.description.trim();
+        }
 
-      // Add scheduled date if both date and time are provided
-      if (hasScheduledDateTime) {
-        const scheduledDateTime = `${contentData.scheduledDate}T${contentData.scheduledTime}:00.000Z`;
-        newContentPayload.scheduledDate = scheduledDateTime;
-      }
+        if (contentData.tags.length > 0) {
+          newContentPayload.tags = contentData.tags.filter((tag) => tag.trim());
+        }
 
-      console.log('Creating content with payload:', newContentPayload);
-
-      // ALWAYS call the API to create content
-      const response = await contentAPI.create(newContentPayload);
-
-      console.log('Content creation response:', response.data);
-
-      // Check if the creation was successful
-      if (
-        response.data?.statusCode === '10000' ||
-        response.status === 200 ||
-        response.status === 201
-      ) {
-        // Dismiss the creating toast
-        toast.dismiss(creatingToastId);
-
-        // Show appropriate success message based on whether it's scheduled or draft
+        // Add scheduled date if both date and time are provided
         if (hasScheduledDateTime) {
-          toast.success(
-            '🎉 Content created and scheduled successfully! Check your calendar!',
-            {
-              duration: 5000,
-              style: {
-                background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
-                color: 'white',
-                border: 'none',
-                fontWeight: '500',
-                fontSize: '16px',
-              },
-              icon: '📅',
-            }
-          );
-        } else {
-          toast.success('🎉 Content created as draft successfully!', {
-            duration: 5000,
-            style: {
-              background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
-              color: 'white',
-              border: 'none',
-              fontWeight: '500',
-              fontSize: '16px',
-            },
-            icon: '📝',
-          });
+          const scheduledDateTime = `${contentData.scheduledDate}T${contentData.scheduledTime}:00.000Z`;
+          newContentPayload.scheduledDate = scheduledDateTime;
         }
 
-        // Celebrate with confetti immediately after toast
-        setTimeout(() => {
-          triggerContentCreationCelebration();
-        }, 100);
+        console.log('Creating content with payload:', newContentPayload);
 
-        // Refresh the content list to show the new content
-        const refreshResponse = await contentAPI.getUserContent();
+        // ALWAYS call the API to create content
+        const response = await contentAPI.create(newContentPayload);
+
+        console.log('Content creation response:', response.data);
+
+        // Check if the creation was successful
         if (
-          refreshResponse.data?.statusCode === '10000' &&
-          refreshResponse.data?.data
+          response.data?.statusCode === '10000' ||
+          response.status === 200 ||
+          response.status === 201
         ) {
-          setContents(refreshResponse.data.data);
-          setFilteredContents(refreshResponse.data.data);
+          // Set the content ID if available and complete the creation
+          if (response.data?.data?._id) {
+            setContentId(response.data.data._id);
+          }
+          completeContentCreation();
+
+          // Refresh the content list
+          const refreshResponse = await contentAPI.getUserContent();
+          if (
+            refreshResponse.data?.statusCode === '10000' &&
+            refreshResponse.data?.data
+          ) {
+            setContents(refreshResponse.data.data);
+            setFilteredContents(refreshResponse.data.data);
+          }
+        } else {
+          throw new Error(response.data?.message || 'Failed to create content');
         }
-      } else {
-        throw new Error(response.data?.message || 'Failed to create content');
+      } catch (error: unknown) {
+        console.error('Failed to create content:', error);
+
+        // Let the global context handle error notification
+        let errorMessage = 'Failed to create content. Please try again.';
+
+        if (error instanceof Error) {
+          errorMessage = error.message;
+        } else if (
+          typeof error === 'object' &&
+          error !== null &&
+          'response' in error
+        ) {
+          const axiosError = error as {
+            response?: { data?: { message?: string } };
+          };
+          errorMessage = axiosError.response?.data?.message || errorMessage;
+        }
+
+        failContentCreation(errorMessage);
       }
     } catch (error: unknown) {
-      console.error('Failed to create content:', error);
+      // Catch any validation errors or other issues before content creation starts
+      console.error('Error in handleCreateContent:', error);
 
-      // Dismiss the creating toast
-      toast.dismiss(creatingToastId);
-
-      // Show error notification with specific message
-      let errorMessage = 'Failed to create content. Please try again.';
-
+      let errorMessage = 'An unexpected error occurred. Please try again.';
       if (error instanceof Error) {
         errorMessage = error.message;
-      } else if (
-        typeof error === 'object' &&
-        error !== null &&
-        'response' in error
-      ) {
-        const axiosError = error as {
-          response?: { data?: { message?: string } };
-        };
-        errorMessage = axiosError.response?.data?.message || errorMessage;
       }
 
+      // Only show toast for validation errors, not failContentCreation
+      // since we haven't started the creation process yet
       toast.error(`❌ ${errorMessage}`, {
         duration: 6000,
         style: {
@@ -296,16 +297,21 @@ export default function ContentPage() {
       );
     }
 
-    // Apply status/type filter
-    if (filterType !== 'all') {
-      filtered = filtered.filter(
-        (content) =>
-          content.status === filterType || content.type === filterType
-      );
+    // Apply status filter
+    if (statusFilter !== 'all') {
+      filtered = filtered.filter((content) => content.status === statusFilter);
+    } else {
+      // When status "all" is selected, exclude archived content by default
+      filtered = filtered.filter((content) => content.status !== 'archived');
+    }
+
+    // Apply type filter
+    if (typeFilter !== 'all') {
+      filtered = filtered.filter((content) => content.type === typeFilter);
     }
 
     setFilteredContents(filtered);
-  }, [contents, searchQuery, filterType]);
+  }, [contents, searchQuery, statusFilter, typeFilter]);
 
   if (isLoading) {
     return <ContentLoading />;
@@ -348,184 +354,18 @@ export default function ContentPage() {
         </div>
 
         {/* Modern Filter Section */}
-        <div className='bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden'>
-          {/* Filter Header */}
-          <div className='px-6 py-4 border-b border-gray-100 bg-gray-50/50'>
-            <div className='flex items-center justify-between'>
-              <h3 className='text-sm font-semibold text-gray-900'>
-                Filter Content
-              </h3>
-              <div className='flex items-center gap-3'>
-                <span className='text-xs text-gray-500'>View:</span>
-                <div className='flex bg-gray-100 rounded-lg p-0.5'>
-                  <button
-                    onClick={() => setViewMode('grid')}
-                    className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-md text-xs font-medium transition-all duration-200 ${
-                      viewMode === 'grid'
-                        ? 'bg-white text-gray-900 shadow-sm'
-                        : 'text-gray-600 hover:text-gray-900'
-                    }`}
-                    title='Grid View'
-                  >
-                    <Grid3X3 className='w-3.5 h-3.5' />
-                    <span>Grid</span>
-                  </button>
-                  <button
-                    onClick={() => setViewMode('list')}
-                    className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-md text-xs font-medium transition-all duration-200 ${
-                      viewMode === 'list'
-                        ? 'bg-white text-gray-900 shadow-sm'
-                        : 'text-gray-600 hover:text-gray-900'
-                    }`}
-                    title='List View'
-                  >
-                    <List className='w-3.5 h-3.5' />
-                    <span>List</span>
-                  </button>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          {/* Filter Content */}
-          <div className='p-6'>
-            <div className='flex flex-wrap items-center gap-6'>
-              {/* Status Section */}
-              <div className='flex items-center gap-3'>
-                <div className='flex items-center gap-2'>
-                  <div className='w-2 h-2 rounded-full bg-purple-500'></div>
-                  <span className='text-sm font-medium text-gray-700'>
-                    Status
-                  </span>
-                </div>
-                <div className='flex items-center gap-2'>
-                  <button
-                    onClick={() => setFilterType('all')}
-                    className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-all duration-200 ${
-                      filterType === 'all'
-                        ? 'bg-purple-100 text-purple-700 border border-purple-200'
-                        : 'text-gray-600 hover:text-gray-900 hover:bg-gray-50'
-                    }`}
-                  >
-                    All
-                  </button>
-                  {Object.values(ContentStatus).map((status) => (
-                    <button
-                      key={status}
-                      onClick={() => setFilterType(status)}
-                      className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-all duration-200 ${
-                        filterType === status
-                          ? 'bg-purple-100 text-purple-700 border border-purple-200'
-                          : 'text-gray-600 hover:text-gray-900 hover:bg-gray-50'
-                      }`}
-                    >
-                      {status.charAt(0).toUpperCase() +
-                        status.slice(1).toLowerCase()}
-                    </button>
-                  ))}
-                </div>
-              </div>
-
-              {/* Vertical Separator */}
-              <div className='h-8 w-px bg-gray-200'></div>
-
-              {/* Type Section */}
-              <div className='flex items-center gap-3'>
-                <div className='flex items-center gap-2'>
-                  <div className='w-2 h-2 rounded-full bg-blue-500'></div>
-                  <span className='text-sm font-medium text-gray-700'>
-                    Type
-                  </span>
-                </div>
-                <div className='flex items-center gap-2'>
-                  {Object.values(ContentType).map((type) => {
-                    const getTypeIcon = (contentType: string) => {
-                      switch (contentType) {
-                        case 'blog_post':
-                          return '📝';
-                        case 'social_post':
-                          return '📱';
-                        case 'video':
-                          return '🎥';
-                        case 'podcast':
-                          return '🎧';
-                        case 'email':
-                          return '📧';
-                        case 'other':
-                          return '📋';
-                        default:
-                          return '📄';
-                      }
-                    };
-
-                    const getTypeName = (contentType: string) => {
-                      switch (contentType) {
-                        case 'blog_post':
-                          return 'Blog';
-                        case 'social_post':
-                          return 'Social';
-                        case 'video':
-                          return 'Video';
-                        case 'podcast':
-                          return 'Podcast';
-                        case 'email':
-                          return 'Email';
-                        case 'other':
-                          return 'Other';
-                        default:
-                          return 'Article';
-                      }
-                    };
-
-                    return (
-                      <button
-                        key={type}
-                        onClick={() => setFilterType(type)}
-                        className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-medium transition-all duration-200 ${
-                          filterType === type
-                            ? 'bg-blue-100 text-blue-700 border border-blue-200'
-                            : 'text-gray-600 hover:text-gray-900 hover:bg-gray-50'
-                        }`}
-                      >
-                        <span className='text-xs'>{getTypeIcon(type)}</span>
-                        <span>{getTypeName(type)}</span>
-                      </button>
-                    );
-                  })}
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      {/* Content Count and Stats */}
-      <div className='flex items-center justify-between bg-gray-50 rounded-lg px-4 py-3'>
-        <div className='flex items-center gap-4'>
-          <p className='text-sm font-medium text-gray-700'>
-            Showing{' '}
-            <span className='text-purple-600 font-semibold'>
-              {filteredContents.length}
-            </span>{' '}
-            of{' '}
-            <span className='text-gray-900 font-semibold'>
-              {contents.length}
-            </span>{' '}
-            content items
-          </p>
-          {filterType !== 'all' && (
-            <span className='px-2 py-1 bg-purple-100 text-purple-700 text-xs font-medium rounded-full'>
-              Filtered by:{' '}
-              {filterType.charAt(0).toUpperCase() +
-                filterType.slice(1).replace('_', ' ')}
-            </span>
-          )}
-        </div>
-        {searchQuery && (
-          <span className='px-2 py-1 bg-blue-100 text-blue-700 text-xs font-medium rounded-full'>
-            Search: &ldquo;{searchQuery}&rdquo;
-          </span>
-        )}
+        <ContentFilter
+          statusFilter={statusFilter}
+          setStatusFilter={setStatusFilter}
+          typeFilter={typeFilter}
+          setTypeFilter={setTypeFilter}
+          viewMode={viewMode}
+          setViewMode={setViewMode}
+          filteredCount={filteredContents.length}
+          totalCount={contents.length}
+          archivedCount={contents.filter((c) => c.status === 'archived').length}
+          searchQuery={searchQuery}
+        />
       </div>
 
       {/* Content Grid/List */}
@@ -544,7 +384,7 @@ export default function ContentPage() {
                 No content found
               </h3>
               <p className='text-sm sm:text-base text-gray-600 mb-4'>
-                {searchQuery || filterType !== 'all'
+                {searchQuery || statusFilter !== 'all' || typeFilter !== 'all'
                   ? 'Try adjusting your search or filters'
                   : 'Get started by creating your first piece of content. You will only see content that you have created.'}
               </p>

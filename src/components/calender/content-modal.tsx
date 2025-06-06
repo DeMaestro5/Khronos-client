@@ -1,14 +1,5 @@
 import React, { useState } from 'react';
-import {
-  Plus,
-  Calendar,
-  Clock,
-  X,
-  Edit3,
-  Trash2,
-  Eye,
-  MoreHorizontal,
-} from 'lucide-react';
+import { Plus, Calendar, Clock, X, Edit3, Trash2, Eye } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import toast from 'react-hot-toast';
 import { Platform } from '@/src/types/modal';
@@ -306,16 +297,6 @@ export default function ContentModal({
                       >
                         <Trash2 className='w-4 h-4' />
                       </button>
-
-                      {/* Only show options button for present/future dates */}
-                      {!isDateInPast && (
-                        <button
-                          className='p-2 hover:bg-white/10 rounded-lg transition-all duration-200 text-slate-400 hover:text-white hover:scale-110'
-                          title='More Options'
-                        >
-                          <MoreHorizontal className='w-4 h-4' />
-                        </button>
-                      )}
                     </div>
                   </div>
                 </div>

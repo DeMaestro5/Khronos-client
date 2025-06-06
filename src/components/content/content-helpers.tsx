@@ -35,14 +35,16 @@ export const getTypeColor = (type: ContentType) => {
   switch (type) {
     case ContentType.BLOG_POST:
       return 'bg-purple-100 text-purple-800';
-    case ContentType.SOCIAL_POST:
+    case ContentType.SOCIAL:
       return 'bg-pink-100 text-pink-800';
-    case ContentType.EMAIL:
+    case ContentType.NEWSLETTER:
       return 'bg-indigo-100 text-indigo-800';
     case ContentType.VIDEO:
       return 'bg-red-100 text-red-800';
     case ContentType.PODCAST:
       return 'bg-orange-100 text-orange-800';
+    case ContentType.ARTICLE:
+      return 'bg-blue-100 text-blue-800';
     default:
       return 'bg-gray-100 text-gray-800';
   }
