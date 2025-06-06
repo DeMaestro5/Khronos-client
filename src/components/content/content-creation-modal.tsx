@@ -225,8 +225,15 @@ export default function CreateContentModal({
     e.preventDefault();
 
     if (validateForm()) {
+      // Determine status based on whether scheduled date and time are provided
+      const hasScheduledDateTime = !!(
+        formData.scheduledDate && formData.scheduledTime
+      );
+      const determinedStatus = hasScheduledDateTime ? 'scheduled' : 'draft';
+
       const contentItem: ContentItem = {
         ...formData,
+        status: determinedStatus, // Use determined status instead of form status
         id: Date.now(), // Generate a temporary ID
         createdAt: new Date().toISOString(),
       };

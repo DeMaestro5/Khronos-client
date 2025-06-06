@@ -34,6 +34,7 @@ interface CalendarContextType {
   ) => void;
   deleteScheduledContent: (id: string, date: string) => void;
   loadScheduledContent: () => Promise<void>;
+  forceRefreshCalendar: () => Promise<void>;
   clearAllData: () => void;
   isLoading: boolean;
 }
@@ -188,15 +189,7 @@ export const CalendarProvider = ({ children }: CalendarProviderProps) => {
     console.log('🚀 Loading scheduled content...');
 
     try {
-      // First, load from localStorage (manually created calendar items)
-      const storedContent = localStorage.getItem('khronos-scheduled-content');
-      let localCalendarData: ScheduledContent = {};
-      if (storedContent) {
-        localCalendarData = JSON.parse(storedContent);
-        console.log('💾 Loaded from localStorage:', localCalendarData);
-      }
-
-      // Then, fetch from API (actual scheduled content)
+      // First, fetch from API (actual scheduled content)
       try {
         console.log('🌐 Fetching content from API...');
         const response = await contentAPI.getUserContent();
@@ -217,38 +210,56 @@ export const CalendarProvider = ({ children }: CalendarProviderProps) => {
             response.data.data
           );
 
-          // Merge API data with local data (local data takes precedence for same dates)
-          const mergedData = { ...apiCalendarData };
+          console.log('🎯 Final calendar data from API:', apiCalendarData);
+          setScheduledContent(apiCalendarData);
 
-          // Add local data, avoiding duplicates
-          Object.keys(localCalendarData).forEach((dateKey) => {
-            if (mergedData[dateKey]) {
-              // Merge arrays and remove duplicates based on title
-              const existingTitles = new Set(
-                mergedData[dateKey].map((item) => item.title)
+          // Clear old localStorage data that might have invalid IDs
+          // Only keep localStorage as backup for manual entries in the future
+          const storedContent = localStorage.getItem(
+            'khronos-scheduled-content'
+          );
+          if (storedContent) {
+            try {
+              const localCalendarData = JSON.parse(
+                storedContent
+              ) as ScheduledContent;
+              // Check if any items have invalid IDs (not MongoDB ObjectIDs)
+              let hasInvalidIds = false;
+              Object.values(localCalendarData).forEach(
+                (dateContent: ScheduledContentItem[]) => {
+                  dateContent.forEach((item: ScheduledContentItem) => {
+                    // MongoDB ObjectIDs are 24 character hex strings
+                    if (
+                      !item.id ||
+                      typeof item.id !== 'string' ||
+                      item.id.length !== 24 ||
+                      !/^[a-f\d]{24}$/i.test(item.id)
+                    ) {
+                      hasInvalidIds = true;
+                    }
+                  });
+                }
               );
-              const uniqueLocalItems = localCalendarData[dateKey].filter(
-                (item) => !existingTitles.has(item.title)
-              );
-              mergedData[dateKey] = [
-                ...mergedData[dateKey],
-                ...uniqueLocalItems,
-              ];
-            } else {
-              mergedData[dateKey] = localCalendarData[dateKey];
+
+              if (hasInvalidIds) {
+                console.log(
+                  '🧹 Found invalid IDs in localStorage, clearing old data...'
+                );
+                localStorage.removeItem('khronos-scheduled-content');
+              }
+            } catch {
+              console.log('🧹 Invalid localStorage data, clearing...');
+              localStorage.removeItem('khronos-scheduled-content');
             }
-          });
-
-          console.log('🎯 Final merged calendar data:', mergedData);
-          setScheduledContent(mergedData);
+          }
         } else {
           console.warn('⚠️ API response not successful:', response.data);
-          // If API fails, fall back to localStorage only
-          setScheduledContent(localCalendarData);
+          // If API fails, show empty calendar
+          setScheduledContent({});
         }
       } catch (apiError) {
         console.error('❌ Failed to load content from API:', apiError);
-        setScheduledContent(localCalendarData);
+        setScheduledContent({});
       }
     } catch (error) {
       console.error('💥 Error loading scheduled content:', error);
@@ -257,6 +268,13 @@ export const CalendarProvider = ({ children }: CalendarProviderProps) => {
       setIsLoading(false);
       console.log('🏁 Loading complete');
     }
+  };
+
+  // Force refresh calendar by clearing cache and reloading
+  const forceRefreshCalendar = async () => {
+    console.log('🔄 Force refreshing calendar...');
+    localStorage.removeItem('khronos-scheduled-content');
+    await loadScheduledContent();
   };
 
   // Add new scheduled content
@@ -347,6 +365,7 @@ export const CalendarProvider = ({ children }: CalendarProviderProps) => {
     updateScheduledContent,
     deleteScheduledContent,
     loadScheduledContent,
+    forceRefreshCalendar,
     clearAllData,
     isLoading,
   };
