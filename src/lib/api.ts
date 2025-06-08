@@ -333,4 +333,56 @@ export const analyticsAPI = {
     api.get('/analytics/stats', { params: { dateRange } }),
 };
 
+// AI Chat API methods
+export const aiChatAPI = {
+  // Start enhanced chat session with content ownership validation
+  startSession: (
+    title: string,
+    contentId: string,
+    description?: string,
+    templateId?: string
+  ) =>
+    api.post('/api/v1/chat/start', {
+      title,
+      description,
+      contentId,
+      templateId,
+    }),
+
+  // Send message with enhanced validation and responses
+  sendMessage: (sessionId: string, message: string) =>
+    api.post('/api/v1/chat/message', {
+      sessionId,
+      message,
+    }),
+
+  // Get all chat sessions with optional content filtering
+  getSessions: (filters?: {
+    status?: 'active' | 'archived' | 'completed';
+    limit?: number;
+    skip?: number;
+    contentId?: string;
+  }) => api.get('/api/v1/chat/sessions', { params: filters }),
+
+  // Get enhanced session with conversation starters
+  getSession: (sessionId: string) =>
+    api.get(`/api/v1/chat/sessions/${sessionId}`),
+
+  // Delete a chat session
+  deleteSession: (sessionId: string) =>
+    api.delete(`/api/v1/chat/sessions/${sessionId}`),
+
+  // Get available chat templates
+  getTemplates: (filters?: {
+    category?:
+      | 'content-optimization'
+      | 'content-creation'
+      | 'strategy'
+      | 'analysis'
+      | 'custom';
+    limit?: number;
+    search?: string;
+  }) => api.get('/api/v1/chat/content-templates', { params: filters }),
+};
+
 export default api;
