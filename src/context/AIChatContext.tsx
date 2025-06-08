@@ -7,21 +7,16 @@ import React, {
   useEffect,
   ReactNode,
 } from 'react';
-
-interface AIChatMessage {
-  id: string;
-  role: 'user' | 'assistant';
-  content: string;
-  timestamp: Date;
-  contentId?: string;
-}
-
-interface ContentConversation {
-  contentId: string;
-  contentTitle: string;
-  messages: AIChatMessage[];
-  lastUpdated: Date;
-}
+import { aiChatAPI } from '@/src/lib/api';
+import {
+  AIChatMessage,
+  ContentConversation,
+  StartSessionResponse,
+  SendMessageResponse,
+  GetSessionResponse,
+  ConversationStarter,
+  ChatUIAction,
+} from '@/src/types/ai';
 
 interface AIChatState {
   isOpen: boolean;
@@ -29,18 +24,23 @@ interface AIChatState {
   currentContentId: string | null;
   currentContentTitle: string | null;
   isLoading: boolean;
+  error: string | null;
 }
 
 interface AIChatContextType {
   isOpen: boolean;
   messages: AIChatMessage[];
   isLoading: boolean;
+  error: string | null;
   currentContentId: string | null;
   currentContentTitle: string | null;
-  openChat: (contentId?: string, contentTitle?: string) => void;
+  conversationStarters: ConversationStarter[];
+  actions: ChatUIAction[];
+  openChat: (contentId?: string, contentTitle?: string) => Promise<void>;
   closeChat: () => void;
   sendMessage: (message: string) => Promise<void>;
   clearMessages: () => void;
+  clearAllConversations: () => void;
   getAllConversations: () => ContentConversation[];
 }
 
@@ -57,6 +57,7 @@ export const AIChatProvider: React.FC<{ children: ReactNode }> = ({
     currentContentId: null,
     currentContentTitle: null,
     isLoading: false,
+    error: null,
   });
 
   // Load conversations from localStorage on mount
@@ -65,6 +66,27 @@ export const AIChatProvider: React.FC<{ children: ReactNode }> = ({
       const stored = localStorage.getItem(STORAGE_KEY);
       if (stored) {
         const parsedConversations = JSON.parse(stored);
+
+        // Check if this is old dummy data format (no sessionId)
+        const isOldFormat = Object.values(parsedConversations).some(
+          (conv: unknown) => {
+            const conversation = conv as Record<string, unknown>;
+            return (
+              !conversation.sessionId &&
+              Array.isArray(conversation.messages) &&
+              conversation.messages.length > 0
+            );
+          }
+        );
+
+        if (isOldFormat) {
+          console.log(
+            'Detected old chat data format, clearing and starting fresh...'
+          );
+          localStorage.removeItem(STORAGE_KEY);
+          return;
+        }
+
         // Convert timestamp strings back to Date objects
         const conversations: Record<string, ContentConversation> = {};
         Object.keys(parsedConversations).forEach((contentId) => {
@@ -86,6 +108,8 @@ export const AIChatProvider: React.FC<{ children: ReactNode }> = ({
       }
     } catch (error) {
       console.error('Failed to load chat conversations:', error);
+      // Clear corrupted data
+      localStorage.removeItem(STORAGE_KEY);
     }
   }, []);
 
@@ -100,169 +124,321 @@ export const AIChatProvider: React.FC<{ children: ReactNode }> = ({
     }
   };
 
-  const openChat = (contentId?: string, contentTitle?: string) => {
+  const openChat = async (contentId?: string, contentTitle?: string) => {
     if (!contentId) {
-      // General chat (no specific content)
+      // General chat (no specific content) - not supported in enhanced mode
       setState((prev) => ({
         ...prev,
         isOpen: true,
         currentContentId: null,
         currentContentTitle: null,
+        error: 'Content ID is required for AI chat',
       }));
       return;
     }
 
-    // Content-specific chat
     setState((prev) => ({
       ...prev,
       isOpen: true,
       currentContentId: contentId,
       currentContentTitle: contentTitle || null,
+      isLoading: true,
+      error: null,
     }));
 
-    // Create conversation if it doesn't exist
-    setState((prev) => {
-      if (!prev.conversations[contentId]) {
+    try {
+      // Check if we already have a session for this content
+      const existingConversation = state.conversations[contentId];
+
+      if (existingConversation && existingConversation.sessionId) {
+        // Load existing session from server
+        try {
+          const response = await aiChatAPI.getSession(
+            existingConversation.sessionId
+          );
+
+          // Handle the server response structure: { statusCode, message, data }
+          const responseData = response.data;
+          if (responseData.statusCode !== '10000') {
+            throw new Error(responseData.message || 'Failed to load session');
+          }
+
+          const sessionData: GetSessionResponse = responseData.data;
+
+          const updatedConversation: ContentConversation = {
+            contentId,
+            contentTitle: contentTitle || existingConversation.contentTitle,
+            sessionId: existingConversation.sessionId,
+            messages: sessionData.session.messages.map((msg) => ({
+              ...msg,
+              timestamp: new Date(msg.timestamp),
+            })),
+            lastUpdated: new Date(sessionData.session.updatedAt),
+            conversationStarters: sessionData.conversationStarters || [],
+            actions: sessionData.ui?.actions || [],
+          };
+
+          setState((prev) => {
+            const newConversations = {
+              ...prev.conversations,
+              [contentId]: updatedConversation,
+            };
+            saveConversations(newConversations);
+            return {
+              ...prev,
+              conversations: newConversations,
+              isLoading: false,
+            };
+          });
+        } catch (error) {
+          console.error('Failed to load existing session:', error);
+          // Create new session if loading existing one fails
+          await createNewSession(contentId, contentTitle);
+        }
+      } else {
+        // Create new session
+        await createNewSession(contentId, contentTitle);
+      }
+    } catch (error) {
+      console.error('Failed to open chat:', error);
+      setState((prev) => ({
+        ...prev,
+        isLoading: false,
+        error: 'Failed to open chat. Please try again.',
+      }));
+    }
+  };
+
+  const createNewSession = async (contentId: string, contentTitle?: string) => {
+    try {
+      console.log('Creating new session for content:', contentId, contentTitle);
+
+      const response = await aiChatAPI.startSession(
+        contentTitle || `Chat for Content ${contentId}`,
+        contentId,
+        `AI assistant session for content: ${contentTitle || contentId}`
+      );
+
+      console.log('Start session response:', response.data);
+
+      // Handle the server response structure: { statusCode, message, data }
+      const responseData = response.data;
+      if (responseData.statusCode !== '10000') {
+        throw new Error(responseData.message || 'Failed to create session');
+      }
+
+      const sessionData: StartSessionResponse = responseData.data;
+
+      console.log('Session data:', sessionData);
+      console.log('Conversation starters:', sessionData.conversationStarters);
+
+      const newConversation: ContentConversation = {
+        contentId,
+        contentTitle: contentTitle || sessionData.session.title,
+        sessionId: sessionData.session.id,
+        messages: [],
+        lastUpdated: new Date(),
+        conversationStarters: sessionData.conversationStarters || [],
+        actions: sessionData.ui?.actions || [],
+      };
+
+      console.log('New conversation created:', newConversation);
+
+      setState((prev) => {
         const newConversations = {
           ...prev.conversations,
-          [contentId]: {
-            contentId,
-            contentTitle: contentTitle || `Content ${contentId}`,
-            messages: [],
-            lastUpdated: new Date(),
-          },
+          [contentId]: newConversation,
         };
         saveConversations(newConversations);
         return {
           ...prev,
           conversations: newConversations,
+          isLoading: false,
         };
-      }
-      return prev;
-    });
+      });
+    } catch (error) {
+      console.error('Failed to create new session:', error);
+      console.error('Error details:', {
+        message: (error as Error)?.message,
+        response: (error as { response?: { data?: unknown; status?: number } })
+          ?.response?.data,
+        status: (error as { response?: { data?: unknown; status?: number } })
+          ?.response?.status,
+      });
+
+      // If the error might be due to conflicting old data, clear it and show helpful message
+      const errorResponse = error as {
+        response?: { data?: { message?: string } };
+      };
+      const errorMessage =
+        errorResponse.response?.data?.message ||
+        (error as Error)?.message ||
+        'Unknown error';
+
+      setState((prev) => ({
+        ...prev,
+        isLoading: false,
+        error: `Failed to create chat session: ${errorMessage}. Try clearing your chat history if this persists.`,
+      }));
+    }
   };
 
   const closeChat = () => {
     setState((prev) => ({
       ...prev,
       isOpen: false,
+      error: null,
     }));
   };
 
   const sendMessage = async (message: string) => {
     const currentContentId = state.currentContentId;
 
+    if (!currentContentId) {
+      setState((prev) => ({
+        ...prev,
+        error: 'No content selected for chat',
+      }));
+      return;
+    }
+
+    const currentConversation = state.conversations[currentContentId];
+    if (!currentConversation?.sessionId) {
+      setState((prev) => ({
+        ...prev,
+        error: 'No active chat session. Please try reopening the chat.',
+      }));
+      return;
+    }
+
     const userMessage: AIChatMessage = {
       id: Date.now().toString(),
       role: 'user',
       content: message,
       timestamp: new Date(),
-      contentId: currentContentId || undefined,
+      contentId: currentContentId,
     };
 
-    // Add user message to current conversation
+    // Add user message to current conversation immediately
     setState((prev) => {
       const updatedConversations = { ...prev.conversations };
-
-      if (currentContentId && updatedConversations[currentContentId]) {
-        updatedConversations[currentContentId] = {
-          ...updatedConversations[currentContentId],
-          messages: [
-            ...updatedConversations[currentContentId].messages,
-            userMessage,
-          ],
-          lastUpdated: new Date(),
-        };
-        saveConversations(updatedConversations);
-      }
+      updatedConversations[currentContentId] = {
+        ...updatedConversations[currentContentId],
+        messages: [
+          ...updatedConversations[currentContentId].messages,
+          userMessage,
+        ],
+        lastUpdated: new Date(),
+      };
+      saveConversations(updatedConversations);
 
       return {
         ...prev,
         conversations: updatedConversations,
         isLoading: true,
+        error: null,
       };
     });
 
     try {
-      // Simulate AI response - replace with actual API call
-      await new Promise((resolve) => setTimeout(resolve, 1500));
+      console.log(
+        'Sending message to session:',
+        currentConversation.sessionId,
+        'Message:',
+        message
+      );
 
-      let aiResponse = "I'm here to help you with your content! ";
+      const response = await aiChatAPI.sendMessage(
+        currentConversation.sessionId,
+        message
+      );
 
-      if (currentContentId && state.currentContentTitle) {
-        // Enhanced content-specific responses
-        const contentSpecificResponses = [
-          `Great question about "${state.currentContentTitle}"! `,
-          `Regarding your content "${state.currentContentTitle}", `,
-          `For "${state.currentContentTitle}", I can help with `,
-          `Let's optimize "${state.currentContentTitle}" together! `,
-        ];
+      console.log('Send message response:', response.data);
 
-        const randomStart =
-          contentSpecificResponses[
-            Math.floor(Math.random() * contentSpecificResponses.length)
-          ];
-
-        aiResponse =
-          randomStart +
-          `I can help you with:
-        
-• Content optimization and SEO improvements
-• Engagement strategies for better reach
-• Performance analysis and insights
-• Content repurposing ideas
-• Audience targeting suggestions
-• Writing style and tone adjustments
-
-What specific aspect would you like to focus on for this content?`;
-      } else {
-        aiResponse +=
-          'Ask me anything about content creation, optimization, strategy, or any specific questions you have about your content calendar! I can help with writing, SEO, engagement tactics, and more.';
+      // Handle the server response structure: { statusCode, message, data }
+      const responseData = response.data;
+      if (responseData.statusCode !== '10000') {
+        throw new Error(responseData.message || 'Failed to send message');
       }
+
+      const messageData: SendMessageResponse = responseData.data;
 
       const assistantMessage: AIChatMessage = {
         id: (Date.now() + 1).toString(),
         role: 'assistant',
-        content: aiResponse,
-        timestamp: new Date(),
-        contentId: currentContentId || undefined,
+        content: messageData.message.content,
+        timestamp: new Date(messageData.message.timestamp),
+        metadata: messageData.message.metadata,
+        contentId: currentContentId,
       };
 
       // Add assistant message to current conversation
       setState((prev) => {
         const updatedConversations = { ...prev.conversations };
-
-        if (currentContentId && updatedConversations[currentContentId]) {
-          updatedConversations[currentContentId] = {
-            ...updatedConversations[currentContentId],
-            messages: [
-              ...updatedConversations[currentContentId].messages,
-              assistantMessage,
-            ],
-            lastUpdated: new Date(),
-          };
-          saveConversations(updatedConversations);
-        }
+        updatedConversations[currentContentId] = {
+          ...updatedConversations[currentContentId],
+          messages: [
+            ...updatedConversations[currentContentId].messages,
+            assistantMessage,
+          ],
+          lastUpdated: new Date(),
+        };
+        saveConversations(updatedConversations);
 
         return {
           ...prev,
           conversations: updatedConversations,
           isLoading: false,
+          error: messageData.inappropriateContentDetected
+            ? messageData.warningMessage || 'Content flagged as inappropriate'
+            : null,
         };
       });
+
+      // Log additional response data for debugging
+      if (messageData.suggestions?.length) {
+        console.log('AI Suggestions:', messageData.suggestions);
+      }
+      if (messageData.contentInsights) {
+        console.log('Content Insights:', messageData.contentInsights);
+      }
     } catch (error) {
       console.error('Failed to send message:', error);
-      setState((prev) => ({
-        ...prev,
-        isLoading: false,
-      }));
+      console.error('Send message error details:', {
+        message: (error as Error)?.message,
+        response: (error as { response?: { data?: unknown; status?: number } })
+          ?.response?.data,
+        status: (error as { response?: { data?: unknown; status?: number } })
+          ?.response?.status,
+        sessionId: currentConversation.sessionId,
+      });
+
+      // Remove the user message on error and show error state
+      setState((prev) => {
+        const updatedConversations = { ...prev.conversations };
+        updatedConversations[currentContentId] = {
+          ...updatedConversations[currentContentId],
+          messages: updatedConversations[currentContentId].messages.filter(
+            (msg) => msg.id !== userMessage.id
+          ),
+        };
+        saveConversations(updatedConversations);
+
+        return {
+          ...prev,
+          conversations: updatedConversations,
+          isLoading: false,
+          error: 'Failed to send message. Please try again.',
+        };
+      });
     }
   };
 
-  const clearMessages = () => {
+  const clearMessages = async () => {
     const currentContentId = state.currentContentId;
 
     if (currentContentId) {
+      // Clear local messages
       setState((prev) => {
         const updatedConversations = { ...prev.conversations };
 
@@ -280,7 +456,22 @@ What specific aspect would you like to focus on for this content?`;
           conversations: updatedConversations,
         };
       });
+
+      // Note: We don't delete the server session here, just clear local messages
+      // If you want to delete the server session, you can call aiChatAPI.deleteSession
     }
+  };
+
+  const clearAllConversations = () => {
+    setState((prev) => ({
+      ...prev,
+      conversations: {},
+      currentContentId: null,
+      currentContentTitle: null,
+      error: null,
+    }));
+    localStorage.removeItem(STORAGE_KEY);
+    console.log('All chat conversations cleared');
   };
 
   const getAllConversations = (): ContentConversation[] => {
@@ -289,10 +480,14 @@ What specific aspect would you like to focus on for this content?`;
     );
   };
 
-  // Get current messages based on selected content
-  const currentMessages = state.currentContentId
-    ? state.conversations[state.currentContentId]?.messages || []
-    : [];
+  // Get current conversation data
+  const currentConversation = state.currentContentId
+    ? state.conversations[state.currentContentId]
+    : null;
+
+  const currentMessages = currentConversation?.messages || [];
+  const conversationStarters = currentConversation?.conversationStarters || [];
+  const actions = currentConversation?.actions || [];
 
   return (
     <AIChatContext.Provider
@@ -300,12 +495,16 @@ What specific aspect would you like to focus on for this content?`;
         isOpen: state.isOpen,
         messages: currentMessages,
         isLoading: state.isLoading,
+        error: state.error,
         currentContentId: state.currentContentId,
         currentContentTitle: state.currentContentTitle,
+        conversationStarters,
+        actions,
         openChat,
         closeChat,
         sendMessage,
         clearMessages,
+        clearAllConversations,
         getAllConversations,
       }}
     >

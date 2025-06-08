@@ -7,7 +7,6 @@ import { contentAPI } from '@/src/lib/api';
 import { ContentData } from '@/src/types/content';
 import {
   HeroSection,
-  StatsBar,
   ContentTabs,
   Sidebar,
 } from '@/src/components/content-detail';
@@ -182,7 +181,7 @@ const ContentDetailPage = () => {
             </button>
             <button
               onClick={handleEditClick}
-              className='inline-flex items-center gap-2 px-5 py-3 bg-blue-600 text-white hover:bg-blue-700 rounded-xl transition-all duration-200 shadow-lg hover:shadow-xl'
+              className='inline-flex items-center gap-2 px-5 py-3 bg-purple-600 text-white hover:bg-purple-700 rounded-xl transition-all duration-200 shadow-lg hover:shadow-xl'
             >
               <Edit className='w-4 h-4' />
               <span className='font-medium'>Edit Content</span>
@@ -194,9 +193,9 @@ const ContentDetailPage = () => {
         <HeroSection content={content} />
 
         {/* Stats Bar */}
-        <div className='bg-white rounded-2xl shadow-sm border border-white/20 backdrop-blur-sm mb-8 overflow-hidden'>
+        {/* <div className='bg-white rounded-2xl shadow-sm border border-white/20 backdrop-blur-sm mb-8 overflow-hidden'>
           <StatsBar stats={content.stats} />
-        </div>
+        </div> */}
 
         {/* Main Content Grid */}
         <div className='grid lg:grid-cols-3 gap-8'>
