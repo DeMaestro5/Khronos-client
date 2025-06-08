@@ -198,32 +198,30 @@ const ContentDetailPage = () => {
           <StatsBar stats={content.stats} />
         </div>
 
-        <div className='grid grid-cols-1 lg:grid-cols-3 gap-8'>
-          {/* Main Content */}
-          <div className='lg:col-span-2 space-y-8'>
+        {/* Main Content Grid */}
+        <div className='grid lg:grid-cols-3 gap-8'>
+          <div className='lg:col-span-2'>
             <ContentTabs content={content} />
           </div>
-
-          {/* Sidebar */}
-          <Sidebar content={content} />
+          <div className='lg:col-span-1'>
+            <Sidebar content={content} />
+          </div>
         </div>
-
-        {/* Edit Modal */}
-        {content && (
-          <ContentEditModal
-            isOpen={isEditModalOpen}
-            onClose={handleEditCancel}
-            contentId={content._id}
-            currentStatus={
-              content.status as 'draft' | 'scheduled' | 'published'
-            }
-            currentPriority='medium' // Default since priority isn't in the content type
-            currentScheduledDate={content.metadata?.scheduledDate}
-            contentTitle={content.title}
-            onSuccess={handleEditSuccess}
-          />
-        )}
       </div>
+
+      {/* Edit Modal */}
+      {isEditModalOpen && content && (
+        <ContentEditModal
+          isOpen={isEditModalOpen}
+          onClose={handleEditCancel}
+          onSuccess={handleEditSuccess}
+          contentId={content._id}
+          currentStatus={content.status as 'draft' | 'scheduled' | 'published'}
+          currentPriority='medium'
+          currentScheduledDate={content.metadata?.scheduledDate}
+          contentTitle={content.title}
+        />
+      )}
     </div>
   );
 };

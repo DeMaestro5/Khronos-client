@@ -2,37 +2,30 @@
 
 import React, { useState, useRef, useEffect } from 'react';
 import {
-  Calendar,
-  MoreHorizontal,
-  Edit,
-  Trash2,
-  Copy,
   Archive,
-  BarChart,
-  Share2,
-  Star,
-  Download,
+  Trash2,
+  MoreVertical,
+  Edit3,
+  ArchiveRestore,
+  Bot,
+  Calendar,
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import Image from 'next/image';
 import toast from 'react-hot-toast';
-import { Content, ContentStatus, ContentType } from '@/src/types/content';
-import {
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
-} from '@/src/components/ui/card';
+import { Content, ContentStatus, ContentType } from '../../types/content';
+import { Card, CardContent, CardHeader, CardTitle } from '../ui/card';
 import {
   getStatusIcon,
   getStatusColor,
   getTypeColor,
   formatDate,
 } from './content-helpers';
-import { contentAPI } from '@/src/lib/api';
+import { contentAPI } from '../../lib/api';
 import DeleteConfirmationModal from './delete-confirmation-modal';
 import ContentEditModal from './content-edit-modal';
 import ArchiveConfirmationModal from './archive-confirmation-modal';
+import { useAIChat } from '@/src/context/AIChatContext';
 
 interface ContentCardProps {
   content: Content;
@@ -79,6 +72,7 @@ const ContentDropdown = ({
   onDeleteClick,
   onEditClick,
   onArchiveClick,
+  onAIChatClick,
 }: {
   content: Content;
   isOpen: boolean;
@@ -86,6 +80,7 @@ const ContentDropdown = ({
   onDeleteClick: () => void;
   onEditClick: () => void;
   onArchiveClick: () => void;
+  onAIChatClick: () => void;
 }) => {
   const dropdownRef = useRef<HTMLDivElement>(null);
 
@@ -110,63 +105,22 @@ const ContentDropdown = ({
 
   const options: DropdownOption[] = [
     {
-      icon: Edit,
+      icon: Bot,
+      label: 'Chat with AI',
+      action: onAIChatClick,
+      variant: 'default',
+    },
+    {
+      icon: Edit3,
       label: 'Edit',
-      action: () => {
-        onEditClick();
-      },
+      action: onEditClick,
+      variant: 'default',
     },
     {
-      icon: Copy,
-      label: 'Duplicate',
-      action: () => {
-        // Handle duplicate logic
-        console.log('Duplicating content:', content._id);
-        toast.success('Content duplicated successfully!');
-      },
-    },
-    {
-      icon: BarChart,
-      label: 'Analytics',
-      action: () => {
-        // Handle analytics logic
-        console.log('Viewing analytics for:', content._id);
-        toast.success('Opening analytics...');
-      },
-    },
-    {
-      icon: Share2,
-      label: 'Share',
-      action: () => {
-        // Handle share logic
-        navigator.clipboard.writeText(
-          window.location.origin + `/content/${content._id}`
-        );
-        toast.success('Link copied to clipboard!');
-      },
-    },
-    {
-      icon: Star,
-      label: 'Feature',
-      action: () => {
-        // Handle feature logic
-        console.log('Featuring content:', content._id);
-        toast.success('Content marked as featured!');
-      },
-    },
-    {
-      icon: Download,
-      label: 'Export',
-      action: () => {
-        // Handle export logic
-        console.log('Exporting content:', content._id);
-        toast.success('Content exported successfully!');
-      },
-    },
-    {
-      icon: Archive,
+      icon: content.status === 'archived' ? ArchiveRestore : Archive,
       label: content.status === 'archived' ? 'Unarchive' : 'Archive',
       action: onArchiveClick,
+      variant: 'default',
     },
   ];
 
@@ -175,45 +129,45 @@ const ContentDropdown = ({
     options.push({
       icon: Trash2,
       label: 'Delete',
-      action: () => {
-        onDeleteClick();
-      },
+      action: onDeleteClick,
       variant: 'danger',
     });
   }
 
-  if (!isOpen) return null;
-
   return (
     <AnimatePresence>
-      <motion.div
-        ref={dropdownRef}
-        initial={{ opacity: 0, scale: 0.95, y: -10 }}
-        animate={{ opacity: 1, scale: 1, y: 0 }}
-        exit={{ opacity: 0, scale: 0.95, y: -10 }}
-        transition={{ duration: 0.15 }}
-        className='absolute right-3 top-14 w-48 bg-white rounded-lg shadow-lg border border-gray-200 py-2 z-50'
-      >
-        {options.map((option, index) => (
-          <button
-            key={index}
-            onClick={(e) => {
-              e.preventDefault();
-              e.stopPropagation();
-              option.action();
-              onClose();
-            }}
-            className={`w-full flex items-center gap-3 px-4 py-2 text-left text-sm transition-colors ${
-              option.variant === 'danger'
-                ? 'text-red-600 hover:bg-red-50'
-                : 'text-gray-700 hover:bg-gray-50'
-            }`}
-          >
-            <option.icon className='w-4 h-4' />
-            {option.label}
-          </button>
-        ))}
-      </motion.div>
+      {isOpen && (
+        <motion.div
+          ref={dropdownRef}
+          initial={{ opacity: 0, scale: 0.95, y: -10 }}
+          animate={{ opacity: 1, scale: 1, y: 0 }}
+          exit={{ opacity: 0, scale: 0.95, y: -10 }}
+          transition={{ duration: 0.15 }}
+          className='absolute right-3 top-14 w-48 bg-white rounded-lg shadow-lg border border-gray-200 py-2 z-50'
+        >
+          {options.map((option, index) => (
+            <button
+              key={index}
+              onClick={(e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                option.action();
+                onClose();
+              }}
+              className={`w-full flex items-center gap-3 px-4 py-2 text-left text-sm transition-colors ${
+                option.variant === 'danger'
+                  ? 'text-red-600 hover:bg-red-50'
+                  : option.label === 'Chat with AI'
+                  ? 'text-purple-600 hover:bg-purple-50'
+                  : 'text-gray-700 hover:bg-gray-50'
+              }`}
+            >
+              <option.icon className='w-4 h-4' />
+              {option.label}
+            </button>
+          ))}
+        </motion.div>
+      )}
     </AnimatePresence>
   );
 };
@@ -229,6 +183,7 @@ export const ContentCard = ({
   const [isArchiveModalOpen, setIsArchiveModalOpen] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
   const [isArchiving, setIsArchiving] = useState(false);
+  const { openChat } = useAIChat();
 
   const handleMoreClick = (e: React.MouseEvent) => {
     e.preventDefault();
@@ -318,6 +273,11 @@ export const ContentCard = ({
     setIsArchiveModalOpen(false);
   };
 
+  const handleAIChat = () => {
+    setIsDropdownOpen(false);
+    openChat(content._id, content.title);
+  };
+
   return (
     <>
       <motion.div
@@ -358,7 +318,7 @@ export const ContentCard = ({
                     onClick={handleMoreClick}
                     className='opacity-0 group-hover:opacity-100 transition-opacity duration-200 p-1 hover:bg-gray-100 rounded z-10 relative'
                   >
-                    <MoreHorizontal className='w-4 h-4 text-gray-500' />
+                    <MoreVertical className='w-4 h-4 text-gray-500' />
                   </button>
                 </div>
               </div>
@@ -477,6 +437,7 @@ export const ContentCard = ({
             onDeleteClick={handleDeleteClick}
             onEditClick={handleEditClick}
             onArchiveClick={handleArchiveClick}
+            onAIChatClick={handleAIChat}
           />
         </Card>
       </motion.div>

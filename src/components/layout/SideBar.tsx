@@ -7,7 +7,6 @@ import {
   FiHome,
   FiCalendar,
   FiFileText,
-  FiMessageSquare,
   FiBarChart2,
   FiSettings,
   FiTrendingUp,
@@ -76,7 +75,6 @@ export default function Sidebar() {
     { name: 'Dashboard', href: '/dashboard', icon: <FiHome /> },
     { name: 'Calendar', href: '/calendar', icon: <FiCalendar /> },
     { name: 'Contents', href: '/content', icon: <FiFileText /> },
-    { name: 'AI Chat', href: '/ai-chat', icon: <FiMessageSquare /> },
     { name: 'Analytics', href: '/analytics', icon: <FiBarChart2 /> },
     {
       name: 'Trend Insights',
