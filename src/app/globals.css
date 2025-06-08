@@ -1,13 +1,32 @@
 @import 'tailwindcss';
 
-/* Hide Next.js development indicators */
+/* Hide Next.js development indicators and logos completely */
 .__next-dev-overlay-logo,
 .__next-dev-overlay,
 [data-nextjs-dev-overlay],
 .__next-build-watcher,
-.next-build-activity {
+.next-build-activity,
+*[class*='next-logo'],
+*[class*='nextjs-logo'],
+*[class*='next-dev'],
+*[data-testid*='next'],
+*[aria-label*='Next.js'],
+img[src*='next'],
+img[alt*='next'],
+img[alt*='Next.js'],
+svg[data-testid*='next'] {
   display: none !important;
   visibility: hidden !important;
+  opacity: 0 !important;
+  position: absolute !important;
+  left: -9999px !important;
+  width: 0 !important;
+  height: 0 !important;
+}
+
+/* Ensure favicon is properly overridden */
+link[rel='icon'][href*='favicon'] {
+  display: none !important;
 }
 
 :root {

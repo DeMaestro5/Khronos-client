@@ -194,12 +194,9 @@ export default function Dashboard() {
             ))}
           </ul>
           <div className='px-4 py-4 border-t border-gray-200 sm:px-6'>
-            <Link
-              href='/dashboard/ai-chat'
-              className='text-sm font-medium text-purple-600 hover:text-purple-500'
-            >
-              Generate more ideas with AI
-            </Link>
+            <span className='text-sm font-medium text-purple-600'>
+              Chat with AI using the floating button! ✨
+            </span>
           </div>
         </div>
       </div>
@@ -246,10 +243,7 @@ export default function Dashboard() {
             </div>
           </Link>
 
-          <Link
-            href='/dashboard/ai-chat'
-            className='bg-white overflow-hidden shadow rounded-lg p-6 hover:bg-gray-50'
-          >
+          <div className='bg-white overflow-hidden shadow rounded-lg p-6 border-2 border-purple-200'>
             <div className='flex items-center'>
               <div className='flex-shrink-0 bg-purple-500 rounded-md p-3'>
                 <FiMessageSquare className='h-6 w-6 text-white' />
@@ -257,11 +251,11 @@ export default function Dashboard() {
               <div className='ml-4'>
                 <h3 className='text-lg font-medium text-gray-900'>AI Chat</h3>
                 <p className='text-sm text-gray-500'>
-                  Get content ideas and assistance
+                  Use the floating button for AI assistance ✨
                 </p>
               </div>
             </div>
-          </Link>
+          </div>
 
           <Link
             href='/dashboard/analytics'
