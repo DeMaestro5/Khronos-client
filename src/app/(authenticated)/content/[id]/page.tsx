@@ -24,19 +24,10 @@ const ContentDetailPage = () => {
     const fetchContent = async () => {
       if (!contentId) return;
 
-      console.log('Fetching content with ID:', contentId);
-
-      // Debug: Check if token exists
-      const token = localStorage.getItem('token');
-      console.log('Token exists:', !!token);
-      console.log('Token preview:', token?.substring(0, 20) + '...');
-
       setIsLoading(true);
 
       try {
         const response = await contentAPI.getById(contentId);
-        console.log('API Response:', response.data);
-        console.log('Full response object:', response);
 
         // Try different response structures
         let contentData = null;
@@ -68,7 +59,6 @@ const ContentDetailPage = () => {
 
         if (contentData) {
           setContent(contentData);
-          console.log('Content loaded successfully:', contentData);
         } else {
           console.error(
             'Content not found. Response structure:',
@@ -77,14 +67,6 @@ const ContentDetailPage = () => {
         }
       } catch (error) {
         console.error('Failed to fetch content:', error);
-        const errorObj = error as {
-          response?: { data?: unknown; status?: number };
-        };
-        console.error('Error response:', errorObj?.response?.data);
-        console.error('Error status:', errorObj?.response?.status);
-        if (error && typeof error === 'object' && 'response' in error) {
-          console.error('Error details:', errorObj.response?.data);
-        }
       } finally {
         setIsLoading(false);
       }
@@ -99,7 +81,6 @@ const ContentDetailPage = () => {
 
   const handleEditSuccess = async () => {
     setIsEditModalOpen(false);
-    // Refresh the content data
     try {
       const response = await contentAPI.getById(contentId);
       if (response.data?.data) {

@@ -26,26 +26,41 @@ interface StreamingTextProps {
   text: string;
   speed?: number;
   onComplete?: () => void;
+  shouldAnimate?: boolean;
 }
 
 const StreamingText = ({
   text,
   speed = 20,
   onComplete,
+  shouldAnimate = true,
 }: StreamingTextProps) => {
   const [displayedText, setDisplayedText] = useState('');
   const [currentIndex, setCurrentIndex] = useState(0);
-  const [isStreaming, setIsStreaming] = useState(true);
+  const [isStreaming, setIsStreaming] = useState(shouldAnimate);
 
   // Reset when text changes
   useEffect(() => {
-    setDisplayedText('');
-    setCurrentIndex(0);
-    setIsStreaming(true);
-  }, [text]);
+    if (shouldAnimate) {
+      setDisplayedText('');
+      setCurrentIndex(0);
+      setIsStreaming(true);
+    } else {
+      // For existing messages, show full text immediately
+      setDisplayedText(text);
+      setCurrentIndex(text.length);
+      setIsStreaming(false);
+      if (onComplete) {
+        onComplete();
+      }
+    }
+  }, [text, shouldAnimate, onComplete]);
 
   // Handle the streaming effect
   useEffect(() => {
+    // Skip animation if shouldn't animate
+    if (!shouldAnimate) return;
+
     if (currentIndex >= text.length) {
       setIsStreaming(false);
       if (onComplete) {
@@ -64,7 +79,7 @@ const StreamingText = ({
     }, speed + Math.random() * 20);
 
     return () => clearTimeout(timer);
-  }, [currentIndex, text, speed, onComplete]);
+  }, [currentIndex, text, speed, onComplete, shouldAnimate]);
 
   // Parse markdown and render formatted text
   const renderFormattedText = (text: string) => {
@@ -245,11 +260,22 @@ const AIChatModal: React.FC = () => {
   const [inputMessage, setInputMessage] = useState('');
   const [isMinimized, setIsMinimized] = useState(false);
   const [copiedMessageId, setCopiedMessageId] = useState<string | null>(null);
-  const [completedAnimations, setCompletedAnimations] = useState<Set<string>>(
-    new Set()
-  );
+  const [lastMessageId, setLastMessageId] = useState<string | null>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
+
+  // Track the most recent message ID to determine which message should animate
+  useEffect(() => {
+    if (messages.length > 0) {
+      const lastMessage = messages[messages.length - 1];
+      if (
+        lastMessage.role === 'assistant' &&
+        lastMessage.id !== lastMessageId
+      ) {
+        setLastMessageId(lastMessage.id || null);
+      }
+    }
+  }, [messages, lastMessageId]);
 
   // Auto-scroll to bottom when new messages arrive
   useEffect(() => {
@@ -305,8 +331,8 @@ const AIChatModal: React.FC = () => {
     }
   };
 
-  const handleAnimationComplete = (messageId: string) => {
-    setCompletedAnimations((prev) => new Set([...prev, messageId]));
+  const handleAnimationComplete = () => {
+    // Animation completed, now show copy button
   };
 
   const formatTime = (date: Date | string) => {
@@ -603,9 +629,13 @@ const AIChatModal: React.FC = () => {
                                   <StreamingText
                                     text={message.content}
                                     speed={15}
-                                    onComplete={() =>
-                                      handleAnimationComplete(message.id || '')
+                                    shouldAnimate={
+                                      message.id === lastMessageId &&
+                                      (isLoading ||
+                                        messages[messages.length - 1]?.id ===
+                                          message.id)
                                     }
+                                    onComplete={handleAnimationComplete}
                                   />
                                 ) : (
                                   message.content
@@ -622,26 +652,25 @@ const AIChatModal: React.FC = () => {
                                 </div>
                               )}
 
-                              {/* Copy button for AI messages - only show when animation is complete */}
-                              {message.role === 'assistant' &&
-                                completedAnimations.has(message.id || '') && (
-                                  <button
-                                    onClick={() =>
-                                      handleCopyMessage(
-                                        message.id || '',
-                                        message.content
-                                      )
-                                    }
-                                    className='absolute -right-8 top-1/2 -translate-y-1/2 opacity-0 group-hover:opacity-100 p-1.5 bg-white border border-gray-200 rounded-lg shadow-sm hover:bg-gray-50 transition-all'
-                                    title='Copy message'
-                                  >
-                                    {copiedMessageId === message.id ? (
-                                      <Check className='w-3 h-3 text-green-500' />
-                                    ) : (
-                                      <Copy className='w-3 h-3 text-gray-400' />
-                                    )}
-                                  </button>
-                                )}
+                              {/* Copy button for AI messages - show for all completed messages */}
+                              {message.role === 'assistant' && (
+                                <button
+                                  onClick={() =>
+                                    handleCopyMessage(
+                                      message.id || '',
+                                      message.content
+                                    )
+                                  }
+                                  className='absolute -right-8 top-1/2 -translate-y-1/2 opacity-0 group-hover:opacity-100 p-1.5 bg-white border border-gray-200 rounded-lg shadow-sm hover:bg-gray-50 transition-all'
+                                  title='Copy message'
+                                >
+                                  {copiedMessageId === message.id ? (
+                                    <Check className='w-3 h-3 text-green-500' />
+                                  ) : (
+                                    <Copy className='w-3 h-3 text-gray-400' />
+                                  )}
+                                </button>
+                              )}
                             </div>
 
                             {/* Timestamp - removed model info */}
