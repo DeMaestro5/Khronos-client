@@ -54,24 +54,7 @@ export default function ContentPage() {
     const fetchContents = async () => {
       setIsLoading(true);
       try {
-        // Debug: Check if valid tokens exist using AuthUtils
-        const hasValidTokens = AuthUtils.hasValidTokens();
-        const currentUser = AuthUtils.getUser();
-        const userId = AuthUtils.getUserId();
-        console.log('Has valid tokens:', hasValidTokens);
-        console.log('Current user:', currentUser);
-        console.log('User ID from getUserId():', userId);
-        console.log('User object id field:', currentUser?.id);
-        console.log('User object _id field:', currentUser?._id);
-
-        if (!hasValidTokens) {
-          console.error('No valid authentication tokens found');
-          window.location.href = '/auth/login';
-          return;
-        }
-
         const response = await contentAPI.getUserContent();
-        console.log('Content API Response:', response.data);
 
         if (response.data?.statusCode === '10000' && response.data?.data) {
           setContents(response.data.data);
