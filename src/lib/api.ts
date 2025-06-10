@@ -324,13 +324,97 @@ export const aiAPI = {
 
 // Analytics API methods
 export const analyticsAPI = {
-  getContentPerformance: (contentId?: string, dateRange?: string) =>
-    api.get('/analytics/content', { params: { contentId, dateRange } }),
+  // Get comprehensive analytics overview (orchestrator)
+  getOverview: () => api.get('/api/v1/analytics/overview'),
 
-  getAudienceInsights: () => api.get('/analytics/audience'),
+  // Get real-time dashboard data (orchestrator)
+  getDashboard: () => api.get('/api/v1/analytics/dashboard'),
 
-  getOverallStats: (dateRange?: string) =>
-    api.get('/analytics/stats', { params: { dateRange } }),
+  // Get comprehensive analytics report (orchestrator)
+  getComprehensiveReport: (params?: {
+    includeCompetitors?: boolean;
+    includePredictions?: boolean;
+    includeSocialListening?: boolean;
+  }) => api.get('/api/v1/analytics/comprehensive-report', { params }),
+
+  // Get performance analytics by period
+  getPerformance: (period: 'week' | 'month' | 'quarter' | 'year') =>
+    api.get(`/api/v1/analytics/performance/${period}`),
+
+  // Get engagement metrics
+  getEngagement: () => api.get('/api/v1/analytics/engagement'),
+
+  // Get audience demographics and insights
+  getAudience: () => api.get('/api/v1/analytics/audience'),
+
+  // Get trending content and topics
+  getTrends: (params?: { platform?: string }) =>
+    api.get('/api/v1/analytics/trends', { params }),
+
+  // Get trending opportunities
+  getTrendingOpportunities: (params?: {
+    platforms?: string[];
+    minScore?: number;
+  }) =>
+    api.get('/api/v1/analytics/trending-opportunities', {
+      params: {
+        ...params,
+        platforms: params?.platforms?.join(','),
+      },
+    }),
+
+  // Get analytics for specific content
+  getContentAnalytics: (contentId: string) =>
+    api.get(`/api/v1/analytics/content/${contentId}`),
+
+  // Get competitor analysis
+  getCompetitorAnalysis: (params?: {
+    competitors?: string[];
+    industry?: string;
+  }) =>
+    api.get('/api/v1/analytics/competitor-analysis', {
+      params: {
+        ...params,
+        competitors: params?.competitors?.join(','),
+      },
+    }),
+
+  // Get social listening data
+  getSocialListening: (params?: { keywords?: string[]; timeframe?: string }) =>
+    api.get('/api/v1/analytics/social-listening', {
+      params: {
+        ...params,
+        keywords: params?.keywords?.join(','),
+      },
+    }),
+
+  // Get platform status
+  getPlatformStatus: () => api.get('/api/v1/analytics/platform-status'),
+
+  // Export analytics data
+  exportData: (
+    type:
+      | 'overview'
+      | 'performance'
+      | 'audience'
+      | 'engagement'
+      | 'comprehensive',
+    format: 'json' | 'csv' = 'json'
+  ) => api.get(`/api/v1/analytics/export/${type}`, { params: { format } }),
+
+  // Configure analytics
+  configure: (configuration: Record<string, unknown>) =>
+    api.post('/api/v1/analytics/configure', { configuration }),
+
+  // Update platform post IDs
+  updatePlatformIds: (
+    contentId: string,
+    platformPostIds: Record<string, string>
+  ) =>
+    api.post('/api/v1/analytics/update-platform-ids', {
+      contentId,
+      platformPostIds,
+    }),
 };
 
 // AI Chat API methods

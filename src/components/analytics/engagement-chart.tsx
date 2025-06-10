@@ -1,6 +1,7 @@
 import React from 'react';
 import { motion } from 'framer-motion';
 import { TrendingUp, ArrowUp, ArrowDown } from 'lucide-react';
+import { TimeSeriesData } from '@/src/types/analytics';
 
 interface EngagementData {
   day: string;
@@ -12,10 +13,32 @@ interface EngagementData {
 
 interface EngagementChartProps {
   data?: EngagementData[];
+  timeSeriesData?: TimeSeriesData[] | null;
 }
 
-export default function EngagementChart({ data }: EngagementChartProps) {
-  // Mock data for demonstration
+export default function EngagementChart({
+  data,
+  timeSeriesData,
+}: EngagementChartProps) {
+  // Transform time series data to chart format when available
+  const transformedData = React.useMemo(() => {
+    if (timeSeriesData && timeSeriesData.length > 0) {
+      return timeSeriesData.slice(-7).map((item) => {
+        const date = new Date(item.date);
+        const dayNames = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+        return {
+          day: dayNames[date.getDay()],
+          likes: Math.floor(item.engagement * 0.6), // Estimate likes as 60% of engagement
+          comments: Math.floor(item.engagement * 0.25), // Estimate comments as 25% of engagement
+          shares: Math.floor(item.engagement * 0.15), // Estimate shares as 15% of engagement
+          total: item.engagement,
+        };
+      });
+    }
+    return null;
+  }, [timeSeriesData]);
+
+  // Mock data for demonstration when no real data is available
   const mockData: EngagementData[] = [
     { day: 'Mon', likes: 245, comments: 45, shares: 23, total: 313 },
     { day: 'Tue', likes: 312, comments: 67, shares: 34, total: 413 },
@@ -26,7 +49,7 @@ export default function EngagementChart({ data }: EngagementChartProps) {
     { day: 'Sun', likes: 298, comments: 54, shares: 31, total: 383 },
   ];
 
-  const chartData = data || mockData;
+  const chartData = data || transformedData || mockData;
   const maxValue = Math.max(...chartData.map((d) => d.total));
   const totalEngagement = chartData.reduce((sum, d) => sum + d.total, 0);
   const averageEngagement = Math.round(totalEngagement / chartData.length);
