@@ -1,46 +1,119 @@
 'use client';
 
 import Link from 'next/link';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import Image from 'next/image';
-import { FiBell, FiMenu, FiX, FiChevronDown, FiActivity } from 'react-icons/fi';
-import { authAPI } from '@/src/lib/api';
+import {
+  FiBell,
+  FiMenu,
+  FiX,
+  FiChevronDown,
+  FiActivity,
+  FiUser,
+  FiSettings,
+  FiCreditCard,
+  FiLogOut,
+  FiEdit3,
+  FiTrendingUp,
+  FiCalendar,
+  FiFileText,
+  FiZap,
+} from 'react-icons/fi';
+import { profileAPI, contentAPI } from '@/src/lib/api';
 import { useRouter } from 'next/navigation';
+import { useAuth } from '@/src/context/AuthContext';
+import { User } from '@/src/types/auth';
+
+interface UserStats {
+  totalContent: number;
+  scheduledContent: number;
+  engagementRate: number;
+  streak: number;
+}
 
 export default function Navbar() {
   const [notificationsOpen, setNotificationsOpen] = useState(false);
   const [profileOpen, setProfileOpen] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [profileData, setProfileData] = useState<User | null>(null);
+  const [userStats, setUserStats] = useState<UserStats>({
+    totalContent: 0,
+    scheduledContent: 0,
+    engagementRate: 0,
+    streak: 0,
+  });
+  const [loadingProfile, setLoadingProfile] = useState(false);
+  const [loadingStats, setLoadingStats] = useState(false);
   const router = useRouter();
+  const { user: contextUser, logout } = useAuth();
 
-  // Placeholder user - this would come from auth context in a real app
-  const user = {
-    name: 'Jane Doe',
-    email: 'jane.doe@example.com',
-    avatar: '/images/avatar-placeholder.png',
-    role: 'Content Creator',
-  };
+  // Fetch user profile data and stats
+  useEffect(() => {
+    const fetchUserData = async () => {
+      if (!contextUser) return;
+
+      setLoadingProfile(true);
+      setLoadingStats(true);
+
+      try {
+        // Fetch profile data
+        const profileResponse = await profileAPI.getProfile();
+        if (profileResponse.data?.data) {
+          setProfileData(profileResponse.data.data);
+        }
+
+        // Fetch user stats
+        const contentResponse = await contentAPI.getUserContent();
+        if (contentResponse.data?.data) {
+          const content = contentResponse.data.data;
+          const scheduled = content.filter(
+            (item: { status: string }) => item.status === 'scheduled'
+          ).length;
+          const engagement = Math.floor(Math.random() * 30) + 70; // Placeholder calculation
+          const streak = Math.floor(Math.random() * 30) + 1; // Placeholder calculation
+
+          setUserStats({
+            totalContent: content.length,
+            scheduledContent: scheduled,
+            engagementRate: engagement,
+            streak: streak,
+          });
+        }
+      } catch (error) {
+        console.error('Failed to fetch user data:', error);
+        setProfileData(contextUser);
+      } finally {
+        setLoadingProfile(false);
+        setLoadingStats(false);
+      }
+    };
+
+    fetchUserData();
+  }, [contextUser]);
+
+  // Use profile data or fallback to context user
+  const user = profileData || contextUser;
 
   const notifications = [
     {
       id: 1,
-      title: 'New content scheduled',
-      message: 'Instagram post for tomorrow',
+      title: 'Content Performance Alert',
+      message: 'Your Instagram post is trending! 📈',
       time: '2m ago',
       type: 'success',
     },
     {
       id: 2,
-      title: 'Analytics update',
-      message: 'Weekly report is ready',
-      time: '1h ago',
+      title: 'AI Suggestion Ready',
+      message: 'New content ideas based on trends',
+      time: '15m ago',
       type: 'info',
     },
     {
       id: 3,
-      title: 'AI suggestion',
-      message: 'Trending topic detected',
-      time: '3h ago',
+      title: 'Schedule Reminder',
+      message: '3 posts scheduled for tomorrow',
+      time: '1h ago',
       type: 'warning',
     },
   ];
@@ -48,18 +121,59 @@ export default function Navbar() {
   const getNotificationIcon = (type: string) => {
     switch (type) {
       case 'success':
-        return '✅';
+        return '🎉';
       case 'info':
-        return '📊';
+        return '🤖';
       case 'warning':
-        return '⚡';
+        return '⏰';
       default:
         return '🔔';
     }
   };
 
+  const getInitials = (name: string) => {
+    return name
+      .split(' ')
+      .map((word) => word.charAt(0))
+      .join('')
+      .toUpperCase()
+      .slice(0, 2);
+  };
+
+  const getDisplayRole = (role: string | undefined | null) => {
+    if (!role) return 'Content Creator';
+
+    const roleStr = String(role);
+    // Check if it's a MongoDB ObjectId or similar ID
+    if (roleStr.length === 24 && /^[a-f\d]{24}$/i.test(roleStr)) {
+      return 'Content Creator';
+    }
+
+    // Check if it's any kind of ID-like string
+    if (roleStr.length > 15 && /^[a-z0-9]+$/i.test(roleStr)) {
+      return 'Content Creator';
+    }
+
+    // Display the role if it looks like a proper role name
+    return roleStr.toLowerCase().replace('_', ' ');
+  };
+
+  const getRoleIcon = (role: string) => {
+    const lowerRole = role.toLowerCase();
+    if (lowerRole.includes('admin')) return '👑';
+    if (lowerRole.includes('manager')) return '🎯';
+    if (lowerRole.includes('creator')) return '✨';
+    return '🚀';
+  };
+
+  const handleLogout = () => {
+    setProfileOpen(false);
+    logout();
+    router.push('/auth/login');
+  };
+
   return (
-    <nav className=' bg-gradient-to-r from-white via-slate-50/90 to-white/95 backdrop-blur-2xl border-b border-slate-200/60 shadow-lg sticky top-0 z-50'>
+    <nav className='bg-gradient-to-r from-white via-slate-50/90 to-white/95 backdrop-blur-2xl border-b border-slate-200/60 shadow-lg sticky top-0 z-50'>
       {/* Subtle gradient overlay */}
       <div className='absolute inset-0 bg-gradient-to-r from-indigo-500/5 via-purple-500/5 to-pink-500/5 pointer-events-none'></div>
 
@@ -177,90 +291,238 @@ export default function Navbar() {
               <button
                 className='flex items-center space-x-3 p-2 text-sm rounded-xl hover:bg-white/80 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 transition-all duration-200 shadow-sm hover:shadow-md group'
                 onClick={() => setProfileOpen(!profileOpen)}
+                disabled={loadingProfile}
               >
                 <div className='relative'>
-                  <Image
-                    className='h-9 w-9 rounded-xl object-cover ring-2 ring-white shadow-lg group-hover:ring-indigo-200 transition-all duration-200'
-                    src='https://via.placeholder.com/40'
-                    width={36}
-                    height={36}
-                    alt={user.name}
-                  />
+                  {user?.profilePicUrl || user?.avatar ? (
+                    <Image
+                      className='h-9 w-9 rounded-xl object-cover ring-2 ring-white shadow-lg group-hover:ring-indigo-200 transition-all duration-200'
+                      src={user.profilePicUrl || user.avatar || ''}
+                      width={36}
+                      height={36}
+                      alt={user.name || 'User'}
+                      onError={(e) => {
+                        (e.target as HTMLImageElement).style.display = 'none';
+                      }}
+                    />
+                  ) : null}
+                  {(!user?.profilePicUrl && !user?.avatar) || loadingProfile ? (
+                    <div className='h-9 w-9 rounded-xl bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center ring-2 ring-white shadow-lg group-hover:ring-indigo-200 transition-all duration-200'>
+                      <span className='text-white font-semibold text-sm'>
+                        {user?.name ? getInitials(user.name) : 'U'}
+                      </span>
+                    </div>
+                  ) : null}
                   <div className='absolute -bottom-1 -right-1 w-3 h-3 bg-green-500 rounded-full border-2 border-white shadow-sm'></div>
                 </div>
                 <div className='hidden lg:block text-left'>
                   <p className='text-sm font-semibold text-gray-800 group-hover:text-indigo-700 transition-colors duration-200'>
-                    {user.name}
+                    {loadingProfile ? 'Loading...' : user?.name || 'User'}
                   </p>
-                  <p className='text-xs text-gray-500'>{user.role}</p>
+                  <div className='flex items-center space-x-1'>
+                    <span className='text-xs'>
+                      {getRoleIcon(getDisplayRole(user?.role))}
+                    </span>
+                    <span className='text-xs text-gray-500 capitalize'>
+                      {getDisplayRole(user?.role)}
+                    </span>
+                  </div>
                 </div>
                 <FiChevronDown className='h-4 w-4 text-gray-400 group-hover:text-indigo-600 transition-all duration-200 group-hover:rotate-180' />
               </button>
 
-              {profileOpen && (
-                <div className='origin-top-right absolute right-0 mt-3 w-64 rounded-2xl shadow-2xl bg-white/95 backdrop-blur-2xl ring-1 ring-black ring-opacity-5 z-20 border border-slate-200/60 overflow-hidden'>
-                  <div className='p-4 bg-gradient-to-r from-indigo-50 to-purple-50 border-b border-slate-200/60'>
-                    <div className='flex items-center space-x-3'>
-                      <Image
-                        className='h-12 w-12 rounded-xl object-cover ring-2 ring-white shadow-lg'
-                        src='https://via.placeholder.com/40'
-                        width={48}
-                        height={48}
-                        alt={user.name}
-                      />
-                      <div>
-                        <p className='text-sm font-bold text-gray-900'>
-                          {user.name}
-                        </p>
-                        <p className='text-xs text-gray-600'>{user.email}</p>
-                        <span className='inline-block mt-1 px-2 py-1 bg-green-100 text-green-700 text-xs font-medium rounded-full'>
-                          Pro Plan
-                        </span>
+              {profileOpen && user && (
+                <div className='origin-top-right absolute right-0 mt-3 w-96 rounded-2xl shadow-2xl bg-white/95 backdrop-blur-2xl ring-1 ring-black ring-opacity-5 z-20 border border-slate-200/60 overflow-hidden'>
+                  {/* Enhanced Profile Header */}
+                  <div className='relative p-6 bg-gradient-to-br from-indigo-50 via-purple-50 to-pink-50 border-b border-slate-200/60'>
+                    <div className='absolute top-0 right-0 w-32 h-32 bg-gradient-to-br from-indigo-200/20 to-purple-200/20 rounded-full -translate-y-16 translate-x-16'></div>
+                    <div className='relative flex items-start space-x-4'>
+                      <div className='relative'>
+                        {user.profilePicUrl || user.avatar ? (
+                          <Image
+                            className='h-20 w-20 rounded-2xl object-cover ring-4 ring-white shadow-xl'
+                            src={user.profilePicUrl || user.avatar || ''}
+                            width={80}
+                            height={80}
+                            alt={user.name}
+                            onError={(e) => {
+                              (e.target as HTMLImageElement).style.display =
+                                'none';
+                            }}
+                          />
+                        ) : null}
+                        {!user.profilePicUrl && !user.avatar ? (
+                          <div className='h-20 w-20 rounded-2xl bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center ring-4 ring-white shadow-xl'>
+                            <span className='text-white font-bold text-2xl'>
+                              {getInitials(user.name)}
+                            </span>
+                          </div>
+                        ) : null}
+                        <div className='absolute -bottom-2 -right-2 w-6 h-6 bg-green-500 rounded-full border-4 border-white shadow-lg flex items-center justify-center'>
+                          <div className='w-2 h-2 bg-white rounded-full'></div>
+                        </div>
+                      </div>
+                      <div className='flex-1 min-w-0'>
+                        <div className='flex items-start justify-between'>
+                          <div>
+                            <h3 className='text-xl font-bold text-gray-900 truncate'>
+                              {user.name}
+                            </h3>
+                            <p className='text-sm text-gray-600 truncate mt-1'>
+                              {user.email}
+                            </p>
+                            <div className='flex items-center space-x-2 mt-3'>
+                              <span className='inline-flex items-center px-3 py-1 bg-gradient-to-r from-emerald-100 to-teal-100 text-emerald-700 text-xs font-semibold rounded-full ring-1 ring-emerald-200'>
+                                <span className='mr-2'>
+                                  {getRoleIcon(getDisplayRole(user.role))}
+                                </span>
+                                {getDisplayRole(user.role)}
+                              </span>
+                            </div>
+                          </div>
+                          <Link
+                            href='/profile/edit'
+                            className='p-2 text-gray-400 hover:text-indigo-600 hover:bg-white/80 rounded-lg transition-all duration-200'
+                            onClick={() => setProfileOpen(false)}
+                          >
+                            <FiEdit3 className='h-4 w-4' />
+                          </Link>
+                        </div>
+                        <div className='mt-3 flex items-center space-x-4 text-xs text-gray-500'>
+                          <div className='flex items-center space-x-1'>
+                            <FiCalendar className='h-3 w-3' />
+                            <span>
+                              Joined{' '}
+                              {user.createdAt &&
+                              !isNaN(new Date(user.createdAt).getTime())
+                                ? new Date(user.createdAt).getFullYear()
+                                : 'Recently'}
+                            </span>
+                          </div>
+                          <div className='flex items-center space-x-1'>
+                            <FiZap className='h-3 w-3 text-orange-500' />
+                            <span>{userStats.streak} day streak</span>
+                          </div>
+                        </div>
                       </div>
                     </div>
                   </div>
+
+                  {/* Enhanced Stats Grid */}
+                  <div className='px-6 py-5 bg-gradient-to-r from-slate-50/50 to-indigo-50/50 border-b border-slate-200/60'>
+                    <div className='grid grid-cols-3 gap-6'>
+                      <div className='text-center group'>
+                        <div className='flex items-center justify-center w-12 h-12 mx-auto mb-2 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-xl shadow-lg group-hover:shadow-xl transition-all duration-200'>
+                          <FiFileText className='h-6 w-6 text-white' />
+                        </div>
+                        <div className='text-2xl font-bold text-gray-900 mb-1'>
+                          {loadingStats ? '...' : userStats.totalContent}
+                        </div>
+                        <div className='text-xs text-gray-500 font-medium'>
+                          Total Content
+                        </div>
+                      </div>
+                      <div className='text-center group'>
+                        <div className='flex items-center justify-center w-12 h-12 mx-auto mb-2 bg-gradient-to-br from-purple-500 to-pink-600 rounded-xl shadow-lg group-hover:shadow-xl transition-all duration-200'>
+                          <FiCalendar className='h-6 w-6 text-white' />
+                        </div>
+                        <div className='text-2xl font-bold text-gray-900 mb-1'>
+                          {loadingStats ? '...' : userStats.scheduledContent}
+                        </div>
+                        <div className='text-xs text-gray-500 font-medium'>
+                          Scheduled
+                        </div>
+                      </div>
+                      <div className='text-center group'>
+                        <div className='flex items-center justify-center w-12 h-12 mx-auto mb-2 bg-gradient-to-br from-green-500 to-emerald-600 rounded-xl shadow-lg group-hover:shadow-xl transition-all duration-200'>
+                          <FiTrendingUp className='h-6 w-6 text-white' />
+                        </div>
+                        <div className='text-2xl font-bold text-gray-900 mb-1'>
+                          {loadingStats ? '...' : userStats.engagementRate}%
+                        </div>
+                        <div className='text-xs text-gray-500 font-medium'>
+                          Engagement
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Quick Actions */}
+                  <div className='px-6 py-4 bg-gradient-to-r from-indigo-50/30 to-purple-50/30 border-b border-slate-200/60'>
+                    <div className='flex items-center justify-between'>
+                      <h4 className='text-sm font-semibold text-gray-900 mb-3'>
+                        Quick Actions
+                      </h4>
+                      <FiZap className='h-4 w-4 text-indigo-500' />
+                    </div>
+                    <div className='grid grid-cols-2 gap-3'>
+                      <Link
+                        href='/content/create'
+                        className='flex items-center justify-center px-3 py-2 bg-gradient-to-r from-indigo-500 to-purple-600 text-white text-xs font-medium rounded-lg hover:shadow-lg transition-all duration-200'
+                        onClick={() => setProfileOpen(false)}
+                      >
+                        <FiFileText className='h-3 w-3 mr-2' />
+                        Create Content
+                      </Link>
+                      <Link
+                        href='/analytics'
+                        className='flex items-center justify-center px-3 py-2 bg-white border border-gray-200 text-gray-700 text-xs font-medium rounded-lg hover:bg-gray-50 transition-all duration-200'
+                        onClick={() => setProfileOpen(false)}
+                      >
+                        <FiTrendingUp className='h-3 w-3 mr-2' />
+                        View Analytics
+                      </Link>
+                    </div>
+                  </div>
+
+                  {/* Menu Items */}
                   <div className='py-2'>
                     <Link
-                      href='/dashboard/profile'
-                      className='flex items-center px-4 py-3 text-sm text-gray-700 hover:bg-gradient-to-r hover:from-slate-50 hover:to-indigo-50/50 hover:text-indigo-600 transition-all duration-200'
+                      href='/profile'
+                      className='flex items-center px-6 py-3 text-sm text-gray-700 hover:bg-gradient-to-r hover:from-slate-50 hover:to-indigo-50/50 hover:text-indigo-600 transition-all duration-200 group'
                       onClick={() => setProfileOpen(false)}
                     >
-                      <span className='mr-3'>👤</span>
+                      <FiUser className='mr-3 h-4 w-4 group-hover:text-indigo-600' />
                       Your Profile
+                      <div className='ml-auto opacity-0 group-hover:opacity-100 transition-opacity duration-200'>
+                        <span className='text-xs text-indigo-500'>→</span>
+                      </div>
                     </Link>
                     <Link
-                      href='/dashboard/settings'
-                      className='flex items-center px-4 py-3 text-sm text-gray-700 hover:bg-gradient-to-r hover:from-slate-50 hover:to-indigo-50/50 hover:text-indigo-600 transition-all duration-200'
+                      href='/settings'
+                      className='flex items-center px-6 py-3 text-sm text-gray-700 hover:bg-gradient-to-r hover:from-slate-50 hover:to-indigo-50/50 hover:text-indigo-600 transition-all duration-200 group'
                       onClick={() => setProfileOpen(false)}
                     >
-                      <span className='mr-3'>⚙️</span>
+                      <FiSettings className='mr-3 h-4 w-4 group-hover:text-indigo-600' />
                       Settings
+                      <div className='ml-auto opacity-0 group-hover:opacity-100 transition-opacity duration-200'>
+                        <span className='text-xs text-indigo-500'>→</span>
+                      </div>
                     </Link>
                     <Link
-                      href='/dashboard/billing'
-                      className='flex items-center px-4 py-3 text-sm text-gray-700 hover:bg-gradient-to-r hover:from-slate-50 hover:to-indigo-50/50 hover:text-indigo-600 transition-all duration-200'
+                      href='/billing'
+                      className='flex items-center px-6 py-3 text-sm text-gray-700 hover:bg-gradient-to-r hover:from-slate-50 hover:to-indigo-50/50 hover:text-indigo-600 transition-all duration-200 group'
                       onClick={() => setProfileOpen(false)}
                     >
-                      <span className='mr-3'>💳</span>
+                      <FiCreditCard className='mr-3 h-4 w-4 group-hover:text-indigo-600' />
                       Billing & Plans
+                      <div className='ml-auto opacity-0 group-hover:opacity-100 transition-opacity duration-200'>
+                        <span className='text-xs text-indigo-500'>→</span>
+                      </div>
                     </Link>
                   </div>
+
+                  {/* Logout */}
                   <div className='border-t border-slate-200/60 py-2'>
                     <button
-                      className='flex items-center w-full px-4 py-3 text-sm text-red-600 hover:bg-red-50/50 transition-all duration-200'
-                      onClick={async () => {
-                        console.log('Logging out');
-                        setProfileOpen(false);
-
-                        // Use the authAPI logout function which handles token cleanup
-                        authAPI.logout();
-
-                        // Redirect to login page
-                        router.push('/auth/login');
-                      }}
+                      className='flex items-center w-full px-6 py-3 text-sm text-red-600 hover:bg-red-50/50 transition-all duration-200 group'
+                      onClick={handleLogout}
                     >
-                      <span className='mr-3'>🚪</span>
+                      <FiLogOut className='mr-3 h-4 w-4 group-hover:text-red-700' />
                       Sign out
+                      <div className='ml-auto opacity-0 group-hover:opacity-100 transition-opacity duration-200'>
+                        <span className='text-xs text-red-500'>→</span>
+                      </div>
                     </button>
                   </div>
                 </div>
@@ -285,6 +547,49 @@ export default function Navbar() {
       {/* Enhanced Mobile menu */}
       {mobileMenuOpen && (
         <div className='md:hidden border-t border-slate-200/60 bg-white/95 backdrop-blur-2xl shadow-lg'>
+          {/* Mobile Profile Section */}
+          {user && (
+            <div className='px-6 py-4 border-b border-slate-200/60 bg-gradient-to-r from-indigo-50/50 to-purple-50/50'>
+              <div className='flex items-center space-x-3'>
+                <div className='relative'>
+                  {user.profilePicUrl || user.avatar ? (
+                    <Image
+                      className='h-12 w-12 rounded-xl object-cover ring-2 ring-white shadow-lg'
+                      src={user.profilePicUrl || user.avatar || ''}
+                      width={48}
+                      height={48}
+                      alt={user.name}
+                      onError={(e) => {
+                        (e.target as HTMLImageElement).style.display = 'none';
+                      }}
+                    />
+                  ) : null}
+                  {!user.profilePicUrl && !user.avatar ? (
+                    <div className='h-12 w-12 rounded-xl bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center ring-2 ring-white shadow-lg'>
+                      <span className='text-white font-bold text-lg'>
+                        {getInitials(user.name)}
+                      </span>
+                    </div>
+                  ) : null}
+                  <div className='absolute -bottom-1 -right-1 w-4 h-4 bg-green-500 rounded-full border-2 border-white shadow-sm'></div>
+                </div>
+                <div>
+                  <p className='text-base font-semibold text-gray-900'>
+                    {user.name}
+                  </p>
+                  <div className='flex items-center space-x-1'>
+                    <span className='text-sm'>
+                      {getRoleIcon(getDisplayRole(user.role))}
+                    </span>
+                    <span className='text-sm text-gray-500 capitalize'>
+                      {getDisplayRole(user.role)}
+                    </span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
+
           {/* Mobile Navigation */}
           <div className='py-3 space-y-1'>
             <Link
