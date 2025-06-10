@@ -16,6 +16,7 @@ interface AuthContextType extends AuthState {
   logout: () => void;
   refreshTokens: () => Promise<boolean>;
   checkAuthStatus: () => void;
+  updateUser: (user: Partial<AuthState['user']>) => void;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -163,6 +164,18 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     });
   };
 
+  // Update user function
+  const updateUser = (updatedUser: Partial<AuthState['user']>) => {
+    if (authState.user && updatedUser) {
+      const newUser = { ...authState.user, ...updatedUser };
+      AuthUtils.storeUser(newUser);
+      setAuthState((prev) => ({
+        ...prev,
+        user: newUser,
+      }));
+    }
+  };
+
   // Set up automatic token refresh check
   useEffect(() => {
     checkAuthStatus();
@@ -206,6 +219,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     logout,
     refreshTokens,
     checkAuthStatus,
+    updateUser,
   };
 
   return (

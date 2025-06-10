@@ -205,6 +205,22 @@ export const authAPI = {
     api.post('/api/v1/forgot-password', { email }),
 };
 
+// Profile API methods
+export const profileAPI = {
+  // Get current user profile
+  getProfile: () => api.get('/api/v1/profile/my'),
+
+  // Update current user profile
+  updateProfile: (data: { name?: string; profilePicUrl?: string }) =>
+    api.put('/api/v1/profile', data),
+
+  // Delete current user account
+  deleteAccount: () => api.delete('/api/v1/profile'),
+
+  // Verify user email
+  verifyEmail: () => api.post('/api/v1/profile/verify-email'),
+};
+
 // Content API methods
 export const contentAPI = {
   getAll: (filters = {}) => api.get('/api/v1/content', { params: filters }),

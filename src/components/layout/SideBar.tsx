@@ -13,7 +13,6 @@ import {
   FiChevronLeft,
   FiChevronRight,
 } from 'react-icons/fi';
-import Image from 'next/image';
 
 interface SidebarLinkProps {
   href: string;
@@ -81,8 +80,13 @@ export default function Sidebar() {
       href: '/dashboard/trends',
       icon: <FiTrendingUp />,
     },
-    { name: 'Settings', href: '/settings', icon: <FiSettings /> },
   ];
+
+  const settingsItem = {
+    name: 'Settings',
+    href: '/settings',
+    icon: <FiSettings />,
+  };
 
   return (
     <div
@@ -139,34 +143,18 @@ export default function Sidebar() {
           ))}
         </nav>
 
-        {/* User Profile */}
-        <div className='border-t border-slate-200/60 p-4'>
-          <div
-            className={`flex items-center ${
-              collapsed ? 'justify-center' : 'space-x-3'
-            } p-3 rounded-xl bg-white/60 backdrop-blur-sm shadow-sm hover:shadow-md transition-all duration-200 cursor-pointer group`}
-          >
-            <div className='relative'>
-              <Image
-                className='h-10 w-10 rounded-xl object-cover ring-2 ring-white shadow-lg'
-                src='https://via.placeholder.com/40'
-                alt='User avatar'
-                width={40}
-                height={40}
-              />
-              <div className='absolute -bottom-1 -right-1 w-4 h-4 bg-green-500 rounded-full border-2 border-white shadow-sm'></div>
-            </div>
-            {!collapsed && (
-              <div className='flex-1 min-w-0'>
-                <p className='text-sm font-semibold text-gray-900 group-hover:text-indigo-600 transition-colors duration-200 truncate'>
-                  Jane Doe
-                </p>
-                <p className='text-xs text-gray-500 group-hover:text-gray-600 transition-colors duration-200'>
-                  Content Creator
-                </p>
-              </div>
-            )}
-          </div>
+        {/* Settings at bottom */}
+        <div className='border-t border-slate-200/60 pt-4 pb-6'>
+          <SidebarLink
+            href={settingsItem.href}
+            icon={settingsItem.icon}
+            label={settingsItem.name}
+            collapsed={collapsed}
+            isActive={
+              pathname === settingsItem.href ||
+              pathname?.startsWith(`${settingsItem.href}/`)
+            }
+          />
         </div>
       </div>
     </div>

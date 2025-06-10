@@ -7,6 +7,7 @@ export interface User {
   createdAt: string;
   updatedAt: string;
   avatar?: string;
+  profilePicUrl?: string; // Backend API response uses this field
 }
 
 export interface AuthTokens {
