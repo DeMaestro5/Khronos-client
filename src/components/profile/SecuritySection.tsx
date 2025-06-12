@@ -30,13 +30,13 @@ export default function SecuritySection({
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
   return (
-    <div className='bg-white rounded-2xl shadow-lg border border-slate-200/60 p-8'>
+    <div className='bg-white rounded-xl shadow-sm border border-gray-200 p-6'>
       <div className='flex items-center justify-between mb-6'>
-        <h2 className='text-xl font-bold text-gray-900'>Security</h2>
+        <h2 className='text-lg font-semibold text-gray-900'>Security</h2>
         <button
           type='button'
           onClick={() => setChangePassword(!changePassword)}
-          className='text-sm text-indigo-600 hover:text-indigo-700 font-medium'
+          className='text-sm text-indigo-600 cursor-pointer hover:text-indigo-700 font-medium hover:underline transition-colors duration-200'
         >
           {changePassword ? 'Cancel Password Change' : 'Change Password'}
         </button>
@@ -44,10 +44,10 @@ export default function SecuritySection({
 
       {changePassword && (
         <div className='space-y-6'>
-          <div className='p-4 bg-yellow-50 border border-yellow-200 rounded-xl'>
-            <div className='flex items-center space-x-3'>
-              <FiShield className='h-5 w-5 text-yellow-600 flex-shrink-0' />
-              <p className='text-sm text-yellow-800'>
+          <div className='p-4 bg-amber-50 border border-amber-200 rounded-lg'>
+            <div className='flex items-start space-x-3'>
+              <FiShield className='h-5 w-5 text-amber-600 flex-shrink-0 mt-0.5' />
+              <p className='text-sm text-amber-800'>
                 Password changes require your current password for security
                 verification.
               </p>
@@ -70,9 +70,9 @@ export default function SecuritySection({
                 name='currentPassword'
                 value={formData.currentPassword}
                 onChange={onInputChange}
-                className={`w-full pl-12 pr-12 py-4 bg-gray-50 border-2 rounded-xl focus:outline-none focus:bg-white transition-all duration-200 ${
+                className={`w-full pl-12 pr-12 py-3 bg-gray-50 border text-gray-900 rounded-lg focus:outline-none focus:bg-white focus:ring-2 focus:ring-indigo-500 focus:ring-offset-0 transition-all duration-200 ${
                   errors.currentPassword
-                    ? 'border-red-300 focus:border-red-500'
+                    ? 'border-red-300 focus:border-red-500 focus:ring-red-500'
                     : 'border-gray-200 focus:border-indigo-500'
                 }`}
                 placeholder='Enter your current password'
@@ -113,9 +113,9 @@ export default function SecuritySection({
                 name='newPassword'
                 value={formData.newPassword}
                 onChange={onInputChange}
-                className={`w-full pl-12 pr-12 py-4 bg-gray-50 border-2 rounded-xl focus:outline-none focus:bg-white transition-all duration-200 ${
+                className={`w-full pl-12 pr-12 py-3 bg-gray-50 border text-gray-900 rounded-lg focus:outline-none focus:bg-white focus:ring-2 focus:ring-indigo-500 focus:ring-offset-0 transition-all duration-200 ${
                   errors.newPassword
-                    ? 'border-red-300 focus:border-red-500'
+                    ? 'border-red-300 focus:border-red-500 focus:ring-red-500'
                     : 'border-gray-200 focus:border-indigo-500'
                 }`}
                 placeholder='Enter your new password'
@@ -156,9 +156,9 @@ export default function SecuritySection({
                 name='confirmPassword'
                 value={formData.confirmPassword}
                 onChange={onInputChange}
-                className={`w-full pl-12 pr-12 py-4 bg-gray-50 border-2 rounded-xl focus:outline-none focus:bg-white transition-all duration-200 ${
+                className={`w-full pl-12 pr-12 py-3 bg-gray-50 border text-gray-900 rounded-lg focus:outline-none focus:bg-white focus:ring-2 focus:ring-indigo-500 focus:ring-offset-0 transition-all duration-200 ${
                   errors.confirmPassword
-                    ? 'border-red-300 focus:border-red-500'
+                    ? 'border-red-300 focus:border-red-500 focus:ring-red-500'
                     : 'border-gray-200 focus:border-indigo-500'
                 }`}
                 placeholder='Confirm your new password'

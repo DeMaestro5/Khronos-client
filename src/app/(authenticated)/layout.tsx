@@ -7,6 +7,7 @@ import { ContentCreationProvider } from '../../context/ContentCreationContext';
 import { AIChatProvider } from '../../context/AIChatContext';
 import GlobalCreationIndicator from '../../components/ui/global-creation-indicator';
 import AIChatModal from '../../components/ai/ai-chat-modal';
+import AuthGuard from '../../components/auth/AuthGuard';
 
 export default function DashboardLayout({
   children,
@@ -15,27 +16,29 @@ export default function DashboardLayout({
 }) {
   return (
     <AuthProvider>
-      <ConfettiProvider>
-        <ContentCreationProvider>
-          <AIChatProvider>
-            <CalendarProvider>
-              <div className='h-screen flex overflow-hidden bg-gray-50 w-full'>
-                <Sidebar />
+      <AuthGuard>
+        <ConfettiProvider>
+          <ContentCreationProvider>
+            <AIChatProvider>
+              <CalendarProvider>
+                <div className='h-screen flex overflow-hidden bg-gray-50 w-full'>
+                  <Sidebar />
 
-                <div className='flex flex-col w-0 flex-1 overflow-hidden '>
-                  <Navbar />
+                  <div className='flex flex-col w-0 flex-1 overflow-hidden '>
+                    <Navbar />
 
-                  <main className='flex-1 relative overflow-y-auto focus:outline-none '>
-                    {children}
-                  </main>
+                    <main className='flex-1 relative overflow-y-auto focus:outline-none '>
+                      {children}
+                    </main>
+                  </div>
                 </div>
-              </div>
-              <GlobalCreationIndicator />
-              <AIChatModal />
-            </CalendarProvider>
-          </AIChatProvider>
-        </ContentCreationProvider>
-      </ConfettiProvider>
+                <GlobalCreationIndicator />
+                <AIChatModal />
+              </CalendarProvider>
+            </AIChatProvider>
+          </ContentCreationProvider>
+        </ConfettiProvider>
+      </AuthGuard>
     </AuthProvider>
   );
 }
