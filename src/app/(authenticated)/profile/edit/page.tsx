@@ -43,7 +43,7 @@ export default function EditProfilePage() {
   useEffect(() => {
     const fetchProfileData = async () => {
       if (!contextUser) {
-        router.push('/auth/login');
+        setLoading(false);
         return;
       }
 
@@ -162,6 +162,7 @@ export default function EditProfilePage() {
 
   const handleImageChange = (imageData: string) => {
     setFormData((prev) => ({ ...prev, profilePicUrl: imageData }));
+    setPreviewImage(imageData);
     // Clear any previous errors
     setErrors((prev) => ({ ...prev, general: undefined }));
     if (success) setSuccess('');
@@ -228,9 +229,9 @@ export default function EditProfilePage() {
 
   if (loading) {
     return (
-      <div className='min-h-screen bg-gradient-to-br from-slate-50 via-white to-indigo-50/30 flex items-center justify-center'>
+      <div className='min-h-screen bg-gray-50 flex items-center justify-center'>
         <div className='text-center'>
-          <div className='w-16 h-16 border-4 border-indigo-200 border-t-indigo-600 rounded-full animate-spin mx-auto mb-4'></div>
+          <div className='w-12 h-12 border-4 border-gray-200 border-t-indigo-600 rounded-full animate-spin mx-auto mb-4'></div>
           <p className='text-gray-600 font-medium'>Loading profile...</p>
         </div>
       </div>
@@ -239,7 +240,7 @@ export default function EditProfilePage() {
 
   if (!user) {
     return (
-      <div className='min-h-screen bg-gradient-to-br from-slate-50 via-white to-indigo-50/30 flex items-center justify-center'>
+      <div className='min-h-screen bg-gray-50 flex items-center justify-center'>
         <div className='text-center'>
           <div className='w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4'>
             <FiUser className='h-8 w-8 text-red-600' />
@@ -257,20 +258,20 @@ export default function EditProfilePage() {
   }
 
   return (
-    <div className='min-h-screen bg-gradient-to-br from-slate-50 via-white to-indigo-50/30'>
-      <div className='max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8'>
+    <div className='min-h-screen bg-gray-50'>
+      <div className='max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 py-8'>
         {/* Header */}
-        <div className='flex items-center justify-between mb-8'>
-          <div className='flex items-center space-x-4'>
+        <div className='mb-8'>
+          <div className='flex items-center space-x-4 mb-4'>
             <Link
               href='/profile'
-              className='p-2 text-gray-600 hover:text-indigo-600 hover:bg-white rounded-xl transition-all duration-200'
+              className='p-2 text-gray-400 hover:text-gray-600 hover:bg-white rounded-lg transition-colors duration-200'
             >
               <FiArrowLeft className='h-5 w-5' />
             </Link>
             <div>
-              <h1 className='text-3xl font-bold text-gray-900'>Edit Profile</h1>
-              <p className='text-gray-600 mt-1'>
+              <h1 className='text-2xl font-bold text-gray-900'>Edit Profile</h1>
+              <p className='text-gray-600 text-sm mt-1'>
                 Update your personal information and settings
               </p>
             </div>
@@ -279,17 +280,17 @@ export default function EditProfilePage() {
 
         {/* Success Message */}
         {success && (
-          <div className='mb-6 p-4 bg-green-50 border border-green-200 rounded-xl flex items-center space-x-3'>
-            <FiCheck className='h-5 w-5 text-green-600 flex-shrink-0' />
-            <p className='text-green-800 font-medium'>{success}</p>
+          <div className='mb-6 p-4 bg-green-50 border border-green-200 rounded-lg flex items-start space-x-3'>
+            <FiCheck className='h-5 w-5 text-green-600 flex-shrink-0 mt-0.5' />
+            <p className='text-green-800 text-sm font-medium'>{success}</p>
           </div>
         )}
 
         {/* General Error */}
         {errors.general && (
-          <div className='mb-6 p-4 bg-red-50 border border-red-200 rounded-xl flex items-center space-x-3'>
-            <FiAlertCircle className='h-5 w-5 text-red-600 flex-shrink-0' />
-            <p className='text-red-800 font-medium'>{errors.general}</p>
+          <div className='mb-6 p-4 bg-red-50 border border-red-200 rounded-lg flex items-start space-x-3'>
+            <FiAlertCircle className='h-5 w-5 text-red-600 flex-shrink-0 mt-0.5' />
+            <p className='text-red-800 text-sm font-medium'>{errors.general}</p>
           </div>
         )}
 
@@ -328,13 +329,13 @@ export default function EditProfilePage() {
           />
 
           {/* Action Buttons */}
-          <div className='flex flex-col sm:flex-row sm:justify-between sm:items-center space-y-4 sm:space-y-0 bg-white rounded-2xl shadow-lg border border-slate-200/60 p-6'>
+          <div className='flex flex-col sm:flex-row sm:justify-between sm:items-center space-y-4 sm:space-y-0 bg-white rounded-xl shadow-sm border border-gray-200 p-6'>
             <div className='text-sm text-gray-500'>* Required fields</div>
 
-            <div className='flex space-x-4'>
+            <div className='flex flex-col sm:flex-row gap-3'>
               <Link
                 href='/profile'
-                className='inline-flex items-center px-6 py-3 bg-white border border-gray-200 text-gray-700 font-semibold rounded-xl hover:bg-gray-50 transition-all duration-200'
+                className='inline-flex items-center justify-center px-6 py-3 bg-white border border-gray-200 text-gray-700 font-medium rounded-lg hover:bg-gray-50 hover:border-gray-300 transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2'
               >
                 <FiX className='h-4 w-4 mr-2' />
                 Cancel
@@ -343,7 +344,7 @@ export default function EditProfilePage() {
               <button
                 type='submit'
                 disabled={saving}
-                className='inline-flex items-center px-8 py-3 bg-gradient-to-r from-indigo-600 to-purple-600 text-white font-semibold rounded-xl hover:shadow-lg transition-all duration-200 transform hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none'
+                className='inline-flex items-center justify-center px-8 py-3 bg-indigo-600 hover:bg-indigo-700 text-white font-medium rounded-lg transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-indigo-600'
               >
                 {saving ? (
                   <>

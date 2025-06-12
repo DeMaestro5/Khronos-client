@@ -15,8 +15,8 @@ export default function BasicInfoSection({
   onInputChange,
 }: BasicInfoSectionProps) {
   return (
-    <div className='bg-white rounded-2xl shadow-lg border border-slate-200/60 p-8'>
-      <h2 className='text-xl font-bold text-gray-900 mb-6'>
+    <div className='bg-white rounded-xl shadow-sm border border-gray-200 p-6'>
+      <h2 className='text-lg font-semibold text-gray-900 mb-6'>
         Basic Information
       </h2>
 
@@ -37,9 +37,9 @@ export default function BasicInfoSection({
               name='name'
               value={formData.name}
               onChange={onInputChange}
-              className={`w-full pl-12 pr-4 py-4 bg-gray-50 border-2 rounded-xl focus:outline-none focus:bg-white transition-all duration-200 ${
+              className={`w-full pl-12 pr-4 py-3 bg-gray-50 border text-gray-900 rounded-lg focus:outline-none focus:bg-white focus:ring-2 focus:ring-indigo-500 focus:ring-offset-0 transition-all duration-200 ${
                 errors.name
-                  ? 'border-red-300 focus:border-red-500'
+                  ? 'border-red-300 focus:border-red-500 focus:ring-red-500'
                   : 'border-gray-200 focus:border-indigo-500'
               }`}
               placeholder='Enter your full name'
@@ -69,9 +69,9 @@ export default function BasicInfoSection({
               name='email'
               value={formData.email}
               onChange={onInputChange}
-              className={`w-full pl-12 pr-4 py-4 bg-gray-50 border-2 rounded-xl focus:outline-none focus:bg-white transition-all duration-200 ${
+              className={`w-full pl-12 pr-4 py-3 bg-gray-50 border text-gray-900 rounded-lg focus:outline-none focus:bg-white focus:ring-2 focus:ring-indigo-500 focus:ring-offset-0 transition-all duration-200 disabled:bg-gray-100 disabled:text-gray-500 ${
                 errors.email
-                  ? 'border-red-300 focus:border-red-500'
+                  ? 'border-red-300 focus:border-red-500 focus:ring-red-500'
                   : 'border-gray-200 focus:border-indigo-500'
               }`}
               placeholder='Enter your email address'
