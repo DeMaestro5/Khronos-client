@@ -23,6 +23,8 @@ import { profileAPI, contentAPI } from '@/src/lib/api';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/src/context/AuthContext';
 import { User } from '@/src/types/auth';
+import { useNotifications } from '@/src/context/NotificationContext';
+import NotificationDropdown from '@/src/components/notifications/NotificationDropdown';
 
 interface UserStats {
   totalContent: number;
@@ -46,6 +48,7 @@ export default function Navbar() {
   const [loadingStats, setLoadingStats] = useState(false);
   const router = useRouter();
   const { user: contextUser, logout } = useAuth();
+  const { unreadCount } = useNotifications();
 
   // Fetch user profile data and stats
   useEffect(() => {
@@ -93,43 +96,6 @@ export default function Navbar() {
 
   // Use profile data or fallback to context user
   const user = profileData || contextUser;
-
-  const notifications = [
-    {
-      id: 1,
-      title: 'Content Performance Alert',
-      message: 'Your Instagram post is trending! 📈',
-      time: '2m ago',
-      type: 'success',
-    },
-    {
-      id: 2,
-      title: 'AI Suggestion Ready',
-      message: 'New content ideas based on trends',
-      time: '15m ago',
-      type: 'info',
-    },
-    {
-      id: 3,
-      title: 'Schedule Reminder',
-      message: '3 posts scheduled for tomorrow',
-      time: '1h ago',
-      type: 'warning',
-    },
-  ];
-
-  const getNotificationIcon = (type: string) => {
-    switch (type) {
-      case 'success':
-        return '🎉';
-      case 'info':
-        return '🤖';
-      case 'warning':
-        return '⏰';
-      default:
-        return '🔔';
-    }
-  };
 
   const getInitials = (name: string) => {
     return name
@@ -226,64 +192,20 @@ export default function Navbar() {
                 onClick={() => setNotificationsOpen(!notificationsOpen)}
               >
                 <FiBell className='h-5 w-5 group-hover:scale-110 transition-transform duration-200' />
-                {notifications.length > 0 && (
+                {unreadCount > 0 && (
                   <span className='absolute -top-1 -right-1 flex h-4 w-4'>
                     <span className='animate-ping absolute inline-flex h-full w-full rounded-full bg-gradient-to-r from-red-400 to-pink-500 opacity-75'></span>
                     <span className='relative inline-flex rounded-full h-4 w-4 bg-gradient-to-r from-red-500 to-pink-600 text-white text-xs items-center justify-center font-bold shadow-lg'>
-                      {notifications.length}
+                      {unreadCount}
                     </span>
                   </span>
                 )}
               </button>
 
-              {notificationsOpen && (
-                <div className='origin-top-right absolute right-0 mt-3 w-96 rounded-2xl shadow-2xl bg-white/95 backdrop-blur-2xl ring-1 ring-black ring-opacity-5 z-20 border border-slate-200/60 overflow-hidden'>
-                  <div className='p-6 bg-gradient-to-r from-indigo-50 to-purple-50 border-b border-slate-200/60'>
-                    <div className='flex items-center justify-between'>
-                      <h3 className='text-lg font-bold text-gray-900'>
-                        Notifications
-                      </h3>
-                      <span className='px-2 py-1 bg-indigo-100 text-indigo-700 text-xs font-medium rounded-full'>
-                        {notifications.length} new
-                      </span>
-                    </div>
-                  </div>
-                  <div className='max-h-96 overflow-y-auto'>
-                    {notifications.map((notification) => (
-                      <div
-                        key={notification.id}
-                        className='p-4 hover:bg-gradient-to-r hover:from-slate-50 hover:to-indigo-50/50 transition-all duration-200 border-b border-slate-200/40 last:border-b-0 group cursor-pointer'
-                      >
-                        <div className='flex items-start space-x-3'>
-                          <span className='text-lg flex-shrink-0 mt-1'>
-                            {getNotificationIcon(notification.type)}
-                          </span>
-                          <div className='flex-1 min-w-0'>
-                            <p className='text-sm font-semibold text-gray-900 group-hover:text-indigo-700 transition-colors duration-200'>
-                              {notification.title}
-                            </p>
-                            <p className='text-sm text-gray-600 mt-1'>
-                              {notification.message}
-                            </p>
-                            <p className='text-xs text-gray-500 mt-1 font-medium'>
-                              {notification.time}
-                            </p>
-                          </div>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                  <div className='p-4 bg-gradient-to-r from-slate-50 to-indigo-50/50 border-t border-slate-200/60'>
-                    <Link
-                      href='/notifications'
-                      className='block text-center text-sm text-indigo-600 hover:text-indigo-700 font-semibold py-2 hover:bg-white/60 rounded-lg transition-all duration-200'
-                      onClick={() => setNotificationsOpen(false)}
-                    >
-                      View all notifications →
-                    </Link>
-                  </div>
-                </div>
-              )}
+              <NotificationDropdown
+                isOpen={notificationsOpen}
+                onClose={() => setNotificationsOpen(false)}
+              />
             </div>
 
             {/* Enhanced Profile Dropdown */}
