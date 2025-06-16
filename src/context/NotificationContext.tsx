@@ -15,7 +15,7 @@ import {
   NotificationSettings,
   NotificationStatus,
 } from '@/src/types/notification';
-import { notificationAPI } from '@/src/lib/api/notification';
+import { notificationAPI } from '@/src/lib/api';
 import { toast } from 'react-hot-toast';
 
 interface NotificationContextType {
@@ -157,7 +157,7 @@ export function NotificationProvider({
 
     const interval = setInterval(() => {
       refreshNotifications();
-    }, 60000);
+    }, 5000); // Changed from 60000 to 5000 for testing (5 seconds)
 
     return () => clearInterval(interval);
   }, [user, refreshNotifications]);

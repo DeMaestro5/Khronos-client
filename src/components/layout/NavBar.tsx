@@ -50,6 +50,22 @@ export default function Navbar() {
   const { user: contextUser, logout } = useAuth();
   const { unreadCount } = useNotifications();
 
+  // Close notifications when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      const target = event.target as HTMLElement;
+      if (
+        !target.closest('.notification-dropdown') &&
+        !target.closest('.notification-button')
+      ) {
+        setNotificationsOpen(false);
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
+
   // Fetch user profile data and stats
   useEffect(() => {
     const fetchUserData = async () => {
@@ -188,7 +204,7 @@ export default function Navbar() {
             {/* Enhanced Notifications */}
             <div className='relative'>
               <button
-                className='relative p-3 text-gray-600 hover:text-indigo-600 hover:bg-white/80 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500/20 transition-all duration-200 shadow-sm hover:shadow-md group'
+                className='notification-button relative p-3 text-gray-600 hover:text-indigo-600 hover:bg-white/80 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500/20 transition-all duration-200 shadow-sm hover:shadow-md group'
                 onClick={() => setNotificationsOpen(!notificationsOpen)}
               >
                 <FiBell className='h-5 w-5 group-hover:scale-110 transition-transform duration-200' />
@@ -202,10 +218,12 @@ export default function Navbar() {
                 )}
               </button>
 
-              <NotificationDropdown
-                isOpen={notificationsOpen}
-                onClose={() => setNotificationsOpen(false)}
-              />
+              <div className='notification-dropdown'>
+                <NotificationDropdown
+                  isOpen={notificationsOpen}
+                  onClose={() => setNotificationsOpen(false)}
+                />
+              </div>
             </div>
 
             {/* Enhanced Profile Dropdown */}
