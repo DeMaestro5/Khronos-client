@@ -3,6 +3,10 @@ import axios, { AxiosError, InternalAxiosRequestConfig } from 'axios';
 import { Content } from '../types/content';
 import { AIChatMessage } from '../types/ai';
 import { AuthUtils } from './auth-utils';
+import {
+  NotificationFilters,
+  NotificationSettings,
+} from '../types/notification';
 
 interface ContentCreateRequest {
   title: string;
@@ -483,6 +487,36 @@ export const aiChatAPI = {
     limit?: number;
     search?: string;
   }) => api.get('/api/v1/chat/content-templates', { params: filters }),
+};
+
+export const notificationAPI = {
+  getNotifications: (filters?: NotificationFilters, page = 1, limit = 20) => {
+    const params: Record<string, string | number | undefined> = { page, limit };
+    if (filters?.type) params.type = filters.type;
+    if (filters?.status) params.status = filters.status;
+    if (filters?.priority) params.priority = filters.priority;
+    return api.get('/api/v1/notifications', { params });
+  },
+  markAsRead: (notificationId: string) =>
+    api.put(`/api/v1/notifications/${notificationId}/read`),
+  markAllAsRead: () => api.put('/api/v1/notifications/read-all'),
+  getSettings: () => api.get('/api/v1/notifications/settings'),
+  updateSettings: (settings: Partial<NotificationSettings>) => {
+    if (settings.quietHours) {
+      const { start, end } = settings.quietHours;
+      if (
+        typeof start !== 'string' ||
+        typeof end !== 'string' ||
+        !/^([0-1]?[0-9]|2[0-3]):[0-5][0-9]$/.test(start) ||
+        !/^([0-1]?[0-9]|2[0-3]):[0-5][0-9]$/.test(end)
+      ) {
+        throw new Error(
+          'Invalid quietHours format. Use HH:MM format (e.g., "22:00")'
+        );
+      }
+    }
+    return api.put('/api/v1/notifications/settings', settings);
+  },
 };
 
 export default api;
