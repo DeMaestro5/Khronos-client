@@ -85,7 +85,7 @@ export interface CustomAnalysisParams {
   };
 }
 
-export interface TrendsFilters {
+export interface TrendFilters {
   platform?: string;
   category?: string;
   timeRange?: 'today' | 'week' | 'month' | 'quarter' | 'year' | 'custom';
@@ -101,7 +101,7 @@ export interface TrendsState {
   historicalData: TrendReport | null;
   predictions: TrendPrediction[];
   relatedTrends: Trend[];
-  filters: TrendsFilters;
+  filters: TrendFilters;
   isLoading: boolean;
   error: string | null;
   platforms: Platform[];
