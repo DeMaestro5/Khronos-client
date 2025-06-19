@@ -77,7 +77,7 @@ export default function Sidebar() {
     { name: 'Analytics', href: '/analytics', icon: <FiBarChart2 /> },
     {
       name: 'Trend Insights',
-      href: '/dashboard/trends',
+      href: '/trends',
       icon: <FiTrendingUp />,
     },
   ];

@@ -24,6 +24,7 @@ import {
 import { useAuth } from '@/src/context/AuthContext';
 import { profileAPI, contentAPI } from '@/src/lib/api';
 import { User } from '@/src/types/auth';
+import PageLoading from '@/src/components/ui/page-loading';
 
 interface UserStats {
   totalContent: number;
@@ -208,12 +209,12 @@ export default function ProfilePage() {
 
   if (loading) {
     return (
-      <div className='min-h-screen bg-gradient-to-br from-slate-50 via-white to-indigo-50/30 flex items-center justify-center'>
-        <div className='text-center'>
-          <div className='w-16 h-16 border-4 border-indigo-200 border-t-indigo-600 rounded-full animate-spin mx-auto mb-4'></div>
-          <p className='text-gray-600 font-medium'>Loading profile...</p>
-        </div>
-      </div>
+      <PageLoading
+        title='Loading Your Profile'
+        subtitle="We're fetching your profile data and statistics..."
+        contentType='data'
+        showGrid={false}
+      />
     );
   }
 

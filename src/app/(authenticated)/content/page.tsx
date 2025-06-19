@@ -13,7 +13,7 @@ import ContentFilter from '@/src/components/content/content-filter';
 import { ContentFormData } from '@/src/types/modal';
 import { contentAPI } from '@/src/lib/api';
 import { AuthUtils } from '@/src/lib/auth-utils';
-import ContentLoading from '@/src/components/ui/content-loading';
+import PageLoading from '@/src/components/ui/page-loading';
 // import AuthDebug from '@/src/components/debug/AuthDebug';
 
 type ViewMode = 'grid' | 'list';
@@ -297,7 +297,15 @@ export default function ContentPage() {
   }, [contents, searchQuery, statusFilter, typeFilter]);
 
   if (isLoading) {
-    return <ContentLoading />;
+    return (
+      <PageLoading
+        title='Loading Your Content'
+        subtitle="We're fetching your amazing content..."
+        contentType='content'
+        showGrid={true}
+        gridItems={8}
+      />
+    );
   }
 
   return (
