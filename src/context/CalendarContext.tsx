@@ -59,10 +59,7 @@ export const CalendarProvider = ({ children }: CalendarProviderProps) => {
   ): ScheduledContent => {
     const calendarData: ScheduledContent = {};
 
-    console.log('🔍 Converting API content to calendar format:', apiContent);
-    console.log('📊 Total content items:', apiContent.length);
-
-    apiContent.forEach((contentItem, index) => {
+    apiContent.forEach((contentItem) => {
       const content = contentItem as {
         _id: string; // MongoDB ObjectID
         title: string;
@@ -93,27 +90,6 @@ export const CalendarProvider = ({ children }: CalendarProviderProps) => {
         content.scheduling?.startDate ||
         content.metadata?.scheduledDate;
 
-      console.log(
-        `📝 Processing content item ${index + 1}:`,
-        JSON.stringify(
-          {
-            _id: content._id,
-            title: content.title,
-            status: content.status,
-            scheduledDate: content.scheduledDate,
-            possibleScheduledDate: possibleScheduledDate,
-            scheduling: content.scheduling,
-            metadata: content.metadata,
-            platform: content.platform,
-            platforms: content.platforms,
-            userId: content.userId,
-            authorId: content.author?.id,
-          },
-          null,
-          2
-        )
-      );
-
       // Check if content has a scheduled date and belongs to current user
       if (
         content.status === 'scheduled' &&
@@ -126,25 +102,6 @@ export const CalendarProvider = ({ children }: CalendarProviderProps) => {
         // Extract time from ISO string (e.g., "2024-01-24T11:15:00.000Z" -> "11:15")
         const timeMatch = possibleScheduledDate.match(/T(\d{2}:\d{2})/);
         const time = timeMatch ? timeMatch[1] : '09:00';
-
-        console.log(
-          '📅 Adding to calendar:',
-          JSON.stringify(
-            {
-              _id: content._id,
-              dateKey,
-              time,
-              title: content.title,
-              platform:
-                content.platform?.[0] ||
-                content.platforms?.[0]?.id ||
-                'linkedin',
-              status: content.status,
-            },
-            null,
-            2
-          )
-        );
 
         const calendarItem: ScheduledContentItem = {
           id: content._id, // Use the actual MongoDB ObjectID
@@ -162,55 +119,26 @@ export const CalendarProvider = ({ children }: CalendarProviderProps) => {
           calendarData[dateKey] = [];
         }
         calendarData[dateKey].push(calendarItem);
-      } else {
-        console.log(
-          `⚠️ Skipping item ${index + 1}: status='${
-            content.status
-          }', scheduledDate='${
-            content.scheduledDate
-          }', possibleScheduledDate='${possibleScheduledDate}', _id='${
-            content._id
-          }'`
-        );
       }
     });
 
-    console.log(
-      '✅ Final calendar data:',
-      JSON.stringify(calendarData, null, 2)
-    );
-    console.log('📊 Calendar dates with content:', Object.keys(calendarData));
     return calendarData;
   };
 
   // Load scheduled content from both API and localStorage
   const loadScheduledContent = async () => {
     setIsLoading(true);
-    console.log('🚀 Loading scheduled content...');
 
     try {
       // First, fetch from API (actual scheduled content)
       try {
-        console.log('🌐 Fetching content from API...');
         const response = await contentAPI.getUserContent();
-        console.log('📡 API Response statusCode:', response.data?.statusCode);
-        console.log('📡 API Response message:', response.data?.message);
-        console.log(
-          '📡 API Response data length:',
-          response.data?.data?.length
-        );
-        console.log(
-          '📡 Full API Response:',
-          JSON.stringify(response.data, null, 2)
-        );
 
         if (response.data?.statusCode === '10000' && response.data?.data) {
-          console.log('✅ API call successful, processing content...');
           const apiCalendarData = convertAPIContentToCalendar(
             response.data.data
           );
 
-          console.log('🎯 Final calendar data from API:', apiCalendarData);
           setScheduledContent(apiCalendarData);
 
           // Clear old localStorage data that might have invalid IDs
@@ -242,37 +170,28 @@ export const CalendarProvider = ({ children }: CalendarProviderProps) => {
               );
 
               if (hasInvalidIds) {
-                console.log(
-                  '🧹 Found invalid IDs in localStorage, clearing old data...'
-                );
                 localStorage.removeItem('khronos-scheduled-content');
               }
             } catch {
-              console.log('🧹 Invalid localStorage data, clearing...');
               localStorage.removeItem('khronos-scheduled-content');
             }
           }
         } else {
-          console.warn('⚠️ API response not successful:', response.data);
           // If API fails, show empty calendar
           setScheduledContent({});
         }
-      } catch (apiError) {
-        console.error('❌ Failed to load content from API:', apiError);
+      } catch {
         setScheduledContent({});
       }
-    } catch (error) {
-      console.error('💥 Error loading scheduled content:', error);
+    } catch {
       setScheduledContent({});
     } finally {
       setIsLoading(false);
-      console.log('🏁 Loading complete');
     }
   };
 
   // Force refresh calendar by clearing cache and reloading
   const forceRefreshCalendar = async () => {
-    console.log('🔄 Force refreshing calendar...');
     localStorage.removeItem('khronos-scheduled-content');
     await loadScheduledContent();
   };

@@ -22,7 +22,7 @@ import {
   PerformanceAnalyticsResponse,
   EngagementAnalyticsResponse,
 } from '@/src/types/analytics';
-import ContentLoading from '@/src/components/ui/content-loading';
+import PageLoading from '@/src/components/ui/page-loading';
 import PlatformPerformance from '@/src/components/analytics/platform-performance';
 import TrendingOpportunities from '@/src/components/analytics/trending-opportunities';
 import PerformanceInsights from '@/src/components/analytics/performance-insights';
@@ -316,7 +316,15 @@ export default function AnalyticsPage() {
   };
 
   if (state.loading) {
-    return <ContentLoading />;
+    return (
+      <PageLoading
+        title='Loading Analytics Dashboard'
+        subtitle="We're gathering your performance metrics and insights..."
+        contentType='analytics'
+        showGrid={true}
+        gridItems={8}
+      />
+    );
   }
 
   if (state.error) {

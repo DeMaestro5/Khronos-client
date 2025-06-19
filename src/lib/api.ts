@@ -519,4 +519,49 @@ export const notificationAPI = {
   },
 };
 
+// Trends API methods
+export const trendsAPI = {
+  // Get current trending topics
+  getCurrentTrends: (params?: { platform?: string; category?: string }) =>
+    api.get('/api/v1/trends', { params }),
+
+  // Get trending topics by platform
+  getTrendsByPlatform: (platform: string, params?: { category?: string }) =>
+    api.get(`/api/v1/trends/${platform}`, { params }),
+
+  // Get trending topics by category
+  getTrendsByCategory: (category: string, params?: { platform?: string }) =>
+    api.get(`/api/v1/trends/category/${category}`, { params }),
+
+  // Get historical trend data
+  getHistoricalTrends: (days: number, params?: { platform?: string }) =>
+    api.get(`/api/v1/trends/historical/${days}`, { params }),
+
+  // Get custom trend analysis
+  getCustomAnalysis: (data: {
+    platform?: string;
+    category?: string;
+    keywords?: string[];
+    timeRange?: { start?: string; end?: string };
+  }) => api.post('/api/v1/trends/custom', data),
+
+  // Get trend prediction for a keyword
+  getTrendPrediction: (keyword: string, params?: { platform?: string }) =>
+    api.get(`/api/v1/trends/predict/${keyword}`, { params }),
+
+  // Get related trends for a keyword
+  getRelatedTrends: (keyword: string, params?: { platform?: string }) =>
+    api.get(`/api/v1/trends/related/${keyword}`, { params }),
+
+  // Generate comprehensive trend report
+  getTrendReport: (platform: string, params?: { days?: number }) =>
+    api.get(`/api/v1/trends/report/${platform}`, { params }),
+
+  // Get available platforms
+  getPlatforms: () => api.get('/api/v1/trends/platforms'),
+
+  // Get available categories
+  getCategories: () => api.get('/api/v1/trends/categories'),
+};
+
 export default api;

@@ -114,9 +114,10 @@ export default function ProfilePictureSection({
             {shouldShowImage() ? (
               <div className='relative'>
                 {previewImage.startsWith('data:') ? (
-                  // Use regular img tag for base64 data to avoid Next.js optimization issues
-                  <img
+                  <Image
                     className='h-28 w-28 rounded-full object-cover border-4 border-white shadow-lg ring-2 ring-gray-100'
+                    width={112}
+                    height={112}
                     src={previewImage}
                     alt='Profile preview'
                     onError={() => {
