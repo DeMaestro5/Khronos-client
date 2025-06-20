@@ -7,13 +7,14 @@ import ContentCalendar from '../components/ui/content-calendar';
 import FeaturesSection from '../components/features';
 import Testimonial from '../components/testimonial';
 import StatsSection from '../components/stats';
+import ThemeToggle from '../components/ui/theme-toggle';
 
 export default function Home() {
   return (
-    <div className='min-h-screen bg-slate-50'>
+    <div className='min-h-screen bg-slate-50 dark:bg-slate-950 transition-colors duration-200'>
       {/* Navigation */}
       <motion.nav
-        className='fixed top-0 w-full bg-white/80 backdrop-blur-md border-b border-slate-200/60 z-50'
+        className='fixed top-0 w-full bg-white/80 dark:bg-slate-900/80 backdrop-blur-md border-b border-slate-200/60 dark:border-slate-800/60 z-50 transition-colors duration-200'
         initial={{ opacity: 0, y: -20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.6 }}
@@ -21,19 +22,22 @@ export default function Home() {
         <div className='max-w-7xl mx-auto px-4 sm:px-6 lg:px-8'>
           <div className='flex justify-between items-center py-4'>
             <div className='flex items-center space-x-2'>
-              <div className='w-8 h-8 bg-gradient-to-r from-indigo-600 to-purple-600 rounded-lg flex items-center justify-center'>
+              <div className='w-8 h-8 bg-gradient-to-r from-indigo-600 to-purple-600 dark:from-blue-600 dark:to-indigo-700 rounded-lg flex items-center justify-center'>
                 <span className='text-white font-bold text-sm'>K</span>
               </div>
-              <span className='text-xl font-bold text-slate-800'>KHRONOS</span>
+              <span className='text-xl font-bold text-slate-800 dark:text-slate-200'>
+                KHRONOS
+              </span>
             </div>
             <div className='flex items-center space-x-4'>
+              <ThemeToggle variant='compact' showLabels={false} size='sm' />
               <Button
                 variant='ghost'
-                className='text-slate-600 hover:text-slate-800'
+                className='text-slate-600 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200'
               >
                 <Link href='/auth/login'>Login</Link>
               </Button>
-              <Button className='bg-gradient-to-r from-indigo-600 to-purple-600 hover:bg-indigo-700'>
+              <Button className='bg-gradient-to-r from-indigo-600 to-purple-600 dark:from-blue-600 dark:to-indigo-700 hover:bg-indigo-700 dark:hover:from-blue-500 dark:hover:to-indigo-600'>
                 <Link href='/auth/signup'>Get Started</Link>
               </Button>
             </div>
@@ -54,24 +58,24 @@ export default function Home() {
             >
               <div className='space-y-6'>
                 <motion.div
-                  className='inline-flex items-center px-4 py-2 rounded-full bg-indigo-50 border border-indigo-200'
+                  className='inline-flex items-center px-4 py-2 rounded-full bg-indigo-50 dark:bg-blue-950/50 border border-indigo-200 dark:border-blue-800'
                   initial={{ opacity: 0, scale: 0.8 }}
                   animate={{ opacity: 1, scale: 1 }}
                   transition={{ duration: 0.6, delay: 0.2 }}
                 >
-                  <span className='text-indigo-600 text-sm font-medium'>
+                  <span className='text-indigo-600 dark:text-blue-400 text-sm font-medium'>
                     ✨ AI-Powered Content Strategy
                   </span>
                 </motion.div>
 
-                <h1 className='text-5xl lg:text-6xl font-bold text-slate-900 leading-tight'>
+                <h1 className='text-5xl lg:text-6xl font-bold text-slate-900 dark:text-slate-100 leading-tight'>
                   Create content that
-                  <span className='block bg-gradient-to-r from-indigo-600 to-purple-600 bg-clip-text text-transparent'>
+                  <span className='block bg-gradient-to-r from-indigo-600 to-purple-600 dark:from-blue-400 dark:to-indigo-500 bg-clip-text text-transparent'>
                     actually converts
                   </span>
                 </h1>
 
-                <p className='text-xl text-slate-600 leading-relaxed max-w-xl'>
+                <p className='text-xl text-slate-600 dark:text-slate-400 leading-relaxed max-w-xl'>
                   Stop guessing what content works. Let our AI analyze your
                   audience, optimize your strategy, and automate your publishing
                   workflow.
@@ -94,7 +98,7 @@ export default function Home() {
                 <Button
                   size='lg'
                   variant='outline'
-                  className='border-slate-300 text-slate-700 hover:bg-slate-50 px-8 py-4 text-lg'
+                  className='border-slate-300 dark:border-slate-600 text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800 px-8 py-4 text-lg'
                 >
                   <Link href='#demo'>Watch Demo</Link>
                 </Button>
@@ -102,16 +106,28 @@ export default function Home() {
 
               <div className='flex items-center space-x-8 pt-4'>
                 <div className='text-center'>
-                  <div className='text-2xl font-bold text-slate-900'>50K+</div>
-                  <div className='text-sm text-slate-600'>Active Users</div>
+                  <div className='text-2xl font-bold text-slate-900 dark:text-slate-100'>
+                    50K+
+                  </div>
+                  <div className='text-sm text-slate-600 dark:text-slate-400'>
+                    Active Users
+                  </div>
                 </div>
                 <div className='text-center'>
-                  <div className='text-2xl font-bold text-slate-900'>99.9%</div>
-                  <div className='text-sm text-slate-600'>Uptime</div>
+                  <div className='text-2xl font-bold text-slate-900 dark:text-slate-100'>
+                    99.9%
+                  </div>
+                  <div className='text-sm text-slate-600 dark:text-slate-400'>
+                    Uptime
+                  </div>
                 </div>
                 <div className='text-center'>
-                  <div className='text-2xl font-bold text-slate-900'>4.9/5</div>
-                  <div className='text-sm text-slate-600'>Rating</div>
+                  <div className='text-2xl font-bold text-slate-900 dark:text-slate-100'>
+                    4.9/5
+                  </div>
+                  <div className='text-sm text-slate-600 dark:text-slate-400'>
+                    Rating
+                  </div>
                 </div>
               </div>
             </motion.div>

@@ -1,3 +1,5 @@
+'use client';
+
 import Navbar from '../../components/layout/NavBar';
 import Sidebar from '../../components/layout/SideBar';
 import { AuthProvider } from '../../context/AuthContext';
@@ -21,13 +23,13 @@ export default function DashboardLayout({
           <ContentCreationProvider>
             <AIChatProvider>
               <CalendarProvider>
-                <div className='h-screen flex overflow-hidden bg-gray-50 w-full'>
+                <div className='h-screen flex overflow-hidden bg-gray-50 dark:bg-slate-950 w-full transition-colors duration-200'>
                   <Sidebar />
 
-                  <div className='flex flex-col w-0 flex-1 overflow-hidden '>
+                  <div className='flex flex-col w-0 flex-1 overflow-hidden'>
                     <Navbar />
 
-                    <main className='flex-1 relative overflow-y-auto focus:outline-none '>
+                    <main className='flex-1 relative overflow-y-auto focus:outline-none bg-white dark:bg-slate-900 transition-colors duration-200'>
                       {children}
                     </main>
                   </div>

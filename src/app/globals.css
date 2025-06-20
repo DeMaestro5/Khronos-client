@@ -29,31 +29,26 @@ link[rel='icon'][href*='favicon'] {
   display: none !important;
 }
 
+/* CSS variables for toast theming */
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  --toast-bg: #ffffff;
+  --toast-text: #1f2937;
+  --toast-border: #e5e7eb;
 }
 
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+.dark {
+  --toast-bg: #1e293b;
+  --toast-text: #f1f5f9;
+  --toast-border: #475569;
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+/* Ensure dark mode transitions work smoothly */
+* {
+  transition-property: background-color, border-color, color, fill, stroke,
+    opacity, box-shadow, transform, filter, backdrop-filter;
+  transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+  transition-duration: 200ms;
 }
-
-body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
-}
-
 /* Line clamp utilities for text truncation */
 .line-clamp-2 {
   display: -webkit-box;
@@ -69,10 +64,14 @@ body {
   overflow: hidden;
 }
 
-/* Basic prose styling */
+/* Updated prose styling with theme support */
 .prose {
   color: #374151;
   line-height: 1.75;
+}
+
+.dark .prose {
+  color: #94a3b8;
 }
 
 .prose h2 {
@@ -83,12 +82,20 @@ body {
   color: #111827;
 }
 
+.dark .prose h2 {
+  color: #f1f5f9;
+}
+
 .prose h3 {
   font-size: 1.25rem;
   font-weight: 600;
   margin-top: 1.5rem;
   margin-bottom: 0.75rem;
   color: #111827;
+}
+
+.dark .prose h3 {
+  color: #f1f5f9;
 }
 
 .prose p {
@@ -109,29 +116,8 @@ body {
   color: #111827;
 }
 
-.prose-lg {
-  font-size: 1.125rem;
-  line-height: 1.7;
-}
-
-.prose-lg h2 {
-  font-size: 1.75rem;
-  margin-top: 2.5rem;
-  margin-bottom: 1.25rem;
-}
-
-.prose-lg h3 {
-  font-size: 1.5rem;
-  margin-top: 2rem;
-  margin-bottom: 1rem;
-}
-
-.prose-lg p {
-  margin-bottom: 1.5rem;
-}
-
-.prose-lg ul {
-  margin-bottom: 1.5rem;
+.dark .prose strong {
+  color: #f1f5f9;
 }
 
 /* Loading Animation Keyframes */
@@ -217,6 +203,10 @@ body {
   background: #f1f5f9;
 }
 
+.dark ::-webkit-scrollbar-track {
+  background: #1e293b;
+}
+
 ::-webkit-scrollbar-thumb {
   background: linear-gradient(to bottom, #8b5cf6, #ec4899);
   border-radius: 3px;
@@ -228,10 +218,10 @@ body {
 
 /* Hidden scrollbar utility */
 .scrollbar-hide {
-  -ms-overflow-style: none; /* Internet Explorer 10+ */
-  scrollbar-width: none; /* Firefox */
+  -ms-overflow-style: none;
+  scrollbar-width: none;
 }
 
 .scrollbar-hide::-webkit-scrollbar {
-  display: none; /* Safari and Chrome */
+  display: none;
 }
