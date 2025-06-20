@@ -38,6 +38,11 @@ export default function ContentPage() {
   const [showModal, setShowModal] = useState(false);
   const [viewMode, setViewMode] = useState<ViewMode>('grid');
   const [isLoading, setIsLoading] = useState(true);
+  const [aiSuggestion, setAiSuggestion] = useState<{
+    title: string;
+    description: string;
+    tags: string[];
+  } | null>(null);
   const previouslyCreatingRef = useRef(false);
 
   const {
@@ -89,6 +94,20 @@ export default function ContentPage() {
     };
 
     fetchContents();
+
+    // Check for AI suggestion passed from dashboard
+    const savedSuggestion = sessionStorage.getItem('aiSuggestion');
+    if (savedSuggestion) {
+      try {
+        const suggestion = JSON.parse(savedSuggestion);
+        setAiSuggestion(suggestion);
+        setShowModal(true);
+        // Clear the suggestion from storage
+        sessionStorage.removeItem('aiSuggestion');
+      } catch (error) {
+        console.error('Failed to parse AI suggestion:', error);
+      }
+    }
   }, []);
 
   // Refresh content when creation completes (user might have navigated away and back)
@@ -417,8 +436,12 @@ export default function ContentPage() {
 
       <CreateContentModal
         isOpen={showModal}
-        onClose={() => setShowModal(false)}
+        onClose={() => {
+          setShowModal(false);
+          setAiSuggestion(null); // Clear suggestion when modal closes
+        }}
         onSubmit={handleCreateContent}
+        initialData={aiSuggestion}
       />
     </div>
   );

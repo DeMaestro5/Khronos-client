@@ -344,6 +344,9 @@ export const aiAPI = {
   // AI form auto-fill endpoint
   getFormFillSuggestions: (): Promise<{ data: AIFormFillResponse }> =>
     api.get('/api/v1/content/ai-suggest/form-fill'),
+
+  // AI content feed suggestions for dashboard
+  getContentFeed: () => api.get('/api/v1/content/ai-suggest/feed'),
 };
 
 // Analytics API methods

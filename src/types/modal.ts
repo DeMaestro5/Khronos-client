@@ -63,4 +63,9 @@ export interface CreateContentModalProps {
   isOpen: boolean;
   onClose: () => void;
   onSubmit: (data: ContentFormData) => void;
+  initialData?: {
+    title?: string;
+    description?: string;
+    tags?: string[];
+  } | null;
 }
