@@ -329,20 +329,22 @@ export default function AnalyticsPage() {
 
   if (state.error) {
     return (
-      <div className='min-h-screen bg-gradient-to-br from-slate-50 via-white to-slate-100 flex items-center justify-center p-6'>
+      <div className='min-h-screen bg-gradient-to-br from-slate-50 via-white to-slate-100 dark:from-slate-950 dark:via-slate-900 dark:to-slate-950 flex items-center justify-center p-6 transition-colors duration-300'>
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          className='bg-white/60 backdrop-blur-lg border border-red-200 rounded-2xl p-8 shadow-lg max-w-md w-full text-center'
+          className='bg-white/60 dark:bg-slate-800/60 backdrop-blur-lg border border-red-200 dark:border-red-800 rounded-2xl p-8 shadow-lg max-w-md w-full text-center'
         >
-          <AlertTriangle className='h-12 w-12 text-red-500 mx-auto mb-4' />
-          <h3 className='text-xl font-bold text-slate-900 mb-2'>
+          <AlertTriangle className='h-12 w-12 text-red-500 dark:text-red-400 mx-auto mb-4' />
+          <h3 className='text-xl font-bold text-slate-900 dark:text-slate-100 mb-2'>
             Analytics Unavailable
           </h3>
-          <p className='text-slate-600 mb-6'>{state.error}</p>
+          <p className='text-slate-600 dark:text-slate-400 mb-6'>
+            {state.error}
+          </p>
           <button
             onClick={handleRefresh}
-            className='px-6 py-3 bg-gradient-to-r from-purple-600 to-pink-600 text-white rounded-xl font-medium hover:shadow-lg transition-all duration-200'
+            className='px-6 py-3 bg-gradient-to-r from-purple-600 to-pink-600 dark:from-blue-600 dark:to-indigo-700 text-white rounded-xl font-medium hover:shadow-lg transition-all duration-200'
           >
             Try Again
           </button>
@@ -357,7 +359,7 @@ export default function AnalyticsPage() {
   const dataQuality = getDataQuality();
 
   return (
-    <div className='p-3 sm:p-4 lg:p-6 space-y-6 min-h-screen bg-gradient-to-br from-slate-50 via-white to-slate-100'>
+    <div className='p-3 sm:p-4 lg:p-6 space-y-6 min-h-screen bg-gradient-to-br from-slate-50 via-white to-slate-100 dark:from-slate-950 dark:via-slate-900 dark:to-slate-950 transition-colors duration-300'>
       {/* Header */}
       <motion.div
         initial={{ opacity: 0, y: 20 }}
@@ -365,11 +367,11 @@ export default function AnalyticsPage() {
         className='flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4'
       >
         <div>
-          <h1 className='text-3xl lg:text-4xl font-bold bg-gradient-to-r from-slate-900 to-slate-600 bg-clip-text text-transparent'>
+          <h1 className='text-3xl lg:text-4xl font-bold bg-gradient-to-r from-slate-900 to-slate-600 dark:from-slate-100 dark:to-slate-400 bg-clip-text text-transparent'>
             Analytics Dashboard
           </h1>
-          <p className='text-slate-600 mt-2 flex items-center gap-2'>
-            <CheckCircle className='h-4 w-4 text-green-500' />
+          <p className='text-slate-600 dark:text-slate-400 mt-2 flex items-center gap-2'>
+            <CheckCircle className='h-4 w-4 text-green-500 dark:text-green-400' />
             Live data from server • {dataQuality.sources.length} data source
             {dataQuality.sources.length !== 1 ? 's' : ''}
           </p>
@@ -379,7 +381,7 @@ export default function AnalyticsPage() {
           <button
             onClick={handleRefresh}
             disabled={state.refreshing}
-            className='p-3 bg-white/60 backdrop-blur-lg border border-white/20 rounded-xl text-slate-600 hover:text-slate-900 hover:bg-white/80 transition-all duration-200 shadow-lg disabled:opacity-50'
+            className='p-3 bg-white/60 dark:bg-slate-800/60 backdrop-blur-lg border border-white/20 dark:border-slate-600/20 rounded-xl text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200 hover:bg-white/80 dark:hover:bg-slate-800/80 transition-all duration-200 shadow-lg disabled:opacity-50'
           >
             <RefreshCw
               className={`h-5 w-5 ${state.refreshing ? 'animate-spin' : ''}`}
@@ -393,26 +395,28 @@ export default function AnalyticsPage() {
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.1 }}
-        className='bg-white/60 backdrop-blur-lg border border-white/20 rounded-xl p-4 shadow-lg'
+        className='bg-white/60 dark:bg-slate-800/60 backdrop-blur-lg border border-white/20 dark:border-slate-600/20 rounded-xl p-4 shadow-lg'
       >
         <div className='flex items-center gap-3'>
-          <Info className='h-5 w-5 text-blue-500' />
+          <Info className='h-5 w-5 text-blue-500 dark:text-blue-400' />
           <div>
-            <span className='font-medium text-slate-900'>Data Quality: </span>
+            <span className='font-medium text-slate-900 dark:text-slate-100'>
+              Data Quality:{' '}
+            </span>
             <span
               className={`font-semibold ${
                 dataQuality.overall === 'excellent'
-                  ? 'text-green-600'
+                  ? 'text-green-600 dark:text-green-400'
                   : dataQuality.overall === 'good'
-                  ? 'text-blue-600'
+                  ? 'text-blue-600 dark:text-blue-400'
                   : dataQuality.overall === 'fair'
-                  ? 'text-yellow-600'
-                  : 'text-red-600'
+                  ? 'text-yellow-600 dark:text-yellow-400'
+                  : 'text-red-600 dark:text-red-400'
               }`}
             >
               {dataQuality.overall}
             </span>
-            <span className='text-slate-600 ml-2'>
+            <span className='text-slate-600 dark:text-slate-400 ml-2'>
               • {dataQuality.confidence}% confidence • Sources:{' '}
               {dataQuality.sources.join(', ')}
             </span>
@@ -463,7 +467,7 @@ export default function AnalyticsPage() {
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.3 + index * 0.1 }}
             whileHover={{ y: -4, transition: { duration: 0.2 } }}
-            className='bg-white/60 backdrop-blur-lg border border-white/20 rounded-2xl p-6 hover:bg-white/80 transition-all duration-300 shadow-lg hover:shadow-xl'
+            className='bg-white/60 dark:bg-slate-800/60 backdrop-blur-lg border border-white/20 dark:border-slate-600/20 rounded-2xl p-6 hover:bg-white/80 dark:hover:bg-slate-800/80 transition-all duration-300 shadow-lg hover:shadow-xl'
           >
             <div className='flex items-start justify-between mb-4'>
               <div
@@ -473,11 +477,15 @@ export default function AnalyticsPage() {
               </div>
             </div>
             <div className='space-y-2'>
-              <h3 className='text-slate-600 text-sm font-medium'>
+              <h3 className='text-slate-600 dark:text-slate-400 text-sm font-medium'>
                 {stat.title}
               </h3>
-              <p className='text-3xl font-bold text-slate-900'>{stat.value}</p>
-              <p className='text-xs text-slate-500'>{stat.description}</p>
+              <p className='text-3xl font-bold text-slate-900 dark:text-slate-100'>
+                {stat.value}
+              </p>
+              <p className='text-xs text-slate-500 dark:text-slate-400'>
+                {stat.description}
+              </p>
             </div>
           </motion.div>
         ))}
@@ -562,22 +570,22 @@ export default function AnalyticsPage() {
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            className='bg-white/60 backdrop-blur-lg border border-white/20 rounded-2xl p-12 shadow-lg text-center'
+            className='bg-white/60 dark:bg-slate-800/60 backdrop-blur-lg border border-white/20 dark:border-slate-600/20 rounded-2xl p-12 shadow-lg text-center'
           >
-            <BarChart3 className='h-16 w-16 text-slate-400 mx-auto mb-4' />
-            <h3 className='text-xl font-bold text-slate-900 mb-2'>
+            <BarChart3 className='h-16 w-16 text-slate-400 dark:text-slate-500 mx-auto mb-4' />
+            <h3 className='text-xl font-bold text-slate-900 dark:text-slate-100 mb-2'>
               Limited Analytics Data
             </h3>
-            <p className='text-slate-600 mb-6'>
+            <p className='text-slate-600 dark:text-slate-400 mb-6'>
               Some analytics features are not available yet. This could be
               because:
             </p>
-            <ul className='text-left text-slate-600 mb-6 max-w-md mx-auto space-y-2'>
+            <ul className='text-left text-slate-600 dark:text-slate-400 mb-6 max-w-md mx-auto space-y-2'>
               <li>• Content analytics are still being processed</li>
               <li>• Platform integrations need more time to collect data</li>
               <li>• Some analytics services may not be fully configured</li>
             </ul>
-            <div className='text-sm text-slate-500'>
+            <div className='text-sm text-slate-500 dark:text-slate-400'>
               Showing data from {dataQuality.sources.length} available source
               {dataQuality.sources.length !== 1 ? 's' : ''}
             </div>

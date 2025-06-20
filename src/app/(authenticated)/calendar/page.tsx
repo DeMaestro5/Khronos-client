@@ -203,7 +203,7 @@ const CalendarPage = () => {
   // Show loading state while calendar data is being fetched
   if (isLoading) {
     return (
-      <div className='h-full bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 relative overflow-y-auto'>
+      <div className='h-full bg-gradient-to-br from-slate-50 via-blue-50 to-slate-100 dark:from-slate-950 dark:via-purple-950 dark:to-slate-950 relative overflow-y-auto transition-colors duration-300'>
         {/* Animated Background Elements */}
         <div className='absolute inset-0 overflow-hidden pointer-events-none'>
           <div className='absolute -top-40 -right-40 w-80 h-80 bg-purple-500/20 rounded-full blur-3xl animate-pulse'></div>
