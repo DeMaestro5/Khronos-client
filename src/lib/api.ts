@@ -1,7 +1,7 @@
 // src/lib/api.ts
 import axios, { AxiosError, InternalAxiosRequestConfig } from 'axios';
 import { Content } from '../types/content';
-import { AIChatMessage } from '../types/ai';
+import { AIChatMessage, AIFormFillResponse } from '../types/ai';
 import { AuthUtils } from './auth-utils';
 import {
   NotificationFilters,
@@ -340,6 +340,10 @@ export const aiAPI = {
     api.post('/chat', { messages }),
 
   getTrends: (category: string) => api.get('/trends', { params: { category } }),
+
+  // AI form auto-fill endpoint
+  getFormFillSuggestions: (): Promise<{ data: AIFormFillResponse }> =>
+    api.get('/api/v1/content/ai-suggest/form-fill'),
 };
 
 // Analytics API methods

@@ -18,7 +18,7 @@ const CalendarPage = () => {
   const {
     scheduledContent,
     loadScheduledContent,
-    forceRefreshCalendar,
+
     isLoading,
   } = useCalendar();
 
@@ -187,19 +187,6 @@ const CalendarPage = () => {
     // You can implement date selection logic here
   };
 
-  const handleForceRefresh = async () => {
-    toast.loading('🔄 Refreshing calendar and clearing old data...', {
-      duration: 2000,
-    });
-    try {
-      await forceRefreshCalendar();
-      toast.success('✅ Calendar refreshed successfully!');
-    } catch (error) {
-      console.error('Failed to refresh calendar:', error);
-      toast.error('❌ Failed to refresh calendar');
-    }
-  };
-
   // Show loading state while calendar data is being fetched
   if (isLoading) {
     return (
@@ -292,13 +279,6 @@ const CalendarPage = () => {
                 </button>
 
                 {/* Force Refresh Button for fixing old data */}
-                <button
-                  onClick={handleForceRefresh}
-                  className='flex items-center justify-center space-x-2 px-3 sm:px-4 py-2 sm:py-2.5 bg-gray-600 hover:bg-gray-500 rounded-lg text-white text-xs sm:text-sm font-medium transition-all duration-300 hover:scale-105'
-                  title='Refresh calendar and clear old cached data'
-                >
-                  <span>🔄 Refresh</span>
-                </button>
               </div>
             </div>
 
