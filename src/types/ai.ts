@@ -24,6 +24,7 @@ export interface AISuggestionResult {
   description: string;
   tags: string[];
 }
+
 export interface AITrendInsight {
   topic: string;
   score: number;
@@ -145,4 +146,17 @@ export interface AIChat {
   messages: AIChatMessage[];
   createdAt: string;
   updatedAt: string;
+}
+
+// API response structure for form-fill endpoint
+export interface AIFormFillResponse {
+  statusCode: string;
+  message: string;
+  data: {
+    title: string;
+    description: string;
+    tags: string[];
+    contentType?: string;
+    platforms?: string[];
+  };
 }
