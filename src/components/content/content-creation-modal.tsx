@@ -36,6 +36,7 @@ export default function CreateContentModal({
   isOpen,
   onClose,
   onSubmit,
+  initialData,
 }: CreateContentModalProps) {
   const [formData, setFormData] = useState<ContentFormData>({
     title: '',
@@ -61,13 +62,13 @@ export default function CreateContentModal({
 
   const resetForm = () => {
     setFormData({
-      title: '',
-      description: '',
+      title: initialData?.title || '',
+      description: initialData?.description || '',
       contentType: 'article',
       platforms: [],
       scheduledDate: '',
       scheduledTime: '',
-      tags: [],
+      tags: initialData?.tags || [],
       priority: 'medium',
       status: 'draft',
     });
