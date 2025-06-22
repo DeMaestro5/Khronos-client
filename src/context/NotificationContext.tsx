@@ -47,14 +47,22 @@ export function NotificationProvider({
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [settings, setSettings] = useState<NotificationSettings | null>(null);
   const [loading, setLoading] = useState(false);
+  const [initialLoading, setInitialLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [unreadCount, setUnreadCount] = useState(0);
 
   const fetchNotifications = useCallback(
-    async (filters?: NotificationFilters, page = 1) => {
+    async (
+      filters?: NotificationFilters,
+      page = 1,
+      isBackgroundRefresh = false
+    ) => {
       if (!user) return;
 
-      setLoading(true);
+      // Only show loading state for initial load or manual refresh, not background polling
+      if (!isBackgroundRefresh) {
+        setLoading(true);
+      }
       setError(null);
 
       try {
@@ -62,21 +70,60 @@ export function NotificationProvider({
         const data = response.data?.data as NotificationResponse;
 
         if (data) {
-          setNotifications(data.notifications);
-          setUnreadCount(
-            data.notifications.filter(
-              (n) => n.status === NotificationStatus.UNREAD
-            ).length
-          );
+          const newNotifications = data.notifications;
+          const newUnreadCount = newNotifications.filter(
+            (n) => n.status === NotificationStatus.UNREAD
+          ).length;
+
+          // Check if there are new notifications (only for background refresh)
+          if (isBackgroundRefresh && notifications.length > 0) {
+            const existingIds = new Set(notifications.map((n) => n._id));
+            const reallyNewNotifications = newNotifications.filter(
+              (n) => !existingIds.has(n._id)
+            );
+
+            // Show toast for new notifications (limit to avoid spam)
+            if (
+              reallyNewNotifications.length > 0 &&
+              reallyNewNotifications.length <= 3
+            ) {
+              reallyNewNotifications.forEach((notification) => {
+                toast.success(`New notification: ${notification.title}`, {
+                  duration: 4000,
+                  icon: '🔔',
+                });
+              });
+            } else if (reallyNewNotifications.length > 3) {
+              toast.success(
+                `${reallyNewNotifications.length} new notifications`,
+                {
+                  duration: 4000,
+                  icon: '🔔',
+                }
+              );
+            }
+          }
+
+          setNotifications(newNotifications);
+          setUnreadCount(newUnreadCount);
         }
       } catch (err) {
-        setError('Failed to fetch notifications');
-        console.error('Error fetching notifications:', err);
+        // Only show error to user if it's not a background refresh
+        if (!isBackgroundRefresh) {
+          setError('Failed to fetch notifications');
+          console.error('Error fetching notifications:', err);
+        } else {
+          // Silently log background fetch errors
+          console.warn('Background notification fetch failed:', err);
+        }
       } finally {
-        setLoading(false);
+        if (!isBackgroundRefresh) {
+          setLoading(false);
+        }
+        setInitialLoading(false);
       }
     },
-    [user]
+    [user, notifications]
   );
 
   const fetchSettings = useCallback(async () => {
@@ -140,35 +187,37 @@ export function NotificationProvider({
   };
 
   const refreshNotifications = useCallback(async () => {
-    await fetchNotifications();
+    await fetchNotifications(undefined, 1, false);
   }, [fetchNotifications]);
 
   // Initial fetch
   useEffect(() => {
     if (user) {
-      fetchNotifications();
+      fetchNotifications(undefined, 1, false);
       fetchSettings();
     }
-  }, [user, fetchNotifications, fetchSettings]);
+  }, [user, fetchSettings]);
 
-  // Poll for new notifications every minute
+  // Background polling for new notifications every 5 minutes
   useEffect(() => {
     if (!user) return;
 
     const interval = setInterval(() => {
-      refreshNotifications();
-    }, 5000); // Changed from 60000 to 5000 for testing (5 seconds)
+      // Background refresh - silent, no loading states shown to user
+      fetchNotifications(undefined, 1, true);
+    }, 300000); // 5 minutes (300,000ms) - realistic polling interval
 
     return () => clearInterval(interval);
-  }, [user, refreshNotifications]);
+  }, [user, fetchNotifications]);
 
   const value = {
     notifications,
     unreadCount,
     settings,
-    loading,
+    loading: initialLoading || loading, // Show loading only on initial load or manual refresh
     error,
-    fetchNotifications,
+    fetchNotifications: (filters?: NotificationFilters, page?: number) =>
+      fetchNotifications(filters, page, false), // Manual fetches are not background
     markAsRead,
     markAllAsRead,
     updateSettings,
