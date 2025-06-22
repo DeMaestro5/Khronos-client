@@ -17,12 +17,11 @@ import {
   FiZap,
   FiStar,
   FiTarget,
-  FiHeart,
   FiShare2,
   FiEye,
 } from 'react-icons/fi';
 import { useAuth } from '@/src/context/AuthContext';
-import { profileAPI, contentAPI } from '@/src/lib/api';
+import { useUserData } from '@/src/context/UserDataContext';
 import { User } from '@/src/types/auth';
 import PageLoading from '@/src/components/ui/page-loading';
 
@@ -38,14 +37,21 @@ interface UserStats {
 
 interface RecentActivity {
   id: string;
-  type: 'created' | 'published' | 'scheduled' | 'edited';
+  type: 'published' | 'created' | 'scheduled';
   title: string;
   timestamp: string;
-  platform?: string;
+  platform: string;
 }
 
 export default function ProfilePage() {
   const { user: contextUser } = useAuth();
+  const {
+    profileData: cachedProfile,
+    userStats: cachedStats,
+    userContent,
+    loading: contextLoading,
+  } = useUserData();
+
   const [profileData, setProfileData] = useState<User | null>(null);
   const [userStats, setUserStats] = useState<UserStats>({
     totalContent: 0,
@@ -60,83 +66,56 @@ export default function ProfilePage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  // Fetch profile data and stats
+  // Use cached data instead of fetching
   useEffect(() => {
-    const fetchProfileData = async () => {
-      if (!contextUser) return;
+    console.log('Profile page: Using cached data', {
+      cachedProfile,
+      cachedStats,
+      userContent,
+      contextLoading,
+    });
 
-      setLoading(true);
-      setError(null);
+    if (!contextUser) return;
 
-      try {
-        // Fetch profile data
-        const profileResponse = await profileAPI.getProfile();
-        if (profileResponse.data?.data) {
-          setProfileData(profileResponse.data.data);
-        }
+    setLoading(contextLoading);
+    setError(null);
 
-        // Fetch user content for stats
-        const contentResponse = await contentAPI.getUserContent();
-        if (contentResponse.data?.data) {
-          const content = contentResponse.data.data;
-          const published = content.filter(
-            (item: { status: string }) => item.status === 'published'
-          ).length;
-          const scheduled = content.filter(
-            (item: { status: string }) => item.status === 'scheduled'
-          ).length;
+    // Use cached profile data
+    setProfileData(cachedProfile || contextUser);
 
-          // Generate some placeholder stats (replace with real calculations)
-          const totalViews = Math.floor(Math.random() * 10000) + 1000;
-          const totalShares = Math.floor(Math.random() * 1000) + 100;
-          const engagementRate = Math.floor(Math.random() * 30) + 70;
-          const streak = Math.floor(Math.random() * 30) + 1;
+    // Use cached stats if available
+    if (cachedStats) {
+      setUserStats({
+        totalContent: cachedStats.totalContent,
+        scheduledContent: cachedStats.scheduledContent,
+        publishedContent:
+          cachedStats.totalContent - cachedStats.scheduledContent, // Approximate published content
+        engagementRate: cachedStats.engagementRate,
+        totalViews: Math.floor(Math.random() * 10000) + 1000, // Still placeholder for views
+        totalShares: Math.floor(Math.random() * 1000) + 100, // Still placeholder for shares
+        streak: cachedStats.streak,
+      });
+    }
 
-          setUserStats({
-            totalContent: content.length,
-            scheduledContent: scheduled,
-            publishedContent: published,
-            engagementRate,
-            totalViews,
-            totalShares,
-            streak,
-          });
+    // Generate recent activity from cached content
+    if (userContent && userContent.length > 0) {
+      const recentItems: RecentActivity[] = userContent
+        .slice(0, 5)
+        .map((item, index) => ({
+          id: item._id || `activity-${index}`,
+          type: item.status === 'published' ? 'published' : 'created',
+          title: item.title || 'Untitled Content',
+          timestamp:
+            item.updatedAt || item.createdAt || new Date().toISOString(),
+          platform: item.platform?.[0] || 'Instagram',
+        }));
+      setRecentActivity(recentItems);
+    }
 
-          // Generate recent activity from content
-          const recentItems: RecentActivity[] = content.slice(0, 5).map(
-            (
-              item: {
-                _id: string;
-                status: string;
-                title: string;
-                updatedAt: string;
-                createdAt: string;
-                platform: string[];
-              },
-              index: number
-            ) => ({
-              id: item._id || `activity-${index}`,
-              type: item.status === 'published' ? 'published' : 'created',
-              title: item.title || 'Untitled Content',
-              timestamp:
-                item.updatedAt || item.createdAt || new Date().toISOString(),
-              platform: item.platform?.[0] || 'Instagram',
-            })
-          );
-
-          setRecentActivity(recentItems);
-        }
-      } catch (err) {
-        console.error('Failed to fetch profile data:', err);
-        setError('Failed to load profile data');
-        setProfileData(contextUser);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchProfileData();
-  }, [contextUser]);
+    if (!contextLoading) {
+      setLoading(false);
+    }
+  }, [contextUser, cachedProfile, cachedStats, userContent, contextLoading]);
 
   const user = profileData || contextUser;
 
@@ -175,33 +154,47 @@ export default function ProfilePage() {
     return '🚀';
   };
 
-  const getActivityIcon = (type: string) => {
-    switch (type) {
-      case 'published':
-        return <FiShare2 className='h-4 w-4 text-green-600' />;
-      case 'scheduled':
-        return <FiClock className='h-4 w-4 text-blue-600' />;
-      case 'edited':
-        return <FiEdit3 className='h-4 w-4 text-orange-600' />;
-      default:
-        return <FiFileText className='h-4 w-4 text-purple-600' />;
+  const formatDate = (dateString: string) => {
+    try {
+      return new Date(dateString).toLocaleDateString('en-US', {
+        year: 'numeric',
+        month: 'long',
+        day: 'numeric',
+      });
+    } catch {
+      return 'Not specified';
     }
   };
 
-  const formatDate = (dateString: string) => {
+  const getActivityIcon = (type: string) => {
+    switch (type) {
+      case 'published':
+        return <FiActivity className='w-4 h-4 text-green-500' />;
+      case 'created':
+        return <FiFileText className='w-4 h-4 text-blue-500' />;
+      case 'scheduled':
+        return <FiClock className='w-4 h-4 text-orange-500' />;
+      default:
+        return <FiActivity className='w-4 h-4 text-gray-500' />;
+    }
+  };
+
+  const getRelativeTime = (timestamp: string) => {
     try {
-      const date = new Date(dateString);
-      if (isNaN(date.getTime())) return 'Recently';
-
+      const date = new Date(timestamp);
       const now = new Date();
-      const diffMs = now.getTime() - date.getTime();
-      const diffHours = Math.floor(diffMs / (1000 * 60 * 60));
-      const diffDays = Math.floor(diffHours / 24);
+      const diffInHours = Math.floor(
+        (now.getTime() - date.getTime()) / (1000 * 60 * 60)
+      );
 
-      if (diffHours < 1) return 'Just now';
-      if (diffHours < 24) return `${diffHours}h ago`;
-      if (diffDays < 7) return `${diffDays}d ago`;
-      return date.toLocaleDateString();
+      if (diffInHours < 1) return 'Just now';
+      if (diffInHours < 24) return `${diffInHours}h ago`;
+
+      const diffInDays = Math.floor(diffInHours / 24);
+      if (diffInDays < 7) return `${diffInDays}d ago`;
+
+      const diffInWeeks = Math.floor(diffInDays / 7);
+      return `${diffInWeeks}w ago`;
     } catch {
       return 'Recently';
     }
@@ -210,279 +203,304 @@ export default function ProfilePage() {
   if (loading) {
     return (
       <PageLoading
-        title='Loading Your Profile'
-        subtitle="We're fetching your profile data and statistics..."
-        contentType='data'
-        showGrid={false}
+        title='Loading Profile'
+        subtitle='Getting your profile ready...'
+        contentType='content'
       />
     );
   }
 
-  if (error || !user) {
+  if (error) {
     return (
-      <div className='min-h-screen bg-gradient-to-br from-slate-50 via-white to-indigo-50/30 dark:from-slate-950 dark:via-slate-900 dark:to-indigo-950/30 flex items-center justify-center'>
+      <div className='flex items-center justify-center min-h-screen bg-white dark:bg-slate-900'>
         <div className='text-center'>
-          <div className='w-16 h-16 bg-red-100 dark:bg-red-900/40 rounded-full flex items-center justify-center mx-auto mb-4'>
-            <FiUser className='h-8 w-8 text-red-600 dark:text-red-400' />
+          <div className='w-16 h-16 bg-red-100 dark:bg-red-900/50 rounded-full flex items-center justify-center mx-auto mb-4'>
+            <FiUser className='w-8 h-8 text-red-600 dark:text-red-400' />
           </div>
-          <p className='text-red-600 dark:text-red-400 font-medium'>
-            {error || 'Failed to load profile'}
-          </p>
-          <Link
-            href='/dashboard'
-            className='text-indigo-600 dark:text-indigo-400 hover:underline mt-2 inline-block'
+          <h1 className='text-xl font-semibold text-gray-900 dark:text-slate-100 mb-2'>
+            Failed to Load Profile
+          </h1>
+          <p className='text-gray-600 dark:text-slate-400 mb-4'>{error}</p>
+          <button
+            onClick={() => window.location.reload()}
+            className='px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg transition-colors duration-200'
           >
-            Return to Dashboard
-          </Link>
+            Try Again
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  if (!user) {
+    return (
+      <div className='flex items-center justify-center min-h-screen bg-white dark:bg-slate-900'>
+        <div className='text-center'>
+          <div className='w-16 h-16 bg-gray-100 dark:bg-slate-800 rounded-full flex items-center justify-center mx-auto mb-4'>
+            <FiUser className='w-8 h-8 text-gray-400 dark:text-slate-500' />
+          </div>
+          <h1 className='text-xl font-semibold text-gray-900 dark:text-slate-100 mb-2'>
+            No Profile Found
+          </h1>
+          <p className='text-gray-600 dark:text-slate-400'>
+            Unable to load profile information.
+          </p>
         </div>
       </div>
     );
   }
 
   return (
-    <div className='min-h-screen bg-gradient-to-br from-slate-50 via-white to-indigo-50/30 dark:from-slate-950 dark:via-slate-900 dark:to-indigo-950/30 transition-colors duration-300'>
+    <div className='min-h-screen bg-white dark:bg-slate-900 transition-colors duration-200'>
       <div className='max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8'>
         {/* Profile Header */}
-        <div className='bg-white dark:bg-slate-800/80 rounded-2xl shadow-lg border border-slate-200/60 dark:border-slate-600 p-6 sm:p-8 mb-8'>
-          <div className='flex flex-col sm:flex-row sm:items-start sm:space-x-6'>
-            {/* Profile Picture */}
-            <div className='relative mb-6 sm:mb-0'>
-              <div className='relative'>
+        <div className='bg-white dark:bg-slate-800 rounded-2xl shadow-sm dark:shadow-slate-700/20 border border-gray-200 dark:border-slate-700 overflow-hidden'>
+          <div className='relative h-32 bg-gradient-to-r from-purple-600 to-pink-600 dark:from-blue-600 dark:to-indigo-700'>
+            <div className='absolute inset-0 bg-black/20'></div>
+          </div>
+
+          <div className='relative px-6 pb-6'>
+            <div className='flex flex-col sm:flex-row sm:items-end sm:space-x-6 -mt-16'>
+              {/* Avatar */}
+              <div className='flex-shrink-0 relative'>
                 {user.profilePicUrl || user.avatar ? (
                   <Image
-                    className='h-20 w-20 sm:h-24 sm:w-24 rounded-2xl object-cover shadow-lg'
                     src={user.profilePicUrl || user.avatar || ''}
-                    width={96}
-                    height={96}
-                    alt={user.name}
-                    onError={(e) => {
-                      (e.target as HTMLImageElement).style.display = 'none';
-                    }}
+                    alt={`${user.name}'s profile`}
+                    width={128}
+                    height={128}
+                    className='w-32 h-32 rounded-2xl border-4 border-white dark:border-slate-800 shadow-lg object-cover'
                   />
-                ) : null}
-                {!user.profilePicUrl && !user.avatar ? (
-                  <div className='h-20 w-20 sm:h-24 sm:w-24 rounded-2xl bg-gradient-to-br from-indigo-500 to-purple-600 dark:from-blue-600 dark:to-indigo-700 flex items-center justify-center shadow-lg'>
-                    <span className='text-white font-bold text-xl sm:text-2xl'>
-                      {getInitials(user.name)}
+                ) : (
+                  <div className='w-32 h-32 rounded-2xl border-4 border-white dark:border-slate-800 shadow-lg bg-gradient-to-br from-purple-500 to-pink-500 dark:from-blue-500 dark:to-indigo-600 flex items-center justify-center'>
+                    <span className='text-3xl font-bold text-white'>
+                      {getInitials(user.name || '')}
                     </span>
                   </div>
-                ) : null}
-                {/* Online Status */}
-                <div className='absolute -bottom-1 -right-1 w-5 h-5 bg-green-500 rounded-full border-2 border-white dark:border-slate-800 shadow-md flex items-center justify-center'>
-                  <div className='w-2 h-2 bg-white rounded-full'></div>
-                </div>
+                )}
               </div>
-            </div>
 
-            {/* Profile Info & Actions */}
-            <div className='flex-1 min-w-0'>
-              <div className='flex flex-col sm:flex-row sm:items-start sm:justify-between space-y-4 sm:space-y-0'>
-                {/* User Details */}
-                <div className='min-w-0'>
-                  <h1 className='text-2xl sm:text-3xl font-bold text-gray-900 dark:text-slate-100 truncate'>
-                    {user.name}
-                  </h1>
-                  <p className='text-gray-600 dark:text-slate-400 text-base truncate mt-1'>
-                    {user.email}
-                  </p>
-
-                  {/* Tags & Info */}
-                  <div className='flex flex-col sm:flex-row sm:items-center gap-3 mt-4'>
-                    <div className='flex items-center gap-3 flex-wrap'>
-                      <span className='inline-flex items-center px-3 py-1.5 bg-gradient-to-r from-emerald-50 to-teal-50 dark:from-emerald-900/40 dark:to-teal-900/40 text-emerald-700 dark:text-emerald-300 text-sm font-medium rounded-lg border border-emerald-200 dark:border-emerald-700'>
-                        <span className='mr-1.5 text-base'>
+              {/* Profile Info */}
+              <div className='flex-1 min-w-0 mt-4 sm:mt-0'>
+                <div className='flex flex-col sm:flex-row sm:items-center sm:justify-between'>
+                  <div>
+                    <h1 className='text-2xl font-bold text-gray-900 dark:text-slate-100 truncate'>
+                      {user.name || 'Anonymous User'}
+                    </h1>
+                    <div className='flex items-center mt-2 space-x-4'>
+                      <div className='flex items-center text-gray-600 dark:text-slate-400'>
+                        <FiMail className='w-4 h-4 mr-2' />
+                        <span className='text-sm truncate'>{user.email}</span>
+                      </div>
+                      <div className='flex items-center text-gray-600 dark:text-slate-400'>
+                        <span className='text-xl mr-2'>
                           {getRoleIcon(getDisplayRole(user.role))}
                         </span>
-                        {getDisplayRole(user.role)}
-                      </span>
-
-                      <div className='flex items-center space-x-1.5 text-sm text-gray-500 dark:text-slate-400'>
-                        <FiCalendar className='h-4 w-4' />
-                        <span>
-                          Joined{' '}
-                          {user.createdAt &&
-                          !isNaN(new Date(user.createdAt).getTime())
-                            ? new Date(user.createdAt).getFullYear()
-                            : 'Recently'}
+                        <span className='text-sm capitalize'>
+                          {getDisplayRole(user.role)}
                         </span>
                       </div>
                     </div>
+                    <div className='flex items-center mt-2 text-gray-500 dark:text-slate-500'>
+                      <FiCalendar className='w-4 h-4 mr-2' />
+                      <span className='text-sm'>
+                        Joined{' '}
+                        {formatDate(user.createdAt || new Date().toISOString())}
+                      </span>
+                    </div>
                   </div>
-                </div>
 
-                {/* Action Buttons */}
-                <div className='flex items-center gap-3 shrink-0'>
-                  <Link
-                    href='/profile/edit'
-                    className='inline-flex items-center px-4 sm:px-5 py-2.5 bg-gradient-to-r from-indigo-600 to-purple-600 dark:from-blue-600 dark:to-indigo-700 text-white font-medium rounded-lg hover:shadow-lg hover:shadow-indigo-500/25 dark:hover:shadow-blue-500/25 transition-all duration-200 text-sm'
-                  >
-                    <FiEdit3 className='h-4 w-4 mr-2' />
-                    Edit Profile
-                  </Link>
-                  <Link
-                    href='/settings'
-                    className='inline-flex items-center px-4 sm:px-5 py-2.5 bg-gray-50 dark:bg-slate-700 hover:bg-gray-100 dark:hover:bg-slate-600 border border-gray-200 dark:border-slate-600 text-gray-700 dark:text-slate-300 font-medium rounded-lg transition-all duration-200 text-sm'
-                  >
-                    <FiSettings className='h-4 w-4 mr-2' />
-                    Settings
-                  </Link>
+                  {/* Action Buttons */}
+                  <div className='flex space-x-3 mt-4 sm:mt-0'>
+                    <Link
+                      href='/profile/edit'
+                      className='inline-flex items-center px-4 py-2 border border-gray-300 dark:border-slate-600 rounded-xl text-sm font-medium text-gray-700 dark:text-slate-300 bg-white dark:bg-slate-700 hover:bg-gray-50 dark:hover:bg-slate-600 transition-colors duration-200'
+                    >
+                      <FiEdit3 className='w-4 h-4 mr-2' />
+                      Edit Profile
+                    </Link>
+                    <button className='inline-flex items-center px-4 py-2 border border-gray-300 dark:border-slate-600 rounded-xl text-sm font-medium text-gray-700 dark:text-slate-300 bg-white dark:bg-slate-700 hover:bg-gray-50 dark:hover:bg-slate-600 transition-colors duration-200'>
+                      <FiSettings className='w-4 h-4 mr-2' />
+                      Settings
+                    </button>
+                  </div>
                 </div>
               </div>
             </div>
           </div>
         </div>
 
-        <div className='grid grid-cols-1 lg:grid-cols-3 gap-8'>
-          {/* Stats Overview */}
-          <div className='lg:col-span-2'>
-            <div className='bg-white dark:bg-slate-800/80 rounded-2xl shadow-lg border border-slate-200/60 dark:border-slate-600 p-6 mb-8'>
-              <div className='flex items-center justify-between mb-6'>
-                <h2 className='text-xl font-bold text-gray-900 dark:text-slate-100'>
-                  Performance Overview
-                </h2>
-                <FiTrendingUp className='h-5 w-5 text-indigo-600 dark:text-blue-400' />
+        {/* Stats Cards */}
+        <div className='grid grid-cols-2 md:grid-cols-4 lg:grid-cols-7 gap-4 mt-8'>
+          {/* Total Content */}
+          <div className='bg-white dark:bg-slate-800 rounded-xl p-4 border border-gray-200 dark:border-slate-700 shadow-sm'>
+            <div className='flex items-center justify-between'>
+              <div>
+                <p className='text-xs font-medium text-gray-500 dark:text-slate-400 uppercase tracking-wider'>
+                  Total Content
+                </p>
+                <p className='text-2xl font-bold text-gray-900 dark:text-slate-100 mt-1'>
+                  {userStats.totalContent}
+                </p>
               </div>
-
-              <div className='grid grid-cols-2 md:grid-cols-4 gap-6'>
-                <div className='text-center group'>
-                  <div className='flex items-center justify-center w-16 h-16 mx-auto mb-3 bg-gradient-to-br from-blue-500 to-indigo-600 dark:from-blue-600 dark:to-indigo-700 rounded-2xl shadow-lg group-hover:shadow-xl transition-all duration-200'>
-                    <FiFileText className='h-8 w-8 text-white' />
-                  </div>
-                  <div className='text-2xl font-bold text-gray-900 dark:text-slate-100 mb-1'>
-                    {userStats.totalContent}
-                  </div>
-                  <div className='text-sm text-gray-500 dark:text-slate-400 font-medium'>
-                    Total Content
-                  </div>
-                </div>
-
-                <div className='text-center group'>
-                  <div className='flex items-center justify-center w-16 h-16 mx-auto mb-3 bg-gradient-to-br from-green-500 to-emerald-600 dark:from-green-600 dark:to-emerald-700 rounded-2xl shadow-lg group-hover:shadow-xl transition-all duration-200'>
-                    <FiShare2 className='h-8 w-8 text-white' />
-                  </div>
-                  <div className='text-2xl font-bold text-gray-900 dark:text-slate-100 mb-1'>
-                    {userStats.publishedContent}
-                  </div>
-                  <div className='text-sm text-gray-500 dark:text-slate-400 font-medium'>
-                    Published
-                  </div>
-                </div>
-
-                <div className='text-center group'>
-                  <div className='flex items-center justify-center w-16 h-16 mx-auto mb-3 bg-gradient-to-br from-purple-500 to-pink-600 dark:from-purple-600 dark:to-pink-700 rounded-2xl shadow-lg group-hover:shadow-xl transition-all duration-200'>
-                    <FiClock className='h-8 w-8 text-white' />
-                  </div>
-                  <div className='text-2xl font-bold text-gray-900 dark:text-slate-100 mb-1'>
-                    {userStats.scheduledContent}
-                  </div>
-                  <div className='text-sm text-gray-500 dark:text-slate-400 font-medium'>
-                    Scheduled
-                  </div>
-                </div>
-
-                <div className='text-center group'>
-                  <div className='flex items-center justify-center w-16 h-16 mx-auto mb-3 bg-gradient-to-br from-orange-500 to-red-600 dark:from-orange-600 dark:to-red-700 rounded-2xl shadow-lg group-hover:shadow-xl transition-all duration-200'>
-                    <FiZap className='h-8 w-8 text-white' />
-                  </div>
-                  <div className='text-2xl font-bold text-gray-900 dark:text-slate-100 mb-1'>
-                    {userStats.streak}
-                  </div>
-                  <div className='text-sm text-gray-500 dark:text-slate-400 font-medium'>
-                    Day Streak
-                  </div>
-                </div>
-              </div>
-
-              {/* Additional Stats */}
-              <div className='grid grid-cols-1 md:grid-cols-3 gap-6 mt-8 pt-6 border-t border-gray-200 dark:border-slate-600'>
-                <div className='flex items-center space-x-3'>
-                  <FiEye className='h-5 w-5 text-gray-400 dark:text-slate-500' />
-                  <div>
-                    <div className='font-semibold text-gray-900 dark:text-slate-100'>
-                      {userStats.totalViews.toLocaleString()}
-                    </div>
-                    <div className='text-sm text-gray-500 dark:text-slate-400'>
-                      Total Views
-                    </div>
-                  </div>
-                </div>
-                <div className='flex items-center space-x-3'>
-                  <FiHeart className='h-5 w-5 text-gray-400 dark:text-slate-500' />
-                  <div>
-                    <div className='font-semibold text-gray-900 dark:text-slate-100'>
-                      {userStats.engagementRate}%
-                    </div>
-                    <div className='text-sm text-gray-500 dark:text-slate-400'>
-                      Engagement Rate
-                    </div>
-                  </div>
-                </div>
-                <div className='flex items-center space-x-3'>
-                  <FiShare2 className='h-5 w-5 text-gray-400 dark:text-slate-500' />
-                  <div>
-                    <div className='font-semibold text-gray-900 dark:text-slate-100'>
-                      {userStats.totalShares}
-                    </div>
-                    <div className='text-sm text-gray-500 dark:text-slate-400'>
-                      Total Shares
-                    </div>
-                  </div>
-                </div>
+              <div className='w-8 h-8 bg-blue-100 dark:bg-blue-900/50 rounded-lg flex items-center justify-center'>
+                <FiFileText className='w-4 h-4 text-blue-600 dark:text-blue-400' />
               </div>
             </div>
+          </div>
 
-            {/* Recent Activity */}
-            <div className='bg-white dark:bg-slate-800/80 rounded-2xl shadow-lg border border-slate-200/60 dark:border-slate-600 p-6'>
-              <div className='flex items-center justify-between mb-6'>
-                <h2 className='text-xl font-bold text-gray-900 dark:text-slate-100'>
-                  Recent Activity
-                </h2>
-                <FiActivity className='h-5 w-5 text-indigo-600 dark:text-blue-400' />
+          {/* Scheduled */}
+          <div className='bg-white dark:bg-slate-800 rounded-xl p-4 border border-gray-200 dark:border-slate-700 shadow-sm'>
+            <div className='flex items-center justify-between'>
+              <div>
+                <p className='text-xs font-medium text-gray-500 dark:text-slate-400 uppercase tracking-wider'>
+                  Scheduled
+                </p>
+                <p className='text-2xl font-bold text-gray-900 dark:text-slate-100 mt-1'>
+                  {userStats.scheduledContent}
+                </p>
               </div>
+              <div className='w-8 h-8 bg-orange-100 dark:bg-orange-900/50 rounded-lg flex items-center justify-center'>
+                <FiClock className='w-4 h-4 text-orange-600 dark:text-orange-400' />
+              </div>
+            </div>
+          </div>
 
-              <div className='space-y-4'>
+          {/* Published */}
+          <div className='bg-white dark:bg-slate-800 rounded-xl p-4 border border-gray-200 dark:border-slate-700 shadow-sm'>
+            <div className='flex items-center justify-between'>
+              <div>
+                <p className='text-xs font-medium text-gray-500 dark:text-slate-400 uppercase tracking-wider'>
+                  Published
+                </p>
+                <p className='text-2xl font-bold text-gray-900 dark:text-slate-100 mt-1'>
+                  {userStats.publishedContent}
+                </p>
+              </div>
+              <div className='w-8 h-8 bg-green-100 dark:bg-green-900/50 rounded-lg flex items-center justify-center'>
+                <FiActivity className='w-4 h-4 text-green-600 dark:text-green-400' />
+              </div>
+            </div>
+          </div>
+
+          {/* Engagement Rate */}
+          <div className='bg-white dark:bg-slate-800 rounded-xl p-4 border border-gray-200 dark:border-slate-700 shadow-sm'>
+            <div className='flex items-center justify-between'>
+              <div>
+                <p className='text-xs font-medium text-gray-500 dark:text-slate-400 uppercase tracking-wider'>
+                  Engagement
+                </p>
+                <p className='text-2xl font-bold text-gray-900 dark:text-slate-100 mt-1'>
+                  {userStats.engagementRate}%
+                </p>
+              </div>
+              <div className='w-8 h-8 bg-purple-100 dark:bg-purple-900/50 rounded-lg flex items-center justify-center'>
+                <FiTrendingUp className='w-4 h-4 text-purple-600 dark:text-purple-400' />
+              </div>
+            </div>
+          </div>
+
+          {/* Total Views */}
+          <div className='bg-white dark:bg-slate-800 rounded-xl p-4 border border-gray-200 dark:border-slate-700 shadow-sm'>
+            <div className='flex items-center justify-between'>
+              <div>
+                <p className='text-xs font-medium text-gray-500 dark:text-slate-400 uppercase tracking-wider'>
+                  Total Views
+                </p>
+                <p className='text-2xl font-bold text-gray-900 dark:text-slate-100 mt-1'>
+                  {userStats.totalViews.toLocaleString()}
+                </p>
+              </div>
+              <div className='w-8 h-8 bg-indigo-100 dark:bg-indigo-900/50 rounded-lg flex items-center justify-center'>
+                <FiEye className='w-4 h-4 text-indigo-600 dark:text-indigo-400' />
+              </div>
+            </div>
+          </div>
+
+          {/* Total Shares */}
+          <div className='bg-white dark:bg-slate-800 rounded-xl p-4 border border-gray-200 dark:border-slate-700 shadow-sm'>
+            <div className='flex items-center justify-between'>
+              <div>
+                <p className='text-xs font-medium text-gray-500 dark:text-slate-400 uppercase tracking-wider'>
+                  Total Shares
+                </p>
+                <p className='text-2xl font-bold text-gray-900 dark:text-slate-100 mt-1'>
+                  {userStats.totalShares.toLocaleString()}
+                </p>
+              </div>
+              <div className='w-8 h-8 bg-pink-100 dark:bg-pink-900/50 rounded-lg flex items-center justify-center'>
+                <FiShare2 className='w-4 h-4 text-pink-600 dark:text-pink-400' />
+              </div>
+            </div>
+          </div>
+
+          {/* Streak */}
+          <div className='bg-white dark:bg-slate-800 rounded-xl p-4 border border-gray-200 dark:border-slate-700 shadow-sm'>
+            <div className='flex items-center justify-between'>
+              <div>
+                <p className='text-xs font-medium text-gray-500 dark:text-slate-400 uppercase tracking-wider'>
+                  Streak
+                </p>
+                <p className='text-2xl font-bold text-gray-900 dark:text-slate-100 mt-1'>
+                  {userStats.streak}
+                </p>
+              </div>
+              <div className='w-8 h-8 bg-yellow-100 dark:bg-yellow-900/50 rounded-lg flex items-center justify-center'>
+                <FiZap className='w-4 h-4 text-yellow-600 dark:text-yellow-400' />
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Recent Activity */}
+        <div className='mt-8 grid grid-cols-1 lg:grid-cols-3 gap-8'>
+          <div className='lg:col-span-2'>
+            <div className='bg-white dark:bg-slate-800 rounded-2xl shadow-sm dark:shadow-slate-700/20 border border-gray-200 dark:border-slate-700'>
+              <div className='px-6 py-5 border-b border-gray-200 dark:border-slate-700'>
+                <h3 className='text-lg font-semibold text-gray-900 dark:text-slate-100'>
+                  Recent Activity
+                </h3>
+              </div>
+              <div className='p-6'>
                 {recentActivity.length > 0 ? (
-                  recentActivity.map((activity) => (
-                    <div
-                      key={activity.id}
-                      className='flex items-start space-x-4 p-4 bg-gray-50 dark:bg-slate-700/50 rounded-xl hover:bg-gray-100 dark:hover:bg-slate-700 transition-colors duration-200'
-                    >
-                      <div className='flex-shrink-0'>
-                        {getActivityIcon(activity.type)}
-                      </div>
-                      <div className='flex-1 min-w-0'>
-                        <p className='text-sm font-medium text-gray-900 dark:text-slate-100 truncate'>
-                          {activity.title}
-                        </p>
-                        <div className='flex items-center space-x-2 mt-1'>
-                          <span className='text-xs text-gray-500 dark:text-slate-400 capitalize'>
-                            {activity.type}
-                          </span>
-                          {activity.platform && (
-                            <>
-                              <span className='text-xs text-gray-300 dark:text-slate-600'>
-                                •
-                              </span>
-                              <span className='text-xs text-gray-500 dark:text-slate-400'>
-                                {activity.platform}
-                              </span>
-                            </>
-                          )}
-                          <span className='text-xs text-gray-300 dark:text-slate-600'>
-                            •
-                          </span>
-                          <span className='text-xs text-gray-500 dark:text-slate-400'>
-                            {formatDate(activity.timestamp)}
-                          </span>
+                  <div className='space-y-4'>
+                    {recentActivity.map((activity) => (
+                      <div
+                        key={activity.id}
+                        className='flex items-center space-x-4 p-3 rounded-xl hover:bg-gray-50 dark:hover:bg-slate-700/50 transition-colors duration-200'
+                      >
+                        <div className='flex-shrink-0'>
+                          {getActivityIcon(activity.type)}
+                        </div>
+                        <div className='flex-1 min-w-0'>
+                          <p className='text-sm font-medium text-gray-900 dark:text-slate-100 truncate'>
+                            {activity.title}
+                          </p>
+                          <p className='text-sm text-gray-500 dark:text-slate-400'>
+                            {activity.type === 'published'
+                              ? 'Published on'
+                              : activity.type === 'scheduled'
+                              ? 'Scheduled for'
+                              : 'Created for'}{' '}
+                            {activity.platform}
+                          </p>
+                        </div>
+                        <div className='flex-shrink-0 text-sm text-gray-500 dark:text-slate-400'>
+                          {getRelativeTime(activity.timestamp)}
                         </div>
                       </div>
-                    </div>
-                  ))
+                    ))}
+                  </div>
                 ) : (
                   <div className='text-center py-8'>
-                    <FiActivity className='h-12 w-12 text-gray-300 dark:text-slate-600 mx-auto mb-4' />
-                    <p className='text-gray-500 dark:text-slate-400'>
+                    <div className='w-12 h-12 bg-gray-100 dark:bg-slate-700 rounded-full flex items-center justify-center mx-auto mb-4'>
+                      <FiActivity className='w-6 h-6 text-gray-400 dark:text-slate-500' />
+                    </div>
+                    <h3 className='text-sm font-medium text-gray-900 dark:text-slate-100 mb-1'>
                       No recent activity
+                    </h3>
+                    <p className='text-sm text-gray-500 dark:text-slate-400'>
+                      Your recent content activity will appear here.
                     </p>
                   </div>
                 )}
@@ -490,127 +508,72 @@ export default function ProfilePage() {
             </div>
           </div>
 
-          {/* Sidebar */}
+          {/* Quick Actions */}
           <div className='space-y-6'>
-            {/* Quick Actions */}
-            <div className='bg-white dark:bg-slate-800/80 rounded-2xl shadow-lg border border-slate-200/60 dark:border-slate-600 p-6'>
-              <h3 className='text-lg font-bold text-gray-900 dark:text-slate-100 mb-4'>
-                Quick Actions
-              </h3>
-              <div className='space-y-3'>
+            <div className='bg-white dark:bg-slate-800 rounded-2xl shadow-sm dark:shadow-slate-700/20 border border-gray-200 dark:border-slate-700'>
+              <div className='px-6 py-5 border-b border-gray-200 dark:border-slate-700'>
+                <h3 className='text-lg font-semibold text-gray-900 dark:text-slate-100'>
+                  Quick Actions
+                </h3>
+              </div>
+              <div className='p-6 space-y-3'>
                 <Link
-                  href='/content/create'
-                  className='flex items-center p-3 bg-gradient-to-r from-indigo-50 to-purple-50 dark:from-indigo-900/40 dark:to-purple-900/40 text-indigo-700 dark:text-indigo-300 rounded-xl hover:shadow-md transition-all duration-200 group'
+                  href='/profile/edit'
+                  className='flex items-center space-x-3 p-3 rounded-xl hover:bg-gray-50 dark:hover:bg-slate-700/50 transition-colors duration-200'
                 >
-                  <FiFileText className='h-5 w-5 mr-3 group-hover:scale-110 transition-transform duration-200' />
-                  Create New Content
+                  <div className='w-8 h-8 bg-blue-100 dark:bg-blue-900/50 rounded-lg flex items-center justify-center'>
+                    <FiEdit3 className='w-4 h-4 text-blue-600 dark:text-blue-400' />
+                  </div>
+                  <span className='text-sm font-medium text-gray-900 dark:text-slate-100'>
+                    Edit Profile
+                  </span>
                 </Link>
-                <Link
-                  href='/calendar'
-                  className='flex items-center p-3 bg-gradient-to-r from-green-50 to-emerald-50 dark:from-green-900/40 dark:to-emerald-900/40 text-green-700 dark:text-green-300 rounded-xl hover:shadow-md transition-all duration-200 group'
-                >
-                  <FiCalendar className='h-5 w-5 mr-3 group-hover:scale-110 transition-transform duration-200' />
-                  Schedule Content
-                </Link>
+                <button className='flex items-center space-x-3 p-3 rounded-xl hover:bg-gray-50 dark:hover:bg-slate-700/50 transition-colors duration-200 w-full text-left'>
+                  <div className='w-8 h-8 bg-green-100 dark:bg-green-900/50 rounded-lg flex items-center justify-center'>
+                    <FiShield className='w-4 h-4 text-green-600 dark:text-green-400' />
+                  </div>
+                  <span className='text-sm font-medium text-gray-900 dark:text-slate-100'>
+                    Privacy Settings
+                  </span>
+                </button>
                 <Link
                   href='/analytics'
-                  className='flex items-center p-3 bg-gradient-to-r from-orange-50 to-red-50 dark:from-orange-900/40 dark:to-red-900/40 text-orange-700 dark:text-orange-300 rounded-xl hover:shadow-md transition-all duration-200 group'
+                  className='flex items-center space-x-3 p-3 rounded-xl hover:bg-gray-50 dark:hover:bg-slate-700/50 transition-colors duration-200'
                 >
-                  <FiTrendingUp className='h-5 w-5 mr-3 group-hover:scale-110 transition-transform duration-200' />
-                  View Analytics
+                  <div className='w-8 h-8 bg-purple-100 dark:bg-purple-900/50 rounded-lg flex items-center justify-center'>
+                    <FiTarget className='w-4 h-4 text-purple-600 dark:text-purple-400' />
+                  </div>
+                  <span className='text-sm font-medium text-gray-900 dark:text-slate-100'>
+                    View Analytics
+                  </span>
+                </Link>
+                <Link
+                  href='/content'
+                  className='flex items-center space-x-3 p-3 rounded-xl hover:bg-gray-50 dark:hover:bg-slate-700/50 transition-colors duration-200'
+                >
+                  <div className='w-8 h-8 bg-indigo-100 dark:bg-indigo-900/50 rounded-lg flex items-center justify-center'>
+                    <FiFileText className='w-4 h-4 text-indigo-600 dark:text-indigo-400' />
+                  </div>
+                  <span className='text-sm font-medium text-gray-900 dark:text-slate-100'>
+                    Manage Content
+                  </span>
                 </Link>
               </div>
             </div>
 
-            {/* Account Info */}
-            <div className='bg-white dark:bg-slate-800/80 rounded-2xl shadow-lg border border-slate-200/60 dark:border-slate-600 p-6'>
-              <h3 className='text-lg font-bold text-gray-900 dark:text-slate-100 mb-4'>
-                Account Information
-              </h3>
-              <div className='space-y-4'>
-                <div className='flex items-center space-x-3'>
-                  <FiMail className='h-5 w-5 text-gray-400 dark:text-slate-500' />
-                  <div>
-                    <div className='text-sm font-medium text-gray-900 dark:text-slate-100'>
-                      Email
-                    </div>
-                    <div className='text-sm text-gray-600 dark:text-slate-400'>
-                      {user.email}
-                    </div>
-                  </div>
-                </div>
-                <div className='flex items-center space-x-3'>
-                  <FiShield className='h-5 w-5 text-gray-400 dark:text-slate-500' />
-                  <div>
-                    <div className='text-sm font-medium text-gray-900 dark:text-slate-100'>
-                      Role
-                    </div>
-                    <div className='text-sm text-gray-600 dark:text-slate-400 capitalize'>
-                      {getDisplayRole(user.role)}
-                    </div>
-                  </div>
-                </div>
-                <div className='flex items-center space-x-3'>
-                  <FiCalendar className='h-5 w-5 text-gray-400 dark:text-slate-500' />
-                  <div>
-                    <div className='text-sm font-medium text-gray-900 dark:text-slate-100'>
-                      Member Since
-                    </div>
-                    <div className='text-sm text-gray-600 dark:text-slate-400'>
-                      {user.createdAt &&
-                      !isNaN(new Date(user.createdAt).getTime())
-                        ? new Date(user.createdAt).toLocaleDateString()
-                        : 'Recently joined'}
-                    </div>
-                  </div>
-                </div>
+            {/* Achievement Badge */}
+            <div className='bg-gradient-to-br from-purple-600 to-pink-600 dark:from-blue-600 dark:to-indigo-700 rounded-2xl p-6 text-white'>
+              <div className='flex items-center justify-between mb-4'>
+                <FiStar className='w-8 h-8' />
+                <span className='text-sm font-medium opacity-90'>
+                  Achievement
+                </span>
               </div>
-            </div>
-
-            {/* Achievements */}
-            <div className='bg-white dark:bg-slate-800/80 rounded-2xl shadow-lg border border-slate-200/60 dark:border-slate-600 p-6'>
-              <h3 className='text-lg font-bold text-gray-900 dark:text-slate-100 mb-4'>
-                Achievements
-              </h3>
-              <div className='space-y-3'>
-                <div className='flex items-center space-x-3 p-3 bg-yellow-50 dark:bg-yellow-900/40 rounded-xl'>
-                  <FiStar className='h-5 w-5 text-yellow-600 dark:text-yellow-400' />
-                  <div>
-                    <div className='text-sm font-medium text-gray-900 dark:text-slate-100'>
-                      Content Creator
-                    </div>
-                    <div className='text-xs text-gray-600 dark:text-slate-400'>
-                      Created your first content
-                    </div>
-                  </div>
-                </div>
-                {userStats.streak >= 7 && (
-                  <div className='flex items-center space-x-3 p-3 bg-orange-50 dark:bg-orange-900/40 rounded-xl'>
-                    <FiZap className='h-5 w-5 text-orange-600 dark:text-orange-400' />
-                    <div>
-                      <div className='text-sm font-medium text-gray-900 dark:text-slate-100'>
-                        On Fire!
-                      </div>
-                      <div className='text-xs text-gray-600 dark:text-slate-400'>
-                        {userStats.streak} day streak
-                      </div>
-                    </div>
-                  </div>
-                )}
-                {userStats.totalContent >= 10 && (
-                  <div className='flex items-center space-x-3 p-3 bg-green-50 dark:bg-green-900/40 rounded-xl'>
-                    <FiTarget className='h-5 w-5 text-green-600 dark:text-green-400' />
-                    <div>
-                      <div className='text-sm font-medium text-gray-900 dark:text-slate-100'>
-                        Prolific Creator
-                      </div>
-                      <div className='text-xs text-gray-600 dark:text-slate-400'>
-                        Created {userStats.totalContent} pieces of content
-                      </div>
-                    </div>
-                  </div>
-                )}
-              </div>
+              <h4 className='text-lg font-semibold mb-2'>Content Creator</h4>
+              <p className='text-sm opacity-90'>
+                You&apos;ve created {userStats.totalContent} pieces of content.
+                Keep up the great work!
+              </p>
             </div>
           </div>
         </div>

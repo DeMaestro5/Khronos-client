@@ -38,7 +38,7 @@ const TrendsGrid: React.FC<TrendsGridProps> = ({
   return (
     <div className='mb-8'>
       <div className='flex items-center justify-between mb-6'>
-        <h2 className='text-2xl font-bold text-gray-900'>Current Trends</h2>
+        <h2 className='text-2xl font-bold text-gray-200'>Current Trends</h2>
         <div className='flex items-center space-x-2 text-sm text-gray-600 bg-white/80 backdrop-blur-sm px-4 py-2 rounded-xl'>
           <Activity className='w-4 h-4' />
           <span>Showing {currentTrends.trends.length} trends</span>
