@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   FiCalendar,
   FiFileText,
@@ -10,12 +10,13 @@ import {
   FiLoader,
 } from 'react-icons/fi';
 import Link from 'next/link';
-import { contentAPI, analyticsAPI, aiAPI } from '../../../lib/api';
+import { contentAPI } from '../../../lib/api';
 import { Content } from '../../../types/content';
 import { format, isToday, isTomorrow, parseISO } from 'date-fns';
 import { toast } from 'react-hot-toast';
 import CreateContentModal from '../../../components/content/content-creation-modal';
 import { ContentFormData } from '../../../types/modal';
+import { useUserData } from '@/src/context/UserDataContext';
 
 interface DashboardStats {
   totalContent: number;
@@ -39,7 +40,6 @@ interface AIContentSuggestion {
 }
 
 export default function Dashboard() {
-  const [loading, setLoading] = useState(true);
   const [stats, setStats] = useState<DashboardStats>({
     totalContent: 0,
     scheduledPosts: 0,
@@ -47,10 +47,17 @@ export default function Dashboard() {
     contentIdeas: 0,
   });
   const [upcomingContent, setUpcomingContent] = useState<Content[]>([]);
-  const [aiSuggestions, setAiSuggestions] = useState<AIContentSuggestion[]>([]);
-  const [loadingContent, setLoadingContent] = useState(true);
-  const [loadingSuggestions, setLoadingSuggestions] = useState(true);
   const [showModal, setShowModal] = useState(false);
+
+  // Use cached user data instead of fetching directly
+  const {
+    userStats,
+    userContent,
+    aiSuggestions,
+    loading: contextLoading,
+    addContent,
+    refreshAISuggestions,
+  } = useUserData();
 
   // Format date for display
   const formatScheduledDate = (dateString: string) => {
@@ -69,87 +76,60 @@ export default function Dashboard() {
     }
   };
 
-  const fetchDashboardData = async () => {
-    try {
-      // Fetch user content and analytics in parallel
-      const [contentResponse, analyticsResponse] = await Promise.all([
-        contentAPI.getUserContent(),
-        analyticsAPI.getOverview().catch(() => null), // Don't fail if analytics fails
-      ]);
+  // Process cached data instead of making API calls
+  useEffect(() => {
+    console.log('Dashboard: Processing cached data', {
+      userContent,
+      userStats,
+      aiSuggestions,
+      contextLoading,
+    });
 
-      const userContent = contentResponse.data?.data || [];
+    if (contextLoading) return;
 
-      // Filter upcoming scheduled content
-      const now = new Date();
-      const upcoming = userContent
-        .filter(
-          (content: Content) =>
-            content.status === 'scheduled' &&
-            content.metadata?.scheduledDate &&
-            new Date(content.metadata.scheduledDate) > now
-        )
-        .sort(
-          (a: Content, b: Content) =>
-            new Date(a.metadata?.scheduledDate || 0).getTime() -
-            new Date(b.metadata?.scheduledDate || 0).getTime()
-        )
-        .slice(0, 3); // Only show first 3
+    // Use cached user content with null safety
+    const contentData: Content[] = userContent || [];
 
-      setUpcomingContent(upcoming);
+    // Filter upcoming scheduled content
+    const now = new Date();
+    const upcoming = contentData
+      .filter(
+        (content: Content) =>
+          content.status === 'scheduled' &&
+          content.metadata?.scheduledDate &&
+          new Date(content.metadata.scheduledDate) > now
+      )
+      .sort(
+        (a: Content, b: Content) =>
+          new Date(a.metadata?.scheduledDate || 0).getTime() -
+          new Date(b.metadata?.scheduledDate || 0).getTime()
+      )
+      .slice(0, 3); // Only show first 3
 
-      // Calculate stats
-      const scheduledCount = userContent.filter(
+    setUpcomingContent(upcoming);
+
+    // Use cached stats when available
+    if (userStats) {
+      setStats({
+        totalContent: userStats.totalContent,
+        scheduledPosts: userStats.scheduledContent,
+        avgEngagement: userStats.engagementRate,
+        contentIdeas: aiSuggestions?.length || 0,
+      });
+    } else {
+      // Fallback calculation if cached data not available
+      const scheduledCount = contentData.filter(
         (content: Content) => content.status === 'scheduled'
       ).length;
 
-      const engagementData = analyticsResponse?.data?.data?.engagement;
-      const avgEngagement = engagementData?.averageEngagementRate || 0;
-
       setStats({
-        totalContent: userContent.length,
+        totalContent: contentData.length,
         scheduledPosts: scheduledCount,
-        avgEngagement: Math.round(avgEngagement * 100) / 100,
-        contentIdeas: 0, // Will be updated when AI suggestions load
+        avgEngagement: 0, // Default to 0 if no cached stats
+        contentIdeas: aiSuggestions?.length || 0,
       });
-
-      setLoadingContent(false);
-    } catch (error) {
-      console.error('Failed to fetch dashboard data:', error);
-      toast.error('Failed to load dashboard data');
-      setLoadingContent(false);
     }
-  };
-
-  const fetchAISuggestions = async () => {
-    try {
-      const response = await aiAPI.getContentFeed();
-      const suggestions = response.data?.data || [];
-
-      setAiSuggestions(suggestions.slice(0, 3)); // Only show first 3
-
-      // Update content ideas count
-      setStats((prev) => ({
-        ...prev,
-        contentIdeas: suggestions.length,
-      }));
-
-      setLoadingSuggestions(false);
-    } catch (error) {
-      console.error('Failed to fetch AI suggestions:', error);
-      // Don't show error toast for AI suggestions as it's not critical
-      setLoadingSuggestions(false);
-    }
-  };
-
-  useEffect(() => {
-    const loadData = async () => {
-      setLoading(true);
-      await Promise.all([fetchDashboardData(), fetchAISuggestions()]);
-      setLoading(false);
-    };
-
-    loadData();
-  }, []);
+  }, [userStats, userContent, aiSuggestions, contextLoading]);
 
   const getPlatformIcon = (platform: string) => {
     switch (platform.toLowerCase()) {
@@ -189,6 +169,14 @@ export default function Dashboard() {
     }
   };
 
+  const truncateDescription = (
+    description: string,
+    maxLength: number = 120
+  ) => {
+    if (description.length <= maxLength) return description;
+    return description.substring(0, maxLength).trim() + '...';
+  };
+
   const handleCreateFromSuggestion = (suggestion: AIContentSuggestion) => {
     // Store suggestion in sessionStorage and navigate to content creation
     sessionStorage.setItem(
@@ -199,7 +187,7 @@ export default function Dashboard() {
         tags: suggestion.tags,
       })
     );
-    window.location.href = '/dashboard/content';
+    window.location.href = '/content';
   };
 
   const handleCreateContent = async (contentData: ContentFormData) => {
@@ -256,8 +244,11 @@ export default function Dashboard() {
         response.status === 201
       ) {
         toast.success('Content created successfully!');
-        // Refresh dashboard data
-        await Promise.all([fetchDashboardData(), fetchAISuggestions()]);
+
+        // Add the new content to the cached data instead of refetching everything
+        if (response.data?.data) {
+          addContent(response.data.data);
+        }
       } else {
         throw new Error(response.data?.message || 'Failed to create content');
       }
@@ -266,6 +257,9 @@ export default function Dashboard() {
       toast.error('Failed to create content. Please try again.');
     }
   };
+
+  // Get AI suggestions from cached data or empty array
+  const displaySuggestions = aiSuggestions?.slice(0, 3) || [];
 
   return (
     <div className='p-6 min-h-screen bg-white dark:bg-slate-900 transition-colors duration-200'>
@@ -288,7 +282,7 @@ export default function Dashboard() {
                   </dt>
                   <dd className='flex items-baseline'>
                     <div className='text-2xl font-semibold text-gray-900 dark:text-slate-100'>
-                      {loading ? (
+                      {contextLoading ? (
                         <FiLoader className='h-6 w-6 animate-spin' />
                       ) : (
                         stats.totalContent
@@ -314,7 +308,7 @@ export default function Dashboard() {
                   </dt>
                   <dd className='flex items-baseline'>
                     <div className='text-2xl font-semibold text-gray-900 dark:text-slate-100'>
-                      {loading ? (
+                      {contextLoading ? (
                         <FiLoader className='h-6 w-6 animate-spin' />
                       ) : (
                         stats.scheduledPosts
@@ -340,7 +334,7 @@ export default function Dashboard() {
                   </dt>
                   <dd className='flex items-baseline'>
                     <div className='text-2xl font-semibold text-gray-900 dark:text-slate-100'>
-                      {loading ? (
+                      {contextLoading ? (
                         <FiLoader className='h-6 w-6 animate-spin' />
                       ) : (
                         `${stats.avgEngagement}%`
@@ -366,7 +360,7 @@ export default function Dashboard() {
                   </dt>
                   <dd className='flex items-baseline'>
                     <div className='text-2xl font-semibold text-gray-900 dark:text-slate-100'>
-                      {loading ? (
+                      {contextLoading ? (
                         <FiLoader className='h-6 w-6 animate-spin' />
                       ) : (
                         stats.contentIdeas
@@ -393,7 +387,7 @@ export default function Dashboard() {
             </h3>
           </div>
 
-          {loadingContent ? (
+          {contextLoading ? (
             <div className='px-4 py-8 text-center'>
               <FiLoader className='h-8 w-8 animate-spin mx-auto text-indigo-600 dark:text-blue-400' />
               <p className='mt-2 text-sm text-gray-500 dark:text-slate-400'>
@@ -474,20 +468,28 @@ export default function Dashboard() {
 
         {/* AI Content Suggestions */}
         <div className='bg-white dark:bg-slate-800 shadow dark:shadow-slate-700/20 rounded-lg border border-gray-200 dark:border-slate-700'>
-          <div className='px-4 py-5 border-b border-gray-200 dark:border-slate-700 sm:px-6'>
+          <div className='px-4 py-5 border-b border-gray-200 dark:border-slate-700 sm:px-6 flex items-center justify-between'>
             <h3 className='text-lg font-medium leading-6 text-gray-900 dark:text-slate-100'>
               AI Content Suggestions
             </h3>
+            {!contextLoading && (
+              <button
+                onClick={refreshAISuggestions}
+                className='text-sm text-purple-600 dark:text-violet-400 hover:text-purple-500 dark:hover:text-violet-300 transition-colors duration-150'
+              >
+                Refresh
+              </button>
+            )}
           </div>
 
-          {loadingSuggestions ? (
+          {contextLoading ? (
             <div className='px-4 py-8 text-center'>
               <FiLoader className='h-8 w-8 animate-spin mx-auto text-purple-600 dark:text-violet-400' />
               <p className='mt-2 text-sm text-gray-500 dark:text-slate-400'>
-                Generating AI suggestions...
+                Loading AI suggestions...
               </p>
             </div>
-          ) : aiSuggestions.length === 0 ? (
+          ) : displaySuggestions.length === 0 ? (
             <div className='px-4 py-8 text-center'>
               <div className='mx-auto h-12 w-12 rounded-full bg-purple-100 dark:bg-violet-900/50 flex items-center justify-center'>
                 <FiMessageSquare className='h-6 w-6 text-purple-600 dark:text-violet-400' />
@@ -499,10 +501,18 @@ export default function Dashboard() {
                 AI content suggestions will appear here. Try creating some
                 content first to get personalized recommendations.
               </p>
+              <div className='mt-4'>
+                <button
+                  onClick={refreshAISuggestions}
+                  className='text-sm text-purple-600 dark:text-violet-400 hover:text-purple-500 dark:hover:text-violet-300 transition-colors duration-150'
+                >
+                  Refresh Suggestions
+                </button>
+              </div>
             </div>
           ) : (
             <ul className='divide-y divide-gray-200 dark:divide-slate-700'>
-              {aiSuggestions.map((suggestion) => (
+              {displaySuggestions.map((suggestion) => (
                 <li
                   key={suggestion.id}
                   className='px-4 py-4 sm:px-6 hover:bg-gray-50 dark:hover:bg-slate-700/50 transition-colors duration-150'
@@ -517,7 +527,7 @@ export default function Dashboard() {
                           {suggestion.title}
                         </div>
                         <div className='mt-1 text-sm text-gray-500 dark:text-slate-400'>
-                          {suggestion.description}
+                          {truncateDescription(suggestion.description)}
                         </div>
                         <div className='mt-1 text-sm text-gray-500 dark:text-slate-400 flex items-center'>
                           {suggestion.trendingScore &&

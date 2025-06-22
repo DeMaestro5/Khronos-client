@@ -23,38 +23,23 @@ import {
   FiMonitor,
 } from 'react-icons/fi';
 import { useTheme } from 'next-themes';
-import { profileAPI, contentAPI } from '@/src/lib/api';
+// Removed profileAPI and contentAPI imports - now using cached data from UserDataContext
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/src/context/AuthContext';
-import { User } from '@/src/types/auth';
 import { useNotifications } from '@/src/context/NotificationContext';
+import { useUserData } from '@/src/context/UserDataContext';
 import NotificationDropdown from '@/src/components/notifications/NotificationDropdown';
-
-interface UserStats {
-  totalContent: number;
-  scheduledContent: number;
-  engagementRate: number;
-  streak: number;
-}
 
 export default function Navbar() {
   const [notificationsOpen, setNotificationsOpen] = useState(false);
   const [profileOpen, setProfileOpen] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
-  const [profileData, setProfileData] = useState<User | null>(null);
-  const [userStats, setUserStats] = useState<UserStats>({
-    totalContent: 0,
-    scheduledContent: 0,
-    engagementRate: 0,
-    streak: 0,
-  });
-  const [loadingProfile, setLoadingProfile] = useState(false);
-  const [loadingStats, setLoadingStats] = useState(false);
   const [mounted, setMounted] = useState(false);
 
   const router = useRouter();
   const { user: contextUser, logout } = useAuth();
   const { unreadCount } = useNotifications();
+  const { profileData, userStats, loading: userDataLoading } = useUserData();
   const { theme, setTheme } = useTheme();
 
   // Handle theme mounting
@@ -87,106 +72,6 @@ export default function Navbar() {
     document.addEventListener('mousedown', handleClickOutside);
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
-
-  // Fetch user profile data and stats
-  useEffect(() => {
-    const fetchUserData = async () => {
-      if (!contextUser) return;
-
-      setLoadingProfile(true);
-      setLoadingStats(true);
-
-      try {
-        // Fetch profile data
-        const profileResponse = await profileAPI.getProfile();
-        if (profileResponse.data?.data) {
-          setProfileData(profileResponse.data.data);
-        }
-
-        // Fetch user stats
-        const contentResponse = await contentAPI.getUserContent();
-        if (contentResponse.data?.data) {
-          const content = contentResponse.data.data;
-          const scheduled = content.filter(
-            (item: { status: string }) => item.status === 'scheduled'
-          ).length;
-
-          // Calculate real engagement rate based on content performance
-          const published = content.filter(
-            (item: { status: string }) => item.status === 'published'
-          );
-          let engagementRate = 0;
-          if (published.length > 0) {
-            const totalEngagement = published.reduce(
-              (
-                sum: number,
-                item: { likes?: number; comments?: number; shares?: number }
-              ) => {
-                return (
-                  sum +
-                  (item.likes || 0) +
-                  (item.comments || 0) +
-                  (item.shares || 0)
-                );
-              },
-              0
-            );
-            const totalViews = published.reduce(
-              (sum: number, item: { views?: number }) => {
-                return sum + (item.views || 1); // Avoid division by zero
-              },
-              0
-            );
-            engagementRate = Math.round((totalEngagement / totalViews) * 100);
-          }
-
-          // Calculate streak based on content creation frequency
-          const sortedContent = content
-            .filter((item: { createdAt?: string }) => item.createdAt)
-            .sort(
-              (a: { createdAt: string }, b: { createdAt: string }) =>
-                new Date(b.createdAt).getTime() -
-                new Date(a.createdAt).getTime()
-            );
-
-          let streak = 0;
-          const currentDate = new Date();
-          currentDate.setHours(0, 0, 0, 0);
-
-          for (const item of sortedContent) {
-            const itemDate = new Date(item.createdAt);
-            itemDate.setHours(0, 0, 0, 0);
-
-            const daysDiff = Math.floor(
-              (currentDate.getTime() - itemDate.getTime()) /
-                (1000 * 60 * 60 * 24)
-            );
-
-            if (daysDiff === streak) {
-              streak++;
-            } else if (daysDiff > streak) {
-              break;
-            }
-          }
-
-          setUserStats({
-            totalContent: content.length,
-            scheduledContent: scheduled,
-            engagementRate: Math.max(0, Math.min(100, engagementRate)), // Ensure 0-100 range
-            streak: streak,
-          });
-        }
-      } catch (error) {
-        console.error('Failed to fetch user data:', error);
-        setProfileData(contextUser);
-      } finally {
-        setLoadingProfile(false);
-        setLoadingStats(false);
-      }
-    };
-
-    fetchUserData();
-  }, [contextUser]);
 
   // Use profile data or fallback to context user
   const user = profileData || contextUser;
@@ -350,7 +235,7 @@ export default function Navbar() {
               <button
                 className='profile-button flex items-center space-x-3 p-2 text-sm rounded-xl hover:bg-gray-50 dark:hover:bg-slate-800 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 dark:focus:ring-blue-500/20 transition-all duration-200 shadow-sm hover:shadow-md group'
                 onClick={() => setProfileOpen(!profileOpen)}
-                disabled={loadingProfile}
+                disabled={userDataLoading}
               >
                 <div className='relative'>
                   {user?.profilePicUrl || user?.avatar ? (
@@ -365,7 +250,8 @@ export default function Navbar() {
                       }}
                     />
                   ) : null}
-                  {(!user?.profilePicUrl && !user?.avatar) || loadingProfile ? (
+                  {(!user?.profilePicUrl && !user?.avatar) ||
+                  userDataLoading ? (
                     <div className='h-9 w-9 rounded-xl bg-gradient-to-br from-indigo-500 to-purple-600 dark:from-blue-600 dark:to-indigo-700 flex items-center justify-center ring-2 ring-white dark:ring-slate-700 shadow-lg group-hover:ring-indigo-200 dark:group-hover:ring-indigo-400 transition-all duration-200'>
                       <span className='text-white font-semibold text-sm'>
                         {user?.name ? getInitials(user.name) : 'U'}
@@ -376,7 +262,7 @@ export default function Navbar() {
                 </div>
                 <div className='hidden lg:block text-left'>
                   <p className='text-sm font-semibold text-gray-800 dark:text-slate-100 group-hover:text-indigo-700 dark:group-hover:text-indigo-400 transition-colors duration-200'>
-                    {loadingProfile ? 'Loading...' : user?.name || 'User'}
+                    {userDataLoading ? 'Loading...' : user?.name || 'User'}
                   </p>
                   <div className='flex items-center space-x-1'>
                     <span className='text-xs'>
@@ -460,7 +346,7 @@ export default function Navbar() {
                           </div>
                           <div className='flex items-center space-x-1'>
                             <FiZap className='h-3 w-3 text-orange-500' />
-                            <span>{userStats.streak} day streak</span>
+                            <span>{userStats?.streak || 0} day streak</span>
                           </div>
                         </div>
                       </div>
@@ -475,7 +361,9 @@ export default function Navbar() {
                           <FiFileText className='h-6 w-6 text-white' />
                         </div>
                         <div className='text-2xl font-bold text-gray-900 dark:text-slate-100 mb-1'>
-                          {loadingStats ? '...' : userStats.totalContent}
+                          {userDataLoading
+                            ? '...'
+                            : userStats?.totalContent || 0}
                         </div>
                         <div className='text-xs text-gray-500 dark:text-slate-400 font-medium'>
                           Total Content
@@ -486,7 +374,9 @@ export default function Navbar() {
                           <FiCalendar className='h-6 w-6 text-white' />
                         </div>
                         <div className='text-2xl font-bold text-gray-900 dark:text-slate-100 mb-1'>
-                          {loadingStats ? '...' : userStats.scheduledContent}
+                          {userDataLoading
+                            ? '...'
+                            : userStats?.scheduledContent || 0}
                         </div>
                         <div className='text-xs text-gray-500 dark:text-slate-400 font-medium'>
                           Scheduled
@@ -497,7 +387,10 @@ export default function Navbar() {
                           <FiTrendingUp className='h-6 w-6 text-white' />
                         </div>
                         <div className='text-2xl font-bold text-gray-900 dark:text-slate-100 mb-1'>
-                          {loadingStats ? '...' : userStats.engagementRate}%
+                          {userDataLoading
+                            ? '...'
+                            : userStats?.engagementRate || 0}
+                          %
                         </div>
                         <div className='text-xs text-gray-500 dark:text-slate-400 font-medium'>
                           Engagement

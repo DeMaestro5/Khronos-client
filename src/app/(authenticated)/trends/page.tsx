@@ -13,6 +13,8 @@ import {
 } from '@/src/types/trends';
 import PageLoading from '@/src/components/ui/page-loading';
 import { AlertCircle } from 'lucide-react';
+import { useUserData } from '@/src/context/UserDataContext';
+import toast from 'react-hot-toast';
 
 // Import all the new components
 import {
@@ -24,19 +26,7 @@ import {
   TrendsPredictions,
   TrendsHistoricalData,
   TrendDetailModal,
-  calculateAverageGrowth,
-  findTopCategory,
-  calculateSentimentBreakdown,
-  getDaysFromTimeRange,
 } from '@/src/components/trends';
-
-// Type for API response data
-interface AnalysisData {
-  trendingTopics?: Trend[];
-  emergingTopics?: Trend[];
-  decliningTopics?: Trend[];
-  recommendations?: string[];
-}
 
 const TrendsPage: React.FC = () => {
   const [currentTrends, setCurrentTrends] = useState<TrendAnalysis | null>(
@@ -50,6 +40,13 @@ const TrendsPage: React.FC = () => {
   const [categories, setCategories] = useState<Category[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+
+  // Use cached trends data from UserDataContext
+  const {
+    trendsData,
+    loading: userDataLoading,
+    refreshTrendsData,
+  } = useUserData();
   const [filters, setFilters] = useState<TrendsFilters>({
     platform: 'all',
     category: 'all',
@@ -63,94 +60,29 @@ const TrendsPage: React.FC = () => {
   const [didInitialLoad, setDidInitialLoad] = useState(false);
   const [isRefreshing, setIsRefreshing] = useState(false);
 
-  // Load initial data
+  // Use cached trends data instead of fetching directly
   useEffect(() => {
-    if (!didInitialLoad) {
-      loadInitialData();
-      setDidInitialLoad(true);
-    }
-  }, [didInitialLoad]);
+    console.log('Trends page: Using cached data', {
+      trendsData,
+      userDataLoading,
+    });
 
-  // Load data when filters change (but not on first mount)
-  useEffect(() => {
-    if (didInitialLoad && platforms.length > 0 && categories.length > 0) {
-      loadTrendsData();
-    }
-  }, [filters, platforms.length, categories.length, didInitialLoad]);
-
-  const loadInitialData = async () => {
-    try {
+    if (userDataLoading) {
       setIsLoading(true);
+      return;
+    }
+
+    if (trendsData) {
+      setCurrentTrends(trendsData.analysis);
+      setHistoricalData(trendsData.historicalData);
+      setPredictions(trendsData.predictions);
+      setPlatforms(trendsData.platforms);
+      setCategories(trendsData.categories);
+      setIsLoading(false);
       setError(null);
-
-      const [platformsResponse, categoriesResponse] = await Promise.all([
-        trendsAPI.getPlatforms(),
-        trendsAPI.getCategories(),
-      ]);
-
-      // Handle platforms
-      if (platformsResponse.data?.statusCode === '10000') {
-        const platformsData = platformsResponse.data?.data?.platforms || [];
-        if (Array.isArray(platformsData) && platformsData.length > 0) {
-          setPlatforms([
-            { value: 'all', label: 'All Platforms' },
-            ...platformsData,
-          ]);
-        } else {
-          setPlatforms([
-            { value: 'all', label: 'All Platforms' },
-            { value: 'twitter', label: 'Twitter' },
-            { value: 'instagram', label: 'Instagram' },
-            { value: 'facebook', label: 'Facebook' },
-            { value: 'linkedin', label: 'LinkedIn' },
-            { value: 'tiktok', label: 'TikTok' },
-            { value: 'youtube', label: 'YouTube' },
-            { value: 'reddit', label: 'Reddit' },
-          ]);
-        }
-      } else {
-        setPlatforms([{ value: 'all', label: 'All Platforms' }]);
-      }
-
-      // Handle categories
-      if (categoriesResponse.data?.statusCode === '10000') {
-        const categoriesData = categoriesResponse.data?.data?.categories || [];
-        if (Array.isArray(categoriesData) && categoriesData.length > 0) {
-          setCategories([
-            { value: 'all', label: 'All Categories' },
-            ...categoriesData,
-          ]);
-        } else {
-          setCategories([
-            { value: 'all', label: 'All Categories' },
-            { value: 'technology', label: 'Technology' },
-            { value: 'entertainment', label: 'Entertainment' },
-            { value: 'sports', label: 'Sports' },
-            { value: 'politics', label: 'Politics' },
-            { value: 'business', label: 'Business' },
-            { value: 'health', label: 'Health' },
-            { value: 'lifestyle', label: 'Lifestyle' },
-            { value: 'travel', label: 'Travel' },
-            { value: 'food', label: 'Food' },
-            { value: 'fashion', label: 'Fashion' },
-            { value: 'science', label: 'Science' },
-            { value: 'education', label: 'Education' },
-            { value: 'finance', label: 'Finance' },
-            { value: 'gaming', label: 'Gaming' },
-            { value: 'music', label: 'Music' },
-            { value: 'general', label: 'General' },
-          ]);
-        }
-      } else {
-        setCategories([{ value: 'all', label: 'All Categories' }]);
-      }
-
-      await loadTrendsData();
-    } catch (err: unknown) {
-      console.error('Failed to load initial data:', err);
-      setError('Failed to load initial data. Please try again.');
-
-      // Set fallback data
+      setDidInitialLoad(true);
+    } else {
+      // Set fallback data if no cached data
       setPlatforms([
         { value: 'all', label: 'All Platforms' },
         { value: 'twitter', label: 'Twitter' },
@@ -160,7 +92,6 @@ const TrendsPage: React.FC = () => {
         { value: 'tiktok', label: 'TikTok' },
         { value: 'youtube', label: 'YouTube' },
       ]);
-
       setCategories([
         { value: 'all', label: 'All Categories' },
         { value: 'technology', label: 'Technology' },
@@ -169,86 +100,133 @@ const TrendsPage: React.FC = () => {
         { value: 'health', label: 'Health' },
         { value: 'lifestyle', label: 'Lifestyle' },
       ]);
-    } finally {
       setIsLoading(false);
+      setDidInitialLoad(true);
     }
-  };
+  }, [trendsData, userDataLoading]);
 
-  const loadTrendsData = async () => {
-    try {
-      setError(null);
-      setPredictions([]);
+  // Refresh trends data when filters change (if initial load is done)
+  useEffect(() => {
+    if (didInitialLoad && filters && refreshTrendsData) {
+      console.log('Trends page: Filters changed, refreshing data...');
       setIsRefreshing(true);
 
-      const trendsResponse = await trendsAPI.getCurrentTrends({
-        platform: filters.platform === 'all' ? undefined : filters.platform,
-        category: filters.category === 'all' ? undefined : filters.category,
-      });
-
-      if (trendsResponse.data?.statusCode === '10000') {
-        const analysisData: AnalysisData = trendsResponse.data?.data?.analysis;
-
-        if (analysisData) {
-          const allTrends = [
-            ...(analysisData.trendingTopics || []),
-            ...(analysisData.emergingTopics || []),
-            ...(analysisData.decliningTopics || []),
-          ];
-
-          const mappedAnalysis: TrendAnalysis = {
-            trends: allTrends,
-            summary: {
-              totalTrends: allTrends.length,
-              averageGrowth: calculateAverageGrowth(allTrends),
-              topCategory: findTopCategory(allTrends),
-              topPlatform:
-                filters.platform === 'all'
-                  ? 'All Platforms'
-                  : filters.platform || 'All Platforms',
-              sentimentBreakdown: calculateSentimentBreakdown(allTrends),
-            },
-            insights: {
-              emergingTrends: analysisData.emergingTopics || [],
-              decliningTrends: analysisData.decliningTopics || [],
-              stableTrends: analysisData.trendingTopics || [],
-            },
-          };
-
-          setCurrentTrends(mappedAnalysis);
-        } else {
-          setCurrentTrends(null);
+      const toastId = toast.loading(
+        <div className='flex items-center space-x-3'>
+          <div>
+            <p className='font-semibold text-white'>Applying filters</p>
+            <p className='text-xs text-blue-100 opacity-90'>
+              Please wait while we update your trends...
+            </p>
+          </div>
+        </div>,
+        {
+          style: {
+            background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+            color: 'white',
+            border: 'none',
+            borderRadius: '16px',
+            padding: '16px 20px',
+            boxShadow:
+              '0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04)',
+            backdropFilter: 'blur(10px)',
+            minWidth: '320px',
+          },
+          duration: Infinity,
         }
-      } else {
-        setCurrentTrends(null);
-      }
+      );
 
-      // Load historical data if needed
-      if (filters.timeRange !== 'today') {
-        const days = getDaysFromTimeRange(filters.timeRange || 'week');
-        try {
-          const historicalResponse = await trendsAPI.getHistoricalTrends(days, {
-            platform: filters.platform === 'all' ? undefined : filters.platform,
-          });
-
-          if (historicalResponse.data?.statusCode === '10000') {
-            setHistoricalData(historicalResponse.data?.data?.report || null);
-          } else {
-            setHistoricalData(null);
-          }
-        } catch (historicalErr) {
-          console.warn('Failed to load historical data:', historicalErr);
-          setHistoricalData(null);
-        }
-      } else {
-        setHistoricalData(null);
-      }
-    } catch (err: unknown) {
-      console.error('Failed to load trends data:', err);
-      setError('Failed to load trends data. Please try again.');
-    } finally {
-      setIsRefreshing(false);
+      refreshTrendsData()
+        .then(() => {
+          toast.success(
+            <div className='flex items-center space-x-3'>
+              <div className='flex-shrink-0 w-8 h-8 bg-green-100 rounded-full flex items-center justify-center'>
+                <svg
+                  className='w-5 h-5 text-green-600'
+                  fill='none'
+                  stroke='currentColor'
+                  viewBox='0 0 24 24'
+                >
+                  <path
+                    strokeLinecap='round'
+                    strokeLinejoin='round'
+                    strokeWidth={2}
+                    d='M5 13l4 4L19 7'
+                  />
+                </svg>
+              </div>
+              <div>
+                <p className='font-semibold text-gray-900'>
+                  Filters applied successfully!
+                </p>
+                <p className='text-xs text-gray-600'>
+                  Your trends data has been updated
+                </p>
+              </div>
+            </div>,
+            {
+              id: toastId,
+              duration: 3000,
+              style: {
+                background: 'linear-gradient(135deg, #d4ffd4 0%, #a8e6a8 100%)',
+                color: '#1f2937',
+                border: '1px solid #10b981',
+                borderRadius: '16px',
+                padding: '16px 20px',
+                boxShadow:
+                  '0 20px 25px -5px rgba(16, 185, 129, 0.1), 0 10px 10px -5px rgba(16, 185, 129, 0.04)',
+                minWidth: '320px',
+              },
+            }
+          );
+        })
+        .catch((error) => {
+          console.error('Failed to apply filters:', error);
+          toast.error(
+            <div className='flex items-center space-x-3'>
+              <div className='flex-shrink-0 w-8 h-8 bg-red-100 rounded-full flex items-center justify-center'>
+                <svg
+                  className='w-5 h-5 text-red-600'
+                  fill='none'
+                  stroke='currentColor'
+                  viewBox='0 0 24 24'
+                >
+                  <path
+                    strokeLinecap='round'
+                    strokeLinejoin='round'
+                    strokeWidth={2}
+                    d='M6 18L18 6M6 6l12 12'
+                  />
+                </svg>
+              </div>
+              <div>
+                <p className='font-semibold text-gray-900'>
+                  Failed to apply filters
+                </p>
+                <p className='text-xs text-gray-600'>
+                  Please try again or check your connection
+                </p>
+              </div>
+            </div>,
+            {
+              id: toastId,
+              duration: 4000,
+              style: {
+                background: 'linear-gradient(135deg, #ffd4d4 0%, #ffa8a8 100%)',
+                color: '#1f2937',
+                border: '1px solid #ef4444',
+                borderRadius: '16px',
+                padding: '16px 20px',
+                boxShadow:
+                  '0 20px 25px -5px rgba(239, 68, 68, 0.1), 0 10px 10px -5px rgba(239, 68, 68, 0.04)',
+                minWidth: '320px',
+              },
+            }
+          );
+        })
+        .finally(() => setIsRefreshing(false));
     }
-  };
+  }, [filters, didInitialLoad, refreshTrendsData]);
 
   const handlePrediction = async (keyword: string) => {
     if (!keyword.trim()) return;
@@ -346,22 +324,130 @@ const TrendsPage: React.FC = () => {
         showFilters={showFilters}
         setShowFilters={setShowFilters}
         isRefreshing={isRefreshing}
-        onRefresh={loadTrendsData}
+        onRefresh={async () => {
+          setIsRefreshing(true);
+          const toastId = toast.loading(
+            <div className='flex items-center space-x-3'>
+              <div>
+                <p className='font-semibold text-white'>
+                  Refreshing trends data
+                </p>
+                <p className='text-xs text-indigo-100 opacity-90'>
+                  Fetching the latest insights for you...
+                </p>
+              </div>
+            </div>,
+            {
+              style: {
+                background: 'linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%)',
+                color: 'white',
+                border: 'none',
+                borderRadius: '16px',
+                padding: '16px 20px',
+                boxShadow:
+                  '0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04)',
+                backdropFilter: 'blur(10px)',
+                minWidth: '320px',
+              },
+              duration: Infinity,
+            }
+          );
+
+          try {
+            await refreshTrendsData();
+            toast.success(
+              <div className='flex items-center space-x-3'>
+                <div className='flex-shrink-0 w-8 h-8 bg-green-100 rounded-full flex items-center justify-center'>
+                  <svg
+                    className='w-5 h-5 text-green-600'
+                    fill='none'
+                    stroke='currentColor'
+                    viewBox='0 0 24 24'
+                  >
+                    <path
+                      strokeLinecap='round'
+                      strokeLinejoin='round'
+                      strokeWidth={2}
+                      d='M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15'
+                    />
+                  </svg>
+                </div>
+                <div>
+                  <p className='font-semibold text-gray-900'>
+                    Trends data updated!
+                  </p>
+                  <p className='text-xs text-gray-600'>
+                    All insights are now up to date
+                  </p>
+                </div>
+              </div>,
+              {
+                id: toastId,
+                duration: 3000,
+                style: {
+                  background:
+                    'linear-gradient(135deg, #d4ffd4 0%, #a8e6a8 100%)',
+                  color: '#1f2937',
+                  border: '1px solid #10b981',
+                  borderRadius: '16px',
+                  padding: '16px 20px',
+                  boxShadow:
+                    '0 20px 25px -5px rgba(16, 185, 129, 0.1), 0 10px 10px -5px rgba(16, 185, 129, 0.04)',
+                  minWidth: '320px',
+                },
+              }
+            );
+          } catch (error) {
+            console.error('Failed to refresh trends data:', error);
+            toast.error(
+              <div className='flex items-center space-x-3'>
+                <div className='flex-shrink-0 w-8 h-8 bg-red-100 rounded-full flex items-center justify-center'>
+                  <svg
+                    className='w-5 h-5 text-red-600'
+                    fill='none'
+                    stroke='currentColor'
+                    viewBox='0 0 24 24'
+                  >
+                    <path
+                      strokeLinecap='round'
+                      strokeLinejoin='round'
+                      strokeWidth={2}
+                      d='M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L4.082 16.5c-.77.833.192 2.5 1.732 2.5z'
+                    />
+                  </svg>
+                </div>
+                <div>
+                  <p className='font-semibold text-gray-900'>
+                    Failed to refresh data
+                  </p>
+                  <p className='text-xs text-gray-600'>
+                    Please check your connection and try again
+                  </p>
+                </div>
+              </div>,
+              {
+                id: toastId,
+                duration: 4000,
+                style: {
+                  background:
+                    'linear-gradient(135deg, #ffd4d4 0%, #ffa8a8 100%)',
+                  color: '#1f2937',
+                  border: '1px solid #ef4444',
+                  borderRadius: '16px',
+                  padding: '16px 20px',
+                  boxShadow:
+                    '0 20px 25px -5px rgba(239, 68, 68, 0.1), 0 10px 10px -5px rgba(239, 68, 68, 0.04)',
+                  minWidth: '320px',
+                },
+              }
+            );
+          } finally {
+            setIsRefreshing(false);
+          }
+        }}
       />
 
       <div className='max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8'>
-        {/* Loading Overlay */}
-        {isRefreshing && (
-          <div className='fixed inset-0 bg-black/20 dark:bg-black/40 backdrop-blur-sm z-50 flex items-center justify-center'>
-            <div className='bg-white dark:bg-slate-800 rounded-2xl p-8 shadow-2xl flex items-center space-x-4 border border-gray-200 dark:border-slate-700'>
-              <div className='animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 dark:border-blue-400'></div>
-              <div className='text-gray-700 dark:text-slate-200 font-medium'>
-                Updating trends data...
-              </div>
-            </div>
-          </div>
-        )}
-
         <TrendsSearchBar
           searchKeyword={searchKeyword}
           setSearchKeyword={setSearchKeyword}

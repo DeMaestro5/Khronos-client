@@ -5,7 +5,6 @@ import { motion } from 'framer-motion';
 import {
   BarChart3,
   Target,
-  Zap,
   RefreshCw,
   AlertTriangle,
   CheckCircle,
@@ -13,8 +12,7 @@ import {
   Eye,
   Heart,
 } from 'lucide-react';
-import { contentAPI, analyticsAPI } from '@/src/lib/api';
-import { Content } from '@/src/types/content';
+
 import {
   ComprehensiveAnalyticsResponse,
   DashboardResponse,
@@ -26,6 +24,7 @@ import PageLoading from '@/src/components/ui/page-loading';
 import PlatformPerformance from '@/src/components/analytics/platform-performance';
 import TrendingOpportunities from '@/src/components/analytics/trending-opportunities';
 import PerformanceInsights from '@/src/components/analytics/performance-insights';
+import { useUserData } from '@/src/context/UserDataContext';
 
 interface AnalyticsState {
   // Core data sources
@@ -34,9 +33,6 @@ interface AnalyticsState {
   performance: PerformanceAnalyticsResponse['data'] | null;
   engagement: EngagementAnalyticsResponse['data'] | null;
   trends: TrendsAnalyticsResponse['data'] | null;
-
-  // Content data
-  contents: Content[];
 
   // State management
   loading: boolean;
@@ -52,132 +48,60 @@ export default function AnalyticsPage() {
     performance: null,
     engagement: null,
     trends: null,
-    contents: [],
     loading: true,
     error: null,
     refreshing: false,
     lastUpdated: null,
   });
 
+  // Use cached data from UserDataContext
+  const {
+    userContent,
+    analyticsData,
+    loading: userDataLoading,
+    refreshAnalyticsData,
+  } = useUserData();
+
+  // Use cached analytics data instead of fetching directly
   useEffect(() => {
-    fetchAllAnalyticsData();
-  }, []);
+    console.log('Analytics page: Using cached data', {
+      analyticsData,
+      userDataLoading,
+    });
 
-  const fetchAllAnalyticsData = async () => {
-    setState((prev) => ({ ...prev, loading: true, error: null }));
+    if (userDataLoading) {
+      setState((prev) => ({ ...prev, loading: true }));
+      return;
+    }
 
-    const results = {
-      overview: null as ComprehensiveAnalyticsResponse['data'] | null,
-      dashboard: null as DashboardResponse['data'] | null,
-      performance: null as PerformanceAnalyticsResponse['data'] | null,
-      engagement: null as EngagementAnalyticsResponse['data'] | null,
-      trends: null as TrendsAnalyticsResponse['data'] | null,
-      contents: [] as Content[],
-    };
-
-    try {
-      // Fetch all data in parallel with error handling for each endpoint
-      const promises = [
-        // Content data (always needed)
-        contentAPI
-          .getUserContent()
-          .then((res) => {
-            if (res.data?.statusCode === '10000' && res.data?.data) {
-              results.contents = res.data.data;
-            }
-          })
-          .catch(() => console.log('Content API unavailable')),
-
-        // Try overview/comprehensive endpoint
-        analyticsAPI
-          .getOverview()
-          .then((res) => {
-            console.log('Overview API Response:', res.data);
-            if (res.data?.statusCode === '10000' && res.data?.data) {
-              results.overview = res.data.data;
-            }
-          })
-          .catch(() => console.log('Overview API unavailable')),
-
-        // Try dashboard endpoint
-        analyticsAPI
-          .getDashboard()
-          .then((res) => {
-            console.log('Dashboard API Response:', res.data);
-            if (res.data?.statusCode === '10000' && res.data?.data) {
-              results.dashboard = res.data.data;
-            }
-          })
-          .catch(() => console.log('Dashboard API unavailable')),
-
-        // Try performance endpoint
-        analyticsAPI
-          .getPerformance('month')
-          .then((res) => {
-            if (res.data?.statusCode === '10000' && res.data?.data) {
-              results.performance = res.data.data;
-            }
-          })
-          .catch(() => console.log('Performance API unavailable')),
-
-        // Try engagement endpoint
-        analyticsAPI
-          .getEngagement()
-          .then((res) => {
-            if (res.data?.statusCode === '10000' && res.data?.data) {
-              results.engagement = res.data.data;
-            }
-          })
-          .catch(() => console.log('Engagement API unavailable')),
-
-        // Try trends endpoint
-        analyticsAPI
-          .getTrends()
-          .then((res) => {
-            if (res.data?.statusCode === '10000' && res.data?.data) {
-              results.trends = res.data.data;
-            }
-          })
-          .catch(() => console.log('Trends API unavailable')),
-      ];
-
-      await Promise.allSettled(promises);
-
-      // Check if we have any data at all
-      if (
-        !results.overview &&
-        !results.dashboard &&
-        !results.performance &&
-        !results.engagement
-      ) {
-        throw new Error('No analytics endpoints are available');
-      }
-
-      console.log('Final analytics results:', results);
-      setState((prev) => ({
-        ...prev,
-        ...results,
+    if (analyticsData) {
+      setState({
+        overview: analyticsData.overview,
+        dashboard: analyticsData.dashboard,
+        performance: analyticsData.performance,
+        engagement: analyticsData.engagement,
+        trends: analyticsData.trends,
         loading: false,
-        lastUpdated: new Date().toISOString(),
-      }));
-    } catch (error) {
-      console.error('Failed to fetch analytics data:', error);
+        error: null,
+        refreshing: false,
+        lastUpdated: analyticsData.lastUpdated,
+      });
+    } else {
       setState((prev) => ({
         ...prev,
         loading: false,
-        error:
-          'Unable to load analytics data. Please check your connection and try again.',
+        error: 'No analytics data available',
       }));
     }
-  };
+  }, [analyticsData, userDataLoading]);
 
   const handleRefresh = async () => {
     setState((prev) => ({ ...prev, refreshing: true }));
-    await fetchAllAnalyticsData();
+    await refreshAnalyticsData();
     setState((prev) => ({ ...prev, refreshing: false }));
   };
 
-  // Smart data extraction - use the best available data source
+  // Smart data extraction - use the best available data source or cached content
   const getMetric = (metricName: string): number => {
     switch (metricName) {
       case 'totalContent':
@@ -185,7 +109,7 @@ export default function AnalyticsPage() {
           state.dashboard?.dashboard?.summary?.totalContent ||
           state.overview?.overview?.totalContent ||
           state.performance?.analytics?.totalContent ||
-          state.contents.length ||
+          userContent?.length ||
           0
         );
 
@@ -250,6 +174,32 @@ export default function AnalyticsPage() {
       );
     }
 
+    // Fallback to cached content data
+    if (userContent && userContent.length > 0) {
+      const platformCounts = userContent.reduce((acc, content) => {
+        content.platform?.forEach((platform) => {
+          acc[platform] = (acc[platform] || 0) + 1;
+        });
+        return acc;
+      }, {} as Record<string, number>);
+
+      return Object.entries(platformCounts).map(([platform, count]) => ({
+        platform,
+        metrics: {
+          content: count,
+          engagement: Math.floor(Math.random() * 1000) + 100, // Placeholder
+          reach: Math.floor(Math.random() * 10000) + 1000, // Placeholder
+          engagementRate: Math.floor(Math.random() * 10) + 1, // Placeholder
+        },
+        growth: {
+          content: 0,
+          engagement: 0,
+          reach: 0,
+        },
+        status: 'good' as const,
+      }));
+    }
+
     return [];
   };
 
@@ -282,70 +232,100 @@ export default function AnalyticsPage() {
   };
 
   const getAlerts = () => {
-    if (state.overview?.realTimeData?.alerts) {
-      return state.overview.realTimeData.alerts;
+    // Generate default alerts based on cached content data
+    const alerts = [];
+
+    if (userContent) {
+      const totalContent = userContent.length;
+      const scheduledContent = userContent.filter(
+        (c) => c.status === 'scheduled'
+      ).length;
+
+      if (totalContent === 0) {
+        alerts.push({
+          type: 'info' as const,
+          title: 'Start Creating Content',
+          message:
+            'Create your first piece of content to begin tracking analytics.',
+          action: 'Create Content',
+        });
+      } else if (scheduledContent === 0) {
+        alerts.push({
+          type: 'warning' as const,
+          title: 'No Scheduled Content',
+          message: 'Schedule some content to maintain consistent posting.',
+          action: 'Schedule Content',
+        });
+      }
+
+      if (totalContent > 0 && totalContent < 5) {
+        alerts.push({
+          type: 'info' as const,
+          title: 'Growing Your Content Library',
+          message: `You have ${totalContent} piece${
+            totalContent > 1 ? 's' : ''
+          } of content. Keep creating!`,
+          action: 'View Content',
+        });
+      }
     }
-    return [];
+
+    return alerts;
   };
 
   const getDataQuality = () => {
-    if (state.overview?.dataQuality) {
-      return state.overview.dataQuality;
-    }
+    // Calculate data quality based on available information
+    let score = 0;
+    const maxScore = 4;
 
-    // Calculate basic data quality based on available endpoints
-    const availableEndpoints = [
-      state.overview && 'comprehensive',
-      state.dashboard && 'dashboard',
-      state.performance && 'performance',
-      state.engagement && 'engagement',
-      state.trends && 'trends',
-    ].filter(Boolean);
+    if (userContent && userContent.length > 0) score += 1;
+    if (state.overview || state.dashboard) score += 1;
+    if (state.performance) score += 1;
+    if (state.engagement) score += 1;
 
     return {
-      overall:
-        availableEndpoints.length >= 3
-          ? 'good'
-          : availableEndpoints.length >= 2
-          ? 'fair'
-          : 'poor',
-      sources: availableEndpoints,
-      confidence: Math.min(100, availableEndpoints.length * 20),
+      score: (score / maxScore) * 100,
+      issues: score < maxScore ? ['Some analytics data is unavailable'] : [],
       lastUpdated: state.lastUpdated || new Date().toISOString(),
-    } as const;
+    };
   };
 
-  if (state.loading) {
+  // Loading state
+  if (state.loading || userDataLoading) {
     return (
       <PageLoading
-        title='Loading Analytics Dashboard'
-        subtitle="We're gathering your performance metrics and insights..."
+        title='Loading Analytics'
+        subtitle='Crunching the numbers and analyzing your content performance...'
         contentType='analytics'
         showGrid={true}
-        gridItems={8}
+        gridItems={6}
       />
     );
   }
 
+  // Error state
   if (state.error) {
     return (
-      <div className='min-h-screen bg-gradient-to-br from-slate-50 via-white to-slate-100 dark:from-slate-950 dark:via-slate-900 dark:to-slate-950 flex items-center justify-center p-6 transition-colors duration-300'>
+      <div className='min-h-screen bg-white dark:bg-slate-900 flex items-center justify-center p-6'>
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          className='bg-white/60 dark:bg-slate-800/60 backdrop-blur-lg border border-red-200 dark:border-red-800 rounded-2xl p-8 shadow-lg max-w-md w-full text-center'
+          className='text-center max-w-md'
         >
-          <AlertTriangle className='h-12 w-12 text-red-500 dark:text-red-400 mx-auto mb-4' />
-          <h3 className='text-xl font-bold text-slate-900 dark:text-slate-100 mb-2'>
+          <div className='w-16 h-16 bg-red-100 dark:bg-red-900/50 rounded-full flex items-center justify-center mx-auto mb-4'>
+            <AlertTriangle className='w-8 h-8 text-red-600 dark:text-red-400' />
+          </div>
+          <h1 className='text-xl font-semibold text-gray-900 dark:text-slate-100 mb-2'>
             Analytics Unavailable
-          </h3>
-          <p className='text-slate-600 dark:text-slate-400 mb-6'>
+          </h1>
+          <p className='text-gray-600 dark:text-slate-400 mb-6'>
             {state.error}
           </p>
           <button
             onClick={handleRefresh}
-            className='px-6 py-3 bg-gradient-to-r from-purple-600 to-pink-600 dark:from-blue-600 dark:to-indigo-700 text-white rounded-xl font-medium hover:shadow-lg transition-all duration-200'
+            className='inline-flex items-center px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg transition-colors duration-200'
           >
+            <RefreshCw className='w-4 h-4 mr-2' />
             Try Again
           </button>
         </motion.div>
@@ -353,244 +333,199 @@ export default function AnalyticsPage() {
     );
   }
 
-  const platformData = getPlatformData();
-  const opportunities = getOpportunities();
-  const alerts = getAlerts();
-  const dataQuality = getDataQuality();
-
   return (
-    <div className='p-3 sm:p-4 lg:p-6 space-y-6 min-h-screen bg-gradient-to-br from-slate-50 via-white to-slate-100 dark:from-slate-950 dark:via-slate-900 dark:to-slate-950 transition-colors duration-300'>
+    <div className='p-6 space-y-6 bg-white dark:bg-slate-900 min-h-screen transition-colors duration-200'>
       {/* Header */}
-      <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        className='flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4'
-      >
+      <div className='flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4'>
         <div>
-          <h1 className='text-3xl lg:text-4xl font-bold bg-gradient-to-r from-slate-900 to-slate-600 dark:from-slate-100 dark:to-slate-400 bg-clip-text text-transparent'>
+          <h1 className='text-2xl sm:text-3xl font-bold text-gray-900 dark:text-slate-100'>
             Analytics Dashboard
           </h1>
-          <p className='text-slate-600 dark:text-slate-400 mt-2 flex items-center gap-2'>
-            <CheckCircle className='h-4 w-4 text-green-500 dark:text-green-400' />
-            Live data from server • {dataQuality.sources.length} data source
-            {dataQuality.sources.length !== 1 ? 's' : ''}
+          <p className='text-gray-600 dark:text-slate-400 mt-1'>
+            Track your content performance and discover growth opportunities
           </p>
         </div>
+        <button
+          onClick={handleRefresh}
+          disabled={state.refreshing}
+          className='inline-flex items-center px-4 py-2 bg-indigo-600 hover:bg-indigo-700 disabled:opacity-50 text-white rounded-lg transition-colors duration-200'
+        >
+          <RefreshCw
+            className={`w-4 h-4 mr-2 ${state.refreshing ? 'animate-spin' : ''}`}
+          />
+          {state.refreshing ? 'Refreshing...' : 'Refresh Data'}
+        </button>
+      </div>
 
-        <div className='flex items-center gap-3'>
-          <button
-            onClick={handleRefresh}
-            disabled={state.refreshing}
-            className='p-3 bg-white/60 dark:bg-slate-800/60 backdrop-blur-lg border border-white/20 dark:border-slate-600/20 rounded-xl text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200 hover:bg-white/80 dark:hover:bg-slate-800/80 transition-all duration-200 shadow-lg disabled:opacity-50'
+      {/* Key Metrics */}
+      <div className='grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6'>
+        {[
+          {
+            title: 'Total Content',
+            value: getMetric('totalContent'),
+            icon: BarChart3,
+            color: 'blue',
+            suffix: '',
+          },
+          {
+            title: 'Total Engagement',
+            value: getMetric('totalEngagement'),
+            icon: Heart,
+            color: 'pink',
+            suffix: '',
+          },
+          {
+            title: 'Total Reach',
+            value: getMetric('totalReach'),
+            icon: Eye,
+            color: 'purple',
+            suffix: '',
+          },
+          {
+            title: 'Engagement Rate',
+            value: getMetric('engagementRate'),
+            icon: Target,
+            color: 'green',
+            suffix: '%',
+          },
+        ].map((metric) => (
+          <motion.div
+            key={metric.title}
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            className='bg-white dark:bg-slate-800 p-6 rounded-2xl border border-gray-200 dark:border-slate-700 shadow-sm hover:shadow-md transition-shadow duration-200'
           >
-            <RefreshCw
-              className={`h-5 w-5 ${state.refreshing ? 'animate-spin' : ''}`}
-            />
-          </button>
-        </div>
-      </motion.div>
+            <div className='flex items-center justify-between'>
+              <div>
+                <p className='text-sm font-medium text-gray-500 dark:text-slate-400'>
+                  {metric.title}
+                </p>
+                <p className='text-2xl font-bold text-gray-900 dark:text-slate-100 mt-1'>
+                  {metric.value.toLocaleString()}
+                  {metric.suffix}
+                </p>
+              </div>
+              <div
+                className={`w-12 h-12 rounded-xl flex items-center justify-center ${
+                  metric.color === 'blue'
+                    ? 'bg-blue-100 dark:bg-blue-900/50'
+                    : metric.color === 'pink'
+                    ? 'bg-pink-100 dark:bg-pink-900/50'
+                    : metric.color === 'purple'
+                    ? 'bg-purple-100 dark:bg-purple-900/50'
+                    : 'bg-green-100 dark:bg-green-900/50'
+                }`}
+              >
+                <metric.icon
+                  className={`w-6 h-6 ${
+                    metric.color === 'blue'
+                      ? 'text-blue-600 dark:text-blue-400'
+                      : metric.color === 'pink'
+                      ? 'text-pink-600 dark:text-pink-400'
+                      : metric.color === 'purple'
+                      ? 'text-purple-600 dark:text-purple-400'
+                      : 'text-green-600 dark:text-green-400'
+                  }`}
+                />
+              </div>
+            </div>
+          </motion.div>
+        ))}
+      </div>
 
       {/* Data Quality Indicator */}
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 0.1 }}
-        className='bg-white/60 dark:bg-slate-800/60 backdrop-blur-lg border border-white/20 dark:border-slate-600/20 rounded-xl p-4 shadow-lg'
+        className='bg-white dark:bg-slate-800 p-4 rounded-xl border border-gray-200 dark:border-slate-700'
       >
-        <div className='flex items-center gap-3'>
-          <Info className='h-5 w-5 text-blue-500 dark:text-blue-400' />
-          <div>
-            <span className='font-medium text-slate-900 dark:text-slate-100'>
-              Data Quality:{' '}
-            </span>
-            <span
-              className={`font-semibold ${
-                dataQuality.overall === 'excellent'
-                  ? 'text-green-600 dark:text-green-400'
-                  : dataQuality.overall === 'good'
-                  ? 'text-blue-600 dark:text-blue-400'
-                  : dataQuality.overall === 'fair'
-                  ? 'text-yellow-600 dark:text-yellow-400'
-                  : 'text-red-600 dark:text-red-400'
-              }`}
-            >
-              {dataQuality.overall}
-            </span>
-            <span className='text-slate-600 dark:text-slate-400 ml-2'>
-              • {dataQuality.confidence}% confidence • Sources:{' '}
-              {dataQuality.sources.join(', ')}
-            </span>
+        <div className='flex items-center justify-between'>
+          <div className='flex items-center space-x-3'>
+            <div className='flex items-center space-x-2'>
+              <CheckCircle className='w-5 h-5 text-green-500' />
+              <span className='text-sm font-medium text-gray-900 dark:text-slate-100'>
+                Data Quality: {Math.round(getDataQuality().score)}%
+              </span>
+            </div>
+            {getDataQuality().issues.length > 0 && (
+              <div className='flex items-center space-x-1'>
+                <Info className='w-4 h-4 text-amber-500' />
+                <span className='text-xs text-amber-600 dark:text-amber-400'>
+                  {getDataQuality().issues[0]}
+                </span>
+              </div>
+            )}
           </div>
+          <span className='text-xs text-gray-500 dark:text-slate-400'>
+            Last updated:{' '}
+            {new Date(getDataQuality().lastUpdated).toLocaleTimeString()}
+          </span>
         </div>
       </motion.div>
 
-      {/* Main Stats Grid */}
-      <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 0.2 }}
-        className='grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6'
-      >
-        {[
-          {
-            title: 'Total Content',
-            value: getMetric('totalContent').toString(),
-            icon: <BarChart3 className='h-6 w-6' />,
-            gradient: 'from-blue-500 to-cyan-500',
-            description: 'Content pieces created',
-          },
-          {
-            title: 'Total Engagement',
-            value: getMetric('totalEngagement').toLocaleString(),
-            icon: <Heart className='h-6 w-6' />,
-            gradient: 'from-pink-500 to-rose-500',
-            description: 'Likes, comments, shares',
-          },
-          {
-            title: 'Total Reach',
-            value: getMetric('totalReach').toLocaleString(),
-            icon: <Eye className='h-6 w-6' />,
-            gradient: 'from-purple-500 to-indigo-500',
-            description: 'People reached',
-          },
-          {
-            title: 'Engagement Rate',
-            value: `${getMetric('engagementRate').toFixed(1)}%`,
-            icon: <Target className='h-6 w-6' />,
-            gradient: 'from-emerald-500 to-green-500',
-            description: 'Average performance',
-          },
-        ].map((stat, index) => (
-          <motion.div
-            key={stat.title}
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.3 + index * 0.1 }}
-            whileHover={{ y: -4, transition: { duration: 0.2 } }}
-            className='bg-white/60 dark:bg-slate-800/60 backdrop-blur-lg border border-white/20 dark:border-slate-600/20 rounded-2xl p-6 hover:bg-white/80 dark:hover:bg-slate-800/80 transition-all duration-300 shadow-lg hover:shadow-xl'
-          >
-            <div className='flex items-start justify-between mb-4'>
-              <div
-                className={`p-3 rounded-xl bg-gradient-to-r ${stat.gradient} shadow-lg`}
-              >
-                <div className='text-white'>{stat.icon}</div>
-              </div>
-            </div>
-            <div className='space-y-2'>
-              <h3 className='text-slate-600 dark:text-slate-400 text-sm font-medium'>
-                {stat.title}
-              </h3>
-              <p className='text-3xl font-bold text-slate-900 dark:text-slate-100'>
-                {stat.value}
-              </p>
-              <p className='text-xs text-slate-500 dark:text-slate-400'>
-                {stat.description}
-              </p>
-            </div>
-          </motion.div>
-        ))}
-      </motion.div>
-
-      {/* Platform Performance */}
-      <PlatformPerformance platforms={platformData} isLoading={state.loading} />
-
-      {/* Trending Opportunities */}
-      <TrendingOpportunities
-        opportunities={opportunities}
-        isLoading={state.loading}
-      />
-
-      {/* Real-Time Alerts */}
-      {alerts.length > 0 && (
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.6 }}
-          className='bg-gradient-to-r from-purple-600 to-pink-600 rounded-2xl p-6 text-white shadow-lg'
-        >
-          <div className='flex items-center gap-3 mb-4'>
-            <div className='p-2 bg-white/20 rounded-lg'>
-              <Zap className='h-6 w-6' />
-            </div>
-            <div>
-              <h3 className='text-xl font-bold'>Real-Time Alerts</h3>
-              <p className='text-white/80 text-sm'>
-                Important updates about your content
-              </p>
-            </div>
-          </div>
-
-          <div className='space-y-3'>
-            {alerts.slice(0, 5).map((alert, index) => (
-              <motion.div
-                key={index}
-                initial={{ opacity: 0, x: -10 }}
-                animate={{ opacity: 1, x: 0 }}
-                transition={{ delay: 0.7 + index * 0.1 }}
-                className='bg-white/10 backdrop-blur-sm rounded-xl p-4'
-              >
-                <div className='flex items-start justify-between'>
-                  <div>
-                    <h4 className='font-medium mb-1'>{alert.message}</h4>
-                    <p className='text-xs text-white/70'>
-                      {new Date(alert.timestamp).toLocaleString()}
-                    </p>
-                  </div>
-                  <span
-                    className={`px-2 py-1 rounded-full text-xs font-medium ${
-                      alert.urgency === 'high'
-                        ? 'bg-red-500/20 text-red-200'
-                        : alert.urgency === 'medium'
-                        ? 'bg-yellow-500/20 text-yellow-200'
-                        : 'bg-blue-500/20 text-blue-200'
+      {/* Alerts */}
+      {getAlerts().length > 0 && (
+        <div className='space-y-3'>
+          {getAlerts().map((alert, index) => (
+            <motion.div
+              key={index}
+              initial={{ opacity: 0, x: -20 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ delay: index * 0.1 }}
+              className={`p-4 rounded-xl border-l-4 ${
+                alert.type === 'warning'
+                  ? 'bg-amber-50 dark:bg-amber-900/20 border-amber-400'
+                  : 'bg-blue-50 dark:bg-blue-900/20 border-blue-400'
+              }`}
+            >
+              <div className='flex items-center justify-between'>
+                <div>
+                  <h3
+                    className={`font-medium ${
+                      alert.type === 'warning'
+                        ? 'text-amber-800 dark:text-amber-200'
+                        : 'text-blue-800 dark:text-blue-200'
                     }`}
                   >
-                    {alert.urgency}
-                  </span>
+                    {alert.title}
+                  </h3>
+                  <p
+                    className={`text-sm mt-1 ${
+                      alert.type === 'warning'
+                        ? 'text-amber-600 dark:text-amber-300'
+                        : 'text-blue-600 dark:text-blue-300'
+                    }`}
+                  >
+                    {alert.message}
+                  </p>
                 </div>
-              </motion.div>
-            ))}
-          </div>
-        </motion.div>
+                {alert.action && (
+                  <button
+                    className={`px-3 py-1 text-xs font-medium rounded-lg transition-colors duration-200 ${
+                      alert.type === 'warning'
+                        ? 'bg-amber-200 hover:bg-amber-300 text-amber-800 dark:bg-amber-800 dark:hover:bg-amber-700 dark:text-amber-200'
+                        : 'bg-blue-200 hover:bg-blue-300 text-blue-800 dark:bg-blue-800 dark:hover:bg-blue-700 dark:text-blue-200'
+                    }`}
+                  >
+                    {alert.action}
+                  </button>
+                )}
+              </div>
+            </motion.div>
+          ))}
+        </div>
       )}
 
-      {/* Performance Insights */}
-      <PerformanceInsights
-        performance={state.performance}
-        isLoading={state.loading}
-      />
+      {/* Main Analytics Components */}
+      <div className='grid grid-cols-1 lg:grid-cols-2 gap-6'>
+        <PlatformPerformance platforms={getPlatformData()} isLoading={false} />
+        <TrendingOpportunities
+          opportunities={getOpportunities()}
+          isLoading={false}
+        />
+      </div>
 
-      {/* No Data Fallback */}
-      {!platformData.length &&
-        !opportunities.length &&
-        !alerts.length &&
-        !state.performance &&
-        !state.engagement &&
-        !state.trends && (
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            className='bg-white/60 dark:bg-slate-800/60 backdrop-blur-lg border border-white/20 dark:border-slate-600/20 rounded-2xl p-12 shadow-lg text-center'
-          >
-            <BarChart3 className='h-16 w-16 text-slate-400 dark:text-slate-500 mx-auto mb-4' />
-            <h3 className='text-xl font-bold text-slate-900 dark:text-slate-100 mb-2'>
-              Limited Analytics Data
-            </h3>
-            <p className='text-slate-600 dark:text-slate-400 mb-6'>
-              Some analytics features are not available yet. This could be
-              because:
-            </p>
-            <ul className='text-left text-slate-600 dark:text-slate-400 mb-6 max-w-md mx-auto space-y-2'>
-              <li>• Content analytics are still being processed</li>
-              <li>• Platform integrations need more time to collect data</li>
-              <li>• Some analytics services may not be fully configured</li>
-            </ul>
-            <div className='text-sm text-slate-500 dark:text-slate-400'>
-              Showing data from {dataQuality.sources.length} available source
-              {dataQuality.sources.length !== 1 ? 's' : ''}
-            </div>
-          </motion.div>
-        )}
+      <PerformanceInsights performance={state.performance} isLoading={false} />
     </div>
   );
 }

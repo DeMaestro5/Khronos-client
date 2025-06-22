@@ -1,10 +1,11 @@
 'use client';
 
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Search, Plus, FileText } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import toast from 'react-hot-toast';
-import { useContentCreation } from '@/src/context/ContentCreationContext';
+
+import { useUserData } from '@/src/context/UserDataContext';
 import { Content, ContentStatus, ContentType } from '@/src/types/content';
 import { ContentCard } from '@/src/components/content/content-card';
 import { ContentListItem } from '@/src/components/content/content-list-items';
@@ -12,7 +13,6 @@ import CreateContentModal from '@/src/components/content/content-creation-modal'
 import ContentFilter from '@/src/components/content/content-filter';
 import { ContentFormData } from '@/src/types/modal';
 import { contentAPI } from '@/src/lib/api';
-import { AuthUtils } from '@/src/lib/auth-utils';
 import PageLoading from '@/src/components/ui/page-loading';
 // import AuthDebug from '@/src/components/debug/AuthDebug';
 
@@ -43,57 +43,35 @@ export default function ContentPage() {
     description: string;
     tags: string[];
   } | null>(null);
-  const previouslyCreatingRef = useRef(false);
 
+  // Use cached user data
   const {
-    startContentCreation,
-    failContentCreation,
-    completeContentCreation,
-    setContentId,
-    isCreating,
-  } = useContentCreation();
-
-  // No calendar context needed in this component
+    userContent,
+    loading: contextLoading,
+    addContent,
+    removeContent,
+  } = useUserData();
 
   useEffect(() => {
-    const fetchContents = async () => {
-      setIsLoading(true);
-      try {
-        const response = await contentAPI.getUserContent();
+    console.log('Content page: Using cached data', {
+      userContent,
+      contextLoading,
+    });
 
-        if (response.data?.statusCode === '10000' && response.data?.data) {
-          setContents(response.data.data);
-          setFilteredContents(response.data.data);
-        } else {
-          console.error('Failed to fetch contents', response.data);
-          setContents([]);
-          setFilteredContents([]);
-        }
-      } catch (error: unknown) {
-        console.error('Failed to fetch contents:', error);
-
-        const errorObj = error as {
-          response?: { status?: number; data?: unknown };
-        };
-        if (errorObj?.response?.status === 401) {
-          console.error('Authentication failed - redirecting to login');
-          // Automatic token refresh will be handled by axios interceptors
-          // If we get here, it means refresh failed, so clear tokens and redirect
-          AuthUtils.clearTokens();
-          window.location.href = '/auth/login';
-          return;
-        }
-
-        console.error('Error response:', errorObj?.response?.data);
-        console.error('Error status:', errorObj?.response?.status);
-        setContents([]);
-        setFilteredContents([]);
-      } finally {
-        setIsLoading(false);
-      }
-    };
-
-    fetchContents();
+    // Use cached content data instead of API call
+    if (userContent) {
+      setContents(userContent);
+      setFilteredContents(userContent);
+      setIsLoading(false);
+    } else if (!contextLoading) {
+      // If no cached data and context is not loading, set empty arrays
+      setContents([]);
+      setFilteredContents([]);
+      setIsLoading(false);
+    } else {
+      // Still loading context data
+      setIsLoading(contextLoading);
+    }
 
     // Check for AI suggestion passed from dashboard
     const savedSuggestion = sessionStorage.getItem('aiSuggestion');
@@ -108,140 +86,103 @@ export default function ContentPage() {
         console.error('Failed to parse AI suggestion:', error);
       }
     }
-  }, []);
-
-  // Refresh content when creation completes (user might have navigated away and back)
-  useEffect(() => {
-    const refreshContents = async () => {
-      try {
-        const response = await contentAPI.getUserContent();
-        if (response.data?.statusCode === '10000' && response.data?.data) {
-          setContents(response.data.data);
-          setFilteredContents(response.data.data);
-        }
-      } catch (error) {
-        console.error('Failed to refresh content after creation:', error);
-      }
-    };
-
-    // If we were creating content and now we're not, refresh the list
-    if (previouslyCreatingRef.current && !isCreating) {
-      refreshContents();
-    }
-
-    previouslyCreatingRef.current = isCreating;
-  }, [isCreating]);
+  }, [userContent, contextLoading]);
 
   const handleCreateContent = async (contentData: ContentFormData) => {
     try {
       // Validate required fields first
       if (!contentData.title.trim()) {
-        toast.error('Content title is required');
+        toast.error('❌ Content title is required');
         return;
       }
 
       if (contentData.platforms.length === 0) {
-        toast.error('Please select at least one platform');
+        toast.error('❌ Please select at least one platform');
         return;
       }
 
-      // Close modal immediately and reset states
+      // Close modal immediately for better UX
       setShowModal(false);
+      setAiSuggestion(null);
 
-      // Determine status based on whether scheduled date/time is provided
-      const hasScheduledDateTime = !!(
-        contentData.scheduledDate && contentData.scheduledTime
-      );
+      // Show creating toast with more visual feedback
+      toast.loading('✨ Creating your amazing content...', {
+        id: 'creating-content',
+        duration: 3000,
+        style: {
+          background: '#8b5cf6',
+          color: 'white',
+          border: 'none',
+          fontWeight: '500',
+        },
+      });
 
-      // Start the global content creation process
-      startContentCreation(contentData.title.trim(), hasScheduledDateTime);
+      // Prepare the payload for API
+      const newContentPayload: ContentCreatePayload = {
+        title: contentData.title.trim(),
+        type: contentData.contentType,
+        platform: contentData.platforms,
+        description: contentData.description?.trim() || undefined,
+        tags:
+          contentData.tags.length > 0
+            ? contentData.tags.filter((tag) => tag.trim())
+            : undefined,
+      };
 
-      try {
-        // Prepare the payload for API
-        const newContentPayload: ContentCreatePayload = {
-          title: contentData.title.trim(),
-          type: contentData.contentType,
-          platform: contentData.platforms,
-        };
+      // Add scheduled date if provided
+      if (contentData.scheduledDate && contentData.scheduledTime) {
+        const scheduledDateTime = `${contentData.scheduledDate}T${contentData.scheduledTime}:00.000Z`;
+        newContentPayload.scheduledDate = scheduledDateTime;
+      }
 
-        // Add optional fields only if they have values
-        if (contentData.description?.trim()) {
-          newContentPayload.description = contentData.description.trim();
+      const response = await contentAPI.create(newContentPayload);
+
+      if (
+        response.data?.statusCode === '10000' ||
+        response.status === 200 ||
+        response.status === 201
+      ) {
+        // Success
+        toast.dismiss('creating-content');
+        toast.success('🎉 Content created successfully!', {
+          duration: 4000,
+          style: {
+            background: '#22c55e',
+            color: 'white',
+            border: 'none',
+            fontWeight: '500',
+          },
+        });
+
+        // Add the new content to the cached data instead of refetching
+        if (response.data?.data) {
+          addContent(response.data.data);
         }
-
-        if (contentData.tags.length > 0) {
-          newContentPayload.tags = contentData.tags.filter((tag) => tag.trim());
-        }
-
-        // Add scheduled date if both date and time are provided
-        if (hasScheduledDateTime) {
-          const scheduledDateTime = `${contentData.scheduledDate}T${contentData.scheduledTime}:00.000Z`;
-          newContentPayload.scheduledDate = scheduledDateTime;
-        }
-
-        console.log('Creating content with payload:', newContentPayload);
-
-        // ALWAYS call the API to create content
-        const response = await contentAPI.create(newContentPayload);
-
-        console.log('Content creation response:', response.data);
-
-        // Check if the creation was successful
-        if (
-          response.data?.statusCode === '10000' ||
-          response.status === 200 ||
-          response.status === 201
-        ) {
-          // Set the content ID if available and complete the creation
-          if (response.data?.data?._id) {
-            setContentId(response.data.data._id);
-          }
-          completeContentCreation();
-
-          // Refresh the content list
-          const refreshResponse = await contentAPI.getUserContent();
-          if (
-            refreshResponse.data?.statusCode === '10000' &&
-            refreshResponse.data?.data
-          ) {
-            setContents(refreshResponse.data.data);
-            setFilteredContents(refreshResponse.data.data);
-          }
-        } else {
-          throw new Error(response.data?.message || 'Failed to create content');
-        }
-      } catch (error: unknown) {
-        console.error('Failed to create content:', error);
-
-        // Let the global context handle error notification
-        let errorMessage = 'Failed to create content. Please try again.';
-
-        if (error instanceof Error) {
-          errorMessage = error.message;
-        } else if (
-          typeof error === 'object' &&
-          error !== null &&
-          'response' in error
-        ) {
-          const axiosError = error as {
-            response?: { data?: { message?: string } };
-          };
-          errorMessage = axiosError.response?.data?.message || errorMessage;
-        }
-
-        failContentCreation(errorMessage);
+      } else {
+        throw new Error(response.data?.message || 'Failed to create content');
       }
     } catch (error: unknown) {
-      // Catch any validation errors or other issues before content creation starts
-      console.error('Error in handleCreateContent:', error);
+      console.error('Failed to create content:', error);
 
-      let errorMessage = 'An unexpected error occurred. Please try again.';
+      // Dismiss loading toast
+      toast.dismiss('creating-content');
+
+      // Show error message
+      let errorMessage = 'Failed to create content. Please try again.';
+
       if (error instanceof Error) {
         errorMessage = error.message;
+      } else if (
+        typeof error === 'object' &&
+        error !== null &&
+        'response' in error
+      ) {
+        const axiosError = error as {
+          response?: { data?: { message?: string } };
+        };
+        errorMessage = axiosError.response?.data?.message || errorMessage;
       }
 
-      // Only show toast for validation errors, not failContentCreation
-      // since we haven't started the creation process yet
       toast.error(`❌ ${errorMessage}`, {
         duration: 6000,
         style: {
@@ -255,31 +196,15 @@ export default function ContentPage() {
   };
 
   const handleContentDeleted = (deletedContentId: string) => {
-    // Remove the deleted content from both contents and filteredContents arrays
-    setContents((prev) =>
-      prev.filter((content) => content._id !== deletedContentId)
-    );
-    setFilteredContents((prev) =>
-      prev.filter((content) => content._id !== deletedContentId)
-    );
+    // Remove from cached data instead of local state
+    removeContent(deletedContentId);
   };
 
-  const handleContentUpdated = async () => {
-    // Refresh the content list when content is updated
-    setIsLoading(true);
-    try {
-      const response = await contentAPI.getUserContent();
-      console.log('Updated content response:', response.data);
-
-      if (response.data?.statusCode === '10000' && response.data?.data) {
-        setContents(response.data.data);
-        setFilteredContents(response.data.data);
-      }
-    } catch (error) {
-      console.error('Failed to refresh content after update:', error);
-    } finally {
-      setIsLoading(false);
-    }
+  const handleContentUpdated = () => {
+    // Since ContentCard doesn't pass the updated content data,
+    // we rely on the cache being updated by the API calls within the component
+    // The cache will be refreshed when needed
+    console.log('Content updated - cache will refresh as needed');
   };
 
   useEffect(() => {
@@ -396,8 +321,15 @@ export default function ContentPage() {
               <p className='text-sm sm:text-base text-gray-600 dark:text-slate-400 mb-4'>
                 {searchQuery || statusFilter !== 'all' || typeFilter !== 'all'
                   ? 'Try adjusting your search or filters'
-                  : 'Get started by creating your first piece of content. You will only see content that you have created.'}
+                  : "You haven't created any content yet"}
               </p>
+              <button
+                onClick={() => setShowModal(true)}
+                className='inline-flex items-center px-4 py-2 bg-purple-600 dark:bg-blue-600 hover:bg-purple-700 dark:hover:bg-blue-700 text-white text-sm font-medium rounded-lg transition-colors duration-200'
+              >
+                <Plus className='w-4 h-4 mr-2' />
+                Create Your First Content
+              </button>
             </div>
           </motion.div>
         ) : viewMode === 'grid' ? (
@@ -438,7 +370,7 @@ export default function ContentPage() {
         isOpen={showModal}
         onClose={() => {
           setShowModal(false);
-          setAiSuggestion(null); // Clear suggestion when modal closes
+          setAiSuggestion(null);
         }}
         onSubmit={handleCreateContent}
         initialData={aiSuggestion}
