@@ -17,6 +17,7 @@ import {
   FiCalendar,
   FiZap,
   FiClock,
+  FiRefreshCw,
 } from 'react-icons/fi';
 import Link from 'next/link';
 import { formatDistanceToNow } from 'date-fns';
@@ -92,8 +93,14 @@ export default function NotificationDropdown({
   onClose,
 }: NotificationDropdownProps) {
   const dropdownRef = useRef<HTMLDivElement>(null);
-  const { notifications, unreadCount, loading, markAsRead, markAllAsRead } =
-    useNotifications();
+  const {
+    notifications,
+    unreadCount,
+    loading,
+    markAsRead,
+    markAllAsRead,
+    refreshNotifications,
+  } = useNotifications();
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
@@ -123,6 +130,10 @@ export default function NotificationDropdown({
     }
   };
 
+  const handleRefresh = async () => {
+    await refreshNotifications();
+  };
+
   // Group notifications by type
   const groupedNotifications = notifications.reduce((acc, notification) => {
     const type = notification.type;
@@ -150,25 +161,43 @@ export default function NotificationDropdown({
               <h3 className='text-lg font-bold text-gray-900 dark:text-slate-100'>
                 Notifications
               </h3>
-              {unreadCount > 0 && (
-                <span className='px-2 py-1 bg-indigo-100 dark:bg-indigo-900/50 text-indigo-700 dark:text-indigo-300 text-xs font-medium rounded-full'>
-                  {unreadCount} new
-                </span>
-              )}
+              <div className='flex items-center space-x-2'>
+                {unreadCount > 0 && (
+                  <span className='px-2 py-1 bg-indigo-100 dark:bg-indigo-900/50 text-indigo-700 dark:text-indigo-300 text-xs font-medium rounded-full'>
+                    {unreadCount} new
+                  </span>
+                )}
+                <button
+                  onClick={handleRefresh}
+                  className='p-1.5 text-gray-400 dark:text-slate-400 hover:text-indigo-600 dark:hover:text-indigo-400 hover:bg-gray-50 dark:hover:bg-slate-700 rounded-lg transition-all duration-200'
+                  title='Refresh notifications'
+                >
+                  <FiRefreshCw
+                    className={`h-4 w-4 ${loading ? 'animate-spin' : ''}`}
+                  />
+                </button>
+              </div>
             </div>
           </div>
 
           {/* Notifications List */}
           <div className='max-h-96 overflow-y-auto'>
-            {loading ? (
-              <div className='p-4 text-center text-gray-500 dark:text-slate-400'>
-                Loading notifications...
+            {loading && notifications.length === 0 ? (
+              <div className='p-8 text-center'>
+                <div className='animate-spin rounded-full h-8 w-8 border-b-2 border-indigo-500 dark:border-blue-400 mx-auto mb-3'></div>
+                <p className='text-gray-500 dark:text-slate-400'>
+                  Loading your notifications...
+                </p>
               </div>
             ) : notifications.length === 0 ? (
               <div className='p-8 text-center'>
-                <FiBell className='h-8 w-8 text-gray-400 dark:text-slate-500 mx-auto mb-3' />
-                <p className='text-gray-500 dark:text-slate-400'>
-                  No notifications yet
+                <FiBell className='h-12 w-12 text-gray-300 dark:text-slate-600 mx-auto mb-4' />
+                <h4 className='text-sm font-semibold text-gray-900 dark:text-slate-100 mb-2'>
+                  You&apos;re all caught up!
+                </h4>
+                <p className='text-sm text-gray-500 dark:text-slate-400'>
+                  No new notifications at the moment. We&apos;ll let you know
+                  when something important happens.
                 </p>
               </div>
             ) : (
@@ -239,25 +268,33 @@ export default function NotificationDropdown({
           </div>
 
           {/* Footer */}
-          <div className='p-4 bg-gradient-to-r from-slate-50 to-indigo-50/50 dark:from-slate-800 dark:to-slate-700 border-t border-slate-200/60 dark:border-slate-600/60'>
-            <div className='flex items-center justify-between'>
-              <button
-                onClick={markAllAsRead}
-                className='flex items-center text-sm text-indigo-600 dark:text-indigo-400 hover:text-indigo-700 dark:hover:text-indigo-300 font-medium'
-              >
-                <FiCheck className='h-4 w-4 mr-1' />
-                Mark all as read
-              </button>
-              <Link
-                href='/notifications'
-                className='flex items-center text-sm text-indigo-600 dark:text-indigo-400 hover:text-indigo-700 dark:hover:text-indigo-300 font-medium'
-                onClick={onClose}
-              >
-                View all
-                <FiSettings className='h-4 w-4 ml-1' />
-              </Link>
+          {notifications.length > 0 && (
+            <div className='p-4 bg-gradient-to-r from-slate-50 to-indigo-50/50 dark:from-slate-800 dark:to-slate-700 border-t border-slate-200/60 dark:border-slate-600/60'>
+              <div className='flex items-center justify-between'>
+                {unreadCount > 0 ? (
+                  <button
+                    onClick={markAllAsRead}
+                    className='flex items-center text-sm text-indigo-600 dark:text-indigo-400 hover:text-indigo-700 dark:hover:text-indigo-300 font-medium transition-colors duration-200'
+                  >
+                    <FiCheck className='h-4 w-4 mr-1' />
+                    Mark all as read
+                  </button>
+                ) : (
+                  <span className='text-sm text-gray-500 dark:text-slate-400'>
+                    All caught up!
+                  </span>
+                )}
+                <Link
+                  href='/notifications'
+                  className='flex items-center text-sm text-indigo-600 dark:text-indigo-400 hover:text-indigo-700 dark:hover:text-indigo-300 font-medium transition-colors duration-200'
+                  onClick={onClose}
+                >
+                  View all
+                  <FiSettings className='h-4 w-4 ml-1' />
+                </Link>
+              </div>
             </div>
-          </div>
+          )}
         </motion.div>
       )}
     </AnimatePresence>

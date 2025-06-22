@@ -62,15 +62,25 @@ export default function Navbar() {
     setMounted(true);
   }, []);
 
-  // Close notifications when clicking outside
+  // Close notifications and profile dropdown when clicking outside
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
       const target = event.target as HTMLElement;
+
+      // Close notifications dropdown
       if (
         !target.closest('.notification-dropdown') &&
         !target.closest('.notification-button')
       ) {
         setNotificationsOpen(false);
+      }
+
+      // Close profile dropdown
+      if (
+        !target.closest('.profile-dropdown') &&
+        !target.closest('.profile-button')
+      ) {
+        setProfileOpen(false);
       }
     };
 
@@ -100,13 +110,69 @@ export default function Navbar() {
           const scheduled = content.filter(
             (item: { status: string }) => item.status === 'scheduled'
           ).length;
-          const engagement = Math.floor(Math.random() * 30) + 70; // Placeholder calculation
-          const streak = Math.floor(Math.random() * 30) + 1; // Placeholder calculation
+
+          // Calculate real engagement rate based on content performance
+          const published = content.filter(
+            (item: { status: string }) => item.status === 'published'
+          );
+          let engagementRate = 0;
+          if (published.length > 0) {
+            const totalEngagement = published.reduce(
+              (
+                sum: number,
+                item: { likes?: number; comments?: number; shares?: number }
+              ) => {
+                return (
+                  sum +
+                  (item.likes || 0) +
+                  (item.comments || 0) +
+                  (item.shares || 0)
+                );
+              },
+              0
+            );
+            const totalViews = published.reduce(
+              (sum: number, item: { views?: number }) => {
+                return sum + (item.views || 1); // Avoid division by zero
+              },
+              0
+            );
+            engagementRate = Math.round((totalEngagement / totalViews) * 100);
+          }
+
+          // Calculate streak based on content creation frequency
+          const sortedContent = content
+            .filter((item: { createdAt?: string }) => item.createdAt)
+            .sort(
+              (a: { createdAt: string }, b: { createdAt: string }) =>
+                new Date(b.createdAt).getTime() -
+                new Date(a.createdAt).getTime()
+            );
+
+          let streak = 0;
+          const currentDate = new Date();
+          currentDate.setHours(0, 0, 0, 0);
+
+          for (const item of sortedContent) {
+            const itemDate = new Date(item.createdAt);
+            itemDate.setHours(0, 0, 0, 0);
+
+            const daysDiff = Math.floor(
+              (currentDate.getTime() - itemDate.getTime()) /
+                (1000 * 60 * 60 * 24)
+            );
+
+            if (daysDiff === streak) {
+              streak++;
+            } else if (daysDiff > streak) {
+              break;
+            }
+          }
 
           setUserStats({
             totalContent: content.length,
             scheduledContent: scheduled,
-            engagementRate: engagement,
+            engagementRate: Math.max(0, Math.min(100, engagementRate)), // Ensure 0-100 range
             streak: streak,
           });
         }
@@ -282,7 +348,7 @@ export default function Navbar() {
             {/* Enhanced Profile Dropdown */}
             <div className='relative'>
               <button
-                className='flex items-center space-x-3 p-2 text-sm rounded-xl hover:bg-gray-50 dark:hover:bg-slate-800 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 dark:focus:ring-blue-500/20 transition-all duration-200 shadow-sm hover:shadow-md group'
+                className='profile-button flex items-center space-x-3 p-2 text-sm rounded-xl hover:bg-gray-50 dark:hover:bg-slate-800 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 dark:focus:ring-blue-500/20 transition-all duration-200 shadow-sm hover:shadow-md group'
                 onClick={() => setProfileOpen(!profileOpen)}
                 disabled={loadingProfile}
               >
@@ -325,7 +391,7 @@ export default function Navbar() {
               </button>
 
               {profileOpen && user && (
-                <div className='origin-top-right absolute right-0 mt-3 w-96 rounded-2xl shadow-2xl bg-white dark:bg-slate-800 backdrop-blur-2xl ring-1 ring-black ring-opacity-5 dark:ring-slate-600 z-20 border border-slate-200 dark:border-slate-600 overflow-hidden'>
+                <div className='profile-dropdown origin-top-right absolute right-0 mt-3 w-96 rounded-2xl shadow-2xl bg-white dark:bg-slate-800 backdrop-blur-2xl ring-1 ring-black ring-opacity-5 dark:ring-slate-600 z-20 border border-slate-200 dark:border-slate-600 overflow-hidden'>
                   {/* Enhanced Profile Header */}
                   <div className='relative p-6 bg-gray-50 dark:bg-slate-900 border-b border-slate-200 dark:border-slate-600'>
                     <div className='absolute top-0 right-0 w-32 h-32 bg-gradient-to-br from-indigo-200/20 to-purple-200/20 dark:from-indigo-500/10 dark:to-purple-500/10 rounded-full -translate-y-16 translate-x-16'></div>
@@ -437,34 +503,6 @@ export default function Navbar() {
                           Engagement
                         </div>
                       </div>
-                    </div>
-                  </div>
-
-                  {/* Quick Actions */}
-                  <div className='px-6 py-4 bg-gray-50 dark:bg-slate-900 border-b border-slate-200 dark:border-slate-600'>
-                    <div className='flex items-center justify-between'>
-                      <h4 className='text-sm font-semibold text-gray-900 dark:text-slate-100 mb-3'>
-                        Quick Actions
-                      </h4>
-                      <FiZap className='h-4 w-4 text-indigo-500 dark:text-blue-400' />
-                    </div>
-                    <div className='grid grid-cols-2 gap-3'>
-                      <Link
-                        href='/content/create'
-                        className='flex items-center justify-center px-3 py-2 bg-gradient-to-r from-indigo-500 to-purple-600 dark:from-blue-600 dark:to-indigo-700 text-white text-xs font-medium rounded-lg hover:shadow-lg transition-all duration-200'
-                        onClick={() => setProfileOpen(false)}
-                      >
-                        <FiFileText className='h-3 w-3 mr-2' />
-                        Create Content
-                      </Link>
-                      <Link
-                        href='/analytics'
-                        className='flex items-center justify-center px-3 py-2 bg-white dark:bg-slate-700 border border-gray-200 dark:border-slate-600 text-gray-700 dark:text-slate-300 text-xs font-medium rounded-lg hover:bg-gray-50 dark:hover:bg-slate-600 transition-all duration-200'
-                        onClick={() => setProfileOpen(false)}
-                      >
-                        <FiTrendingUp className='h-3 w-3 mr-2' />
-                        View Analytics
-                      </Link>
                     </div>
                   </div>
 
