@@ -153,10 +153,28 @@ export interface AIFormFillResponse {
   statusCode: string;
   message: string;
   data: {
-    title: string;
-    description: string;
-    tags: string[];
-    contentType?: string;
-    platforms?: string[];
+    suggestion?: {
+      id: string;
+      title: string;
+      description: string;
+      category?: string;
+      trending?: boolean;
+      tags?: string[];
+    };
+    formData?: {
+      title: string;
+      description: string;
+      tags: string[];
+      type?: string;
+      platform?: string[];
+      contentType?: string;
+      platforms?: string[];
+    };
+    metadata?: {
+      autoFillReady: boolean;
+      source: string;
+      canModify: boolean;
+      timestamp: string;
+    };
   };
 }

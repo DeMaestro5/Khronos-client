@@ -18,26 +18,42 @@ export default function AISuggestionButton({
 
   const generateSuggestion = async (): Promise<AISuggestionResult> => {
     try {
+      console.log('Making API call to getFormFillSuggestions...');
       const response: { data: AIFormFillResponse } =
         await aiAPI.getFormFillSuggestions();
 
+      console.log('Raw API response:', response);
+      console.log('Response data:', response.data);
+      console.log('Response statusCode:', response.data?.statusCode);
+      console.log('Response data field:', response.data?.data);
+
       // Check if the API response is successful
       if (response.data?.statusCode === '10000' && response.data?.data) {
-        const suggestion = response.data.data;
+        const apiData = response.data.data;
+        console.log('API data from response:', apiData);
+
+        // Extract from either formData or suggestion object
+        const formData = apiData.formData;
+        const suggestion = apiData.suggestion;
+        console.log('FormData:', formData, 'Suggestion:', suggestion);
 
         // Transform the API response to match our expected format
-        return {
-          title: suggestion.title || '',
-          description: suggestion.description || '',
-          tags: suggestion.tags || [],
+        const result = {
+          title: formData?.title || suggestion?.title || '',
+          description: formData?.description || suggestion?.description || '',
+          tags: formData?.tags || suggestion?.tags || [],
         };
+        console.log('Transformed suggestion result:', result);
+        return result;
       } else {
+        console.log('API response not successful, throwing error');
         throw new Error(
           response.data?.message || 'Failed to get AI suggestions'
         );
       }
     } catch (error) {
       console.error('AI suggestion API error:', error);
+      console.log('Falling back to mock data due to API error');
 
       // Show fallback message
       toast.error('AI service unavailable. Using fallback suggestions.', {
@@ -127,6 +143,9 @@ export default function AISuggestionButton({
       const typeData =
         suggestions[contentType as keyof typeof suggestions] ||
         suggestions.post;
+      console.log('Using contentType:', contentType);
+      console.log('Selected typeData:', typeData);
+
       const randomTitle =
         typeData.titles[Math.floor(Math.random() * typeData.titles.length)];
       const randomDescription =
@@ -135,6 +154,12 @@ export default function AISuggestionButton({
         ];
       const randomTags =
         typeData.tags[Math.floor(Math.random() * typeData.tags.length)];
+
+      console.log('Generated mock data:', {
+        title: randomTitle,
+        description: randomDescription,
+        tags: randomTags,
+      });
 
       return {
         title: randomTitle,
@@ -150,7 +175,11 @@ export default function AISuggestionButton({
     setIsLoading(true);
     try {
       const suggestion = await generateSuggestion();
+      console.log('Generated suggestion:', suggestion);
+
+      console.log('Calling onSuggestion callback with:', suggestion);
       onSuggestion(suggestion);
+      console.log('onSuggestion callback completed');
 
       // Show success message
       toast.success('🎉 AI suggestions applied to your form!', {

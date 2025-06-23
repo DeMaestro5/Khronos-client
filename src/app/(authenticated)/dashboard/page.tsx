@@ -48,6 +48,11 @@ export default function Dashboard() {
   });
   const [upcomingContent, setUpcomingContent] = useState<Content[]>([]);
   const [showModal, setShowModal] = useState(false);
+  const [aiSuggestionData, setAiSuggestionData] = useState<{
+    title: string;
+    description: string;
+    tags: string[];
+  } | null>(null);
 
   // Use cached user data instead of fetching directly
   const {
@@ -178,16 +183,13 @@ export default function Dashboard() {
   };
 
   const handleCreateFromSuggestion = (suggestion: AIContentSuggestion) => {
-    // Store suggestion in sessionStorage and navigate to content creation
-    sessionStorage.setItem(
-      'aiSuggestion',
-      JSON.stringify({
-        title: suggestion.title,
-        description: suggestion.description,
-        tags: suggestion.tags,
-      })
-    );
-    window.location.href = '/content';
+    // Create proper initial data structure for the content creation modal
+    setAiSuggestionData({
+      title: suggestion.title,
+      description: suggestion.description,
+      tags: suggestion.tags || [],
+    });
+    setShowModal(true);
   };
 
   const handleCreateContent = async (contentData: ContentFormData) => {
@@ -551,9 +553,6 @@ export default function Dashboard() {
                             >
                               Create
                             </button>
-                            <button className='inline-flex items-center px-2 py-1 text-xs font-medium rounded bg-gray-100 dark:bg-slate-700 text-gray-600 dark:text-slate-300 hover:bg-gray-200 dark:hover:bg-slate-600 transition-colors duration-150'>
-                              Save
-                            </button>
                           </div>
                         </div>
                       </div>
@@ -656,8 +655,12 @@ export default function Dashboard() {
       {/* Create Content Modal */}
       <CreateContentModal
         isOpen={showModal}
-        onClose={() => setShowModal(false)}
+        onClose={() => {
+          setShowModal(false);
+          setAiSuggestionData(null);
+        }}
         onSubmit={handleCreateContent}
+        initialData={aiSuggestionData}
       />
     </div>
   );

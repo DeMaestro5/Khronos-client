@@ -53,15 +53,20 @@ export default function CreateContentModal({
   const [newTag, setNewTag] = useState<string>('');
   const [errors, setErrors] = useState<FormErrors>({});
 
-  // Reset form when modal opens
+  // Reset form when modal opens or closes
   useEffect(() => {
     if (isOpen) {
+      console.log('Modal opened, resetting form to initial state');
+      resetForm();
+    } else {
+      console.log('Modal closed, resetting form to default state');
       resetForm();
     }
   }, [isOpen]);
 
   const resetForm = () => {
-    setFormData({
+    console.log('Resetting form with initialData:', initialData);
+    const newFormData: ContentFormData = {
       title: initialData?.title || '',
       description: initialData?.description || '',
       contentType: 'article',
@@ -71,22 +76,32 @@ export default function CreateContentModal({
       tags: initialData?.tags || [],
       priority: 'medium',
       status: 'draft',
-    });
+    };
+    console.log('Setting form data to:', newFormData);
+    setFormData(newFormData);
     setErrors({});
     setNewTag('');
   };
 
   // AI Suggestion Handler
   const handleAISuggestion = (suggestion: AISuggestionResult) => {
-    setFormData((prev) => ({
-      ...prev,
-      title: suggestion.title,
-      description: suggestion.description,
-      tags: [
-        ...prev.tags,
-        ...suggestion.tags.filter((tag) => !prev.tags.includes(tag)),
-      ],
-    }));
+    console.log('AI Suggestion received:', suggestion);
+    console.log('Current form data before update:', formData);
+
+    setFormData((prev) => {
+      console.log('Previous form data:', prev);
+      const newFormData = {
+        ...prev,
+        title: suggestion.title || '',
+        description: suggestion.description || '',
+        tags: [
+          ...prev.tags,
+          ...suggestion.tags.filter((tag) => !prev.tags.includes(tag)),
+        ],
+      };
+      console.log('New form data after AI suggestion:', newFormData);
+      return newFormData;
+    });
 
     // Clear any existing errors for the fields we just populated
     setErrors((prev) => ({
@@ -94,6 +109,13 @@ export default function CreateContentModal({
       title: undefined,
       description: undefined,
     }));
+
+    console.log('AI suggestion handler completed');
+
+    // Add a small delay to check if data persists
+    setTimeout(() => {
+      console.log('Form data after 1 second:', formData);
+    }, 1000);
   };
 
   const contentTypes: ContentType[] = [
