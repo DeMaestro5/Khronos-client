@@ -1,10 +1,11 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { ArrowLeft, Edit, Share2, FileText } from 'lucide-react';
 import { useRouter, useParams } from 'next/navigation';
 import { contentAPI } from '@/src/lib/api';
 import { ContentData } from '@/src/types/content';
+import { useUserData } from '@/src/context/UserDataContext';
 import {
   HeroSection,
   ContentTabs,
@@ -20,10 +21,42 @@ const ContentDetailPage = () => {
   const params = useParams();
   const contentId = params.id as string;
 
+  // Use cached data from UserDataContext
+  const { userContent, loading: contextLoading } = useUserData();
+
+  // Find content in cached data
+  const cachedContent = useMemo(() => {
+    if (!userContent || !contentId) return null;
+    return userContent.find((content) => content._id === contentId) || null;
+  }, [userContent, contentId]);
+
   useEffect(() => {
-    const fetchContent = async () => {
+    const loadContent = async () => {
       if (!contentId) return;
 
+      console.log('Content detail: Checking cached data first', {
+        contentId,
+        cachedContent: !!cachedContent,
+        contextLoading,
+      });
+
+      // If we have cached data, use it immediately
+      if (cachedContent) {
+        console.log('✅ Using cached content data');
+        setContent(cachedContent as ContentData);
+        setIsLoading(false);
+        return;
+      }
+
+      // If context is still loading, wait for it
+      if (contextLoading) {
+        console.log('⏳ Waiting for context to load...');
+        setIsLoading(true);
+        return;
+      }
+
+      // If no cached data and context is done loading, fetch from API as fallback
+      console.log('📡 No cached data found, fetching from API as fallback...');
       setIsLoading(true);
 
       try {
@@ -72,8 +105,8 @@ const ContentDetailPage = () => {
       }
     };
 
-    fetchContent();
-  }, [contentId]);
+    loadContent();
+  }, [contentId, cachedContent, contextLoading]);
 
   const handleEditClick = () => {
     setIsEditModalOpen(true);
@@ -81,6 +114,21 @@ const ContentDetailPage = () => {
 
   const handleEditSuccess = async () => {
     setIsEditModalOpen(false);
+
+    // Try to use cached data first after edit
+    if (cachedContent) {
+      // The edit modal should have updated the cache via updateContent
+      console.log('✅ Using updated cached content data');
+      const updatedCachedContent = userContent?.find(
+        (content) => content._id === contentId
+      );
+      if (updatedCachedContent) {
+        setContent(updatedCachedContent as ContentData);
+        return;
+      }
+    }
+
+    // Fallback to API call if cached data not available
     try {
       const response = await contentAPI.getById(contentId);
       if (response.data?.data) {
@@ -135,7 +183,10 @@ const ContentDetailPage = () => {
             The content you&apos;re looking for doesn&apos;t exist or has been
             removed.
           </p>
-          <button className='inline-flex items-center gap-2 px-6 py-3 bg-blue-600 hover:bg-blue-700 dark:bg-blue-600 dark:hover:bg-blue-700 text-white rounded-xl transition-all duration-200 shadow-lg hover:shadow-xl'>
+          <button
+            onClick={() => router.push('/content')}
+            className='inline-flex items-center gap-2 px-6 py-3 bg-blue-600 hover:bg-blue-700 dark:bg-blue-600 dark:hover:bg-blue-700 text-white rounded-xl transition-all duration-200 shadow-lg hover:shadow-xl'
+          >
             <ArrowLeft className='w-4 h-4' />
             Back to Content
           </button>

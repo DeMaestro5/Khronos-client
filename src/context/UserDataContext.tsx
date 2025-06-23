@@ -6,6 +6,7 @@ import React, {
   useState,
   useEffect,
   useCallback,
+  useRef,
 } from 'react';
 import { useAuth } from './AuthContext';
 import { User } from '@/src/types/auth';
@@ -140,6 +141,17 @@ export function UserDataProvider({ children }: { children: React.ReactNode }) {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
+  // Add ref to track if initial data load has completed for this user
+  const initialLoadCompleteRef = useRef<string | null>(null);
+
+  // Add mount/unmount logging
+  useEffect(() => {
+    console.log('🔧 UserDataProvider: Component mounted');
+    return () => {
+      console.log('🔧 UserDataProvider: Component unmounting');
+    };
+  }, []);
+
   // Check if cached data is still valid
   const isCacheValid = useCallback(
     (cacheKey: string, duration: number = CACHE_DURATION) => {
@@ -197,36 +209,37 @@ export function UserDataProvider({ children }: { children: React.ReactNode }) {
     return false;
   }, [isCacheValid]);
 
-  // Load cached AI suggestions
-  const loadCachedAISuggestions = useCallback(() => {
-    try {
-      if (!isCacheValid(STORAGE_KEYS.AI_LAST_FETCH, AI_CACHE_DURATION)) {
-        console.log('🗑️ Cache: Clearing expired AI suggestions cache');
-        localStorage.removeItem(STORAGE_KEYS.AI_SUGGESTIONS);
-        localStorage.removeItem(STORAGE_KEYS.AI_LAST_FETCH);
-        return false;
-      }
-
-      const cachedSuggestions = localStorage.getItem(
-        STORAGE_KEYS.AI_SUGGESTIONS
-      );
-
-      if (cachedSuggestions) {
-        console.log('💾 Cache: Loading cached AI suggestions');
-        setAiSuggestions(JSON.parse(cachedSuggestions));
-        return true;
-      }
-    } catch (error) {
-      console.error('Error loading cached AI suggestions:', error);
-    }
-    return false;
-  }, [isCacheValid]);
+  // Clear all cached data
+  const clearUserData = useCallback(() => {
+    setProfileData(null);
+    setUserStats(null);
+    setUserContent(null);
+    setAiSuggestions(null);
+    setAnalyticsData(null);
+    setTrendsData(null);
+    setError(null);
+    localStorage.removeItem(STORAGE_KEYS.PROFILE_DATA);
+    localStorage.removeItem(STORAGE_KEYS.USER_STATS);
+    localStorage.removeItem(STORAGE_KEYS.USER_CONTENT);
+    localStorage.removeItem(STORAGE_KEYS.AI_SUGGESTIONS);
+    localStorage.removeItem(STORAGE_KEYS.ANALYTICS_DATA);
+    localStorage.removeItem(STORAGE_KEYS.TRENDS_DATA);
+    localStorage.removeItem(STORAGE_KEYS.LAST_FETCH);
+    localStorage.removeItem(STORAGE_KEYS.AI_LAST_FETCH);
+    localStorage.removeItem(STORAGE_KEYS.ANALYTICS_LAST_FETCH);
+    localStorage.removeItem(STORAGE_KEYS.TRENDS_LAST_FETCH);
+  }, []);
 
   // Save data to localStorage
   const saveToCache = useCallback(
     (profile: ExtendedUserData, stats: UserStats, content: Content[]) => {
       try {
-        console.log('💾 UserDataContext: Saving user data to cache...');
+        console.log('💾 UserDataContext: Saving user data to cache...', {
+          profileId: profile.id || profile._id,
+          statsCount: stats.totalContent,
+          contentCount: content.length,
+          timestamp: new Date().toLocaleTimeString(),
+        });
         localStorage.setItem(
           STORAGE_KEYS.PROFILE_DATA,
           JSON.stringify(profile)
@@ -695,140 +708,204 @@ export function UserDataProvider({ children }: { children: React.ReactNode }) {
     [calculateUserStats, profileData, saveToCache]
   );
 
-  // Load cached analytics data
-  const loadCachedAnalyticsData = useCallback(() => {
-    try {
-      if (!isCacheValid(STORAGE_KEYS.ANALYTICS_LAST_FETCH, CACHE_DURATION)) {
-        console.log('🗑️ Cache: Clearing expired analytics data cache');
-        localStorage.removeItem(STORAGE_KEYS.ANALYTICS_DATA);
-        localStorage.removeItem(STORAGE_KEYS.ANALYTICS_LAST_FETCH);
-        return false;
-      }
-
-      const cachedAnalytics = localStorage.getItem(STORAGE_KEYS.ANALYTICS_DATA);
-
-      if (cachedAnalytics) {
-        console.log('💾 Cache: Loading cached analytics data');
-        setAnalyticsData(JSON.parse(cachedAnalytics));
-        return true;
-      }
-    } catch (error) {
-      console.error('Error loading cached analytics data:', error);
-    }
-    return false;
-  }, [isCacheValid]);
-
-  // Load cached trends data
-  const loadCachedTrendsData = useCallback(() => {
-    try {
-      if (!isCacheValid(STORAGE_KEYS.TRENDS_LAST_FETCH, CACHE_DURATION)) {
-        console.log('🗑️ Cache: Clearing expired trends data cache');
-        localStorage.removeItem(STORAGE_KEYS.TRENDS_DATA);
-        localStorage.removeItem(STORAGE_KEYS.TRENDS_LAST_FETCH);
-        return false;
-      }
-
-      const cachedTrends = localStorage.getItem(STORAGE_KEYS.TRENDS_DATA);
-
-      if (cachedTrends) {
-        console.log('💾 Cache: Loading cached trends data');
-        setTrendsData(JSON.parse(cachedTrends));
-        return true;
-      }
-    } catch (error) {
-      console.error('Error loading cached trends data:', error);
-    }
-    return false;
-  }, [isCacheValid]);
-
-  // Clear all cached data
-  const clearUserData = useCallback(() => {
-    setProfileData(null);
-    setUserStats(null);
-    setUserContent(null);
-    setAiSuggestions(null);
-    setAnalyticsData(null);
-    setTrendsData(null);
-    setError(null);
-    localStorage.removeItem(STORAGE_KEYS.PROFILE_DATA);
-    localStorage.removeItem(STORAGE_KEYS.USER_STATS);
-    localStorage.removeItem(STORAGE_KEYS.USER_CONTENT);
-    localStorage.removeItem(STORAGE_KEYS.AI_SUGGESTIONS);
-    localStorage.removeItem(STORAGE_KEYS.ANALYTICS_DATA);
-    localStorage.removeItem(STORAGE_KEYS.TRENDS_DATA);
-    localStorage.removeItem(STORAGE_KEYS.LAST_FETCH);
-    localStorage.removeItem(STORAGE_KEYS.AI_LAST_FETCH);
-    localStorage.removeItem(STORAGE_KEYS.ANALYTICS_LAST_FETCH);
-    localStorage.removeItem(STORAGE_KEYS.TRENDS_LAST_FETCH);
-  }, []);
-
-  // Load data when user authenticates
+  // Load data when user authenticates - simplified to avoid callback dependency hell
   useEffect(() => {
-    if (isAuthenticated && user) {
+    console.log('🔧 UserDataProvider useEffect triggered:', {
+      isAuthenticated,
+      userId: user?.id || user?._id,
+      previousUser: initialLoadCompleteRef.current,
+      timestamp: new Date().toLocaleTimeString(),
+    });
+
+    if (!isAuthenticated || !user) {
+      // Clear data when user logs out
+      setProfileData(null);
+      setUserStats(null);
+      setUserContent(null);
+      setAiSuggestions(null);
+      setAnalyticsData(null);
+      setTrendsData(null);
+      setError(null);
+      localStorage.removeItem(STORAGE_KEYS.PROFILE_DATA);
+      localStorage.removeItem(STORAGE_KEYS.USER_STATS);
+      localStorage.removeItem(STORAGE_KEYS.USER_CONTENT);
+      localStorage.removeItem(STORAGE_KEYS.AI_SUGGESTIONS);
+      localStorage.removeItem(STORAGE_KEYS.ANALYTICS_DATA);
+      localStorage.removeItem(STORAGE_KEYS.TRENDS_DATA);
+      localStorage.removeItem(STORAGE_KEYS.LAST_FETCH);
+      localStorage.removeItem(STORAGE_KEYS.AI_LAST_FETCH);
+      localStorage.removeItem(STORAGE_KEYS.ANALYTICS_LAST_FETCH);
+      localStorage.removeItem(STORAGE_KEYS.TRENDS_LAST_FETCH);
+      initialLoadCompleteRef.current = null;
+      return;
+    }
+
+    const currentUserId = (user.id || user._id) as string;
+
+    // Check if we've already loaded data for this user
+    if (initialLoadCompleteRef.current === currentUserId) {
       console.log(
-        '🔍 UserDataContext: User authenticated, checking for cached data...'
+        '✅ UserDataContext: Data already loaded for this user, skipping fetch'
       );
+      return;
+    }
 
-      // First try to load cached user data
-      const hasCachedData = loadCachedData();
+    console.log(
+      '🔍 UserDataContext: User authenticated, checking for cached data...'
+    );
 
-      // Load cached AI suggestions (independent of user data)
-      const hasCachedAI = loadCachedAISuggestions();
+    // Check user data cache validity
+    const isUserDataCacheValid = (() => {
+      const lastFetch = localStorage.getItem(STORAGE_KEYS.LAST_FETCH);
+      const cachedProfile = localStorage.getItem(STORAGE_KEYS.PROFILE_DATA);
+      const cachedStats = localStorage.getItem(STORAGE_KEYS.USER_STATS);
+      const cachedContent = localStorage.getItem(STORAGE_KEYS.USER_CONTENT);
 
-      // Load cached analytics data
-      const hasCachedAnalytics = loadCachedAnalyticsData();
+      console.log('🔧 Cache Debug - User Data:', {
+        lastFetch,
+        hasProfile: !!cachedProfile,
+        hasStats: !!cachedStats,
+        hasContent: !!cachedContent,
+        cacheAge: lastFetch
+          ? Math.round((Date.now() - parseInt(lastFetch, 10)) / 1000) + 's'
+          : 'N/A',
+      });
 
-      // Load cached trends data
-      const hasCachedTrends = loadCachedTrendsData();
+      if (!lastFetch) return false;
+      const lastFetchTime = parseInt(lastFetch, 10);
+      const now = Date.now();
+      const isValid = now - lastFetchTime < CACHE_DURATION;
+      console.log('🔧 Cache Validity Check:', {
+        isValid,
+        ageMs: now - lastFetchTime,
+        maxAge: CACHE_DURATION,
+      });
+      return isValid;
+    })();
 
-      if (hasCachedData) {
-        console.log(
-          '✅ UserDataContext: Using cached user data, no API call needed'
-        );
-      } else {
-        console.log(
-          '🌐 UserDataContext: No valid user data cache found, fetching fresh data...'
-        );
+    // Check AI cache validity
+    const isAICacheValid = (() => {
+      const lastFetch = localStorage.getItem(STORAGE_KEYS.AI_LAST_FETCH);
+      if (!lastFetch) return false;
+      const lastFetchTime = parseInt(lastFetch, 10);
+      const now = Date.now();
+      return now - lastFetchTime < AI_CACHE_DURATION;
+    })();
+
+    // Check analytics cache validity
+    const isAnalyticsCacheValid = (() => {
+      const lastFetch = localStorage.getItem(STORAGE_KEYS.ANALYTICS_LAST_FETCH);
+      if (!lastFetch) return false;
+      const lastFetchTime = parseInt(lastFetch, 10);
+      const now = Date.now();
+      return now - lastFetchTime < CACHE_DURATION;
+    })();
+
+    // Check trends cache validity
+    const isTrendsCacheValid = (() => {
+      const lastFetch = localStorage.getItem(STORAGE_KEYS.TRENDS_LAST_FETCH);
+      if (!lastFetch) return false;
+      const lastFetchTime = parseInt(lastFetch, 10);
+      const now = Date.now();
+      return now - lastFetchTime < CACHE_DURATION;
+    })();
+
+    // Load user data cache
+    if (isUserDataCacheValid) {
+      try {
+        const cachedProfile = localStorage.getItem(STORAGE_KEYS.PROFILE_DATA);
+        const cachedStats = localStorage.getItem(STORAGE_KEYS.USER_STATS);
+        const cachedContent = localStorage.getItem(STORAGE_KEYS.USER_CONTENT);
+
+        if (cachedProfile && cachedStats && cachedContent) {
+          console.log('💾 Cache: Loading cached user data');
+          setProfileData(JSON.parse(cachedProfile));
+          setUserStats(JSON.parse(cachedStats));
+          setUserContent(JSON.parse(cachedContent));
+        } else {
+          // Cache invalid, fetch fresh data
+          fetchUserData();
+        }
+      } catch (error) {
+        console.error('Error loading cached user data:', error);
         fetchUserData();
       }
+    } else {
+      // Cache expired or missing, fetch fresh data
+      console.log(
+        '🌐 UserDataContext: No valid user data cache found, fetching fresh data...'
+      );
+      fetchUserData();
+    }
 
-      if (!hasCachedAI) {
-        console.log(
-          '🤖 UserDataContext: No valid AI cache found, fetching AI suggestions...'
-        );
+    // Load AI suggestions cache
+    if (isAICacheValid) {
+      try {
+        const cachedAI = localStorage.getItem(STORAGE_KEYS.AI_SUGGESTIONS);
+        if (cachedAI) {
+          console.log('💾 Cache: Loading cached AI suggestions');
+          setAiSuggestions(JSON.parse(cachedAI));
+        } else {
+          fetchAISuggestions();
+        }
+      } catch (error) {
+        console.error('Error loading cached AI suggestions:', error);
         fetchAISuggestions();
       }
+    } else {
+      console.log(
+        '🤖 UserDataContext: No valid AI cache found, fetching AI suggestions...'
+      );
+      fetchAISuggestions();
+    }
 
-      if (!hasCachedAnalytics) {
-        console.log(
-          '📊 UserDataContext: No valid analytics cache found, fetching analytics data...'
+    // Load analytics cache
+    if (isAnalyticsCacheValid) {
+      try {
+        const cachedAnalytics = localStorage.getItem(
+          STORAGE_KEYS.ANALYTICS_DATA
         );
+        if (cachedAnalytics) {
+          console.log('💾 Cache: Loading cached analytics data');
+          setAnalyticsData(JSON.parse(cachedAnalytics));
+        } else {
+          fetchAnalyticsData();
+        }
+      } catch (error) {
+        console.error('Error loading cached analytics data:', error);
         fetchAnalyticsData();
       }
+    } else {
+      console.log(
+        '📊 UserDataContext: No valid analytics cache found, fetching analytics data...'
+      );
+      fetchAnalyticsData();
+    }
 
-      if (!hasCachedTrends) {
-        console.log(
-          '📈 UserDataContext: No valid trends cache found, fetching trends data...'
-        );
+    // Load trends cache
+    if (isTrendsCacheValid) {
+      try {
+        const cachedTrends = localStorage.getItem(STORAGE_KEYS.TRENDS_DATA);
+        if (cachedTrends) {
+          console.log('💾 Cache: Loading cached trends data');
+          setTrendsData(JSON.parse(cachedTrends));
+        } else {
+          fetchTrendsData();
+        }
+      } catch (error) {
+        console.error('Error loading cached trends data:', error);
         fetchTrendsData();
       }
     } else {
-      // Clear data when user logs out
-      clearUserData();
+      console.log(
+        '📈 UserDataContext: No valid trends cache found, fetching trends data...'
+      );
+      fetchTrendsData();
     }
-  }, [
-    isAuthenticated,
-    user,
-    loadCachedData,
-    loadCachedAISuggestions,
-    loadCachedAnalyticsData,
-    loadCachedTrendsData,
-    fetchUserData,
-    fetchAISuggestions,
-    fetchAnalyticsData,
-    fetchTrendsData,
-    clearUserData,
-  ]);
+
+    // Mark initial load as complete for this user
+    initialLoadCompleteRef.current = currentUserId;
+  }, [isAuthenticated, user?.id, user?._id]); // Only depend on authentication and user ID
 
   const value: UserDataContextType = {
     profileData,
