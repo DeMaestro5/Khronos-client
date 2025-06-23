@@ -334,7 +334,7 @@ export default function AnalyticsPage() {
   }
 
   return (
-    <div className='p-6 space-y-6 bg-white dark:bg-slate-900 min-h-screen transition-colors duration-200'>
+    <div className='p-4 lg:p-6 space-y-4 bg-white dark:bg-slate-900 min-h-screen transition-colors duration-200'>
       {/* Header */}
       <div className='flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4'>
         <div>
@@ -358,7 +358,7 @@ export default function AnalyticsPage() {
       </div>
 
       {/* Key Metrics */}
-      <div className='grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6'>
+      <div className='grid grid-cols-2 lg:grid-cols-4 gap-3 lg:gap-4'>
         {[
           {
             title: 'Total Content',
@@ -393,20 +393,20 @@ export default function AnalyticsPage() {
             key={metric.title}
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            className='bg-white dark:bg-slate-800 p-6 rounded-2xl border border-gray-200 dark:border-slate-700 shadow-sm hover:shadow-md transition-shadow duration-200'
+            className='bg-white dark:bg-slate-800 p-4 lg:p-5 rounded-xl border border-gray-200 dark:border-slate-700 shadow-sm hover:shadow-md transition-shadow duration-200'
           >
             <div className='flex items-center justify-between'>
               <div>
-                <p className='text-sm font-medium text-gray-500 dark:text-slate-400'>
+                <p className='text-xs lg:text-sm font-medium text-gray-500 dark:text-slate-400'>
                   {metric.title}
                 </p>
-                <p className='text-2xl font-bold text-gray-900 dark:text-slate-100 mt-1'>
+                <p className='text-lg lg:text-2xl font-bold text-gray-900 dark:text-slate-100 mt-1'>
                   {metric.value.toLocaleString()}
                   {metric.suffix}
                 </p>
               </div>
               <div
-                className={`w-12 h-12 rounded-xl flex items-center justify-center ${
+                className={`w-8 h-8 lg:w-10 lg:h-10 rounded-lg flex items-center justify-center ${
                   metric.color === 'blue'
                     ? 'bg-blue-100 dark:bg-blue-900/50'
                     : metric.color === 'pink'
@@ -417,7 +417,7 @@ export default function AnalyticsPage() {
                 }`}
               >
                 <metric.icon
-                  className={`w-6 h-6 ${
+                  className={`w-4 h-4 lg:w-5 lg:h-5 ${
                     metric.color === 'blue'
                       ? 'text-blue-600 dark:text-blue-400'
                       : metric.color === 'pink'
@@ -433,35 +433,47 @@ export default function AnalyticsPage() {
         ))}
       </div>
 
-      {/* Data Quality Indicator */}
-      <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        className='bg-white dark:bg-slate-800 p-4 rounded-xl border border-gray-200 dark:border-slate-700'
-      >
-        <div className='flex items-center justify-between'>
-          <div className='flex items-center space-x-3'>
-            <div className='flex items-center space-x-2'>
-              <CheckCircle className='w-5 h-5 text-green-500' />
-              <span className='text-sm font-medium text-gray-900 dark:text-slate-100'>
-                Data Quality: {Math.round(getDataQuality().score)}%
-              </span>
-            </div>
-            {getDataQuality().issues.length > 0 && (
-              <div className='flex items-center space-x-1'>
-                <Info className='w-4 h-4 text-amber-500' />
-                <span className='text-xs text-amber-600 dark:text-amber-400'>
-                  {getDataQuality().issues[0]}
+      {/* Data Quality & Alerts Row */}
+      <div className='grid grid-cols-1 lg:grid-cols-3 gap-4'>
+        {/* Data Quality Indicator */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          className='lg:col-span-2 bg-white dark:bg-slate-800 p-4 rounded-xl border border-gray-200 dark:border-slate-700'
+        >
+          <div className='flex items-center justify-between'>
+            <div className='flex items-center space-x-3'>
+              <div className='flex items-center space-x-2'>
+                <CheckCircle className='w-5 h-5 text-green-500' />
+                <span className='text-sm font-medium text-gray-900 dark:text-slate-100'>
+                  Data Quality: {Math.round(getDataQuality().score)}%
                 </span>
               </div>
-            )}
+              {getDataQuality().issues.length > 0 && (
+                <div className='flex items-center space-x-1'>
+                  <Info className='w-4 h-4 text-amber-500' />
+                  <span className='text-xs text-amber-600 dark:text-amber-400'>
+                    {getDataQuality().issues[0]}
+                  </span>
+                </div>
+              )}
+            </div>
+            <span className='text-xs text-gray-500 dark:text-slate-400'>
+              Last updated:{' '}
+              {new Date(getDataQuality().lastUpdated).toLocaleTimeString()}
+            </span>
           </div>
-          <span className='text-xs text-gray-500 dark:text-slate-400'>
-            Last updated:{' '}
-            {new Date(getDataQuality().lastUpdated).toLocaleTimeString()}
-          </span>
+        </motion.div>
+
+        {/* Trending Opportunities - Compact Version */}
+        <div className='lg:col-span-1'>
+          <TrendingOpportunities
+            opportunities={getOpportunities()}
+            isLoading={false}
+            maxItems={3}
+          />
         </div>
-      </motion.div>
+      </div>
 
       {/* Alerts */}
       {getAlerts().length > 0 && (
@@ -516,15 +528,10 @@ export default function AnalyticsPage() {
         </div>
       )}
 
-      {/* Main Analytics Components */}
-      <div className='grid grid-cols-1 lg:grid-cols-2 gap-6'>
-        <PlatformPerformance platforms={getPlatformData()} isLoading={false} />
-        <TrendingOpportunities
-          opportunities={getOpportunities()}
-          isLoading={false}
-        />
-      </div>
+      {/* Platform Performance - Full Width */}
+      <PlatformPerformance platforms={getPlatformData()} isLoading={false} />
 
+      {/* Performance Insights - Full Width */}
       <PerformanceInsights performance={state.performance} isLoading={false} />
     </div>
   );

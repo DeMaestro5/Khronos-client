@@ -48,6 +48,11 @@ export default function Dashboard() {
   });
   const [upcomingContent, setUpcomingContent] = useState<Content[]>([]);
   const [showModal, setShowModal] = useState(false);
+  const [aiSuggestionData, setAiSuggestionData] = useState<{
+    title: string;
+    description: string;
+    tags: string[];
+  } | null>(null);
 
   // Use cached user data instead of fetching directly
   const {
@@ -178,16 +183,13 @@ export default function Dashboard() {
   };
 
   const handleCreateFromSuggestion = (suggestion: AIContentSuggestion) => {
-    // Store suggestion in sessionStorage and navigate to content creation
-    sessionStorage.setItem(
-      'aiSuggestion',
-      JSON.stringify({
-        title: suggestion.title,
-        description: suggestion.description,
-        tags: suggestion.tags,
-      })
-    );
-    window.location.href = '/content';
+    // Create proper initial data structure for the content creation modal
+    setAiSuggestionData({
+      title: suggestion.title,
+      description: suggestion.description,
+      tags: suggestion.tags || [],
+    });
+    setShowModal(true);
   };
 
   const handleCreateContent = async (contentData: ContentFormData) => {
@@ -380,7 +382,7 @@ export default function Dashboard() {
       {/* Main content sections */}
       <div className='mt-6 grid grid-cols-1 gap-5 lg:grid-cols-2'>
         {/* Upcoming content */}
-        <div className='bg-white dark:bg-slate-800 shadow dark:shadow-slate-700/20 rounded-lg border border-gray-200 dark:border-slate-700'>
+        <div className='bg-white dark:bg-slate-800 shadow dark:shadow-slate-700/20 rounded-lg border border-gray-200 dark:border-slate-700 overflow-hidden'>
           <div className='px-4 py-5 border-b border-gray-200 dark:border-slate-700 sm:px-6'>
             <h3 className='text-lg font-medium leading-6 text-gray-900 dark:text-slate-100'>
               Upcoming Content
@@ -388,86 +390,89 @@ export default function Dashboard() {
           </div>
 
           {contextLoading ? (
-            <div className='px-4 py-8 text-center'>
-              <FiLoader className='h-8 w-8 animate-spin mx-auto text-indigo-600 dark:text-blue-400' />
+            <div className='px-4 py-6 text-center'>
+              <FiLoader className='h-6 w-6 animate-spin mx-auto text-indigo-600 dark:text-blue-400' />
               <p className='mt-2 text-sm text-gray-500 dark:text-slate-400'>
                 Loading upcoming content...
               </p>
             </div>
           ) : upcomingContent.length === 0 ? (
-            <div className='px-4 py-8 text-center'>
-              <div className='mx-auto h-12 w-12 rounded-full bg-gray-100 dark:bg-slate-700 flex items-center justify-center'>
-                <FiCalendar className='h-6 w-6 text-gray-400 dark:text-slate-400' />
+            <div className='px-4 py-6 text-center'>
+              <div className='mx-auto h-10 w-10 rounded-full bg-gray-100 dark:bg-slate-700 flex items-center justify-center mb-3'>
+                <FiCalendar className='h-5 w-5 text-gray-400 dark:text-slate-400' />
               </div>
-              <h3 className='mt-2 text-sm font-medium text-gray-900 dark:text-slate-100'>
+              <h3 className='text-sm font-medium text-gray-900 dark:text-slate-100 mb-1'>
                 No scheduled content
               </h3>
-              <p className='mt-1 text-sm text-gray-500 dark:text-slate-400'>
-                You don&apos;t have any content scheduled yet. Create your first
-                piece of content to get started!
+              <p className='text-xs text-gray-500 dark:text-slate-400 mb-4'>
+                Create your first piece of content to get started!
               </p>
-              <div className='mt-4'>
-                <button
-                  onClick={() => setShowModal(true)}
-                  className='inline-flex items-center px-4 py-2 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 dark:bg-blue-600 dark:hover:bg-blue-700 transition-colors duration-150'
-                >
-                  <FiFileText className='h-4 w-4 mr-2' />
-                  Create Content
-                </button>
-              </div>
+              <button
+                onClick={() => setShowModal(true)}
+                className='inline-flex items-center px-3 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 dark:bg-blue-600 dark:hover:bg-blue-700 transition-colors duration-150'
+              >
+                <FiFileText className='h-4 w-4 mr-2' />
+                Create Content
+              </button>
             </div>
           ) : (
-            <ul className='divide-y divide-gray-200 dark:divide-slate-700'>
-              {upcomingContent.map((content) => (
-                <li
-                  key={content._id}
-                  className='px-4 py-4 sm:px-6 hover:bg-gray-50 dark:hover:bg-slate-700/50 transition-colors duration-150'
-                >
-                  <div className='flex items-center justify-between'>
-                    <div className='flex items-center'>
-                      <div className='flex-shrink-0 h-10 w-10 rounded-full bg-indigo-100 dark:bg-blue-900/50 flex items-center justify-center'>
-                        <span className='text-lg'>
-                          {getTypeIcon(content.type)}
+            <div className='max-h-80 overflow-y-auto'>
+              <ul className='divide-y divide-gray-200 dark:divide-slate-700'>
+                {upcomingContent.map((content) => (
+                  <li
+                    key={content._id}
+                    className='px-4 py-3 hover:bg-gray-50 dark:hover:bg-slate-700/50 transition-colors duration-150'
+                  >
+                    <div className='flex items-center justify-between'>
+                      <div className='flex items-center min-w-0 flex-1'>
+                        <div className='flex-shrink-0 h-8 w-8 rounded-full bg-indigo-100 dark:bg-blue-900/50 flex items-center justify-center'>
+                          <span className='text-sm'>
+                            {getTypeIcon(content.type)}
+                          </span>
+                        </div>
+                        <div className='ml-3 min-w-0 flex-1'>
+                          <div className='text-sm font-medium text-indigo-600 dark:text-blue-400 truncate'>
+                            {content.title}
+                          </div>
+                          <div className='text-xs text-gray-500 dark:text-slate-400'>
+                            {content.metadata?.scheduledDate &&
+                              formatScheduledDate(
+                                content.metadata.scheduledDate
+                              )}
+                          </div>
+                          {content.platform && content.platform.length > 0 && (
+                            <div className='text-xs text-gray-400 dark:text-slate-500 mt-1'>
+                              {content.platform
+                                .map((p) => getPlatformIcon(p))
+                                .join(' ')}
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                      <div className='flex-shrink-0 ml-2'>
+                        <span className='inline-flex items-center px-2 py-1 text-xs rounded-full bg-green-100 dark:bg-emerald-900/50 text-green-800 dark:text-emerald-300'>
+                          Scheduled
                         </span>
                       </div>
-                      <div className='ml-4'>
-                        <div className='text-sm font-medium text-indigo-600 dark:text-blue-400 truncate max-w-xs'>
-                          {content.title}
-                        </div>
-                        <div className='text-sm text-gray-500 dark:text-slate-400'>
-                          {content.metadata?.scheduledDate &&
-                            formatScheduledDate(content.metadata.scheduledDate)}
-                        </div>
-                        {content.platform && content.platform.length > 0 && (
-                          <div className='text-xs text-gray-400 dark:text-slate-500 mt-1'>
-                            {content.platform
-                              .map((p) => getPlatformIcon(p))
-                              .join(' ')}
-                          </div>
-                        )}
-                      </div>
                     </div>
-                    <div className='px-2 py-1 text-xs rounded-full bg-green-100 dark:bg-emerald-900/50 text-green-800 dark:text-emerald-300'>
-                      Scheduled
-                    </div>
-                  </div>
-                </li>
-              ))}
-            </ul>
+                  </li>
+                ))}
+              </ul>
+            </div>
           )}
 
-          <div className='px-4 py-4 border-t border-gray-200 dark:border-slate-700 sm:px-6'>
+          <div className='px-4 py-3 border-t border-gray-200 dark:border-slate-700 bg-gray-50 dark:bg-slate-700/50'>
             <Link
               href='/calendar'
               className='text-sm font-medium text-indigo-600 dark:text-blue-400 hover:text-indigo-500 dark:hover:text-blue-300 transition-colors duration-150'
             >
-              View full calendar
+              View full calendar →
             </Link>
           </div>
         </div>
 
         {/* AI Content Suggestions */}
-        <div className='bg-white dark:bg-slate-800 shadow dark:shadow-slate-700/20 rounded-lg border border-gray-200 dark:border-slate-700'>
+        <div className='bg-white dark:bg-slate-800 shadow dark:shadow-slate-700/20 rounded-lg border border-gray-200 dark:border-slate-700 overflow-hidden'>
           <div className='px-4 py-5 border-b border-gray-200 dark:border-slate-700 sm:px-6 flex items-center justify-between'>
             <h3 className='text-lg font-medium leading-6 text-gray-900 dark:text-slate-100'>
               AI Content Suggestions
@@ -483,81 +488,82 @@ export default function Dashboard() {
           </div>
 
           {contextLoading ? (
-            <div className='px-4 py-8 text-center'>
-              <FiLoader className='h-8 w-8 animate-spin mx-auto text-purple-600 dark:text-violet-400' />
+            <div className='px-4 py-6 text-center'>
+              <FiLoader className='h-6 w-6 animate-spin mx-auto text-purple-600 dark:text-violet-400' />
               <p className='mt-2 text-sm text-gray-500 dark:text-slate-400'>
                 Loading AI suggestions...
               </p>
             </div>
           ) : displaySuggestions.length === 0 ? (
-            <div className='px-4 py-8 text-center'>
-              <div className='mx-auto h-12 w-12 rounded-full bg-purple-100 dark:bg-violet-900/50 flex items-center justify-center'>
-                <FiMessageSquare className='h-6 w-6 text-purple-600 dark:text-violet-400' />
+            <div className='px-4 py-6 text-center'>
+              <div className='mx-auto h-10 w-10 rounded-full bg-purple-100 dark:bg-violet-900/50 flex items-center justify-center mb-3'>
+                <FiMessageSquare className='h-5 w-5 text-purple-600 dark:text-violet-400' />
               </div>
-              <h3 className='mt-2 text-sm font-medium text-gray-900 dark:text-slate-100'>
+              <h3 className='text-sm font-medium text-gray-900 dark:text-slate-100 mb-1'>
                 No suggestions available
               </h3>
-              <p className='mt-1 text-sm text-gray-500 dark:text-slate-400'>
-                AI content suggestions will appear here. Try creating some
-                content first to get personalized recommendations.
+              <p className='text-xs text-gray-500 dark:text-slate-400 mb-4'>
+                AI content suggestions will appear here. Create some content
+                first to get personalized recommendations.
               </p>
-              <div className='mt-4'>
-                <button
-                  onClick={refreshAISuggestions}
-                  className='text-sm text-purple-600 dark:text-violet-400 hover:text-purple-500 dark:hover:text-violet-300 transition-colors duration-150'
-                >
-                  Refresh Suggestions
-                </button>
-              </div>
+              <button
+                onClick={refreshAISuggestions}
+                className='text-sm text-purple-600 dark:text-violet-400 hover:text-purple-500 dark:hover:text-violet-300 transition-colors duration-150'
+              >
+                Refresh Suggestions
+              </button>
             </div>
           ) : (
-            <ul className='divide-y divide-gray-200 dark:divide-slate-700'>
-              {displaySuggestions.map((suggestion) => (
-                <li
-                  key={suggestion.id}
-                  className='px-4 py-4 sm:px-6 hover:bg-gray-50 dark:hover:bg-slate-700/50 transition-colors duration-150'
-                >
-                  <div>
-                    <div className='flex items-center'>
-                      <div className='flex-shrink-0 h-10 w-10 rounded-full bg-purple-100 dark:bg-violet-900/50 flex items-center justify-center'>
-                        <FiMessageSquare className='h-5 w-5 text-purple-600 dark:text-violet-400' />
+            <div className='max-h-80 overflow-y-auto'>
+              <ul className='divide-y divide-gray-200 dark:divide-slate-700'>
+                {displaySuggestions.map((suggestion) => (
+                  <li
+                    key={suggestion.id}
+                    className='px-4 py-3 hover:bg-gray-50 dark:hover:bg-slate-700/50 transition-colors duration-150'
+                  >
+                    <div className='flex items-start space-x-3'>
+                      <div className='flex-shrink-0 h-8 w-8 rounded-full bg-purple-100 dark:bg-violet-900/50 flex items-center justify-center'>
+                        <FiMessageSquare className='h-4 w-4 text-purple-600 dark:text-violet-400' />
                       </div>
-                      <div className='ml-4'>
-                        <div className='text-sm font-medium text-purple-600 dark:text-violet-400'>
+                      <div className='min-w-0 flex-1'>
+                        <div className='text-sm font-medium text-purple-600 dark:text-violet-400 mb-1'>
                           {suggestion.title}
                         </div>
-                        <div className='mt-1 text-sm text-gray-500 dark:text-slate-400'>
-                          {truncateDescription(suggestion.description)}
+                        <div className='text-xs text-gray-500 dark:text-slate-400 mb-2 line-clamp-2'>
+                          {truncateDescription(suggestion.description, 80)}
                         </div>
-                        <div className='mt-1 text-sm text-gray-500 dark:text-slate-400 flex items-center'>
-                          {suggestion.trendingScore &&
-                            suggestion.trendingScore > 70 && (
-                              <span className='px-2 py-1 text-xs rounded-full bg-purple-100 dark:bg-violet-900/50 text-purple-800 dark:text-violet-300 mr-2'>
-                                Trending Topic
-                              </span>
-                            )}
-                          <span>Est. {suggestion.estimatedTime} to create</span>
+                        <div className='flex items-center justify-between'>
+                          <div className='flex items-center text-xs text-gray-500 dark:text-slate-400'>
+                            {suggestion.trendingScore &&
+                              suggestion.trendingScore > 70 && (
+                                <span className='px-2 py-1 text-xs rounded-full bg-purple-100 dark:bg-violet-900/50 text-purple-800 dark:text-violet-300 mr-2'>
+                                  🔥 Trending
+                                </span>
+                              )}
+                            <span>
+                              Est. {suggestion.estimatedTime} to create
+                            </span>
+                          </div>
+                          <div className='flex space-x-2'>
+                            <button
+                              onClick={() =>
+                                handleCreateFromSuggestion(suggestion)
+                              }
+                              className='inline-flex items-center px-2 py-1 text-xs font-medium rounded bg-purple-100 dark:bg-violet-900/50 text-purple-700 dark:text-violet-300 hover:bg-purple-200 dark:hover:bg-violet-800/50 transition-colors duration-150'
+                            >
+                              Create
+                            </button>
+                          </div>
                         </div>
                       </div>
                     </div>
-                    <div className='mt-2 flex'>
-                      <button
-                        onClick={() => handleCreateFromSuggestion(suggestion)}
-                        className='mr-2 bg-white dark:bg-slate-700 hover:bg-gray-50 dark:hover:bg-slate-600 text-purple-700 dark:text-violet-300 font-semibold py-1 px-3 border border-purple-500 dark:border-violet-500 rounded text-sm transition-colors duration-150'
-                      >
-                        Create Content
-                      </button>
-                      <button className='bg-white dark:bg-slate-700 hover:bg-gray-50 dark:hover:bg-slate-600 text-gray-500 dark:text-slate-300 font-semibold py-1 px-3 border border-gray-300 dark:border-slate-600 rounded text-sm transition-colors duration-150'>
-                        Save Idea
-                      </button>
-                    </div>
-                  </div>
-                </li>
-              ))}
-            </ul>
+                  </li>
+                ))}
+              </ul>
+            </div>
           )}
 
-          <div className='px-4 py-4 border-t border-gray-200 dark:border-slate-700 sm:px-6'>
+          <div className='px-4 py-3 border-t border-gray-200 dark:border-slate-700 bg-gray-50 dark:bg-slate-700/50'>
             <span className='text-sm font-medium text-purple-600 dark:text-violet-400'>
               Chat with AI using the floating button! ✨
             </span>
@@ -649,8 +655,12 @@ export default function Dashboard() {
       {/* Create Content Modal */}
       <CreateContentModal
         isOpen={showModal}
-        onClose={() => setShowModal(false)}
+        onClose={() => {
+          setShowModal(false);
+          setAiSuggestionData(null);
+        }}
         onSubmit={handleCreateContent}
+        initialData={aiSuggestionData}
       />
     </div>
   );
