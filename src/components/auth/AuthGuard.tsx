@@ -19,13 +19,13 @@ export default function AuthGuard({ children }: AuthGuardProps) {
     }
   }, [loading, isAuthenticated, router]);
 
-  // Show loading spinner while checking authentication
+  // Show loading spinner while checking authentication - use app's background and design
   if (loading) {
     return (
-      <div className='min-h-screen bg-gray-50 flex items-center justify-center'>
+      <div className='min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50 dark:from-slate-950 dark:via-blue-950 dark:to-indigo-950 flex items-center justify-center'>
         <div className='text-center'>
-          <div className='w-12 h-12 border-4 border-gray-200 border-t-indigo-600 rounded-full animate-spin mx-auto mb-4'></div>
-          <p className='text-gray-600 font-medium'>
+          <div className='w-12 h-12 border-4 border-gray-200 dark:border-slate-600 border-t-blue-600 dark:border-t-blue-400 rounded-full animate-spin mx-auto mb-4'></div>
+          <p className='text-gray-600 dark:text-slate-400 font-medium'>
             Checking authentication...
           </p>
         </div>
@@ -36,10 +36,12 @@ export default function AuthGuard({ children }: AuthGuardProps) {
   // Don't render children if not authenticated (redirect will happen in useEffect)
   if (!isAuthenticated || !user) {
     return (
-      <div className='min-h-screen bg-gray-50 flex items-center justify-center'>
+      <div className='min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50 dark:from-slate-950 dark:via-blue-950 dark:to-indigo-950 flex items-center justify-center'>
         <div className='text-center'>
-          <div className='w-12 h-12 border-4 border-gray-200 border-t-indigo-600 rounded-full animate-spin mx-auto mb-4'></div>
-          <p className='text-gray-600 font-medium'>Redirecting to login...</p>
+          <div className='w-12 h-12 border-4 border-gray-200 dark:border-slate-600 border-t-blue-600 dark:border-t-blue-400 rounded-full animate-spin mx-auto mb-4'></div>
+          <p className='text-gray-600 dark:text-slate-400 font-medium'>
+            Redirecting to login...
+          </p>
         </div>
       </div>
     );

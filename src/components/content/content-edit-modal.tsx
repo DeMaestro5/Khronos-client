@@ -6,6 +6,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import toast from 'react-hot-toast';
 import { contentAPI } from '@/src/lib/api';
 import { Content } from '@/src/types/content';
+import { useUserData } from '@/src/context/UserDataContext';
 
 interface ContentEditModalProps {
   isOpen: boolean;
@@ -37,6 +38,9 @@ const ContentEditModal: React.FC<ContentEditModalProps> = ({
   contentTitle,
   onSuccess,
 }) => {
+  // Use UserDataContext to update cached data
+  const { updateContent } = useUserData();
+
   const [formData, setFormData] = useState<EditFormData>({
     status: currentStatus,
     priority: currentPriority,
@@ -256,6 +260,14 @@ const ContentEditModal: React.FC<ContentEditModalProps> = ({
         if (hasPriorityUpdate) updateTypes.push('priority');
         if (hasScheduleUpdate) updateTypes.push('schedule');
         if (hasStatusUpdate) updateTypes.push('status');
+
+        // Update cached data in UserDataContext
+        const updates: Partial<Content> = {
+          status: formData.status,
+        };
+
+        // Update the cached content
+        updateContent(contentId, updates);
 
         toast.success(
           `✅ Content ${updateTypes.join(' and ')} updated successfully!`,

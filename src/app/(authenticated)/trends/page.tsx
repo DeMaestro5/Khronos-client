@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { trendsAPI } from '@/src/lib/api';
 import {
   TrendAnalysis,
@@ -60,6 +60,9 @@ const TrendsPage: React.FC = () => {
   const [didInitialLoad, setDidInitialLoad] = useState(false);
   const [isRefreshing, setIsRefreshing] = useState(false);
 
+  // Add ref to track previous filters to detect actual changes
+  const previousFiltersRef = useRef<TrendsFilters | null>(null);
+
   // Use cached trends data instead of fetching directly
   useEffect(() => {
     console.log('Trends page: Using cached data', {
@@ -105,10 +108,28 @@ const TrendsPage: React.FC = () => {
     }
   }, [trendsData, userDataLoading]);
 
-  // Refresh trends data when filters change (if initial load is done)
+  // Refresh trends data only when filters actually change (not on component remount)
   useEffect(() => {
-    if (didInitialLoad && filters && refreshTrendsData) {
-      console.log('Trends page: Filters changed, refreshing data...');
+    // Skip if initial load hasn't completed yet
+    if (!didInitialLoad || !refreshTrendsData) {
+      return;
+    }
+
+    // Check if filters have actually changed
+    const previousFilters = previousFiltersRef.current;
+    const filtersChanged =
+      !previousFilters ||
+      JSON.stringify(previousFilters) !== JSON.stringify(filters);
+
+    if (filtersChanged) {
+      console.log('Trends page: Filters changed, refreshing data...', {
+        previous: previousFilters,
+        current: filters,
+      });
+
+      // Update the ref with current filters
+      previousFiltersRef.current = { ...filters };
+
       setIsRefreshing(true);
 
       const toastId = toast.loading(
@@ -225,8 +246,17 @@ const TrendsPage: React.FC = () => {
           );
         })
         .finally(() => setIsRefreshing(false));
+    } else {
+      console.log('Trends page: No filter changes detected, skipping refresh');
     }
   }, [filters, didInitialLoad, refreshTrendsData]);
+
+  // Initialize the filters ref when component mounts
+  useEffect(() => {
+    if (didInitialLoad && !previousFiltersRef.current) {
+      previousFiltersRef.current = { ...filters };
+    }
+  }, [didInitialLoad, filters]);
 
   const handlePrediction = async (keyword: string) => {
     if (!keyword.trim()) return;
