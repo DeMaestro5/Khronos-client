@@ -117,15 +117,17 @@ const ContentDropdown = ({
       variant: 'default',
     },
     {
-      icon: content.status === 'archived' ? ArchiveRestore : Archive,
-      label: content.status === 'archived' ? 'Unarchive' : 'Archive',
+      icon:
+        (content.status || 'draft') === 'archived' ? ArchiveRestore : Archive,
+      label:
+        (content.status || 'draft') === 'archived' ? 'Unarchive' : 'Archive',
       action: onArchiveClick,
       variant: 'default',
     },
   ];
 
   // Only show delete option for non-archived content
-  if (content.status !== 'archived') {
+  if ((content.status || 'draft') !== 'archived') {
     options.push({
       icon: Trash2,
       label: 'Delete',
@@ -240,7 +242,7 @@ export const ContentCard = ({
   const handleArchive = async () => {
     setIsArchiving(true);
     try {
-      if (content.status === 'archived') {
+      if ((content.status || 'draft') === 'archived') {
         // Unarchive
         await contentAPI.unarchive(content._id, {
           restoreStatus: 'draft', // Default restore status
@@ -290,7 +292,7 @@ export const ContentCard = ({
       >
         <Card
           className={`h-full hover:shadow-lg dark:hover:shadow-slate-900/40 transition-all duration-200 cursor-pointer group relative ${
-            content.status === 'archived'
+            (content.status || 'draft') === 'archived'
               ? 'opacity-60 bg-gray-50 dark:bg-slate-800/50'
               : 'bg-white dark:bg-slate-800/80 border-gray-200 dark:border-slate-600'
           }`}
@@ -299,20 +301,22 @@ export const ContentCard = ({
             <CardHeader className='pb-2 sm:pb-3 p-3 sm:p-6'>
               <div className='flex items-start justify-between'>
                 <div className='flex items-center gap-1.5 sm:gap-2 mb-2 min-w-0 flex-1'>
-                  {getStatusIcon(content.status as ContentStatus)}
+                  {getStatusIcon((content.status || 'draft') as ContentStatus)}
                   <span
                     className={`px-2 py-0.5 sm:py-1 rounded-full text-xs font-medium border flex-shrink-0 max-w-[80px] truncate ${getStatusColor(
-                      content.status as ContentStatus
+                      (content.status || 'draft') as ContentStatus
                     )}`}
                   >
-                    {content.status.replace('_', ' ').toUpperCase()}
+                    {(content.status || 'draft')
+                      .replace('_', ' ')
+                      .toUpperCase()}
                   </span>
                   <span
                     className={`px-2 py-0.5 sm:py-1 rounded-full text-xs font-medium flex-shrink-0 max-w-[80px] truncate ${getTypeColor(
-                      content.type as ContentType
+                      (content.type || 'article') as ContentType
                     )}`}
                   >
-                    {content.type.replace('_', ' ')}
+                    {(content.type || 'article').replace('_', ' ')}
                   </span>
                 </div>
                 <div className='relative flex-shrink-0 ml-2'>
@@ -449,7 +453,9 @@ export const ContentCard = ({
         isOpen={isEditModalOpen}
         onClose={handleEditCancel}
         contentId={content._id}
-        currentStatus={content.status as 'draft' | 'scheduled' | 'published'}
+        currentStatus={
+          (content.status || 'draft') as 'draft' | 'scheduled' | 'published'
+        }
         currentPriority='medium' // Default since priority isn't in the content type
         currentScheduledDate={content.metadata?.scheduledDate}
         contentTitle={content.title}
@@ -462,8 +468,10 @@ export const ContentCard = ({
         onClose={handleArchiveCancel}
         onConfirm={handleArchive}
         contentTitle={content.title}
-        isArchiving={content.status !== 'archived' && isArchiving}
-        isUnarchiving={content.status === 'archived' && isArchiving}
+        isArchiving={(content.status || 'draft') !== 'archived' && isArchiving}
+        isUnarchiving={
+          (content.status || 'draft') === 'archived' && isArchiving
+        }
       />
 
       {/* Delete Confirmation Modal */}

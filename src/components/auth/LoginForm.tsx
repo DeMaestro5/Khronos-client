@@ -36,11 +36,13 @@ export default function LoginForm() {
     setIsLoading(true);
     setErrors({});
 
-    // Validation
+    // Validate email
     const newErrors: FormErrors = {};
     if (!formData.email) newErrors.email = 'Email is required';
     else if (!/\S+@\S+\.\S+/.test(formData.email))
       newErrors.email = 'Email is invalid';
+
+    // Validate Password
     if (!formData.password) newErrors.password = 'Password is required';
     else if (formData.password.length < 8)
       newErrors.password = 'Password must be at least 8 characters';
@@ -52,11 +54,7 @@ export default function LoginForm() {
     }
 
     try {
-      console.log('Login submitted:', formData);
-
       const response = await authAPI.login(formData.email, formData.password);
-      console.log('Login Response:', response.data);
-
       // Handle success
       if (response.data.data?.tokens) {
         // Use AuthUtils to store tokens and user data properly

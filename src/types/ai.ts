@@ -14,7 +14,6 @@ export interface AIContentSuggestion {
 
 export interface AISuggestionButtonProps {
   onSuggestion: (suggestion: AISuggestionResult) => void;
-  contentType?: string;
   platforms?: string[];
   disabled?: boolean;
 }

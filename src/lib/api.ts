@@ -347,6 +347,10 @@ export const aiAPI = {
 
   // AI content feed suggestions for dashboard
   getContentFeed: () => api.get('/api/v1/content/ai-suggest/feed'),
+
+  // AI-powered content creation endpoint
+  createSuggestedContent: (title: string) =>
+    api.post('/api/v1/content/ai-suggest/create', { title }),
 };
 
 // Analytics API methods
