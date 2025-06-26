@@ -137,11 +137,6 @@ export default function SignupForm({
       console.error('Signup error:', error);
 
       if (error instanceof AxiosError) {
-        // Log the full error response for debugging
-        console.error('Error response data:', error.response?.data);
-        console.error('Error response status:', error.response?.status);
-        console.error('Error response headers:', error.response?.headers);
-
         const errorMessage =
           error.response?.data?.message ||
           error.response?.data?.error ||

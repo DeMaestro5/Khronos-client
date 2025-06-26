@@ -56,10 +56,8 @@ export default function CreateContentModal({
   // Reset form when modal opens or closes
   useEffect(() => {
     if (isOpen) {
-      console.log('Modal opened, resetting form to initial state');
       resetForm();
     } else {
-      console.log('Modal closed, resetting form to default state');
       resetForm();
     }
   }, [isOpen]);
@@ -85,11 +83,7 @@ export default function CreateContentModal({
 
   // AI Suggestion Handler
   const handleAISuggestion = (suggestion: AISuggestionResult) => {
-    console.log('AI Suggestion received:', suggestion);
-    console.log('Current form data before update:', formData);
-
     setFormData((prev) => {
-      console.log('Previous form data:', prev);
       const newFormData = {
         ...prev,
         title: suggestion.title || '',

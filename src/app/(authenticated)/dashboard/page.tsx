@@ -10,13 +10,14 @@ import {
   FiLoader,
 } from 'react-icons/fi';
 import Link from 'next/link';
-import { contentAPI } from '../../../lib/api';
+import { contentAPI, aiAPI } from '../../../lib/api';
 import { Content } from '../../../types/content';
 import { format, isToday, isTomorrow, parseISO } from 'date-fns';
 import { toast } from 'react-hot-toast';
 import CreateContentModal from '../../../components/content/content-creation-modal';
 import { ContentFormData } from '../../../types/modal';
 import { useUserData } from '@/src/context/UserDataContext';
+import { useGlobalConfetti } from '@/src/context/ConfettiContext';
 
 interface DashboardStats {
   totalContent: number;
@@ -48,11 +49,6 @@ export default function Dashboard() {
   });
   const [upcomingContent, setUpcomingContent] = useState<Content[]>([]);
   const [showModal, setShowModal] = useState(false);
-  const [aiSuggestionData, setAiSuggestionData] = useState<{
-    title: string;
-    description: string;
-    tags: string[];
-  } | null>(null);
 
   // Use cached user data instead of fetching directly
   const {
@@ -63,6 +59,8 @@ export default function Dashboard() {
     addContent,
     refreshAISuggestions,
   } = useUserData();
+
+  const { triggerContentCreationCelebration } = useGlobalConfetti();
 
   // Format date for display
   const formatScheduledDate = (dateString: string) => {
@@ -83,13 +81,6 @@ export default function Dashboard() {
 
   // Process cached data instead of making API calls
   useEffect(() => {
-    console.log('Dashboard: Processing cached data', {
-      userContent,
-      userStats,
-      aiSuggestions,
-      contextLoading,
-    });
-
     if (contextLoading) return;
 
     // Use cached user content with null safety
@@ -175,24 +166,105 @@ export default function Dashboard() {
   };
 
   const truncateDescription = (
-    description: string,
+    description: string | undefined,
     maxLength: number = 120
   ) => {
+    if (!description) return 'No description available';
     if (description.length <= maxLength) return description;
     return description.substring(0, maxLength).trim() + '...';
   };
 
-  const handleCreateFromSuggestion = (suggestion: AIContentSuggestion) => {
-    // Create proper initial data structure for the content creation modal
-    setAiSuggestionData({
-      title: suggestion.title,
-      description: suggestion.description,
-      tags: suggestion.tags || [],
-    });
-    setShowModal(true);
+  const handleCreateFromSuggestion = async (
+    suggestion: AIContentSuggestion
+  ) => {
+    // Directly create content using the AI endpoint with just the title
+    try {
+      // Show creating toast with loading indicator
+      const creatingToastId = toast.loading(
+        '🚀 Creating AI-powered content... This will be amazing!',
+        {
+          style: {
+            background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+            color: 'white',
+            border: 'none',
+            fontWeight: '500',
+          },
+        }
+      );
+
+      // Call the new AI content creation endpoint
+      const response = await aiAPI.createSuggestedContent(suggestion.title);
+
+      if (
+        response.data?.statusCode === '10000' ||
+        response.status === 200 ||
+        response.status === 201
+      ) {
+        // Dismiss the creating toast
+        toast.dismiss(creatingToastId);
+
+        // Show success toast
+        toast.success('🎉 AI-powered content created successfully!', {
+          duration: 5000,
+          style: {
+            background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+            color: 'white',
+            border: 'none',
+            fontWeight: '500',
+            fontSize: '16px',
+          },
+          icon: '🤖',
+        });
+
+        // Celebrate with confetti
+        setTimeout(() => {
+          triggerContentCreationCelebration();
+        }, 100);
+
+        // Add the new content to the cached data
+        if (response.data?.data) {
+          addContent(response.data.data);
+        }
+      } else {
+        throw new Error(
+          response.data?.message || 'Failed to create AI content'
+        );
+      }
+    } catch (error: unknown) {
+      console.error('Failed to create AI content:', error);
+
+      let errorMessage =
+        'Failed to create AI-powered content. Please try again.';
+
+      if (error instanceof Error) {
+        errorMessage = error.message;
+      } else if (
+        typeof error === 'object' &&
+        error !== null &&
+        'response' in error
+      ) {
+        const axiosError = error as {
+          response?: { data?: { message?: string } };
+        };
+        errorMessage = axiosError.response?.data?.message || errorMessage;
+      }
+
+      toast.error(`❌ ${errorMessage}`, {
+        duration: 6000,
+        style: {
+          background: '#ef4444',
+          color: 'white',
+          border: 'none',
+          fontWeight: '500',
+        },
+      });
+    }
   };
 
   const handleCreateContent = async (contentData: ContentFormData) => {
+    // Declare creatingToastId variable at function scope
+    let creatingToastId: string | undefined;
+
     try {
       // Validate required fields first
       if (!contentData.title.trim()) {
@@ -208,10 +280,23 @@ export default function Dashboard() {
       // Close modal immediately
       setShowModal(false);
 
-      // Show creating toast
-      toast.loading('Creating your content...', {
-        duration: 2000,
-      });
+      // Show creating toast with loading indicator
+      creatingToastId = toast.loading(
+        '🚀 Creating your content... AI is working its magic!',
+        {
+          style: {
+            background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+            color: 'white',
+            border: 'none',
+            fontWeight: '500',
+          },
+        }
+      );
+
+      // Determine status based on whether scheduled date/time is provided
+      const hasScheduledDate = !!(
+        contentData.scheduledDate && contentData.scheduledTime
+      );
 
       // Prepare the payload for API
       const newContentPayload: {
@@ -233,7 +318,7 @@ export default function Dashboard() {
       };
 
       // Add scheduled date if provided
-      if (contentData.scheduledDate && contentData.scheduledTime) {
+      if (hasScheduledDate) {
         const scheduledDateTime = `${contentData.scheduledDate}T${contentData.scheduledTime}:00.000Z`;
         newContentPayload.scheduledDate = scheduledDateTime;
       }
@@ -245,7 +330,46 @@ export default function Dashboard() {
         response.status === 200 ||
         response.status === 201
       ) {
-        toast.success('Content created successfully!');
+        // Dismiss the creating toast
+        toast.dismiss(creatingToastId);
+
+        // Show success toast with confetti
+        if (hasScheduledDate) {
+          toast.success(
+            '🎉 Content created and scheduled successfully! Check your calendar!',
+            {
+              duration: 5000,
+              style: {
+                background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+                color: 'white',
+                border: 'none',
+                fontWeight: '500',
+                fontSize: '16px',
+              },
+              icon: '📅',
+            }
+          );
+          // Celebrate with confetti after successful scheduled content creation
+          setTimeout(() => {
+            triggerContentCreationCelebration();
+          }, 100);
+        } else {
+          toast.success('🎉 Content created as draft successfully!', {
+            duration: 5000,
+            style: {
+              background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+              color: 'white',
+              border: 'none',
+              fontWeight: '500',
+              fontSize: '16px',
+            },
+            icon: '📝',
+          });
+          // Celebrate with confetti after successful draft content creation
+          setTimeout(() => {
+            triggerContentCreationCelebration();
+          }, 100);
+        }
 
         // Add the new content to the cached data instead of refetching everything
         if (response.data?.data) {
@@ -254,9 +378,39 @@ export default function Dashboard() {
       } else {
         throw new Error(response.data?.message || 'Failed to create content');
       }
-    } catch (error) {
+    } catch (error: unknown) {
       console.error('Failed to create content:', error);
-      toast.error('Failed to create content. Please try again.');
+
+      // Dismiss the creating toast if it was created
+      if (creatingToastId) {
+        toast.dismiss(creatingToastId);
+      }
+
+      // Show error notification with specific message
+      let errorMessage = 'Failed to create content. Please try again.';
+
+      if (error instanceof Error) {
+        errorMessage = error.message;
+      } else if (
+        typeof error === 'object' &&
+        error !== null &&
+        'response' in error
+      ) {
+        const axiosError = error as {
+          response?: { data?: { message?: string } };
+        };
+        errorMessage = axiosError.response?.data?.message || errorMessage;
+      }
+
+      toast.error(`❌ ${errorMessage}`, {
+        duration: 6000,
+        style: {
+          background: '#ef4444',
+          color: 'white',
+          border: 'none',
+          fontWeight: '500',
+        },
+      });
     }
   };
 
@@ -657,10 +811,9 @@ export default function Dashboard() {
         isOpen={showModal}
         onClose={() => {
           setShowModal(false);
-          setAiSuggestionData(null);
         }}
         onSubmit={handleCreateContent}
-        initialData={aiSuggestionData}
+        initialData={null}
       />
     </div>
   );

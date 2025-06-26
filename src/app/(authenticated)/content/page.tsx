@@ -89,6 +89,9 @@ export default function ContentPage() {
   }, [userContent, contextLoading]);
 
   const handleCreateContent = async (contentData: ContentFormData) => {
+    // Declare creatingToastId variable at function scope
+    let creatingToastId: string | undefined;
+
     try {
       // Validate required fields first
       if (!contentData.title.trim()) {
@@ -105,17 +108,18 @@ export default function ContentPage() {
       setShowModal(false);
       setAiSuggestion(null);
 
-      // Show creating toast with more visual feedback
-      toast.loading('✨ Creating your amazing content...', {
-        id: 'creating-content',
-        duration: 3000,
-        style: {
-          background: '#8b5cf6',
-          color: 'white',
-          border: 'none',
-          fontWeight: '500',
-        },
-      });
+      // Show creating toast with loading indicator
+      creatingToastId = toast.loading(
+        '🚀 Creating your content... AI is working its magic!',
+        {
+          style: {
+            background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+            color: 'white',
+            border: 'none',
+            fontWeight: '500',
+          },
+        }
+      );
 
       // Prepare the payload for API
       const newContentPayload: ContentCreatePayload = {
@@ -143,16 +147,41 @@ export default function ContentPage() {
         response.status === 201
       ) {
         // Success
-        toast.dismiss('creating-content');
-        toast.success('🎉 Content created successfully!', {
-          duration: 4000,
-          style: {
-            background: '#22c55e',
-            color: 'white',
-            border: 'none',
-            fontWeight: '500',
-          },
-        });
+        toast.dismiss(creatingToastId);
+
+        // Determine if content was scheduled
+        const hasScheduledDate = !!(
+          contentData.scheduledDate && contentData.scheduledTime
+        );
+
+        if (hasScheduledDate) {
+          toast.success(
+            '🎉 Content created and scheduled successfully! Check your calendar!',
+            {
+              duration: 5000,
+              style: {
+                background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+                color: 'white',
+                border: 'none',
+                fontWeight: '500',
+                fontSize: '16px',
+              },
+              icon: '📅',
+            }
+          );
+        } else {
+          toast.success('🎉 Content created as draft successfully!', {
+            duration: 5000,
+            style: {
+              background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+              color: 'white',
+              border: 'none',
+              fontWeight: '500',
+              fontSize: '16px',
+            },
+            icon: '📝',
+          });
+        }
 
         // Add the new content to the cached data instead of refetching
         if (response.data?.data) {
@@ -165,7 +194,9 @@ export default function ContentPage() {
       console.error('Failed to create content:', error);
 
       // Dismiss loading toast
-      toast.dismiss('creating-content');
+      if (creatingToastId) {
+        toast.dismiss(creatingToastId);
+      }
 
       // Show error message
       let errorMessage = 'Failed to create content. Please try again.';

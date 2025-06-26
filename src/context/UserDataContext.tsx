@@ -128,6 +128,7 @@ const AI_CACHE_DURATION = 60 * 60 * 1000;
 
 export function UserDataProvider({ children }: { children: React.ReactNode }) {
   const { user, isAuthenticated } = useAuth();
+
   const [profileData, setProfileData] = useState<ExtendedUserData | null>(null);
   const [userStats, setUserStats] = useState<UserStats | null>(null);
   const [userContent, setUserContent] = useState<Content[] | null>(null);
@@ -157,7 +158,6 @@ export function UserDataProvider({ children }: { children: React.ReactNode }) {
     (cacheKey: string, duration: number = CACHE_DURATION) => {
       const lastFetch = localStorage.getItem(cacheKey);
       if (!lastFetch) {
-        console.log(`📅 Cache: No last fetch timestamp found for ${cacheKey}`);
         return false;
       }
 
@@ -178,11 +178,6 @@ export function UserDataProvider({ children }: { children: React.ReactNode }) {
   const loadCachedData = useCallback(() => {
     try {
       if (!isCacheValid(STORAGE_KEYS.LAST_FETCH)) {
-        console.log('🗑️ Cache: Clearing expired user data cache');
-        localStorage.removeItem(STORAGE_KEYS.PROFILE_DATA);
-        localStorage.removeItem(STORAGE_KEYS.USER_STATS);
-        localStorage.removeItem(STORAGE_KEYS.USER_CONTENT);
-        localStorage.removeItem(STORAGE_KEYS.LAST_FETCH);
         return false;
       }
 
@@ -191,9 +186,6 @@ export function UserDataProvider({ children }: { children: React.ReactNode }) {
       const cachedContent = localStorage.getItem(STORAGE_KEYS.USER_CONTENT);
 
       if (cachedProfile && cachedStats && cachedContent) {
-        console.log(
-          '💾 Cache: Loading cached profile, stats, and content data'
-        );
         setProfileData(JSON.parse(cachedProfile));
         setUserStats(JSON.parse(cachedStats));
         setUserContent(JSON.parse(cachedContent));
@@ -234,12 +226,6 @@ export function UserDataProvider({ children }: { children: React.ReactNode }) {
   const saveToCache = useCallback(
     (profile: ExtendedUserData, stats: UserStats, content: Content[]) => {
       try {
-        console.log('💾 UserDataContext: Saving user data to cache...', {
-          profileId: profile.id || profile._id,
-          statsCount: stats.totalContent,
-          contentCount: content.length,
-          timestamp: new Date().toLocaleTimeString(),
-        });
         localStorage.setItem(
           STORAGE_KEYS.PROFILE_DATA,
           JSON.stringify(profile)
@@ -264,15 +250,11 @@ export function UserDataProvider({ children }: { children: React.ReactNode }) {
   const saveAISuggestionsToCache = useCallback(
     (suggestions: AIContentSuggestion[]) => {
       try {
-        console.log('💾 UserDataContext: Saving AI suggestions to cache...');
         localStorage.setItem(
           STORAGE_KEYS.AI_SUGGESTIONS,
           JSON.stringify(suggestions)
         );
         localStorage.setItem(STORAGE_KEYS.AI_LAST_FETCH, Date.now().toString());
-        console.log(
-          '✅ UserDataContext: AI suggestions saved to cache successfully'
-        );
       } catch (error) {
         console.error('❌ Error saving AI suggestions to cache:', error);
       }
@@ -367,7 +349,6 @@ export function UserDataProvider({ children }: { children: React.ReactNode }) {
   const fetchUserData = useCallback(async () => {
     if (!user || !isAuthenticated) return;
 
-    console.log('🌐 UserDataContext: Fetching fresh user data from API...');
     setLoading(true);
     setError(null);
 
@@ -377,10 +358,6 @@ export function UserDataProvider({ children }: { children: React.ReactNode }) {
         profileAPI.getProfile(),
         contentAPI.getUserContent(),
       ]);
-
-      console.log(
-        '📡 UserDataContext: User data API fetch completed, processing data...'
-      );
 
       let profile: ExtendedUserData = user; // Fallback to auth user
       if (profileResponse.data?.data) {
@@ -422,9 +399,7 @@ export function UserDataProvider({ children }: { children: React.ReactNode }) {
   // Fetch AI suggestions
   const fetchAISuggestions = useCallback(async () => {
     try {
-      console.log('🤖 UserDataContext: Fetching AI suggestions...');
       const response = await aiAPI.getContentFeed();
-      console.log('AI API Response:', response.data);
 
       // Handle the correct response structure
       let suggestions = [];
@@ -469,7 +444,6 @@ export function UserDataProvider({ children }: { children: React.ReactNode }) {
   // Fetch analytics data
   const fetchAnalyticsData = useCallback(async () => {
     try {
-      console.log('📊 UserDataContext: Fetching analytics data...');
       const results = {
         overview: null as ComprehensiveAnalyticsResponse['data'] | null,
         dashboard: null as DashboardResponse['data'] | null,
@@ -710,13 +684,6 @@ export function UserDataProvider({ children }: { children: React.ReactNode }) {
 
   // Load data when user authenticates - simplified to avoid callback dependency hell
   useEffect(() => {
-    console.log('🔧 UserDataProvider useEffect triggered:', {
-      isAuthenticated,
-      userId: user?.id || user?._id,
-      previousUser: initialLoadCompleteRef.current,
-      timestamp: new Date().toLocaleTimeString(),
-    });
-
     if (!isAuthenticated || !user) {
       // Clear data when user logs out
       setProfileData(null);
@@ -744,34 +711,14 @@ export function UserDataProvider({ children }: { children: React.ReactNode }) {
 
     // Check if we've already loaded data for this user
     if (initialLoadCompleteRef.current === currentUserId) {
-      console.log(
-        '✅ UserDataContext: Data already loaded for this user, skipping fetch'
-      );
       return;
     }
-
-    console.log(
-      '🔍 UserDataContext: User authenticated, checking for cached data...'
-    );
 
     // Check user data cache validity
     const isUserDataCacheValid = (() => {
       const lastFetch = localStorage.getItem(STORAGE_KEYS.LAST_FETCH);
-      const cachedProfile = localStorage.getItem(STORAGE_KEYS.PROFILE_DATA);
-      const cachedStats = localStorage.getItem(STORAGE_KEYS.USER_STATS);
-      const cachedContent = localStorage.getItem(STORAGE_KEYS.USER_CONTENT);
-
-      console.log('🔧 Cache Debug - User Data:', {
-        lastFetch,
-        hasProfile: !!cachedProfile,
-        hasStats: !!cachedStats,
-        hasContent: !!cachedContent,
-        cacheAge: lastFetch
-          ? Math.round((Date.now() - parseInt(lastFetch, 10)) / 1000) + 's'
-          : 'N/A',
-      });
-
       if (!lastFetch) return false;
+
       const lastFetchTime = parseInt(lastFetch, 10);
       const now = Date.now();
       const isValid = now - lastFetchTime < CACHE_DURATION;
@@ -818,7 +765,6 @@ export function UserDataProvider({ children }: { children: React.ReactNode }) {
         const cachedContent = localStorage.getItem(STORAGE_KEYS.USER_CONTENT);
 
         if (cachedProfile && cachedStats && cachedContent) {
-          console.log('💾 Cache: Loading cached user data');
           setProfileData(JSON.parse(cachedProfile));
           setUserStats(JSON.parse(cachedStats));
           setUserContent(JSON.parse(cachedContent));
@@ -866,7 +812,6 @@ export function UserDataProvider({ children }: { children: React.ReactNode }) {
           STORAGE_KEYS.ANALYTICS_DATA
         );
         if (cachedAnalytics) {
-          console.log('💾 Cache: Loading cached analytics data');
           setAnalyticsData(JSON.parse(cachedAnalytics));
         } else {
           fetchAnalyticsData();
@@ -876,9 +821,6 @@ export function UserDataProvider({ children }: { children: React.ReactNode }) {
         fetchAnalyticsData();
       }
     } else {
-      console.log(
-        '📊 UserDataContext: No valid analytics cache found, fetching analytics data...'
-      );
       fetchAnalyticsData();
     }
 
