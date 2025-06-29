@@ -5,6 +5,7 @@ import { AuthProvider } from '@/src/context/AuthContext';
 import { UserDataProvider } from '@/src/context/UserDataContext';
 import { ThemeProvider } from '@/src/components/themeProvider';
 import './globals.css';
+import { SettingsProvider } from '../context/SettingsContext';
 
 const inter = Inter({ subsets: ['latin'] });
 
@@ -19,45 +20,47 @@ export default function RootLayout({
         <ThemeProvider attribute='class' defaultTheme='system' enableSystem>
           <AuthProvider>
             <UserDataProvider>
-              <NotificationProvider>
-                {children}
-                <Toaster
-                  position='top-center'
-                  toastOptions={{
-                    duration: 4000,
-                    style: {
-                      background: 'var(--toast-bg)',
-                      color: 'var(--toast-text)',
-                      border: '1px solid var(--toast-border)',
-                      borderRadius: '12px',
-                      padding: '16px',
-                      fontSize: '14px',
-                      maxWidth: '500px',
-                    },
-                    success: {
-                      duration: 5000,
-                      iconTheme: {
-                        primary: '#10b981',
-                        secondary: 'var(--toast-text)',
+              <SettingsProvider>
+                <NotificationProvider>
+                  {children}
+                  <Toaster
+                    position='top-center'
+                    toastOptions={{
+                      duration: 4000,
+                      style: {
+                        background: 'var(--toast-bg)',
+                        color: 'var(--toast-text)',
+                        border: '1px solid var(--toast-border)',
+                        borderRadius: '12px',
+                        padding: '16px',
+                        fontSize: '14px',
+                        maxWidth: '500px',
                       },
-                    },
-                    loading: {
-                      duration: Infinity,
-                      iconTheme: {
-                        primary: '#8b5cf6',
-                        secondary: 'var(--toast-text)',
+                      success: {
+                        duration: 5000,
+                        iconTheme: {
+                          primary: '#10b981',
+                          secondary: 'var(--toast-text)',
+                        },
                       },
-                    },
-                    error: {
-                      duration: 6000,
-                      iconTheme: {
-                        primary: '#ef4444',
-                        secondary: 'var(--toast-text)',
+                      loading: {
+                        duration: Infinity,
+                        iconTheme: {
+                          primary: '#8b5cf6',
+                          secondary: 'var(--toast-text)',
+                        },
                       },
-                    },
-                  }}
-                />
-              </NotificationProvider>
+                      error: {
+                        duration: 6000,
+                        iconTheme: {
+                          primary: '#ef4444',
+                          secondary: 'var(--toast-text)',
+                        },
+                      },
+                    }}
+                  />
+                </NotificationProvider>
+              </SettingsProvider>
             </UserDataProvider>
           </AuthProvider>
         </ThemeProvider>

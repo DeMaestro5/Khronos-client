@@ -7,6 +7,7 @@ import {
   NotificationFilters,
   NotificationSettings,
 } from '../types/notification';
+import { PartialSettingsUpdate } from '../types/settings';
 
 interface ContentCreateRequest {
   title: string;
@@ -573,6 +574,80 @@ export const trendsAPI = {
 
   // Get available categories
   getCategories: () => api.get('/api/v1/trends/categories'),
+};
+
+export const settingsApi = {
+  // Get current user settings
+  getSettings: () => api.get('/api/v1/settings'),
+
+  //update all settings (partial updates supported)
+  updateSettings: (settingsData: PartialSettingsUpdate) =>
+    api.put('/api/v1/settings', settingsData),
+
+  updateProfile: (profileData: {
+    displayName?: string;
+    bio?: string;
+    location?: string;
+    website?: string;
+    timezone?: string;
+    language?: string;
+    dateFormat?: string;
+    timeFormat?: string;
+  }) => api.put('/api/v1/settings/profile', profileData),
+
+  updateNotifications: (notificationData: {
+    email?: {
+      enabled?: boolean;
+      marketing?: boolean;
+      productUpdates?: boolean;
+      weeklyDigest?: boolean;
+      contentReminders?: boolean;
+    };
+
+    push?: {
+      enabled?: boolean;
+      contentPublished?: boolean;
+      trendsAlert?: boolean;
+      collaborativeInvites?: boolean;
+    };
+
+    inApp?: {
+      enabled?: boolean;
+      mentions?: boolean;
+      comments?: boolean;
+      likes?: boolean;
+    };
+  }) => api.put('/api/v1/settings/notifications', notificationData),
+
+  updatePrivacy: (privacyData: {
+    profileVisibility?: 'public' | 'private' | 'followers';
+    showEmail?: boolean;
+    showLocation?: boolean;
+    allowAnalytics?: boolean;
+    dataSharing?: boolean;
+  }) => api.put('/api/v1/settings/privacy', privacyData),
+
+  updateContent: (contentData: {
+    defaultPlatforms?: string[];
+    defaultContentType?: 'article' | 'post' | 'video';
+    autoSave?: boolean;
+    autoScheduling?: boolean;
+    aiSuggestions?: boolean;
+    contentLanguage?: string;
+  }) => api.put('/api/v1/settings/content', contentData),
+
+  updateInterface: (interfaceData: {
+    theme?: 'light' | 'dark' | 'system';
+    sidebarCollapsed?: boolean;
+    defaultView?: 'list' | 'grid';
+    itemsPerPage?: number;
+    enableAnimations?: boolean;
+    compactMode?: boolean;
+  }) => api.put('/api/v1/settings/interface', interfaceData),
+
+  resetSettings: () => api.post('/api/v1/settings/reset'),
+  exportSettings: () => api.get('/api/v1/settings/export'),
+  getDefaults: () => api.get('/api/v1/settings/defaults'),
 };
 
 export default api;
