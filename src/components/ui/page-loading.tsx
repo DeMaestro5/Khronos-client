@@ -6,7 +6,13 @@ import { motion } from 'framer-motion';
 interface PageLoadingProps {
   title?: string;
   subtitle?: string;
-  contentType?: 'content' | 'analytics' | 'trends' | 'insights' | 'data';
+  contentType?:
+    | 'content'
+    | 'analytics'
+    | 'trends'
+    | 'insights'
+    | 'data'
+    | 'settings';
   showGrid?: boolean;
   gridItems?: number;
 }

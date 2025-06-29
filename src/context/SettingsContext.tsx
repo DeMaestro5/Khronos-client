@@ -28,12 +28,12 @@ type SettingsUpdateData =
   | ContentSettingsUpdate
   | InterfaceSettingsUpdate;
 
-// API-compatible notification structure (what the backend expects)
-interface ApiNotificationSettings {
+// Backend notification structure (what the backend expects)
+interface BackendNotificationSettings {
   email?: {
     enabled?: boolean;
     marketing?: boolean;
-    productUpdates?: boolean;
+    productUpdate?: boolean;
     weeklyDigest?: boolean;
     contentReminders?: boolean;
     security?: boolean;
@@ -45,7 +45,7 @@ interface ApiNotificationSettings {
   push?: {
     enabled?: boolean;
     contentPublished?: boolean;
-    trendAlert?: boolean;
+    trendsAlert?: boolean;
     collaborativeInvites?: boolean;
     security?: boolean;
     updates?: boolean;
@@ -73,7 +73,54 @@ interface ApiNotificationSettings {
   };
 }
 
-// Type for API response structure
+// Backend settings structure (what comes from server)
+interface BackendUserSettings {
+  userId: string;
+  profile: UserSettings['profile'];
+  notifications: {
+    email: {
+      enabled: boolean;
+      marketing: boolean;
+      productUpdate: boolean;
+      weeklyDigest: boolean;
+      contentReminders: boolean;
+    };
+    push: {
+      enabled: boolean;
+      contentPublished: boolean;
+      trendsAlert: boolean;
+      collaborativeInvites: boolean;
+    };
+    inApp: {
+      enabled: boolean;
+      mentions: boolean;
+      comments: boolean;
+      likes: boolean;
+    };
+  };
+  privacy: UserSettings['privacy'];
+  content: {
+    defaultPlatforms: string[];
+    defaultContentType: 'article' | 'post' | 'video';
+    autoSave: boolean;
+    autoScheduling: boolean;
+    aiSuggestion: boolean; // Note: backend uses "aiSuggestion"
+    contentLanguage: string;
+  };
+  interface: {
+    theme: 'light' | 'dark' | 'system';
+    sidebarCollapsed: boolean;
+    defaultView: 'list' | 'grid';
+    itemsPerPage: number;
+    enablesAnimation: boolean; // Note: backend uses "enablesAnimation"
+    compactMode: boolean;
+  };
+  integrations: UserSettings['integrations'];
+  createdAt: string;
+  updatedAt: string;
+}
+
+// API response structure
 interface ApiResponse<T = unknown> {
   data?: {
     statusCode?: string;
@@ -82,27 +129,28 @@ interface ApiResponse<T = unknown> {
   };
 }
 
-// Type for settings API response (raw from backend)
+// Settings API response
 interface SettingsApiResponse {
-  settings?: UserSettings;
-  notifications?: ApiNotificationSettings;
-  privacy?: UserSettings['privacy'];
+  settings?: BackendUserSettings;
   profile?: UserSettings['profile'];
-  content?: UserSettings['content'];
-  interface?: UserSettings['interface'];
+  notifications?: BackendUserSettings['notifications'];
+  privacy?: UserSettings['privacy'];
+  content?: BackendUserSettings['content'];
+  interface?: BackendUserSettings['interface'];
 }
 
-// Type for processed settings response (after conversion)
-interface ProcessedSettingsResponse {
-  settings?: UserSettings;
-  notifications?: UserSettings['notifications'];
-  privacy?: UserSettings['privacy'];
+// API update response type
+interface SettingsUpdateResponse {
+  settings?: BackendUserSettings;
   profile?: UserSettings['profile'];
-  content?: UserSettings['content'];
-  interface?: UserSettings['interface'];
+  notifications?: BackendUserSettings['notifications'];
+  privacy?: UserSettings['privacy'];
+  content?: BackendUserSettings['content'];
+  interface?: BackendUserSettings['interface'];
+  updatedAt?: string;
 }
 
-// Type for error with response
+// Error type
 interface ApiError {
   response?: {
     data?: {
@@ -112,23 +160,17 @@ interface ApiError {
   message?: string;
 }
 
-// Helper function to check if error is an ApiError
 function isApiError(error: unknown): error is ApiError {
   return typeof error === 'object' && error !== null && 'response' in error;
 }
 
 interface SettingsContextType extends SettingsState {
-  // Data fetching
   fetchSettings: () => Promise<void>;
   refreshSettings: () => Promise<void>;
-
-  // Generic update method with proper typing
   updateSettings: (
     section: 'notifications' | 'profile' | 'privacy' | 'content' | 'interface',
     data: SettingsUpdateData
   ) => Promise<void>;
-
-  // Section updates
   updateProfileSettings: (data: ProfileSettingsUpdate) => Promise<void>;
   updateNotificationSettings: (
     data: NotificationSettingsUpdate
@@ -136,17 +178,11 @@ interface SettingsContextType extends SettingsState {
   updatePrivacySettings: (data: PrivacySettingsUpdate) => Promise<void>;
   updateContentSettings: (data: ContentSettingsUpdate) => Promise<void>;
   updateInterfaceSettings: (data: InterfaceSettingsUpdate) => Promise<void>;
-
-  // Bulk operations
   updateAllSettings: (data: Partial<UserSettings>) => Promise<void>;
   resetToDefaults: () => Promise<void>;
   exportSettings: () => Promise<void>;
-
-  // Local state management
   markUnsavedChanges: () => void;
   clearUnsavedChanges: () => void;
-
-  // Add these properties that the component expects
   isLoading: boolean;
 }
 
@@ -154,7 +190,6 @@ const SettingsContext = createContext<SettingsContextType | undefined>(
   undefined
 );
 
-// Custom hook to use settings context
 export function useSettings() {
   const context = useContext(SettingsContext);
   if (context === undefined) {
@@ -163,96 +198,119 @@ export function useSettings() {
   return context;
 }
 
-// Helper function to convert flat notification structure to API format
-function convertNotificationSettingsToApi(
-  data: NotificationSettingsUpdate
-): ApiNotificationSettings {
-  const apiData: ApiNotificationSettings = {};
-
-  // Convert email settings
-  if (data.emailEnabled !== undefined || data.emailTypes) {
-    apiData.email = {
-      enabled: data.emailEnabled,
-      ...data.emailTypes,
-    };
-  }
-
-  // Convert push settings
-  if (data.pushEnabled !== undefined || data.pushTypes) {
-    apiData.push = {
-      enabled: data.pushEnabled,
-      ...data.pushTypes,
-    };
-  }
-
-  // Convert in-app settings
-  if (data.inAppEnabled !== undefined || data.inAppTypes) {
-    apiData.inApp = {
-      enabled: data.inAppEnabled,
-      ...data.inAppTypes,
-    };
-  }
-
-  // Convert quiet hours
-  if (
-    data.quietHoursEnabled !== undefined ||
-    data.quietHoursStart ||
-    data.quietHoursEnd
-  ) {
-    apiData.quietHours = {
-      enabled: data.quietHoursEnabled,
-      startTime: data.quietHoursStart,
-      endTime: data.quietHoursEnd,
-    };
-  }
-
-  return apiData;
-}
-
-// Helper function to convert API response to flat structure
-function convertApiNotificationSettingsToFlat(
-  apiData: ApiNotificationSettings
+// Convert backend notification settings to frontend format
+function convertBackendNotificationsToFrontend(
+  backendNotifications: BackendUserSettings['notifications']
 ): UserSettings['notifications'] {
   return {
-    emailEnabled: apiData.email?.enabled || false,
-    pushEnabled: apiData.push?.enabled || false,
-    inAppEnabled: apiData.inApp?.enabled || false,
+    emailEnabled: backendNotifications.email?.enabled || false,
+    pushEnabled: backendNotifications.push?.enabled || false,
+    inAppEnabled: backendNotifications.inApp?.enabled || false,
     emailTypes: {
-      security: apiData.email?.security || false,
-      updates: apiData.email?.updates || apiData.email?.productUpdates || false,
-      messages: apiData.email?.messages || false,
-      reminders:
-        apiData.email?.reminders || apiData.email?.contentReminders || false,
-      marketing: apiData.email?.marketing || false,
-      reports: apiData.email?.reports || apiData.email?.weeklyDigest || false,
+      security: false, // Default since backend doesn't have this
+      updates: backendNotifications.email?.productUpdate || false,
+      messages: false, // Default since backend doesn't have this
+      reminders: backendNotifications.email?.contentReminders || false,
+      marketing: backendNotifications.email?.marketing || false,
+      reports: backendNotifications.email?.weeklyDigest || false,
     },
     pushTypes: {
-      security: apiData.push?.security || false,
-      updates: apiData.push?.updates || apiData.push?.trendAlert || false,
-      messages: apiData.push?.messages || false,
-      reminders: apiData.push?.reminders || false,
-      marketing: apiData.push?.marketing || false,
-      reports: apiData.push?.reports || false,
+      security: false, // Default since backend doesn't have this
+      updates: backendNotifications.push?.trendsAlert || false,
+      messages: false, // Default since backend doesn't have this
+      reminders: false, // Default since backend doesn't have this
+      marketing: false, // Default since backend doesn't have this
+      reports: false, // Default since backend doesn't have this
     },
     inAppTypes: {
-      security: apiData.inApp?.security || false,
-      updates: apiData.inApp?.updates || false,
-      messages: apiData.inApp?.messages || apiData.inApp?.mentions || false,
-      reminders: apiData.inApp?.reminders || false,
-      marketing: apiData.inApp?.marketing || false,
-      reports: apiData.inApp?.reports || false,
+      security: false, // Default since backend doesn't have this
+      updates: false, // Default since backend doesn't have this
+      messages: backendNotifications.inApp?.mentions || false,
+      reminders: false, // Default since backend doesn't have this
+      marketing: false, // Default since backend doesn't have this
+      reports: false, // Default since backend doesn't have this
     },
-    quietHoursEnabled: apiData.quietHours?.enabled || false,
-    quietHoursStart: apiData.quietHours?.startTime || '22:00',
-    quietHoursEnd: apiData.quietHours?.endTime || '08:00',
+    quietHoursEnabled: false, // Default since backend doesn't have this
+    quietHoursStart: '22:00',
+    quietHoursEnd: '08:00',
   };
 }
 
-// Settings provider component
+// Convert frontend notification settings to backend format
+function convertFrontendNotificationsToBackend(
+  frontendNotifications: NotificationSettingsUpdate
+): BackendNotificationSettings {
+  const backendData: BackendNotificationSettings = {};
+
+  if (
+    frontendNotifications.emailEnabled !== undefined ||
+    frontendNotifications.emailTypes
+  ) {
+    backendData.email = {
+      enabled: frontendNotifications.emailEnabled,
+      marketing: frontendNotifications.emailTypes?.marketing,
+      productUpdate: frontendNotifications.emailTypes?.updates,
+      weeklyDigest: frontendNotifications.emailTypes?.reports,
+      contentReminders: frontendNotifications.emailTypes?.reminders,
+    };
+  }
+
+  if (
+    frontendNotifications.pushEnabled !== undefined ||
+    frontendNotifications.pushTypes
+  ) {
+    backendData.push = {
+      enabled: frontendNotifications.pushEnabled,
+      contentPublished: true, // Default
+      trendsAlert: frontendNotifications.pushTypes?.updates,
+      collaborativeInvites: true, // Default
+    };
+  }
+
+  if (
+    frontendNotifications.inAppEnabled !== undefined ||
+    frontendNotifications.inAppTypes
+  ) {
+    backendData.inApp = {
+      enabled: frontendNotifications.inAppEnabled,
+      mentions: frontendNotifications.inAppTypes?.messages,
+      comments: true, // Default
+      likes: false, // Default
+    };
+  }
+
+  return backendData;
+}
+
+// Convert backend settings to frontend format
+function convertBackendSettingsToFrontend(
+  backendSettings: BackendUserSettings
+): UserSettings {
+  return {
+    _id: backendSettings.userId,
+    userId: backendSettings.userId,
+    profile: backendSettings.profile,
+    notifications: convertBackendNotificationsToFrontend(
+      backendSettings.notifications
+    ),
+    privacy: backendSettings.privacy,
+    content: {
+      ...backendSettings.content,
+      aiSuggestions: backendSettings.content.aiSuggestion, // Convert property name
+    },
+    interface: {
+      ...backendSettings.interface,
+      enableAnimation: backendSettings.interface.enablesAnimation, // Convert property name
+    },
+    integrations: backendSettings.integrations,
+    createdAt: backendSettings.createdAt,
+    updatedAt: backendSettings.updatedAt,
+  };
+}
+
 export function SettingsProvider({ children }: { children: React.ReactNode }) {
   const { user, isAuthenticated } = useAuth();
 
-  // Settings state
   const [state, setState] = useState<SettingsState>({
     settings: null,
     loading: false,
@@ -260,12 +318,10 @@ export function SettingsProvider({ children }: { children: React.ReactNode }) {
     hasUnsavedChanges: false,
   });
 
-  // Helper function to update state
   const updateState = useCallback((updates: Partial<SettingsState>) => {
     setState((prev) => ({ ...prev, ...updates }));
   }, []);
 
-  // Fetch settings from API
   const fetchSettings = useCallback(async () => {
     if (!isAuthenticated || !user) {
       updateState({ settings: null, loading: false, error: null });
@@ -284,20 +340,12 @@ export function SettingsProvider({ children }: { children: React.ReactNode }) {
         response.data?.statusCode === '10000' &&
         response.data?.data?.settings
       ) {
-        const settings = response.data.data.settings;
-
-        // Convert API notification structure to flat structure if needed
-        if (
-          settings.notifications &&
-          !('emailEnabled' in settings.notifications)
-        ) {
-          settings.notifications = convertApiNotificationSettingsToFlat(
-            settings.notifications as ApiNotificationSettings
-          );
-        }
+        const backendSettings = response.data.data.settings;
+        const frontendSettings =
+          convertBackendSettingsToFrontend(backendSettings);
 
         updateState({
-          settings,
+          settings: frontendSettings,
           loading: false,
           error: null,
         });
@@ -310,7 +358,6 @@ export function SettingsProvider({ children }: { children: React.ReactNode }) {
       console.error('❌ SettingsContext: Failed to fetch settings:', error);
 
       let errorMessage = 'Failed to load settings';
-
       if (isApiError(error)) {
         errorMessage = error.response?.data?.message || errorMessage;
       } else if (error instanceof Error) {
@@ -326,15 +373,13 @@ export function SettingsProvider({ children }: { children: React.ReactNode }) {
     }
   }, [isAuthenticated, user, updateState]);
 
-  // Refresh settings (force reload)
   const refreshSettings = useCallback(async () => {
     await fetchSettings();
   }, [fetchSettings]);
 
-  // Generic function to handle settings updates
   const handleSettingsUpdate = useCallback(
     async (
-      updateFn: () => Promise<ApiResponse<SettingsApiResponse>>,
+      updateFn: () => Promise<ApiResponse<SettingsUpdateResponse>>,
       successMessage: string,
       errorMsg: string
     ) => {
@@ -344,76 +389,7 @@ export function SettingsProvider({ children }: { children: React.ReactNode }) {
         const response = await updateFn();
 
         if (response.data?.statusCode === '10000') {
-          // Extract settings from different possible response structures
-          let updatedSettings: UserSettings | null = null;
-
-          if (response.data.data?.settings) {
-            updatedSettings = response.data.data.settings;
-
-            // Convert API notification structure to flat structure if needed
-            if (
-              updatedSettings.notifications &&
-              !('emailEnabled' in updatedSettings.notifications)
-            ) {
-              updatedSettings.notifications =
-                convertApiNotificationSettingsToFlat(
-                  updatedSettings.notifications as ApiNotificationSettings
-                );
-            }
-          } else if (
-            response.data.data?.notifications ||
-            response.data.data?.privacy ||
-            response.data.data?.profile ||
-            response.data.data?.content ||
-            response.data.data?.interface
-          ) {
-            // For section updates, we need to merge with existing settings
-            const apiSectionData = response.data.data;
-            const processedSectionData: ProcessedSettingsResponse = {};
-
-            // Convert notifications if present
-            if (apiSectionData.notifications) {
-              if ('emailEnabled' in apiSectionData.notifications) {
-                // Already in flat format
-                processedSectionData.notifications =
-                  apiSectionData.notifications as UserSettings['notifications'];
-              } else {
-                // Convert from API format to flat format
-                processedSectionData.notifications =
-                  convertApiNotificationSettingsToFlat(
-                    apiSectionData.notifications as ApiNotificationSettings
-                  );
-              }
-            }
-
-            // Copy other sections as-is
-            if (apiSectionData.privacy) {
-              processedSectionData.privacy = apiSectionData.privacy;
-            }
-            if (apiSectionData.profile) {
-              processedSectionData.profile = apiSectionData.profile;
-            }
-            if (apiSectionData.content) {
-              processedSectionData.content = apiSectionData.content;
-            }
-            if (apiSectionData.interface) {
-              processedSectionData.interface = apiSectionData.interface;
-            }
-
-            updatedSettings = {
-              ...state.settings!,
-              ...processedSectionData,
-            };
-          }
-
-          if (updatedSettings) {
-            updateState({
-              settings: updatedSettings,
-              loading: false,
-              hasUnsavedChanges: false,
-            });
-          }
-
+          await fetchSettings(); // Refresh the full settings
           toast.success(successMessage);
           console.log('✅ SettingsContext: Settings updated successfully');
         } else {
@@ -423,7 +399,6 @@ export function SettingsProvider({ children }: { children: React.ReactNode }) {
         console.error('❌ SettingsContext: Settings update failed:', error);
 
         let errorMessage = errorMsg;
-
         if (isApiError(error)) {
           errorMessage = error.response?.data?.message || errorMessage;
         } else if (error instanceof Error) {
@@ -438,10 +413,9 @@ export function SettingsProvider({ children }: { children: React.ReactNode }) {
         toast.error(errorMessage);
       }
     },
-    [state.settings, updateState]
+    [updateState, fetchSettings]
   );
 
-  // Update profile settings
   const updateProfileSettings = useCallback(
     async (data: ProfileSettingsUpdate) => {
       await handleSettingsUpdate(
@@ -453,14 +427,11 @@ export function SettingsProvider({ children }: { children: React.ReactNode }) {
     [handleSettingsUpdate]
   );
 
-  // Update notification settings
   const updateNotificationSettings = useCallback(
     async (data: NotificationSettingsUpdate) => {
-      // Convert to API format
-      const apiData = convertNotificationSettingsToApi(data);
-
+      const backendData = convertFrontendNotificationsToBackend(data);
       await handleSettingsUpdate(
-        () => settingsApi.updateNotifications(apiData),
+        () => settingsApi.updateNotifications(backendData),
         'Notification settings updated successfully',
         'Failed to update notification settings'
       );
@@ -468,7 +439,6 @@ export function SettingsProvider({ children }: { children: React.ReactNode }) {
     [handleSettingsUpdate]
   );
 
-  // Update privacy settings
   const updatePrivacySettings = useCallback(
     async (data: PrivacySettingsUpdate) => {
       await handleSettingsUpdate(
@@ -480,11 +450,17 @@ export function SettingsProvider({ children }: { children: React.ReactNode }) {
     [handleSettingsUpdate]
   );
 
-  // Update content settings
   const updateContentSettings = useCallback(
     async (data: ContentSettingsUpdate) => {
+      // Convert frontend property names to backend
+      const backendData: Record<string, unknown> = {
+        ...data,
+        aiSuggestion: data.aiSuggestions, // Convert property name
+      };
+      delete backendData.aiSuggestions; // Remove the frontend property
+
       await handleSettingsUpdate(
-        () => settingsApi.updateContent(data),
+        () => settingsApi.updateContent(backendData),
         'Content settings updated successfully',
         'Failed to update content settings'
       );
@@ -492,11 +468,17 @@ export function SettingsProvider({ children }: { children: React.ReactNode }) {
     [handleSettingsUpdate]
   );
 
-  // Update interface settings
   const updateInterfaceSettings = useCallback(
     async (data: InterfaceSettingsUpdate) => {
+      // Convert frontend property names to backend
+      const backendData: Record<string, unknown> = {
+        ...data,
+        enablesAnimation: data.enableAnimations, // Convert property name
+      };
+      delete backendData.enableAnimations; // Remove the frontend property
+
       await handleSettingsUpdate(
-        () => settingsApi.updateInterface(data),
+        () => settingsApi.updateInterface(backendData),
         'Interface settings updated successfully',
         'Failed to update interface settings'
       );
@@ -504,7 +486,6 @@ export function SettingsProvider({ children }: { children: React.ReactNode }) {
     [handleSettingsUpdate]
   );
 
-  // Generic update method with proper typing
   const updateSettings = useCallback(
     async (
       section:
@@ -544,7 +525,6 @@ export function SettingsProvider({ children }: { children: React.ReactNode }) {
     ]
   );
 
-  // Update all settings at once
   const updateAllSettings = useCallback(
     async (data: Partial<UserSettings>) => {
       await handleSettingsUpdate(
@@ -556,7 +536,6 @@ export function SettingsProvider({ children }: { children: React.ReactNode }) {
     [handleSettingsUpdate]
   );
 
-  // Reset settings to defaults
   const resetToDefaults = useCallback(async () => {
     const confirmReset = window.confirm(
       'Are you sure you want to reset all settings to their default values? This action cannot be undone.'
@@ -571,7 +550,6 @@ export function SettingsProvider({ children }: { children: React.ReactNode }) {
     );
   }, [handleSettingsUpdate]);
 
-  // Export settings
   const exportSettings = useCallback(async () => {
     try {
       updateState({ loading: true });
@@ -580,7 +558,6 @@ export function SettingsProvider({ children }: { children: React.ReactNode }) {
         await settingsApi.exportSettings();
 
       if (response.data) {
-        // Create download link
         const blob = new Blob([JSON.stringify(response.data, null, 2)], {
           type: 'application/json',
         });
@@ -611,22 +588,18 @@ export function SettingsProvider({ children }: { children: React.ReactNode }) {
     }
   }, [updateState]);
 
-  // Mark unsaved changes
   const markUnsavedChanges = useCallback(() => {
     updateState({ hasUnsavedChanges: true });
   }, [updateState]);
 
-  // Clear unsaved changes
   const clearUnsavedChanges = useCallback(() => {
     updateState({ hasUnsavedChanges: false });
   }, [updateState]);
 
-  // Auto-fetch settings when user authenticates
   useEffect(() => {
     if (isAuthenticated && user) {
       fetchSettings();
     } else {
-      // Clear settings when user logs out
       updateState({
         settings: null,
         loading: false,
@@ -636,10 +609,9 @@ export function SettingsProvider({ children }: { children: React.ReactNode }) {
     }
   }, [isAuthenticated, user, fetchSettings, updateState]);
 
-  // Context value
   const contextValue: SettingsContextType = {
     ...state,
-    isLoading: state.loading, // Add alias for component compatibility
+    isLoading: state.loading,
     fetchSettings,
     refreshSettings,
     updateSettings,

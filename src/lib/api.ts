@@ -580,7 +580,7 @@ export const settingsApi = {
   // Get current user settings
   getSettings: () => api.get('/api/v1/settings'),
 
-  //update all settings (partial updates supported)
+  // Update all settings (partial updates supported)
   updateSettings: (settingsData: PartialSettingsUpdate) =>
     api.put('/api/v1/settings', settingsData),
 
@@ -599,16 +599,27 @@ export const settingsApi = {
     email?: {
       enabled?: boolean;
       marketing?: boolean;
-      productUpdates?: boolean;
+      productUpdate?: boolean; // Backend expects "productUpdate" not "productUpdates"
       weeklyDigest?: boolean;
       contentReminders?: boolean;
+      security?: boolean;
+      updates?: boolean;
+      messages?: boolean;
+      reminders?: boolean;
+      reports?: boolean;
     };
 
     push?: {
       enabled?: boolean;
       contentPublished?: boolean;
-      trendsAlert?: boolean;
+      trendsAlert?: boolean; // Backend expects "trendsAlert" not "trendAlert"
       collaborativeInvites?: boolean;
+      security?: boolean;
+      updates?: boolean;
+      messages?: boolean;
+      reminders?: boolean;
+      marketing?: boolean;
+      reports?: boolean;
     };
 
     inApp?: {
@@ -616,6 +627,18 @@ export const settingsApi = {
       mentions?: boolean;
       comments?: boolean;
       likes?: boolean;
+      security?: boolean;
+      updates?: boolean;
+      messages?: boolean;
+      reminders?: boolean;
+      marketing?: boolean;
+      reports?: boolean;
+    };
+
+    quietHours?: {
+      enabled?: boolean;
+      startTime?: string;
+      endTime?: string;
     };
   }) => api.put('/api/v1/settings/notifications', notificationData),
 
@@ -632,7 +655,7 @@ export const settingsApi = {
     defaultContentType?: 'article' | 'post' | 'video';
     autoSave?: boolean;
     autoScheduling?: boolean;
-    aiSuggestions?: boolean;
+    aiSuggestion?: boolean; // Backend expects "aiSuggestion" not "aiSuggestions"
     contentLanguage?: string;
   }) => api.put('/api/v1/settings/content', contentData),
 
@@ -641,7 +664,7 @@ export const settingsApi = {
     sidebarCollapsed?: boolean;
     defaultView?: 'list' | 'grid';
     itemsPerPage?: number;
-    enableAnimations?: boolean;
+    enablesAnimation?: boolean; // Backend expects "enablesAnimation" not "enableAnimations"
     compactMode?: boolean;
   }) => api.put('/api/v1/settings/interface', interfaceData),
 
