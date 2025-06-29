@@ -1,5 +1,3 @@
-// src/types/settings.ts
-
 export interface UserSettings {
   _id: string;
   userId: string;
@@ -16,7 +14,7 @@ export interface UserSettings {
     timeFormat: '12h' | '24h';
   };
 
-  // Notification preferences - Updated structure
+  // Notification preferences - Updated structure to match backend
   notifications: {
     emailEnabled: boolean;
     pushEnabled: boolean;
@@ -172,26 +170,31 @@ export interface SettingsState {
 
 // Available options for dropdowns
 export const TIMEZONE_OPTIONS = [
-  { value: 'UTC', label: 'UTC' },
-  { value: 'EST', label: 'Eastern Time (EST)' },
-  { value: 'PST', label: 'Pacific Time (PST)' },
-  { value: 'GMT', label: 'Greenwich Mean Time (GMT)' },
-  { value: 'CET', label: 'Central European Time (CET)' },
-  { value: 'JST', label: 'Japan Standard Time (JST)' },
-  { value: 'CST', label: 'Central Standard Time (CST)' },
-  { value: 'MST', label: 'Mountain Standard Time (MST)' },
+  { value: 'UTC', label: 'UTC (Coordinated Universal Time)' },
+  { value: 'America/New_York', label: 'Eastern Time (ET)' },
+  { value: 'America/Chicago', label: 'Central Time (CT)' },
+  { value: 'America/Denver', label: 'Mountain Time (MT)' },
+  { value: 'America/Los_Angeles', label: 'Pacific Time (PT)' },
+  { value: 'Europe/London', label: 'London (GMT/BST)' },
+  { value: 'Europe/Paris', label: 'Paris (CET/CEST)' },
+  { value: 'Europe/Berlin', label: 'Berlin (CET/CEST)' },
+  { value: 'Asia/Tokyo', label: 'Tokyo (JST)' },
+  { value: 'Asia/Shanghai', label: 'Shanghai (CST)' },
+  { value: 'Asia/Mumbai', label: 'Mumbai (IST)' },
+  { value: 'Australia/Sydney', label: 'Sydney (AEST/AEDT)' },
 ] as const;
 
 export const LANGUAGE_OPTIONS = [
   { value: 'en', label: 'English' },
-  { value: 'es', label: 'Spanish' },
-  { value: 'fr', label: 'French' },
-  { value: 'de', label: 'German' },
-  { value: 'it', label: 'Italian' },
-  { value: 'pt', label: 'Portuguese' },
-  { value: 'zh', label: 'Chinese' },
-  { value: 'ja', label: 'Japanese' },
-  { value: 'ko', label: 'Korean' },
+  { value: 'es', label: 'Español' },
+  { value: 'fr', label: 'Français' },
+  { value: 'de', label: 'Deutsch' },
+  { value: 'it', label: 'Italiano' },
+  { value: 'pt', label: 'Português' },
+  { value: 'ru', label: 'Русский' },
+  { value: 'zh', label: '中文' },
+  { value: 'ja', label: '日本語' },
+  { value: 'ko', label: '한국어' },
 ] as const;
 
 export const PLATFORM_OPTIONS = [

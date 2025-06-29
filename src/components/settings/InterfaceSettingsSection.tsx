@@ -1,4 +1,3 @@
-// src/components/settings/InterfaceSettingsSection.tsx
 'use client';
 
 import React, { useState, useEffect } from 'react';
@@ -11,6 +10,7 @@ import {
   SunIcon,
   ComputerDesktopIcon,
 } from '@heroicons/react/24/outline';
+import { toast } from 'react-hot-toast';
 
 interface SelectFieldProps {
   label: string;
@@ -18,16 +18,8 @@ interface SelectFieldProps {
   onChange: (value: string | number) => void;
   options: { value: string | number; label: string }[];
   description?: string;
+  error?: string;
 }
-
-type InterfaceSettingsValue =
-  | 'light'
-  | 'dark'
-  | 'system' // theme values
-  | 'list'
-  | 'grid' // defaultView values
-  | boolean // sidebarCollapsed, enableAnimation, compactMode
-  | number;
 
 const SelectField: React.FC<SelectFieldProps> = ({
   label,
@@ -35,6 +27,7 @@ const SelectField: React.FC<SelectFieldProps> = ({
   onChange,
   options,
   description,
+  error,
 }) => {
   const [isOpen, setIsOpen] = useState(false);
 
@@ -55,7 +48,11 @@ const SelectField: React.FC<SelectFieldProps> = ({
         <button
           type='button'
           onClick={() => setIsOpen(!isOpen)}
-          className='w-full bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg px-3 py-2 text-left shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 flex items-center justify-between'
+          className={`w-full border rounded-lg px-3 py-2 text-left shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 flex items-center justify-between ${
+            error
+              ? 'border-red-300 dark:border-red-600 bg-red-50 dark:bg-red-900/20'
+              : 'border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800'
+          }`}
         >
           <span className='text-gray-900 dark:text-gray-100'>
             {options.find((opt) => opt.value === value)?.label || 'Select...'}
@@ -91,6 +88,10 @@ const SelectField: React.FC<SelectFieldProps> = ({
           </div>
         )}
       </div>
+
+      {error && (
+        <p className='text-xs text-red-600 dark:text-red-400'>{error}</p>
+      )}
     </div>
   );
 };
@@ -100,6 +101,7 @@ interface ThemeSelectorProps {
   description?: string;
   value: 'light' | 'dark' | 'system';
   onChange: (theme: 'light' | 'dark' | 'system') => void;
+  disabled?: boolean;
 }
 
 const ThemeSelector: React.FC<ThemeSelectorProps> = ({
@@ -107,6 +109,7 @@ const ThemeSelector: React.FC<ThemeSelectorProps> = ({
   description,
   value,
   onChange,
+  disabled = false,
 }) => {
   const { setTheme } = useTheme();
   const [mounted, setMounted] = useState(false);
@@ -129,6 +132,7 @@ const ThemeSelector: React.FC<ThemeSelectorProps> = ({
   ];
 
   const handleThemeChange = (themeValue: 'light' | 'dark' | 'system') => {
+    if (disabled) return;
     setTheme(themeValue); // Update next-themes
     onChange(themeValue); // Update local settings
   };
@@ -152,8 +156,11 @@ const ThemeSelector: React.FC<ThemeSelectorProps> = ({
             key={themeValue}
             type='button'
             onClick={() => handleThemeChange(themeValue)}
+            disabled={disabled}
             className={`p-3 rounded-lg border-2 transition-all duration-200 flex flex-col items-center space-y-2 ${
-              value === themeValue
+              disabled
+                ? 'opacity-50 cursor-not-allowed'
+                : value === themeValue
                 ? 'border-blue-500 bg-blue-50 dark:bg-blue-900/20'
                 : 'border-gray-200 dark:border-gray-700 hover:border-gray-300 dark:hover:border-gray-600'
             }`}
@@ -174,6 +181,7 @@ interface ToggleSwitchProps {
   description?: string;
   checked: boolean;
   onChange: (checked: boolean) => void;
+  disabled?: boolean;
 }
 
 const ToggleSwitch: React.FC<ToggleSwitchProps> = ({
@@ -181,15 +189,28 @@ const ToggleSwitch: React.FC<ToggleSwitchProps> = ({
   description,
   checked,
   onChange,
+  disabled = false,
 }) => {
   return (
     <div className='flex items-start justify-between'>
       <div className='flex-1'>
-        <h4 className='text-sm font-medium text-gray-900 dark:text-gray-100'>
+        <h4
+          className={`text-sm font-medium ${
+            disabled
+              ? 'text-gray-400 dark:text-gray-500'
+              : 'text-gray-900 dark:text-gray-100'
+          }`}
+        >
           {label}
         </h4>
         {description && (
-          <p className='text-xs text-gray-500 dark:text-gray-400 mt-1'>
+          <p
+            className={`text-xs mt-1 ${
+              disabled
+                ? 'text-gray-400 dark:text-gray-500'
+                : 'text-gray-500 dark:text-gray-400'
+            }`}
+          >
             {description}
           </p>
         )}
@@ -197,9 +218,14 @@ const ToggleSwitch: React.FC<ToggleSwitchProps> = ({
 
       <button
         type='button'
-        onClick={() => onChange(!checked)}
+        onClick={() => !disabled && onChange(!checked)}
+        disabled={disabled}
         className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 ${
-          checked ? 'bg-blue-600' : 'bg-gray-200 dark:bg-gray-700'
+          disabled
+            ? 'opacity-50 cursor-not-allowed bg-gray-200 dark:bg-gray-700'
+            : checked
+            ? 'bg-blue-600'
+            : 'bg-gray-200 dark:bg-gray-700'
         }`}
       >
         <span
@@ -218,6 +244,8 @@ const InterfaceSettingsSection: React.FC = () => {
     {}
   );
   const [hasChanges, setHasChanges] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
+  const [errors, setErrors] = useState<Record<string, string>>({});
 
   // Initialize local settings when global settings load
   useEffect(() => {
@@ -237,30 +265,109 @@ const InterfaceSettingsSection: React.FC = () => {
   useEffect(() => {
     if (!settings?.interface) return;
 
-    const hasChanges = Object.keys(localSettings).some((key) => {
-      const localKey = key as keyof InterfaceSettingsUpdate;
-      const globalKey = key as keyof typeof settings.interface;
-      return localSettings[localKey] !== settings.interface[globalKey];
-    });
+    const originalSettings = {
+      theme: settings.interface.theme || 'system',
+      sidebarCollapsed: settings.interface.sidebarCollapsed || false,
+      defaultView: settings.interface.defaultView || 'list',
+      itemsPerPage: settings.interface.itemsPerPage || 25,
+      enableAnimations: settings.interface.enableAnimation ?? true,
+      compactMode: settings.interface.compactMode || false,
+    };
 
+    const hasChanges =
+      JSON.stringify(localSettings) !== JSON.stringify(originalSettings);
     setHasChanges(hasChanges);
   }, [localSettings, settings?.interface]);
 
+  const validateForm = () => {
+    const newErrors: Record<string, string> = {};
+
+    if (!localSettings.theme) {
+      newErrors.theme = 'Theme selection is required';
+    }
+
+    if (!localSettings.defaultView) {
+      newErrors.defaultView = 'Default view is required';
+    }
+
+    if (!localSettings.itemsPerPage || localSettings.itemsPerPage < 1) {
+      newErrors.itemsPerPage = 'Items per page must be a positive number';
+    }
+
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
+  };
+
   const handleChange = (
     field: keyof InterfaceSettingsUpdate,
-    value: InterfaceSettingsValue
+    value: InterfaceSettingsUpdate[keyof InterfaceSettingsUpdate]
   ) => {
     setLocalSettings((prev) => ({
       ...prev,
       [field]: value,
     }));
+
+    // Clear error for this field
+    if (errors[field]) {
+      setErrors((prev) => ({
+        ...prev,
+        [field]: '',
+      }));
+    }
   };
 
   const handleSave = async () => {
+    if (!validateForm()) {
+      toast.error('Please fix the errors before saving');
+      return;
+    }
+
+    setIsSaving(true);
     try {
-      await updateSettings('interface', localSettings);
+      // Only send changed fields
+      const changedFields: InterfaceSettingsUpdate = {};
+
+      if (localSettings.theme !== settings?.interface?.theme) {
+        changedFields.theme = localSettings.theme;
+      }
+      if (
+        localSettings.sidebarCollapsed !== settings?.interface?.sidebarCollapsed
+      ) {
+        changedFields.sidebarCollapsed = localSettings.sidebarCollapsed;
+      }
+      if (localSettings.defaultView !== settings?.interface?.defaultView) {
+        changedFields.defaultView = localSettings.defaultView;
+      }
+      if (localSettings.itemsPerPage !== settings?.interface?.itemsPerPage) {
+        changedFields.itemsPerPage = localSettings.itemsPerPage;
+      }
+      if (
+        localSettings.enableAnimations !== settings?.interface?.enableAnimation
+      ) {
+        changedFields.enableAnimations = localSettings.enableAnimations;
+      }
+      if (localSettings.compactMode !== settings?.interface?.compactMode) {
+        changedFields.compactMode = localSettings.compactMode;
+      }
+
+      if (Object.keys(changedFields).length === 0) {
+        toast('No changes to save', {
+          icon: 'ℹ️',
+          style: {
+            background: '#3b82f6',
+            color: 'white',
+          },
+        });
+        return;
+      }
+
+      await updateSettings('interface', changedFields);
+      setHasChanges(false);
     } catch (error) {
-      console.error('Failed to save interface settings:', error);
+      console.error('Failed to update interface settings:', error);
+      // Error is already handled by the context with toast
+    } finally {
+      setIsSaving(false);
     }
   };
 
@@ -274,10 +381,12 @@ const InterfaceSettingsSection: React.FC = () => {
         enableAnimations: settings.interface.enableAnimation ?? true,
         compactMode: settings.interface.compactMode || false,
       });
+      setErrors({});
+      setHasChanges(false);
     }
   };
 
-  if (isLoading) {
+  if (isLoading && !settings) {
     return (
       <div className='space-y-6'>
         {[1, 2, 3, 4].map((i) => (
@@ -305,15 +414,17 @@ const InterfaceSettingsSection: React.FC = () => {
             <div className='flex items-center space-x-3'>
               <button
                 onClick={handleDiscard}
-                className='text-sm text-yellow-700 dark:text-yellow-300 hover:text-yellow-900 dark:hover:text-yellow-100'
+                disabled={isSaving}
+                className='text-sm text-yellow-700 dark:text-yellow-300 hover:text-yellow-900 dark:hover:text-yellow-100 disabled:opacity-50'
               >
                 Discard
               </button>
               <button
                 onClick={handleSave}
-                className='bg-yellow-600 hover:bg-yellow-700 text-white px-3 py-1 rounded-md text-sm font-medium'
+                disabled={isSaving}
+                className='bg-yellow-600 hover:bg-yellow-700 text-white px-3 py-1 rounded-md text-sm font-medium disabled:opacity-50 disabled:cursor-not-allowed'
               >
-                Save Changes
+                {isSaving ? 'Saving...' : 'Save Changes'}
               </button>
             </div>
           </div>
@@ -331,6 +442,7 @@ const InterfaceSettingsSection: React.FC = () => {
           description='Choose your preferred color scheme'
           value={localSettings.theme || 'system'}
           onChange={(theme) => handleChange('theme', theme)}
+          disabled={isSaving}
         />
       </div>
 
@@ -352,6 +464,7 @@ const InterfaceSettingsSection: React.FC = () => {
               { value: 'grid', label: 'Grid View' },
             ]}
             description='Choose how content is displayed by default'
+            error={errors.defaultView}
           />
 
           <SelectField
@@ -365,6 +478,7 @@ const InterfaceSettingsSection: React.FC = () => {
               { value: 100, label: '100 items' },
             ]}
             description='Number of items to show per page'
+            error={errors.itemsPerPage}
           />
         </div>
       </div>
@@ -381,6 +495,7 @@ const InterfaceSettingsSection: React.FC = () => {
             description='Use a more condensed layout to show more content'
             checked={localSettings.compactMode || false}
             onChange={(checked) => handleChange('compactMode', checked)}
+            disabled={isSaving}
           />
 
           <ToggleSwitch
@@ -388,6 +503,7 @@ const InterfaceSettingsSection: React.FC = () => {
             description='Hide the sidebar by default for more content space'
             checked={localSettings.sidebarCollapsed || false}
             onChange={(checked) => handleChange('sidebarCollapsed', checked)}
+            disabled={isSaving}
           />
 
           <ToggleSwitch
@@ -395,6 +511,7 @@ const InterfaceSettingsSection: React.FC = () => {
             description='Show smooth transitions and micro-interactions'
             checked={localSettings.enableAnimations ?? true}
             onChange={(checked) => handleChange('enableAnimations', checked)}
+            disabled={isSaving}
           />
         </div>
       </div>
@@ -454,6 +571,18 @@ const InterfaceSettingsSection: React.FC = () => {
               {localSettings.enableAnimations ? 'Enabled' : 'Disabled'}
             </span>
           </div>
+        </div>
+
+        {/* Preview of current settings */}
+        <div className='mt-4 p-3 bg-blue-50 dark:bg-blue-900/20 rounded-lg'>
+          <p className='text-sm text-blue-800 dark:text-blue-200'>
+            <span className='font-medium'>Active Configuration:</span>{' '}
+            {localSettings.theme} theme • {localSettings.defaultView} view •{' '}
+            {localSettings.itemsPerPage} items per page
+            {localSettings.compactMode && ' • Compact'}
+            {localSettings.sidebarCollapsed && ' • Sidebar collapsed'}
+            {!localSettings.enableAnimations && ' • Animations disabled'}
+          </p>
         </div>
       </div>
     </div>

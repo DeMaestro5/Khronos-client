@@ -1,4 +1,3 @@
-// src/components/settings/SecuritySettingsSection.tsx
 'use client';
 
 import React, { useState, useEffect } from 'react';
@@ -30,6 +29,7 @@ interface PasswordInputProps {
   placeholder?: string;
   error?: string;
   showStrength?: boolean;
+  disabled?: boolean;
 }
 
 const PasswordInput: React.FC<PasswordInputProps> = ({
@@ -39,6 +39,7 @@ const PasswordInput: React.FC<PasswordInputProps> = ({
   placeholder,
   error,
   showStrength = false,
+  disabled = false,
 }) => {
   const [showPassword, setShowPassword] = useState(false);
 
@@ -75,8 +76,11 @@ const PasswordInput: React.FC<PasswordInputProps> = ({
           value={value}
           onChange={(e) => onChange(e.target.value)}
           placeholder={placeholder}
+          disabled={disabled}
           className={`w-full px-3 py-2 border rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 pr-10 ${
-            error
+            disabled
+              ? 'opacity-50 cursor-not-allowed bg-gray-100 dark:bg-gray-700'
+              : error
               ? 'border-red-300 dark:border-red-600 bg-red-50 dark:bg-red-900/20'
               : 'border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800'
           } text-gray-900 dark:text-gray-100 placeholder-gray-500 dark:placeholder-gray-400`}
@@ -85,7 +89,12 @@ const PasswordInput: React.FC<PasswordInputProps> = ({
         <button
           type='button'
           onClick={() => setShowPassword(!showPassword)}
-          className='absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300'
+          disabled={disabled}
+          className={`absolute right-3 top-1/2 transform -translate-y-1/2 ${
+            disabled
+              ? 'text-gray-300 cursor-not-allowed'
+              : 'text-gray-400 hover:text-gray-600 dark:hover:text-gray-300'
+          }`}
         >
           {showPassword ? (
             <EyeSlashIcon className='h-4 w-4' />
@@ -96,7 +105,7 @@ const PasswordInput: React.FC<PasswordInputProps> = ({
       </div>
 
       {/* Password Strength Indicator */}
-      {strength && (
+      {strength && !disabled && (
         <div className='space-y-2'>
           <div className='flex items-center space-x-2'>
             <div className='flex-1 bg-gray-200 dark:bg-gray-700 rounded-full h-2'>
@@ -161,11 +170,13 @@ const PasswordInput: React.FC<PasswordInputProps> = ({
 interface TwoFactorSetupProps {
   enabled: boolean;
   onToggle: (enabled: boolean) => void;
+  disabled?: boolean;
 }
 
 const TwoFactorSetup: React.FC<TwoFactorSetupProps> = ({
   enabled,
   onToggle,
+  disabled = false,
 }) => {
   const [showSetup, setShowSetup] = useState(false);
   const [verificationCode, setVerificationCode] = useState('');
@@ -174,6 +185,7 @@ const TwoFactorSetup: React.FC<TwoFactorSetupProps> = ({
   const [isVerifying, setIsVerifying] = useState(false);
 
   const handleEnable2FA = async () => {
+    if (disabled) return;
     setShowSetup(true);
     // In a real app, you would call your API to get the QR code and setup secret
     setQrCode(
@@ -210,6 +222,13 @@ const TwoFactorSetup: React.FC<TwoFactorSetupProps> = ({
   };
 
   const handleDisable2FA = async () => {
+    if (disabled) return;
+    const confirmDisable = window.confirm(
+      'Are you sure you want to disable two-factor authentication? This will make your account less secure.'
+    );
+
+    if (!confirmDisable) return;
+
     try {
       onToggle(false);
       setShowSetup(false);
@@ -254,15 +273,17 @@ const TwoFactorSetup: React.FC<TwoFactorSetupProps> = ({
                     )
                   }
                   placeholder='Enter 6-digit code'
-                  className='mt-1 w-full px-3 py-2 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 rounded-lg text-center text-2xl tracking-widest'
+                  className='mt-1 w-full px-3 py-2 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 rounded-lg text-center text-2xl tracking-widest text-gray-900 dark:text-gray-100'
                   maxLength={6}
+                  disabled={isVerifying}
                 />
               </div>
 
               <div className='flex space-x-3'>
                 <button
                   onClick={() => setShowSetup(false)}
-                  className='flex-1 px-4 py-2 border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700'
+                  disabled={isVerifying}
+                  className='flex-1 px-4 py-2 border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 disabled:opacity-50 disabled:cursor-not-allowed'
                 >
                   Cancel
                 </button>
@@ -324,13 +345,31 @@ const TwoFactorSetup: React.FC<TwoFactorSetupProps> = ({
     <div className='flex items-center justify-between p-4 bg-gray-50 dark:bg-gray-900 rounded-lg'>
       <div className='flex items-center space-x-3'>
         <ShieldCheckIcon
-          className={`h-6 w-6 ${enabled ? 'text-green-500' : 'text-gray-400'}`}
+          className={`h-6 w-6 ${
+            enabled
+              ? 'text-green-500'
+              : disabled
+              ? 'text-gray-300'
+              : 'text-gray-400'
+          }`}
         />
         <div>
-          <h4 className='font-medium text-gray-900 dark:text-gray-100'>
+          <h4
+            className={`font-medium ${
+              disabled
+                ? 'text-gray-400 dark:text-gray-500'
+                : 'text-gray-900 dark:text-gray-100'
+            }`}
+          >
             Two-Factor Authentication
           </h4>
-          <p className='text-sm text-gray-500 dark:text-gray-400'>
+          <p
+            className={`text-sm ${
+              disabled
+                ? 'text-gray-400 dark:text-gray-500'
+                : 'text-gray-500 dark:text-gray-400'
+            }`}
+          >
             {enabled
               ? 'Your account is protected with 2FA'
               : 'Add an extra layer of security to your account'}
@@ -340,8 +379,11 @@ const TwoFactorSetup: React.FC<TwoFactorSetupProps> = ({
 
       <button
         onClick={enabled ? handleDisable2FA : handleEnable2FA}
-        className={`px-4 py-2 rounded-lg text-sm font-medium ${
-          enabled
+        disabled={disabled}
+        className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
+          disabled
+            ? 'opacity-50 cursor-not-allowed bg-gray-100 dark:bg-gray-700 text-gray-400'
+            : enabled
             ? 'bg-red-100 dark:bg-red-900/20 text-red-700 dark:text-red-300 hover:bg-red-200 dark:hover:bg-red-900/30'
             : 'bg-blue-100 dark:bg-blue-900/20 text-blue-700 dark:text-blue-300 hover:bg-blue-200 dark:hover:bg-blue-900/30'
         }`}
@@ -362,7 +404,9 @@ interface ActiveSession {
   ip: string;
 }
 
-const ActiveSessions: React.FC = () => {
+const ActiveSessions: React.FC<{ disabled?: boolean }> = ({
+  disabled = false,
+}) => {
   const [sessions] = useState<ActiveSession[]>([
     {
       id: '1',
@@ -394,23 +438,41 @@ const ActiveSessions: React.FC = () => {
   ]);
 
   const handleTerminateSession = (sessionId: string) => {
+    if (disabled) return;
     console.log('Terminating session:', sessionId);
-    toast.success('Session terminated successfully');
+    toast.success('Session terminated successfully (preview mode)');
   };
 
   const handleTerminateAllSessions = () => {
-    toast.success('All other sessions terminated');
+    if (disabled) return;
+    const confirmTerminate = window.confirm(
+      'Are you sure you want to terminate all other sessions? You will need to log in again on those devices.'
+    );
+
+    if (!confirmTerminate) return;
+    toast.success('All other sessions terminated (preview mode)');
   };
 
   return (
     <div className='space-y-4'>
       <div className='flex items-center justify-between'>
-        <h4 className='font-medium text-gray-900 dark:text-gray-100'>
+        <h4
+          className={`font-medium ${
+            disabled
+              ? 'text-gray-400 dark:text-gray-500'
+              : 'text-gray-900 dark:text-gray-100'
+          }`}
+        >
           Active Sessions
         </h4>
         <button
           onClick={handleTerminateAllSessions}
-          className='text-sm text-red-600 dark:text-red-400 hover:text-red-800 dark:hover:text-red-300'
+          disabled={disabled}
+          className={`text-sm transition-colors ${
+            disabled
+              ? 'text-gray-400 cursor-not-allowed'
+              : 'text-red-600 dark:text-red-400 hover:text-red-800 dark:hover:text-red-300'
+          }`}
         >
           Terminate All Others
         </button>
@@ -420,19 +482,37 @@ const ActiveSessions: React.FC = () => {
         {sessions.map((session) => (
           <div
             key={session.id}
-            className='flex items-center justify-between p-4 border border-gray-200 dark:border-gray-700 rounded-lg'
+            className={`flex items-center justify-between p-4 border rounded-lg ${
+              disabled
+                ? 'border-gray-200 dark:border-gray-700 opacity-50'
+                : 'border-gray-200 dark:border-gray-700'
+            }`}
           >
             <div className='flex items-center space-x-3'>
               {session.device.toLowerCase().includes('iphone') ||
               session.device.toLowerCase().includes('mobile') ? (
-                <DevicePhoneMobileIcon className='h-6 w-6 text-gray-400' />
+                <DevicePhoneMobileIcon
+                  className={`h-6 w-6 ${
+                    disabled ? 'text-gray-300' : 'text-gray-400'
+                  }`}
+                />
               ) : (
-                <ComputerDesktopIcon className='h-6 w-6 text-gray-400' />
+                <ComputerDesktopIcon
+                  className={`h-6 w-6 ${
+                    disabled ? 'text-gray-300' : 'text-gray-400'
+                  }`}
+                />
               )}
 
               <div>
                 <div className='flex items-center space-x-2'>
-                  <span className='font-medium text-gray-900 dark:text-gray-100'>
+                  <span
+                    className={`font-medium ${
+                      disabled
+                        ? 'text-gray-400 dark:text-gray-500'
+                        : 'text-gray-900 dark:text-gray-100'
+                    }`}
+                  >
                     {session.device}
                   </span>
                   {session.current && (
@@ -441,10 +521,22 @@ const ActiveSessions: React.FC = () => {
                     </span>
                   )}
                 </div>
-                <div className='text-sm text-gray-500 dark:text-gray-400'>
+                <div
+                  className={`text-sm ${
+                    disabled
+                      ? 'text-gray-400 dark:text-gray-500'
+                      : 'text-gray-500 dark:text-gray-400'
+                  }`}
+                >
                   {session.browser} • {session.location} • {session.ip}
                 </div>
-                <div className='flex items-center text-xs text-gray-400 dark:text-gray-500 mt-1'>
+                <div
+                  className={`flex items-center text-xs mt-1 ${
+                    disabled
+                      ? 'text-gray-400 dark:text-gray-500'
+                      : 'text-gray-400 dark:text-gray-500'
+                  }`}
+                >
                   <ClockIcon className='h-3 w-3 mr-1' />
                   Last active {session.lastActive}
                 </div>
@@ -454,7 +546,12 @@ const ActiveSessions: React.FC = () => {
             {!session.current && (
               <button
                 onClick={() => handleTerminateSession(session.id)}
-                className='text-sm text-red-600 dark:text-red-400 hover:text-red-800 dark:hover:text-red-300'
+                disabled={disabled}
+                className={`text-sm transition-colors ${
+                  disabled
+                    ? 'text-gray-400 cursor-not-allowed'
+                    : 'text-red-600 dark:text-red-400 hover:text-red-800 dark:hover:text-red-300'
+                }`}
               >
                 Terminate
               </button>
@@ -470,6 +567,9 @@ const SecuritySettingsSection: React.FC = () => {
   const { settings, isLoading } = useSettings();
   const [localSettings, setLocalSettings] = useState<SecuritySettings>({});
   const [hasChanges, setHasChanges] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
+  const [errors, setErrors] = useState<Record<string, string>>({});
+
   const [passwordForm, setPasswordForm] = useState({
     currentPassword: '',
     newPassword: '',
@@ -478,6 +578,7 @@ const SecuritySettingsSection: React.FC = () => {
   const [passwordErrors, setPasswordErrors] = useState<Record<string, string>>(
     {}
   );
+  const [isChangingPassword, setIsChangingPassword] = useState(false);
 
   // Helper function to get default security settings
   const getDefaultSecuritySettings = (): SecuritySettings => ({
@@ -532,6 +633,17 @@ const SecuritySettingsSection: React.FC = () => {
     setHasChanges(hasChanges);
   }, [localSettings, settings]);
 
+  const validateForm = () => {
+    const newErrors: Record<string, string> = {};
+
+    if (!localSettings.sessionTimeout) {
+      newErrors.sessionTimeout = 'Session timeout is required';
+    }
+
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
+  };
+
   const handleChange = (
     field: keyof SecuritySettings,
     value: SecuritySettings[keyof SecuritySettings]
@@ -540,6 +652,14 @@ const SecuritySettingsSection: React.FC = () => {
       ...prev,
       [field]: value,
     }));
+
+    // Clear error for this field
+    if (errors[field]) {
+      setErrors((prev) => ({
+        ...prev,
+        [field]: '',
+      }));
+    }
   };
 
   const validatePasswordForm = () => {
@@ -570,14 +690,16 @@ const SecuritySettingsSection: React.FC = () => {
 
   const handlePasswordChange = async () => {
     if (!validatePasswordForm()) {
+      toast.error('Please fix the errors before changing password');
       return;
     }
 
+    setIsChangingPassword(true);
     try {
       // In a real app, you would call your API to change the password
       await new Promise((resolve) => setTimeout(resolve, 1000));
 
-      toast.success('Password changed successfully');
+      toast.success('Password changed successfully (preview mode)');
       setPasswordForm({
         currentPassword: '',
         newPassword: '',
@@ -587,20 +709,34 @@ const SecuritySettingsSection: React.FC = () => {
     } catch (error: unknown) {
       console.error('Password change error:', error);
       toast.error('Failed to change password');
+    } finally {
+      setIsChangingPassword(false);
     }
   };
 
   const handleSave = async () => {
+    if (!validateForm()) {
+      toast.error('Please fix the errors before saving');
+      return;
+    }
+
+    setIsSaving(true);
     try {
       // Note: Server doesn't have security endpoint yet
+      console.log('Security settings to save:', localSettings);
+
+      // Simulate API call
+      await new Promise((resolve) => setTimeout(resolve, 1000));
+
       toast.success(
         'Security settings saved locally (server endpoint not implemented yet)'
       );
-      console.log('Security settings to save:', localSettings);
       setHasChanges(false);
     } catch (error: unknown) {
       console.error('Failed to save security settings:', error);
       toast.error('Failed to save security settings');
+    } finally {
+      setIsSaving(false);
     }
   };
 
@@ -620,9 +756,11 @@ const SecuritySettingsSection: React.FC = () => {
       // Reset to defaults
       setLocalSettings(getDefaultSecuritySettings());
     }
+    setErrors({});
+    setHasChanges(false);
   };
 
-  if (isLoading) {
+  if (isLoading && !settings) {
     return (
       <div className='space-y-6'>
         {[1, 2, 3].map((i) => (
@@ -635,6 +773,9 @@ const SecuritySettingsSection: React.FC = () => {
     );
   }
 
+  // Check if we're in preview mode (no backend security endpoint)
+  const isPreviewMode = true; // This would be false when backend implements security
+
   return (
     <div className='space-y-6'>
       {/* Security Notice */}
@@ -646,8 +787,8 @@ const SecuritySettingsSection: React.FC = () => {
               Security Settings Preview
             </p>
             <p className='text-xs text-blue-700 dark:text-blue-300 mt-1'>
-              Some security features may require server-side implementation to
-              be fully functional.
+              Security features are in preview mode and require server-side
+              implementation to be fully functional.
             </p>
           </div>
         </div>
@@ -666,15 +807,17 @@ const SecuritySettingsSection: React.FC = () => {
             <div className='flex items-center space-x-3'>
               <button
                 onClick={handleDiscard}
-                className='text-sm text-yellow-700 dark:text-yellow-300 hover:text-yellow-900 dark:hover:text-yellow-100'
+                disabled={isSaving}
+                className='text-sm text-yellow-700 dark:text-yellow-300 hover:text-yellow-900 dark:hover:text-yellow-100 disabled:opacity-50'
               >
                 Discard
               </button>
               <button
                 onClick={handleSave}
-                className='bg-yellow-600 hover:bg-yellow-700 text-white px-3 py-1 rounded-md text-sm font-medium'
+                disabled={isSaving}
+                className='bg-yellow-600 hover:bg-yellow-700 text-white px-3 py-1 rounded-md text-sm font-medium disabled:opacity-50 disabled:cursor-not-allowed'
               >
-                Save Changes
+                {isSaving ? 'Saving...' : 'Save Changes'}
               </button>
             </div>
           </div>
@@ -696,6 +839,7 @@ const SecuritySettingsSection: React.FC = () => {
             }
             placeholder='Enter your current password'
             error={passwordErrors.currentPassword}
+            disabled={isChangingPassword}
           />
 
           <PasswordInput
@@ -707,6 +851,7 @@ const SecuritySettingsSection: React.FC = () => {
             placeholder='Enter your new password'
             error={passwordErrors.newPassword}
             showStrength
+            disabled={isChangingPassword}
           />
 
           <PasswordInput
@@ -717,13 +862,15 @@ const SecuritySettingsSection: React.FC = () => {
             }
             placeholder='Confirm your new password'
             error={passwordErrors.confirmPassword}
+            disabled={isChangingPassword}
           />
 
           <button
             onClick={handlePasswordChange}
-            className='w-full bg-blue-600 hover:bg-blue-700 text-white py-2 px-4 rounded-lg font-medium'
+            disabled={isChangingPassword}
+            className='w-full bg-blue-600 hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed text-white py-2 px-4 rounded-lg font-medium transition-colors'
           >
-            Change Password
+            {isChangingPassword ? 'Changing...' : 'Change Password'}
           </button>
         </div>
       </div>
@@ -732,6 +879,7 @@ const SecuritySettingsSection: React.FC = () => {
       <TwoFactorSetup
         enabled={localSettings.twoFactorEnabled || false}
         onToggle={(enabled) => handleChange('twoFactorEnabled', enabled)}
+        disabled={isSaving}
       />
 
       {/* Security Preferences */}
@@ -743,10 +891,22 @@ const SecuritySettingsSection: React.FC = () => {
         <div className='space-y-4'>
           <div className='flex items-center justify-between'>
             <div>
-              <h4 className='font-medium text-gray-900 dark:text-gray-100'>
+              <h4
+                className={`font-medium ${
+                  isSaving
+                    ? 'text-gray-400 dark:text-gray-500'
+                    : 'text-gray-900 dark:text-gray-100'
+                }`}
+              >
                 Login Alerts
               </h4>
-              <p className='text-sm text-gray-500 dark:text-gray-400'>
+              <p
+                className={`text-sm ${
+                  isSaving
+                    ? 'text-gray-400 dark:text-gray-500'
+                    : 'text-gray-500 dark:text-gray-400'
+                }`}
+              >
                 Get notified when someone logs into your account
               </p>
             </div>
@@ -754,8 +914,11 @@ const SecuritySettingsSection: React.FC = () => {
               onClick={() =>
                 handleChange('loginAlerts', !localSettings.loginAlerts)
               }
+              disabled={isSaving}
               className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 ${
-                localSettings.loginAlerts
+                isSaving
+                  ? 'opacity-50 cursor-not-allowed bg-gray-200 dark:bg-gray-700'
+                  : localSettings.loginAlerts
                   ? 'bg-blue-600'
                   : 'bg-gray-200 dark:bg-gray-700'
               }`}
@@ -769,13 +932,26 @@ const SecuritySettingsSection: React.FC = () => {
           </div>
 
           <div className='space-y-2'>
-            <label className='text-sm font-medium text-gray-900 dark:text-gray-100'>
+            <label
+              className={`text-sm font-medium ${
+                isSaving
+                  ? 'text-gray-400 dark:text-gray-500'
+                  : 'text-gray-900 dark:text-gray-100'
+              }`}
+            >
               Session Timeout
             </label>
             <select
               value={localSettings.sessionTimeout || '24h'}
               onChange={(e) => handleChange('sessionTimeout', e.target.value)}
-              className='w-full px-3 py-2 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 rounded-lg text-gray-900 dark:text-gray-100'
+              disabled={isSaving}
+              className={`w-full px-3 py-2 border rounded-lg text-gray-900 dark:text-gray-100 ${
+                isSaving
+                  ? 'opacity-50 cursor-not-allowed bg-gray-100 dark:bg-gray-700 border-gray-300 dark:border-gray-600'
+                  : errors.sessionTimeout
+                  ? 'border-red-300 dark:border-red-600 bg-red-50 dark:bg-red-900/20'
+                  : 'border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800'
+              }`}
             >
               <option value='1h'>1 hour</option>
               <option value='8h'>8 hours</option>
@@ -783,8 +959,17 @@ const SecuritySettingsSection: React.FC = () => {
               <option value='7d'>7 days</option>
               <option value='30d'>30 days</option>
             </select>
-            <p className='text-xs text-gray-500 dark:text-gray-400'>
-              Automatically log out after this period of inactivity
+            <p
+              className={`text-xs ${
+                errors.sessionTimeout
+                  ? 'text-red-600 dark:text-red-400'
+                  : isSaving
+                  ? 'text-gray-400 dark:text-gray-500'
+                  : 'text-gray-500 dark:text-gray-400'
+              }`}
+            >
+              {errors.sessionTimeout ||
+                'Automatically log out after this period of inactivity'}
             </p>
           </div>
         </div>
@@ -795,7 +980,7 @@ const SecuritySettingsSection: React.FC = () => {
         <h3 className='text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4'>
           Account Security
         </h3>
-        <ActiveSessions />
+        <ActiveSessions disabled={isPreviewMode} />
       </div>
     </div>
   );

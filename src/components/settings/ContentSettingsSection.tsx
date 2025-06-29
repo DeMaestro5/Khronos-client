@@ -1,15 +1,10 @@
-// src/components/settings/ContentSettingsSection.tsx
 'use client';
 
 import React, { useState, useEffect } from 'react';
 import { useSettings } from '@/src/context/SettingsContext';
-import { settingsApi } from '@/src/lib/api';
 import { ContentSettingsUpdate, PLATFORM_OPTIONS } from '@/src/types/settings';
 import { DocumentTextIcon, VideoCameraIcon } from '@heroicons/react/24/outline';
 import { toast } from 'react-hot-toast';
-
-// Define content settings types to match server structure
-type ContentSettings = ContentSettingsUpdate;
 
 interface ToggleSwitchProps {
   label: string;
@@ -83,6 +78,7 @@ interface MultiSelectFieldProps {
     icon?: string;
   }[];
   description?: string;
+  error?: string;
 }
 
 const MultiSelectField: React.FC<MultiSelectFieldProps> = ({
@@ -91,6 +87,7 @@ const MultiSelectField: React.FC<MultiSelectFieldProps> = ({
   onChange,
   options,
   description,
+  error,
 }) => {
   const [isOpen, setIsOpen] = useState(false);
 
@@ -119,7 +116,11 @@ const MultiSelectField: React.FC<MultiSelectFieldProps> = ({
         <button
           type='button'
           onClick={() => setIsOpen(!isOpen)}
-          className='w-full bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg px-3 py-2 text-left shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 flex items-center justify-between'
+          className={`w-full border rounded-lg px-3 py-2 text-left shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 flex items-center justify-between ${
+            error
+              ? 'border-red-300 dark:border-red-600 bg-red-50 dark:bg-red-900/20'
+              : 'border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800'
+          }`}
         >
           <div className='flex flex-wrap gap-1'>
             {value.length === 0 ? (
@@ -184,6 +185,10 @@ const MultiSelectField: React.FC<MultiSelectFieldProps> = ({
           </div>
         )}
       </div>
+
+      {error && (
+        <p className='text-xs text-red-600 dark:text-red-400'>{error}</p>
+      )}
     </div>
   );
 };
@@ -302,115 +307,159 @@ const SelectField: React.FC<SelectFieldProps> = ({
 };
 
 const ContentSettingsSection: React.FC = () => {
-  const { settings, isLoading } = useSettings();
-  const [localSettings, setLocalSettings] = useState<ContentSettings>({});
+  const { settings, updateSettings, isLoading } = useSettings();
+  const [localSettings, setLocalSettings] = useState<ContentSettingsUpdate>({});
   const [hasChanges, setHasChanges] = useState(false);
-
-  // Helper function to get default content settings
-  const getDefaultContentSettings = (): ContentSettings => ({
-    defaultPlatforms: ['twitter'],
-    defaultContentType: 'post',
-    autoSave: true,
-    autoScheduling: false,
-    aiSuggestions: true,
-    contentLanguage: 'en',
-  });
+  const [isSaving, setIsSaving] = useState(false);
+  const [errors, setErrors] = useState<Record<string, string>>({});
 
   // Initialize local settings
   useEffect(() => {
-    const settingsWithContent = settings as unknown as {
-      content?: ContentSettings;
-    };
-    const contentSettings = settingsWithContent?.content;
-
-    if (contentSettings) {
+    if (settings?.content) {
       setLocalSettings({
-        defaultPlatforms: contentSettings.defaultPlatforms || ['twitter'],
-        defaultContentType: contentSettings.defaultContentType || 'post',
-        autoSave: contentSettings.autoSave ?? true,
-        autoScheduling: contentSettings.autoScheduling ?? false,
-        aiSuggestions: contentSettings.aiSuggestions ?? true,
-        contentLanguage: contentSettings.contentLanguage || 'en',
+        defaultPlatforms: settings.content.defaultPlatforms || ['twitter'],
+        defaultContentType: settings.content.defaultContentType || 'post',
+        autoSave: settings.content.autoSave ?? true,
+        autoScheduling: settings.content.autoScheduling ?? false,
+        aiSuggestions: settings.content.aiSuggestions ?? true,
+        contentLanguage: settings.content.contentLanguage || 'en',
       });
-    } else {
-      // Use sensible defaults if server doesn't have content settings yet
-      setLocalSettings(getDefaultContentSettings());
     }
-  }, [settings]);
+  }, [settings?.content]);
 
   // Check for changes
   useEffect(() => {
-    const settingsWithContent = settings as unknown as {
-      content?: ContentSettings;
-    };
-    const contentSettings = settingsWithContent?.content;
+    if (!settings?.content) return;
 
-    if (!contentSettings) {
-      // If no server settings, check against defaults
-      const defaultSettings = getDefaultContentSettings();
-      const hasChanges =
-        JSON.stringify(localSettings) !== JSON.stringify(defaultSettings);
-      setHasChanges(hasChanges);
-      return;
-    }
-
-    const serverSettings: ContentSettings = {
-      defaultPlatforms: contentSettings.defaultPlatforms || ['twitter'],
-      defaultContentType: contentSettings.defaultContentType || 'post',
-      autoSave: contentSettings.autoSave ?? true,
-      autoScheduling: contentSettings.autoScheduling ?? false,
-      aiSuggestions: contentSettings.aiSuggestions ?? true,
-      contentLanguage: contentSettings.contentLanguage || 'en',
+    const originalSettings = {
+      defaultPlatforms: settings.content.defaultPlatforms || ['twitter'],
+      defaultContentType: settings.content.defaultContentType || 'post',
+      autoSave: settings.content.autoSave ?? true,
+      autoScheduling: settings.content.autoScheduling ?? false,
+      aiSuggestions: settings.content.aiSuggestions ?? true,
+      contentLanguage: settings.content.contentLanguage || 'en',
     };
 
     const hasChanges =
-      JSON.stringify(localSettings) !== JSON.stringify(serverSettings);
+      JSON.stringify(localSettings) !== JSON.stringify(originalSettings);
     setHasChanges(hasChanges);
-  }, [localSettings, settings]);
+  }, [localSettings, settings?.content]);
+
+  const validateForm = () => {
+    const newErrors: Record<string, string> = {};
+
+    if (
+      !localSettings.defaultPlatforms ||
+      localSettings.defaultPlatforms.length === 0
+    ) {
+      newErrors.defaultPlatforms = 'At least one platform must be selected';
+    }
+
+    if (!localSettings.defaultContentType) {
+      newErrors.defaultContentType = 'Content type is required';
+    }
+
+    if (!localSettings.contentLanguage) {
+      newErrors.contentLanguage = 'Content language is required';
+    }
+
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
+  };
 
   const handleChange = (
-    field: keyof ContentSettings,
-    value: ContentSettings[keyof ContentSettings]
+    field: keyof ContentSettingsUpdate,
+    value: ContentSettingsUpdate[keyof ContentSettingsUpdate]
   ) => {
     setLocalSettings((prev) => ({
       ...prev,
       [field]: value,
     }));
+
+    // Clear error for this field
+    if (errors[field]) {
+      setErrors((prev) => ({
+        ...prev,
+        [field]: '',
+      }));
+    }
   };
 
   const handleSave = async () => {
+    if (!validateForm()) {
+      toast.error('Please fix the errors before saving');
+      return;
+    }
+
+    setIsSaving(true);
     try {
-      await settingsApi.updateContent(localSettings);
-      toast.success('Content settings saved successfully');
+      // Only send changed fields
+      const changedFields: ContentSettingsUpdate = {};
+
+      if (
+        JSON.stringify(localSettings.defaultPlatforms) !==
+        JSON.stringify(settings?.content?.defaultPlatforms)
+      ) {
+        changedFields.defaultPlatforms = localSettings.defaultPlatforms;
+      }
+      if (
+        localSettings.defaultContentType !==
+        settings?.content?.defaultContentType
+      ) {
+        changedFields.defaultContentType = localSettings.defaultContentType;
+      }
+      if (localSettings.autoSave !== settings?.content?.autoSave) {
+        changedFields.autoSave = localSettings.autoSave;
+      }
+      if (localSettings.autoScheduling !== settings?.content?.autoScheduling) {
+        changedFields.autoScheduling = localSettings.autoScheduling;
+      }
+      if (localSettings.aiSuggestions !== settings?.content?.aiSuggestions) {
+        changedFields.aiSuggestions = localSettings.aiSuggestions;
+      }
+      if (
+        localSettings.contentLanguage !== settings?.content?.contentLanguage
+      ) {
+        changedFields.contentLanguage = localSettings.contentLanguage;
+      }
+
+      if (Object.keys(changedFields).length === 0) {
+        toast('No changes to save', {
+          icon: 'ℹ️',
+          style: {
+            background: '#3b82f6',
+            color: 'white',
+          },
+        });
+        return;
+      }
+
+      await updateSettings('content', changedFields);
       setHasChanges(false);
-    } catch (error: unknown) {
-      console.error('Failed to save content settings:', error);
-      toast.error('Failed to save content settings');
+    } catch (error) {
+      console.error('Failed to update content settings:', error);
+      // Error is already handled by the context with toast
+    } finally {
+      setIsSaving(false);
     }
   };
 
   const handleDiscard = () => {
-    const settingsWithContent = settings as unknown as {
-      content?: ContentSettings;
-    };
-    const contentSettings = settingsWithContent?.content;
-
-    if (contentSettings) {
+    if (settings?.content) {
       setLocalSettings({
-        defaultPlatforms: contentSettings.defaultPlatforms || ['twitter'],
-        defaultContentType: contentSettings.defaultContentType || 'post',
-        autoSave: contentSettings.autoSave ?? true,
-        autoScheduling: contentSettings.autoScheduling ?? false,
-        aiSuggestions: contentSettings.aiSuggestions ?? true,
-        contentLanguage: contentSettings.contentLanguage || 'en',
+        defaultPlatforms: settings.content.defaultPlatforms || ['twitter'],
+        defaultContentType: settings.content.defaultContentType || 'post',
+        autoSave: settings.content.autoSave ?? true,
+        autoScheduling: settings.content.autoScheduling ?? false,
+        aiSuggestions: settings.content.aiSuggestions ?? true,
+        contentLanguage: settings.content.contentLanguage || 'en',
       });
-    } else {
-      // Reset to defaults
-      setLocalSettings(getDefaultContentSettings());
+      setErrors({});
+      setHasChanges(false);
     }
   };
 
-  if (isLoading) {
+  if (isLoading && !settings) {
     return (
       <div className='space-y-6'>
         {[1, 2, 3].map((i) => (
@@ -458,22 +507,6 @@ const ContentSettingsSection: React.FC = () => {
 
   return (
     <div className='space-y-6'>
-      {/* Content Notice */}
-      <div className='bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-4'>
-        <div className='flex items-center'>
-          <DocumentTextIcon className='h-5 w-5 text-blue-600 dark:text-blue-400 mr-3' />
-          <div>
-            <p className='text-sm font-medium text-blue-800 dark:text-blue-200'>
-              Content Settings Preview
-            </p>
-            <p className='text-xs text-blue-700 dark:text-blue-300 mt-1'>
-              These settings will be applied to new content creation and may
-              require server-side implementation.
-            </p>
-          </div>
-        </div>
-      </div>
-
       {/* Unsaved Changes Banner */}
       {hasChanges && (
         <div className='bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 rounded-lg p-4'>
@@ -487,15 +520,17 @@ const ContentSettingsSection: React.FC = () => {
             <div className='flex items-center space-x-3'>
               <button
                 onClick={handleDiscard}
-                className='text-sm text-yellow-700 dark:text-yellow-300 hover:text-yellow-900 dark:hover:text-yellow-100'
+                disabled={isSaving}
+                className='text-sm text-yellow-700 dark:text-yellow-300 hover:text-yellow-900 dark:hover:text-yellow-100 disabled:opacity-50'
               >
                 Discard
               </button>
               <button
                 onClick={handleSave}
-                className='bg-yellow-600 hover:bg-yellow-700 text-white px-3 py-1 rounded-md text-sm font-medium'
+                disabled={isSaving}
+                className='bg-yellow-600 hover:bg-yellow-700 text-white px-3 py-1 rounded-md text-sm font-medium disabled:opacity-50 disabled:cursor-not-allowed'
               >
-                Save Changes
+                {isSaving ? 'Saving...' : 'Save Changes'}
               </button>
             </div>
           </div>
@@ -519,6 +554,7 @@ const ContentSettingsSection: React.FC = () => {
               icon: opt.icon,
             }))}
             description='Platforms to use for new content creation'
+            error={errors.defaultPlatforms}
           />
 
           <SelectField
@@ -556,6 +592,7 @@ const ContentSettingsSection: React.FC = () => {
             description='Automatically save your work as you create content'
             checked={localSettings.autoSave || false}
             onChange={(checked) => handleChange('autoSave', checked)}
+            disabled={isSaving}
           />
 
           <ToggleSwitch
@@ -563,6 +600,7 @@ const ContentSettingsSection: React.FC = () => {
             description='Automatically schedule content based on optimal posting times'
             checked={localSettings.autoScheduling || false}
             onChange={(checked) => handleChange('autoScheduling', checked)}
+            disabled={isSaving}
           />
         </div>
       </div>
@@ -579,6 +617,7 @@ const ContentSettingsSection: React.FC = () => {
             description='Enable AI-powered content suggestions and assistance'
             checked={localSettings.aiSuggestions || false}
             onChange={(checked) => handleChange('aiSuggestions', checked)}
+            disabled={isSaving}
           />
         </div>
       </div>

@@ -225,8 +225,9 @@ const ProfileSettingsSection: React.FC = () => {
   const [localSettings, setLocalSettings] = useState<ProfileSettingsUpdate>({});
   const [hasChanges, setHasChanges] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
+  const [isSaving, setIsSaving] = useState(false);
 
-  // Initialize local settings based on actual server structure
+  // Initialize local settings
   useEffect(() => {
     if (settings?.profile) {
       setLocalSettings({
@@ -247,19 +248,16 @@ const ProfileSettingsSection: React.FC = () => {
     if (!settings?.profile) return;
 
     const profileChanged = Object.keys(localSettings).some((key) => {
-      return (
-        localSettings[key as keyof ProfileSettingsUpdate] !==
-        settings.profile[key as keyof typeof settings.profile]
-      );
+      const localValue = localSettings[key as keyof ProfileSettingsUpdate];
+      const serverValue =
+        settings.profile[key as keyof typeof settings.profile];
+      return localValue !== serverValue;
     });
 
     setHasChanges(profileChanged);
   }, [localSettings, settings?.profile]);
 
-  const handleChange = (
-    field: keyof ProfileSettingsUpdate,
-    value: ProfileSettingsUpdate[keyof ProfileSettingsUpdate]
-  ) => {
+  const handleChange = (field: keyof ProfileSettingsUpdate, value: string) => {
     setLocalSettings((prev) => ({
       ...prev,
       [field]: value,
@@ -279,6 +277,12 @@ const ProfileSettingsSection: React.FC = () => {
 
     if (!localSettings.displayName?.trim()) {
       newErrors.displayName = 'Display name is required';
+    } else if (localSettings.displayName.length > 100) {
+      newErrors.displayName = 'Display name must be 100 characters or less';
+    }
+
+    if (localSettings.bio && localSettings.bio.length > 500) {
+      newErrors.bio = 'Bio must be 500 characters or less';
     }
 
     if (
@@ -287,6 +291,10 @@ const ProfileSettingsSection: React.FC = () => {
     ) {
       newErrors.website =
         'Please enter a valid URL (starting with http:// or https://)';
+    }
+
+    if (localSettings.location && localSettings.location.length > 100) {
+      newErrors.location = 'Location must be 100 characters or less';
     }
 
     setErrors(newErrors);
@@ -299,10 +307,80 @@ const ProfileSettingsSection: React.FC = () => {
       return;
     }
 
+    setIsSaving(true);
     try {
-      await updateSettings('profile', localSettings);
+      // Only send changed fields
+      const changedFields: ProfileSettingsUpdate = {};
+
+      // Check each field explicitly
+      if (
+        localSettings.displayName !== settings?.profile.displayName &&
+        localSettings.displayName !== undefined
+      ) {
+        changedFields.displayName = localSettings.displayName;
+      }
+      if (
+        localSettings.bio !== settings?.profile.bio &&
+        localSettings.bio !== undefined
+      ) {
+        changedFields.bio = localSettings.bio;
+      }
+      if (
+        localSettings.location !== settings?.profile.location &&
+        localSettings.location !== undefined
+      ) {
+        changedFields.location = localSettings.location;
+      }
+      if (
+        localSettings.website !== settings?.profile.website &&
+        localSettings.website !== undefined
+      ) {
+        changedFields.website = localSettings.website;
+      }
+      if (
+        localSettings.timezone !== settings?.profile.timezone &&
+        localSettings.timezone !== undefined
+      ) {
+        changedFields.timezone = localSettings.timezone;
+      }
+      if (
+        localSettings.language !== settings?.profile.language &&
+        localSettings.language !== undefined
+      ) {
+        changedFields.language = localSettings.language;
+      }
+      if (
+        localSettings.dateFormat !== settings?.profile.dateFormat &&
+        localSettings.dateFormat !== undefined
+      ) {
+        changedFields.dateFormat = localSettings.dateFormat;
+      }
+      if (
+        localSettings.timeFormat !== settings?.profile.timeFormat &&
+        localSettings.timeFormat !== undefined
+      ) {
+        changedFields.timeFormat = localSettings.timeFormat;
+      }
+
+      if (Object.keys(changedFields).length === 0) {
+        // Changed from toast.info to toast.success with info styling
+        toast('No changes to save', {
+          icon: 'ℹ️',
+          style: {
+            background: '#3b82f6',
+            color: 'white',
+          },
+        });
+        return;
+      }
+
+      await updateSettings('profile', changedFields);
+      setHasChanges(false);
     } catch (error) {
       console.error('Failed to update profile:', error);
+      // Error is already handled by the context with toast
+    } finally {
+      setIsSaving(false);
     }
   };
 
@@ -319,10 +397,11 @@ const ProfileSettingsSection: React.FC = () => {
         timeFormat: settings.profile.timeFormat || '12h',
       });
       setErrors({});
+      setHasChanges(false);
     }
   };
 
-  if (isLoading) {
+  if (isLoading && !settings) {
     return (
       <div className='space-y-6'>
         {[1, 2, 3, 4].map((i) => (
@@ -350,15 +429,17 @@ const ProfileSettingsSection: React.FC = () => {
             <div className='flex items-center space-x-3'>
               <button
                 onClick={handleDiscard}
-                className='text-sm text-yellow-700 dark:text-yellow-300 hover:text-yellow-900 dark:hover:text-yellow-100'
+                disabled={isSaving}
+                className='text-sm text-yellow-700 dark:text-yellow-300 hover:text-yellow-900 dark:hover:text-yellow-100 disabled:opacity-50'
               >
                 Discard
               </button>
               <button
                 onClick={handleSave}
-                className='bg-yellow-600 hover:bg-yellow-700 text-white px-3 py-1 rounded-md text-sm font-medium'
+                disabled={isSaving}
+                className='bg-yellow-600 hover:bg-yellow-700 text-white px-3 py-1 rounded-md text-sm font-medium disabled:opacity-50 disabled:cursor-not-allowed'
               >
-                Save Changes
+                {isSaving ? 'Saving...' : 'Save Changes'}
               </button>
             </div>
           </div>
@@ -411,12 +492,13 @@ const ProfileSettingsSection: React.FC = () => {
               placeholder='City, Country'
               description="Where you're based"
               maxLength={100}
+              error={errors.location}
             />
           </div>
         </div>
       </div>
 
-      {/* Preferences */}
+      {/* Language & Regional Preferences */}
       <div className='bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-6'>
         <h3 className='text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4'>
           Language & Regional Preferences
@@ -466,12 +548,7 @@ const ProfileSettingsSection: React.FC = () => {
           <SelectField
             label='Date Format'
             value={localSettings.dateFormat || 'MM/DD/YYYY'}
-            onChange={(value) =>
-              handleChange(
-                'dateFormat',
-                value as 'MM/DD/YYYY' | 'DD/MM/YYYY' | 'YYYY-MM-DD'
-              )
-            }
+            onChange={(value) => handleChange('dateFormat', value)}
             options={[
               { value: 'MM/DD/YYYY', label: 'MM/DD/YYYY (US)' },
               { value: 'DD/MM/YYYY', label: 'DD/MM/YYYY (UK)' },
@@ -483,9 +560,7 @@ const ProfileSettingsSection: React.FC = () => {
           <SelectField
             label='Time Format'
             value={localSettings.timeFormat || '12h'}
-            onChange={(value) =>
-              handleChange('timeFormat', value as '12h' | '24h')
-            }
+            onChange={(value) => handleChange('timeFormat', value)}
             options={[
               { value: '12h', label: '12-hour (1:30 PM)' },
               { value: '24h', label: '24-hour (13:30)' },
@@ -495,7 +570,7 @@ const ProfileSettingsSection: React.FC = () => {
         </div>
       </div>
 
-      {/* Settings Summary */}
+      {/* Profile Summary */}
       <div className='bg-gray-50 dark:bg-gray-900 rounded-lg border border-gray-200 dark:border-gray-700 p-6'>
         <h3 className='text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4'>
           Profile Summary

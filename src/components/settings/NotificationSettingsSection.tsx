@@ -1,4 +1,3 @@
-// src/components/settings/NotificationSettingsSection.tsx
 'use client';
 
 import React, { useState, useEffect } from 'react';
@@ -11,6 +10,7 @@ import {
   CheckCircleIcon,
   XCircleIcon,
 } from '@heroicons/react/24/outline';
+import { toast } from 'react-hot-toast';
 
 // Define notification type keys as a union type for type safety
 type NotificationTypeKey =
@@ -21,7 +21,6 @@ type NotificationTypeKey =
   | 'marketing'
   | 'reports';
 
-// Type guard to check if a string is a valid notification type key
 interface ToggleSwitchProps {
   checked: boolean;
   onChange: (checked: boolean) => void;
@@ -36,9 +35,7 @@ const ToggleSwitch: React.FC<ToggleSwitchProps> = ({
   size = 'md',
 }) => {
   const sizeClasses = size === 'sm' ? 'h-5 w-9' : 'h-6 w-11';
-
   const thumbClasses = size === 'sm' ? 'h-3 w-3' : 'h-4 w-4';
-
   const translateClasses =
     size === 'sm'
       ? checked
@@ -187,6 +184,7 @@ interface QuietHoursProps {
   onEnabledChange: (enabled: boolean) => void;
   onStartTimeChange: (time: string) => void;
   onEndTimeChange: (time: string) => void;
+  error?: string;
 }
 
 const QuietHours: React.FC<QuietHoursProps> = ({
@@ -196,6 +194,7 @@ const QuietHours: React.FC<QuietHoursProps> = ({
   onEnabledChange,
   onStartTimeChange,
   onEndTimeChange,
+  error,
 }) => {
   return (
     <div className='bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-6'>
@@ -223,7 +222,11 @@ const QuietHours: React.FC<QuietHoursProps> = ({
                 type='time'
                 value={startTime}
                 onChange={(e) => onStartTimeChange(e.target.value)}
-                className='w-full px-3 py-2 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 rounded-lg text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500'
+                className={`w-full px-3 py-2 border rounded-lg text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 ${
+                  error
+                    ? 'border-red-300 dark:border-red-600 bg-red-50 dark:bg-red-900/20'
+                    : 'border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800'
+                }`}
               />
             </div>
 
@@ -235,13 +238,23 @@ const QuietHours: React.FC<QuietHoursProps> = ({
                 type='time'
                 value={endTime}
                 onChange={(e) => onEndTimeChange(e.target.value)}
-                className='w-full px-3 py-2 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 rounded-lg text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500'
+                className={`w-full px-3 py-2 border rounded-lg text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 ${
+                  error
+                    ? 'border-red-300 dark:border-red-600 bg-red-50 dark:bg-red-900/20'
+                    : 'border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800'
+                }`}
               />
             </div>
           </div>
 
+          {error && (
+            <p className='text-xs text-red-600 dark:text-red-400 mt-2'>
+              {error}
+            </p>
+          )}
+
           <p className='text-xs text-gray-500 dark:text-gray-400 mt-2'>
-            {enabled && startTime && endTime && (
+            {enabled && startTime && endTime && !error && (
               <>
                 Notifications will be silenced from {formatTime(startTime)} to{' '}
                 {formatTime(endTime)}
@@ -256,11 +269,15 @@ const QuietHours: React.FC<QuietHoursProps> = ({
 
 // Helper function to format time
 const formatTime = (time: string) => {
-  return new Date(`2000-01-01T${time}`).toLocaleTimeString('en-US', {
-    hour: 'numeric',
-    minute: '2-digit',
-    hour12: true,
-  });
+  try {
+    return new Date(`2000-01-01T${time}`).toLocaleTimeString('en-US', {
+      hour: 'numeric',
+      minute: '2-digit',
+      hour12: true,
+    });
+  } catch {
+    return time;
+  }
 };
 
 const NotificationSettingsSection: React.FC = () => {
@@ -268,6 +285,8 @@ const NotificationSettingsSection: React.FC = () => {
   const [localSettings, setLocalSettings] =
     useState<NotificationSettingsUpdate>({});
   const [hasChanges, setHasChanges] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
+  const [errors, setErrors] = useState<Record<string, string>>({});
 
   // Initialize local settings when global settings load
   useEffect(() => {
@@ -290,22 +309,43 @@ const NotificationSettingsSection: React.FC = () => {
   useEffect(() => {
     if (!settings?.notifications) return;
 
-    const hasChanges =
-      JSON.stringify(localSettings) !==
-      JSON.stringify({
-        emailEnabled: settings.notifications.emailEnabled,
-        pushEnabled: settings.notifications.pushEnabled,
-        inAppEnabled: settings.notifications.inAppEnabled,
-        emailTypes: settings.notifications.emailTypes,
-        pushTypes: settings.notifications.pushTypes,
-        inAppTypes: settings.notifications.inAppTypes,
-        quietHoursEnabled: settings.notifications.quietHoursEnabled,
-        quietHoursStart: settings.notifications.quietHoursStart,
-        quietHoursEnd: settings.notifications.quietHoursEnd,
-      });
+    const originalSettings = {
+      emailEnabled: settings.notifications.emailEnabled,
+      pushEnabled: settings.notifications.pushEnabled,
+      inAppEnabled: settings.notifications.inAppEnabled,
+      emailTypes: settings.notifications.emailTypes,
+      pushTypes: settings.notifications.pushTypes,
+      inAppTypes: settings.notifications.inAppTypes,
+      quietHoursEnabled: settings.notifications.quietHoursEnabled,
+      quietHoursStart: settings.notifications.quietHoursStart,
+      quietHoursEnd: settings.notifications.quietHoursEnd,
+    };
 
+    const hasChanges =
+      JSON.stringify(localSettings) !== JSON.stringify(originalSettings);
     setHasChanges(hasChanges);
   }, [localSettings, settings?.notifications]);
+
+  const validateQuietHours = () => {
+    const newErrors: Record<string, string> = {};
+
+    if (localSettings.quietHoursEnabled) {
+      const startTime = localSettings.quietHoursStart;
+      const endTime = localSettings.quietHoursEnd;
+
+      if (!startTime || !endTime) {
+        newErrors.quietHours = 'Both start and end times are required';
+      } else if (
+        !/^([0-1]?[0-9]|2[0-3]):[0-5][0-9]$/.test(startTime) ||
+        !/^([0-1]?[0-9]|2[0-3]):[0-5][0-9]$/.test(endTime)
+      ) {
+        newErrors.quietHours = 'Please enter valid time format (HH:MM)';
+      }
+    }
+
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
+  };
 
   const handleSectionToggle = (
     section: 'email' | 'push' | 'inApp',
@@ -315,6 +355,14 @@ const NotificationSettingsSection: React.FC = () => {
       ...prev,
       [`${section}Enabled`]: enabled,
     }));
+
+    // Clear related errors
+    if (errors[section]) {
+      setErrors((prev) => ({
+        ...prev,
+        [section]: '',
+      }));
+    }
   };
 
   const handleTypeToggle = (
@@ -340,7 +388,88 @@ const NotificationSettingsSection: React.FC = () => {
   };
 
   const handleSave = async () => {
-    await updateSettings('notifications', localSettings);
+    if (!validateQuietHours()) {
+      toast.error('Please fix the errors before saving');
+      return;
+    }
+
+    setIsSaving(true);
+    try {
+      // Only send changed fields
+      const changedFields: NotificationSettingsUpdate = {};
+
+      if (localSettings.emailEnabled !== settings?.notifications.emailEnabled) {
+        changedFields.emailEnabled = localSettings.emailEnabled;
+      }
+      if (localSettings.pushEnabled !== settings?.notifications.pushEnabled) {
+        changedFields.pushEnabled = localSettings.pushEnabled;
+      }
+      if (localSettings.inAppEnabled !== settings?.notifications.inAppEnabled) {
+        changedFields.inAppEnabled = localSettings.inAppEnabled;
+      }
+
+      // Check email types
+      if (
+        JSON.stringify(localSettings.emailTypes) !==
+        JSON.stringify(settings?.notifications.emailTypes)
+      ) {
+        changedFields.emailTypes = localSettings.emailTypes;
+      }
+
+      // Check push types
+      if (
+        JSON.stringify(localSettings.pushTypes) !==
+        JSON.stringify(settings?.notifications.pushTypes)
+      ) {
+        changedFields.pushTypes = localSettings.pushTypes;
+      }
+
+      // Check in-app types
+      if (
+        JSON.stringify(localSettings.inAppTypes) !==
+        JSON.stringify(settings?.notifications.inAppTypes)
+      ) {
+        changedFields.inAppTypes = localSettings.inAppTypes;
+      }
+
+      // Check quiet hours
+      if (
+        localSettings.quietHoursEnabled !==
+        settings?.notifications.quietHoursEnabled
+      ) {
+        changedFields.quietHoursEnabled = localSettings.quietHoursEnabled;
+      }
+      if (
+        localSettings.quietHoursStart !==
+        settings?.notifications.quietHoursStart
+      ) {
+        changedFields.quietHoursStart = localSettings.quietHoursStart;
+      }
+      if (
+        localSettings.quietHoursEnd !== settings?.notifications.quietHoursEnd
+      ) {
+        changedFields.quietHoursEnd = localSettings.quietHoursEnd;
+      }
+
+      if (Object.keys(changedFields).length === 0) {
+        toast('No changes to save', {
+          icon: 'ℹ️',
+          style: {
+            background: '#3b82f6',
+            color: 'white',
+          },
+        });
+        return;
+      }
+
+      await updateSettings('notifications', changedFields);
+      setHasChanges(false);
+    } catch (error) {
+      console.error('Failed to update notification settings:', error);
+      // Error is already handled by the context with toast
+    } finally {
+      setIsSaving(false);
+    }
   };
 
   const handleDiscard = () => {
@@ -356,10 +485,12 @@ const NotificationSettingsSection: React.FC = () => {
         quietHoursStart: settings.notifications.quietHoursStart,
         quietHoursEnd: settings.notifications.quietHoursEnd,
       });
+      setErrors({});
+      setHasChanges(false);
     }
   };
 
-  if (isLoading) {
+  if (isLoading && !settings) {
     return (
       <div className='space-y-6'>
         {[1, 2, 3, 4].map((i) => (
@@ -418,15 +549,17 @@ const NotificationSettingsSection: React.FC = () => {
             <div className='flex items-center space-x-3'>
               <button
                 onClick={handleDiscard}
-                className='text-sm text-yellow-700 dark:text-yellow-300 hover:text-yellow-900 dark:hover:text-yellow-100'
+                disabled={isSaving}
+                className='text-sm text-yellow-700 dark:text-yellow-300 hover:text-yellow-900 dark:hover:text-yellow-100 disabled:opacity-50'
               >
                 Discard
               </button>
               <button
                 onClick={handleSave}
-                className='bg-yellow-600 hover:bg-yellow-700 text-white px-3 py-1 rounded-md text-sm font-medium'
+                disabled={isSaving}
+                className='bg-yellow-600 hover:bg-yellow-700 text-white px-3 py-1 rounded-md text-sm font-medium disabled:opacity-50 disabled:cursor-not-allowed'
               >
-                Save Changes
+                {isSaving ? 'Saving...' : 'Save Changes'}
               </button>
             </div>
           </div>
@@ -534,6 +667,7 @@ const NotificationSettingsSection: React.FC = () => {
         onEndTimeChange={(time) =>
           setLocalSettings((prev) => ({ ...prev, quietHoursEnd: time }))
         }
+        error={errors.quietHours}
       />
 
       {/* Notification Summary */}
