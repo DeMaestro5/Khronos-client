@@ -1,12 +1,11 @@
-import { useState, useEffect } from 'react';
-import { CreateContentModalProps } from '../../types/modal';
+import React, { useState, useEffect } from 'react';
+import { CreateContentModalProps, CreatedContent } from '../../types/modal';
 import {
   ContentFormData,
   FormErrors,
   ContentType,
   Platform,
   Priority,
-  ContentItem,
 } from '../../types/modal';
 import {
   FileText,
@@ -25,12 +24,98 @@ import {
 } from 'lucide-react';
 import { Modal } from '../modal';
 import AISuggestionButton from '../ai/ai-suggestion-button';
+import { contentAPI } from '../../lib/api';
+import toast from 'react-hot-toast';
+import { AxiosResponse } from 'axios';
 
 interface AISuggestionResult {
   title: string;
   description: string;
   tags: string[];
 }
+
+interface ContentCreateRequest {
+  title: string;
+  description?: string;
+  type: string;
+  platform: string[];
+  tags?: string[];
+  scheduledDate?: string;
+}
+
+interface ContentResponseData {
+  _id?: string;
+  title?: string;
+  description?: string;
+  type?: string;
+  platform?: string[];
+  tags?: string[];
+  status?: string;
+  createdAt?: string;
+  updatedAt?: string;
+  [key: string]: unknown;
+}
+
+interface APIResponseData {
+  content?: ContentResponseData;
+  [key: string]: unknown;
+}
+
+interface APIResponse {
+  statusCode?: string;
+  success?: boolean;
+  message?: string;
+  data?: APIResponseData;
+  content?: ContentResponseData;
+}
+
+// Simple Animated Loading Toast Component
+interface SimpleAnimatedToastProps {
+  onClose?: () => void;
+}
+
+const SimpleAnimatedToast: React.FC<SimpleAnimatedToastProps> = ({
+  onClose,
+}) => {
+  const [dotCount, setDotCount] = useState(0);
+
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setDotCount((prev) => (prev + 1) % 4);
+    }, 500);
+    return () => clearInterval(interval);
+  }, []);
+
+  return (
+    <div className='bg-white dark:bg-slate-800 rounded-xl shadow-lg border border-gray-200 dark:border-slate-600 p-4 flex items-center space-x-3 min-w-[280px]'>
+      {/* Simple rotating spinner */}
+      <div className='relative'>
+        <div className='w-6 h-6 border-2 border-purple-200 border-t-purple-600 rounded-full animate-spin' />
+        <div className='absolute inset-0 w-6 h-6 border border-purple-300 rounded-full animate-ping opacity-30' />
+      </div>
+
+      {/* Simple text with animated dots */}
+      <div className='flex-1'>
+        <p className='text-sm font-medium text-gray-900 dark:text-white'>
+          Creating content{'.'.repeat(dotCount + 1)}
+        </p>
+        <p className='text-xs text-gray-500 dark:text-slate-400'>
+          This will just take a moment
+        </p>
+      </div>
+
+      {/* Simple close button */}
+      {onClose && (
+        <button
+          onClick={onClose}
+          className='text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 transition-colors p-1'
+        >
+          <X className='w-4 h-4' />
+        </button>
+      )}
+    </div>
+  );
+};
 
 export default function CreateContentModal({
   isOpen,
@@ -63,7 +148,6 @@ export default function CreateContentModal({
   }, [isOpen]);
 
   const resetForm = () => {
-    console.log('Resetting form with initialData:', initialData);
     const newFormData: ContentFormData = {
       title: initialData?.title || '',
       description: initialData?.description || '',
@@ -75,7 +159,6 @@ export default function CreateContentModal({
       priority: 'medium',
       status: 'draft',
     };
-    console.log('Setting form data to:', newFormData);
     setFormData(newFormData);
     setErrors({});
     setNewTag('');
@@ -83,19 +166,24 @@ export default function CreateContentModal({
 
   // AI Suggestion Handler
   const handleAISuggestion = (suggestion: AISuggestionResult) => {
-    setFormData((prev) => {
-      const newFormData = {
-        ...prev,
-        title: suggestion.title || '',
-        description: suggestion.description || '',
-        tags: [
-          ...prev.tags,
-          ...suggestion.tags.filter((tag) => !prev.tags.includes(tag)),
-        ],
-      };
-      console.log('New form data after AI suggestion:', newFormData);
-      return newFormData;
-    });
+    if (!suggestion || typeof suggestion !== 'object') {
+      toast.error('Invalid AI suggestion received');
+      return;
+    }
+
+    const { title, description, tags } = suggestion;
+
+    setFormData((prev) => ({
+      ...prev,
+      title: title || prev.title,
+      description: description || prev.description,
+      tags: [
+        ...prev.tags,
+        ...(Array.isArray(tags)
+          ? tags.filter((tag) => tag && !prev.tags.includes(tag))
+          : []),
+      ],
+    }));
 
     // Clear any existing errors for the fields we just populated
     setErrors((prev) => ({
@@ -103,13 +191,6 @@ export default function CreateContentModal({
       title: undefined,
       description: undefined,
     }));
-
-    console.log('AI suggestion handler completed');
-
-    // Add a small delay to check if data persists
-    setTimeout(() => {
-      console.log('Form data after 1 second:', formData);
-    }, 1000);
   };
 
   const contentTypes: ContentType[] = [
@@ -209,6 +290,7 @@ export default function CreateContentModal({
     }
   };
 
+  // Add the missing validateForm function
   const validateForm = (): boolean => {
     const newErrors: Record<string, string> = {};
 
@@ -238,25 +320,226 @@ export default function CreateContentModal({
     return Object.keys(newErrors).length === 0;
   };
 
-  const handleSubmit = (e: React.MouseEvent<HTMLButtonElement>) => {
+  const handleSubmit = async (e: React.MouseEvent<HTMLButtonElement>) => {
     e.preventDefault();
 
-    if (validateForm()) {
-      // Determine status based on whether scheduled date and time are provided
-      const hasScheduledDateTime = !!(
-        formData.scheduledDate && formData.scheduledTime
-      );
-      const determinedStatus = hasScheduledDateTime ? 'scheduled' : 'draft';
+    if (!validateForm()) {
+      return;
+    }
 
-      const contentItem: ContentItem = {
-        ...formData,
-        status: determinedStatus, // Use determined status instead of form status
-        id: Date.now(), // Generate a temporary ID
-        createdAt: new Date().toISOString(),
+    // Close the modal immediately when creation starts
+    onClose();
+
+    // Show simple animated loading toast
+    const loadingToastId = toast.custom(
+      (t) => <SimpleAnimatedToast onClose={() => toast.dismiss(t.id)} />,
+      {
+        duration: Infinity, // Persist until dismissed
+        position: 'top-center',
+      }
+    );
+
+    try {
+      // Prepare the payload for API - matching the exact structure the API expects
+      const newContentPayload: ContentCreateRequest = {
+        title: formData.title.trim(),
+        type: formData.contentType, // API expects 'type', not 'contentType'
+        platform: formData.platforms, // API expects 'platform', not 'platforms'
+        description: formData.description?.trim() || undefined,
+        tags:
+          formData.tags.length > 0
+            ? formData.tags.filter((tag) => tag.trim())
+            : undefined,
       };
-      onSubmit(contentItem);
-      // Modal will be closed by parent component
-      // Form will be reset when modal reopens
+
+      // Add scheduled date if provided
+      if (formData.scheduledDate && formData.scheduledTime) {
+        const scheduledDateTime = `${formData.scheduledDate}T${formData.scheduledTime}:00.000Z`;
+        newContentPayload.scheduledDate = scheduledDateTime;
+      }
+
+      console.log('Creating content with payload:', newContentPayload);
+
+      // Call the API directly from the modal
+      const response: AxiosResponse<APIResponse> = await contentAPI.create(
+        newContentPayload
+      );
+
+      console.log('Create content response:', response);
+
+      // Fixed response checking - properly access properties from response.data
+      const isSuccessful =
+        response?.data?.statusCode === '10000' ||
+        response?.status === 200 ||
+        response?.status === 201 ||
+        response?.data?.success === true ||
+        (response?.data && Object.keys(response.data).length > 0);
+
+      if (isSuccessful) {
+        // Dismiss the loading toast
+        toast.dismiss(loadingToastId);
+
+        // Determine if content was scheduled
+        const hasScheduledDate = !!(
+          formData.scheduledDate && formData.scheduledTime
+        );
+
+        // Show simple success toast
+        if (hasScheduledDate) {
+          toast.custom(
+            (t) => (
+              <div className='bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-700 rounded-xl p-4 flex items-center space-x-3 min-w-[280px]'>
+                <div className='w-6 h-6 bg-green-500 rounded-full flex items-center justify-center animate-bounce'>
+                  <svg
+                    className='w-4 h-4 text-white'
+                    fill='none'
+                    stroke='currentColor'
+                    viewBox='0 0 24 24'
+                  >
+                    <path
+                      strokeLinecap='round'
+                      strokeLinejoin='round'
+                      strokeWidth={2}
+                      d='M5 13l4 4L19 7'
+                    />
+                  </svg>
+                </div>
+                <div className='flex-1'>
+                  <p className='text-sm font-medium text-green-900 dark:text-green-100'>
+                    Content scheduled!
+                  </p>
+                  <p className='text-xs text-green-700 dark:text-green-300'>
+                    Check your calendar
+                  </p>
+                </div>
+                <button
+                  onClick={() => toast.dismiss(t.id)}
+                  className='text-green-500 hover:text-green-700'
+                >
+                  <X className='w-4 h-4' />
+                </button>
+              </div>
+            ),
+            { duration: 5000, position: 'top-center' }
+          );
+        } else {
+          toast.custom(
+            (t) => (
+              <div className='bg-purple-50 dark:bg-purple-900/20 border border-purple-200 dark:border-purple-700 rounded-xl p-4 flex items-center space-x-3 min-w-[280px]'>
+                <div className='w-6 h-6 bg-purple-500 rounded-full flex items-center justify-center animate-bounce'>
+                  <svg
+                    className='w-4 h-4 text-white'
+                    fill='none'
+                    stroke='currentColor'
+                    viewBox='0 0 24 24'
+                  >
+                    <path
+                      strokeLinecap='round'
+                      strokeLinejoin='round'
+                      strokeWidth={2}
+                      d='M5 13l4 4L19 7'
+                    />
+                  </svg>
+                </div>
+                <div className='flex-1'>
+                  <p className='text-sm font-medium text-purple-900 dark:text-purple-100'>
+                    Content created!
+                  </p>
+                  <p className='text-xs text-purple-700 dark:text-purple-300'>
+                    Saved as draft
+                  </p>
+                </div>
+                <button
+                  onClick={() => toast.dismiss(t.id)}
+                  className='text-purple-500 hover:text-purple-700'
+                >
+                  <X className='w-4 h-4' />
+                </button>
+              </div>
+            ),
+            { duration: 5000, position: 'top-center' }
+          );
+        }
+
+        // Call the parent callback with the created content data
+        // Try multiple possible response structures
+        let createdContentData = null;
+        if (response.data?.data?.content) {
+          createdContentData = response.data.data.content;
+        } else if (response.data?.content) {
+          createdContentData = response.data.content;
+        } else if (response.data) {
+          createdContentData = response.data;
+        }
+
+        if (createdContentData && onSubmit) {
+          console.log('Calling onSubmit with:', createdContentData);
+          onSubmit(createdContentData as CreatedContent);
+        } else if (onSubmit) {
+          // Still call onSubmit even if we don't have the exact content data
+          // This ensures confetti still triggers
+          console.log('Calling onSubmit without content data');
+          onSubmit();
+        }
+      } else {
+        throw new Error(response.data?.message || 'Failed to create content');
+      }
+    } catch (error: unknown) {
+      // Dismiss the loading toast
+      toast.dismiss(loadingToastId);
+
+      // Show error message
+      let errorMessage = 'Failed to create content. Please try again.';
+
+      if (error instanceof Error) {
+        errorMessage = error.message;
+      } else if (
+        typeof error === 'object' &&
+        error !== null &&
+        'response' in error
+      ) {
+        const axiosError = error as {
+          response?: { data?: { message?: string } };
+        };
+        errorMessage = axiosError.response?.data?.message || errorMessage;
+      }
+
+      toast.custom(
+        (t) => (
+          <div className='bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-700 rounded-xl p-4 flex items-center space-x-3 min-w-[280px]'>
+            <div className='w-6 h-6 bg-red-500 rounded-full flex items-center justify-center animate-pulse'>
+              <svg
+                className='w-4 h-4 text-white'
+                fill='none'
+                stroke='currentColor'
+                viewBox='0 0 24 24'
+              >
+                <path
+                  strokeLinecap='round'
+                  strokeLinejoin='round'
+                  strokeWidth={2}
+                  d='M6 18L18 6M6 6l12 12'
+                />
+              </svg>
+            </div>
+            <div className='flex-1'>
+              <p className='text-sm font-medium text-red-900 dark:text-red-100'>
+                Creation failed
+              </p>
+              <p className='text-xs text-red-700 dark:text-red-300'>
+                {errorMessage}
+              </p>
+            </div>
+            <button
+              onClick={() => toast.dismiss(t.id)}
+              className='text-red-500 hover:text-red-700'
+            >
+              <X className='w-4 h-4' />
+            </button>
+          </div>
+        ),
+        { duration: 6000, position: 'top-center' }
+      );
     }
   };
 

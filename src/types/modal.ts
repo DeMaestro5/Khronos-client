@@ -52,17 +52,56 @@ export interface FormErrors {
   title?: string;
   description?: string;
   contentType?: string;
-  platforms?: Platform['id'][];
+  platforms?: string; // Changed from Platform['id'][] to string for error messages
   scheduledDate?: string;
   scheduledTime?: string;
   tags?: string[];
   priority?: string;
 }
 
+// Type for content returned from API
+export interface CreatedContent {
+  _id: string;
+  userId: string; // Required for ContentData compatibility
+  title: string;
+  description: string; // Required - removed the ? to make it non-optional
+  type: 'article' | 'video' | 'social' | 'podcast' | 'newsletter' | 'blog_post'; // Required with specific types
+  status: 'draft' | 'scheduled' | 'published' | 'archived';
+  platform: string[];
+  tags: string[];
+  author: {
+    id: string;
+    name: string;
+    avatar?: string;
+    role: string;
+  };
+  metadata: {
+    title: string; // Required
+    description: string; // Required
+    type:
+      | 'article'
+      | 'video'
+      | 'social'
+      | 'podcast'
+      | 'newsletter'
+      | 'blog_post'; // Required with specific types
+    status: 'draft' | 'scheduled' | 'published' | 'archived'; // Required
+    platform: string[]; // Required
+    tags: string[]; // Required
+    scheduledDate?: string;
+    category?: string;
+    language?: string;
+    targetAudience?: string[];
+    contentPillars?: string[];
+  };
+  createdAt: string;
+  updatedAt: string;
+}
+
 export interface CreateContentModalProps {
   isOpen: boolean;
   onClose: () => void;
-  onSubmit: (data: ContentFormData) => void;
+  onSubmit?: (createdContent?: CreatedContent) => void; // Now properly typed
   initialData?: {
     title?: string;
     description?: string;

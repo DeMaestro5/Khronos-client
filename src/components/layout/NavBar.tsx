@@ -11,13 +11,7 @@ import {
   FiActivity,
   FiUser,
   FiSettings,
-  FiCreditCard,
   FiLogOut,
-  FiEdit3,
-  FiTrendingUp,
-  FiCalendar,
-  FiFileText,
-  FiZap,
   FiSun,
   FiMoon,
   FiMonitor,
@@ -39,7 +33,7 @@ export default function Navbar() {
   const router = useRouter();
   const { user: contextUser, logout } = useAuth();
   const { unreadCount } = useNotifications();
-  const { profileData, userStats, loading: userDataLoading } = useUserData();
+  const { profileData, loading: userDataLoading } = useUserData();
   const { theme, setTheme } = useTheme();
 
   // Handle theme mounting
@@ -230,7 +224,7 @@ export default function Navbar() {
               </div>
             </div>
 
-            {/* Enhanced Profile Dropdown */}
+            {/* Simplified Profile Dropdown */}
             <div className='relative'>
               <button
                 className='profile-button flex items-center space-x-3 p-2 text-sm rounded-xl hover:bg-gray-50 dark:hover:bg-slate-800 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 dark:focus:ring-blue-500/20 transition-all duration-200 shadow-sm hover:shadow-md group'
@@ -276,185 +270,37 @@ export default function Navbar() {
                 <FiChevronDown className='h-4 w-4 text-gray-400 dark:text-slate-400 group-hover:text-indigo-600 dark:group-hover:text-indigo-400 transition-all duration-200 group-hover:rotate-180' />
               </button>
 
+              {/* Simplified Profile Dropdown Menu */}
               {profileOpen && user && (
-                <div className='profile-dropdown origin-top-right absolute right-0 mt-3 w-96 rounded-2xl shadow-2xl bg-white dark:bg-slate-800 backdrop-blur-2xl ring-1 ring-black ring-opacity-5 dark:ring-slate-600 z-20 border border-slate-200 dark:border-slate-600 overflow-hidden'>
-                  {/* Enhanced Profile Header */}
-                  <div className='relative p-6 bg-gray-50 dark:bg-slate-900 border-b border-slate-200 dark:border-slate-600'>
-                    <div className='absolute top-0 right-0 w-32 h-32 bg-gradient-to-br from-indigo-200/20 to-purple-200/20 dark:from-indigo-500/10 dark:to-purple-500/10 rounded-full -translate-y-16 translate-x-16'></div>
-                    <div className='relative flex items-start space-x-4'>
-                      <div className='relative'>
-                        {user.profilePicUrl || user.avatar ? (
-                          <Image
-                            className='h-20 w-20 rounded-2xl object-cover ring-4 ring-white dark:ring-slate-700 shadow-xl'
-                            src={user.profilePicUrl || user.avatar || ''}
-                            width={80}
-                            height={80}
-                            alt={user.name}
-                            onError={(e) => {
-                              (e.target as HTMLImageElement).style.display =
-                                'none';
-                            }}
-                          />
-                        ) : null}
-                        {!user.profilePicUrl && !user.avatar ? (
-                          <div className='h-20 w-20 rounded-2xl bg-gradient-to-br from-indigo-500 to-purple-600 dark:from-blue-600 dark:to-indigo-700 flex items-center justify-center ring-4 ring-white dark:ring-slate-700 shadow-xl'>
-                            <span className='text-white font-bold text-2xl'>
-                              {getInitials(user.name)}
-                            </span>
-                          </div>
-                        ) : null}
-                        <div className='absolute -bottom-2 -right-2 w-6 h-6 bg-green-500 rounded-full border-4 border-white dark:border-slate-900 shadow-lg flex items-center justify-center'>
-                          <div className='w-2 h-2 bg-white rounded-full'></div>
-                        </div>
-                      </div>
-                      <div className='flex-1 min-w-0'>
-                        <div className='flex items-start justify-between'>
-                          <div>
-                            <h3 className='text-xl font-bold text-gray-900 dark:text-slate-100 truncate'>
-                              {user.name}
-                            </h3>
-                            <p className='text-sm text-gray-600 dark:text-slate-400 truncate mt-1'>
-                              {user.email}
-                            </p>
-                            <div className='flex items-center space-x-2 mt-3'>
-                              <span className='inline-flex items-center px-3 py-1 bg-gradient-to-r from-emerald-100 to-teal-100 dark:from-emerald-900/50 dark:to-teal-900/50 text-emerald-700 dark:text-emerald-300 text-xs font-semibold rounded-full ring-1 ring-emerald-200 dark:ring-emerald-700'>
-                                <span className='mr-2'>
-                                  {getRoleIcon(getDisplayRole(user.role))}
-                                </span>
-                                {getDisplayRole(user.role)}
-                              </span>
-                            </div>
-                          </div>
-                          <Link
-                            href='/profile/edit'
-                            className='p-2 text-gray-400 dark:text-slate-400 hover:text-indigo-600 dark:hover:text-indigo-400 hover:bg-gray-50 dark:hover:bg-slate-700 rounded-lg transition-all duration-200'
-                            onClick={() => setProfileOpen(false)}
-                          >
-                            <FiEdit3 className='h-4 w-4' />
-                          </Link>
-                        </div>
-                        <div className='mt-3 flex items-center space-x-4 text-xs text-gray-500 dark:text-slate-400'>
-                          <div className='flex items-center space-x-1'>
-                            <FiCalendar className='h-3 w-3' />
-                            <span>
-                              Joined{' '}
-                              {user.createdAt &&
-                              !isNaN(new Date(user.createdAt).getTime())
-                                ? new Date(user.createdAt).getFullYear()
-                                : 'Recently'}
-                            </span>
-                          </div>
-                          <div className='flex items-center space-x-1'>
-                            <FiZap className='h-3 w-3 text-orange-500' />
-                            <span>{userStats?.streak || 0} day streak</span>
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Enhanced Stats Grid */}
-                  <div className='px-6 py-5 bg-gray-50 dark:bg-slate-900 border-b border-slate-200 dark:border-slate-600'>
-                    <div className='grid grid-cols-3 gap-6'>
-                      <div className='text-center group'>
-                        <div className='flex items-center justify-center w-12 h-12 mx-auto mb-2 bg-gradient-to-br from-blue-500 to-indigo-600 dark:from-blue-600 dark:to-indigo-700 rounded-xl shadow-lg group-hover:shadow-xl transition-all duration-200'>
-                          <FiFileText className='h-6 w-6 text-white' />
-                        </div>
-                        <div className='text-2xl font-bold text-gray-900 dark:text-slate-100 mb-1'>
-                          {userDataLoading
-                            ? '...'
-                            : userStats?.totalContent || 0}
-                        </div>
-                        <div className='text-xs text-gray-500 dark:text-slate-400 font-medium'>
-                          Total Content
-                        </div>
-                      </div>
-                      <div className='text-center group'>
-                        <div className='flex items-center justify-center w-12 h-12 mx-auto mb-2 bg-gradient-to-br from-purple-500 to-pink-600 dark:from-purple-600 dark:to-pink-700 rounded-xl shadow-lg group-hover:shadow-xl transition-all duration-200'>
-                          <FiCalendar className='h-6 w-6 text-white' />
-                        </div>
-                        <div className='text-2xl font-bold text-gray-900 dark:text-slate-100 mb-1'>
-                          {userDataLoading
-                            ? '...'
-                            : userStats?.scheduledContent || 0}
-                        </div>
-                        <div className='text-xs text-gray-500 dark:text-slate-400 font-medium'>
-                          Scheduled
-                        </div>
-                      </div>
-                      <div className='text-center group'>
-                        <div className='flex items-center justify-center w-12 h-12 mx-auto mb-2 bg-gradient-to-br from-green-500 to-emerald-600 dark:from-green-600 dark:to-emerald-700 rounded-xl shadow-lg group-hover:shadow-xl transition-all duration-200'>
-                          <FiTrendingUp className='h-6 w-6 text-white' />
-                        </div>
-                        <div className='text-2xl font-bold text-gray-900 dark:text-slate-100 mb-1'>
-                          {userDataLoading
-                            ? '...'
-                            : userStats?.engagementRate || 0}
-                          %
-                        </div>
-                        <div className='text-xs text-gray-500 dark:text-slate-400 font-medium'>
-                          Engagement
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Menu Items */}
+                <div className='profile-dropdown origin-top-right absolute right-0 mt-3 w-56 rounded-xl shadow-xl bg-white dark:bg-slate-800 backdrop-blur-2xl ring-1 ring-black ring-opacity-5 dark:ring-slate-600 z-20 border border-slate-200 dark:border-slate-600 overflow-hidden'>
+                  {/* Simple Menu Items */}
                   <div className='py-2'>
                     <Link
                       href='/profile'
-                      className='flex items-center px-6 py-3 text-sm text-gray-700 dark:text-slate-300 hover:bg-gray-50 dark:hover:bg-slate-700 hover:text-indigo-600 dark:hover:text-indigo-400 transition-all duration-200 group'
+                      className='flex items-center px-4 py-3 text-sm text-gray-700 dark:text-slate-300 hover:bg-gray-50 dark:hover:bg-slate-700 hover:text-indigo-600 dark:hover:text-indigo-400 transition-all duration-200 group'
                       onClick={() => setProfileOpen(false)}
                     >
                       <FiUser className='mr-3 h-4 w-4 group-hover:text-indigo-600 dark:group-hover:text-indigo-400' />
-                      Your Profile
-                      <div className='ml-auto opacity-0 group-hover:opacity-100 transition-opacity duration-200'>
-                        <span className='text-xs text-indigo-500 dark:text-indigo-400'>
-                          →
-                        </span>
-                      </div>
+                      Profile
                     </Link>
                     <Link
                       href='/settings'
-                      className='flex items-center px-6 py-3 text-sm text-gray-700 dark:text-slate-300 hover:bg-gray-50 dark:hover:bg-slate-700 hover:text-indigo-600 dark:hover:text-indigo-400 transition-all duration-200 group'
+                      className='flex items-center px-4 py-3 text-sm text-gray-700 dark:text-slate-300 hover:bg-gray-50 dark:hover:bg-slate-700 hover:text-indigo-600 dark:hover:text-indigo-400 transition-all duration-200 group'
                       onClick={() => setProfileOpen(false)}
                     >
                       <FiSettings className='mr-3 h-4 w-4 group-hover:text-indigo-600 dark:group-hover:text-indigo-400' />
                       Settings
-                      <div className='ml-auto opacity-0 group-hover:opacity-100 transition-opacity duration-200'>
-                        <span className='text-xs text-indigo-500 dark:text-indigo-400'>
-                          →
-                        </span>
-                      </div>
-                    </Link>
-                    <Link
-                      href='/billing'
-                      className='flex items-center px-6 py-3 text-sm text-gray-700 dark:text-slate-300 hover:bg-gray-50 dark:hover:bg-slate-700 hover:text-indigo-600 dark:hover:text-indigo-400 transition-all duration-200 group'
-                      onClick={() => setProfileOpen(false)}
-                    >
-                      <FiCreditCard className='mr-3 h-4 w-4 group-hover:text-indigo-600 dark:group-hover:text-indigo-400' />
-                      Billing & Plans
-                      <div className='ml-auto opacity-0 group-hover:opacity-100 transition-opacity duration-200'>
-                        <span className='text-xs text-indigo-500 dark:text-indigo-400'>
-                          →
-                        </span>
-                      </div>
                     </Link>
                   </div>
 
                   {/* Logout */}
                   <div className='border-t border-slate-200 dark:border-slate-600 py-2'>
                     <button
-                      className='flex items-center w-full px-6 py-3 text-sm text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 transition-all duration-200 group'
+                      className='flex items-center w-full px-4 py-3 text-sm text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 transition-all duration-200 group'
                       onClick={handleLogout}
                     >
                       <FiLogOut className='mr-3 h-4 w-4 group-hover:text-red-700 dark:group-hover:text-red-300' />
                       Sign out
-                      <div className='ml-auto opacity-0 group-hover:opacity-100 transition-opacity duration-200'>
-                        <span className='text-xs text-red-500 dark:text-red-400'>
-                          →
-                        </span>
-                      </div>
                     </button>
                   </div>
                 </div>

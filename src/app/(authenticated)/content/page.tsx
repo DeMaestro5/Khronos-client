@@ -3,31 +3,20 @@
 import React, { useState, useEffect } from 'react';
 import { Search, Plus, FileText } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
-import toast from 'react-hot-toast';
 
 import { useUserData } from '@/src/context/UserDataContext';
+import { useGlobalConfetti } from '@/src/context/ConfettiContext'; // Add this import
 import { Content, ContentStatus, ContentType } from '@/src/types/content';
 import { ContentCard } from '@/src/components/content/content-card';
 import { ContentListItem } from '@/src/components/content/content-list-items';
 import CreateContentModal from '@/src/components/content/content-creation-modal';
 import ContentFilter from '@/src/components/content/content-filter';
-import { ContentFormData } from '@/src/types/modal';
-import { contentAPI } from '@/src/lib/api';
 import PageLoading from '@/src/components/ui/page-loading';
-// import AuthDebug from '@/src/components/debug/AuthDebug';
+import { CreatedContent } from '@/src/types/modal';
 
 type ViewMode = 'grid' | 'list';
 type StatusFilter = 'all' | ContentStatus;
 type TypeFilter = 'all' | ContentType;
-
-interface ContentCreatePayload {
-  title: string;
-  description?: string;
-  type: string;
-  platform: string[];
-  tags?: string[];
-  scheduledDate?: string;
-}
 
 export default function ContentPage() {
   const [contents, setContents] = useState<Content[]>([]);
@@ -51,6 +40,9 @@ export default function ContentPage() {
     addContent,
     removeContent,
   } = useUserData();
+
+  // Add confetti context
+  const { triggerContentCreationCelebration } = useGlobalConfetti();
 
   useEffect(() => {
     console.log('Content page: Using cached data', {
@@ -88,142 +80,19 @@ export default function ContentPage() {
     }
   }, [userContent, contextLoading]);
 
-  const handleCreateContent = async (contentData: ContentFormData) => {
-    // Declare creatingToastId variable at function scope
-    let creatingToastId: string | undefined;
+  const handleContentCreated = (createdContent?: CreatedContent) => {
+    // Clear AI suggestion
+    setAiSuggestion(null);
 
-    try {
-      // Validate required fields first
-      if (!contentData.title.trim()) {
-        toast.error('❌ Content title is required');
-        return;
-      }
-
-      if (contentData.platforms.length === 0) {
-        toast.error('❌ Please select at least one platform');
-        return;
-      }
-
-      // Close modal immediately for better UX
-      setShowModal(false);
-      setAiSuggestion(null);
-
-      // Show creating toast with loading indicator
-      creatingToastId = toast.loading(
-        '🚀 Creating your content... AI is working its magic!',
-        {
-          style: {
-            background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
-            color: 'white',
-            border: 'none',
-            fontWeight: '500',
-          },
-        }
-      );
-
-      // Prepare the payload for API
-      const newContentPayload: ContentCreatePayload = {
-        title: contentData.title.trim(),
-        type: contentData.contentType,
-        platform: contentData.platforms,
-        description: contentData.description?.trim() || undefined,
-        tags:
-          contentData.tags.length > 0
-            ? contentData.tags.filter((tag) => tag.trim())
-            : undefined,
-      };
-
-      // Add scheduled date if provided
-      if (contentData.scheduledDate && contentData.scheduledTime) {
-        const scheduledDateTime = `${contentData.scheduledDate}T${contentData.scheduledTime}:00.000Z`;
-        newContentPayload.scheduledDate = scheduledDateTime;
-      }
-
-      const response = await contentAPI.create(newContentPayload);
-
-      if (
-        response.data?.statusCode === '10000' ||
-        response.status === 200 ||
-        response.status === 201
-      ) {
-        // Success
-        toast.dismiss(creatingToastId);
-
-        // Determine if content was scheduled
-        const hasScheduledDate = !!(
-          contentData.scheduledDate && contentData.scheduledTime
-        );
-
-        if (hasScheduledDate) {
-          toast.success(
-            '🎉 Content created and scheduled successfully! Check your calendar!',
-            {
-              duration: 5000,
-              style: {
-                background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
-                color: 'white',
-                border: 'none',
-                fontWeight: '500',
-                fontSize: '16px',
-              },
-              icon: '📅',
-            }
-          );
-        } else {
-          toast.success('🎉 Content created as draft successfully!', {
-            duration: 5000,
-            style: {
-              background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
-              color: 'white',
-              border: 'none',
-              fontWeight: '500',
-              fontSize: '16px',
-            },
-            icon: '📝',
-          });
-        }
-
-        // Add the new content to the cached data instead of refetching
-        if (response.data?.data) {
-          addContent(response.data.data);
-        }
-      } else {
-        throw new Error(response.data?.message || 'Failed to create content');
-      }
-    } catch (error: unknown) {
-      console.error('Failed to create content:', error);
-
-      // Dismiss loading toast
-      if (creatingToastId) {
-        toast.dismiss(creatingToastId);
-      }
-
-      // Show error message
-      let errorMessage = 'Failed to create content. Please try again.';
-
-      if (error instanceof Error) {
-        errorMessage = error.message;
-      } else if (
-        typeof error === 'object' &&
-        error !== null &&
-        'response' in error
-      ) {
-        const axiosError = error as {
-          response?: { data?: { message?: string } };
-        };
-        errorMessage = axiosError.response?.data?.message || errorMessage;
-      }
-
-      toast.error(`❌ ${errorMessage}`, {
-        duration: 6000,
-        style: {
-          background: '#ef4444',
-          color: 'white',
-          border: 'none',
-          fontWeight: '500',
-        },
-      });
+    // Add the new content to the cached data
+    if (createdContent) {
+      addContent(createdContent);
     }
+
+    // Celebrate with confetti - Add this!
+    setTimeout(() => {
+      triggerContentCreationCelebration();
+    }, 100);
   };
 
   const handleContentDeleted = (deletedContentId: string) => {
@@ -403,7 +272,7 @@ export default function ContentPage() {
           setShowModal(false);
           setAiSuggestion(null);
         }}
-        onSubmit={handleCreateContent}
+        onSubmit={handleContentCreated}
         initialData={aiSuggestion}
       />
     </div>

@@ -280,6 +280,15 @@ export const ContentCard = ({
     openChat(content._id, content.title);
   };
 
+  // Add null safety for content fields
+  const safeContent = {
+    ...content,
+    tags: content.tags || [],
+    platforms: content.platforms || content.platform || [],
+    description: content.description || '',
+    author: content.author || { name: 'Unknown Author', avatar: undefined },
+  };
+
   return (
     <>
       <motion.div
@@ -334,12 +343,12 @@ export const ContentCard = ({
             </CardHeader>
             <CardContent className='pt-0 p-3 sm:p-6 sm:pt-0'>
               <p className='text-xs sm:text-sm text-gray-600 dark:text-slate-400 line-clamp-3 mb-3 sm:mb-4 leading-relaxed'>
-                {content.description}
+                {safeContent.description}
               </p>
 
-              {/* Tags */}
+              {/* Tags - Now with null safety */}
               <div className='flex flex-wrap gap-1 mb-3 sm:mb-4'>
-                {content.tags.slice(0, 3).map((tag, index) => (
+                {safeContent.tags.slice(0, 3).map((tag, index) => (
                   <span
                     key={index}
                     className='px-2 py-0.5 sm:py-1 bg-gray-100 dark:bg-slate-700 text-gray-600 dark:text-slate-300 text-xs rounded-md'
@@ -347,49 +356,60 @@ export const ContentCard = ({
                     {tag}
                   </span>
                 ))}
-                {content.tags.length > 3 && (
+                {safeContent.tags.length > 3 && (
                   <span className='px-2 py-0.5 sm:py-1 bg-gray-50 dark:bg-slate-700/50 text-gray-500 dark:text-slate-400 text-xs rounded-md'>
-                    +{content.tags.length - 3} more
+                    +{safeContent.tags.length - 3} more
+                  </span>
+                )}
+                {safeContent.tags.length === 0 && (
+                  <span className='px-2 py-0.5 sm:py-1 bg-gray-50 dark:bg-slate-700/50 text-gray-500 dark:text-slate-400 text-xs rounded-md'>
+                    No tags
                   </span>
                 )}
               </div>
 
-              {/* Platforms */}
+              {/* Platforms - Now with null safety */}
               <div className='flex items-center gap-2 mb-3 sm:mb-4'>
                 <span className='text-xs text-gray-500 dark:text-slate-400 flex-shrink-0'>
                   Platforms:
                 </span>
                 <div className='flex gap-1 flex-wrap'>
-                  {(content.platforms || content.platform || [])
-                    .slice(0, 3)
-                    .map((platform, index) => (
-                      <div
-                        key={index}
-                        className='w-5 h-5 sm:w-6 sm:h-6 bg-gray-100 dark:bg-slate-700 rounded flex items-center justify-center'
-                        title={
-                          typeof platform === 'string'
-                            ? platform
-                            : platform.name
-                        }
-                      >
-                        <span className='text-[9px] sm:text-[10px] font-medium text-gray-600 dark:text-slate-300'>
-                          {(typeof platform === 'string'
-                            ? platform
-                            : platform.name
-                          )
-                            .charAt(0)
-                            .toUpperCase()}
-                        </span>
-                      </div>
-                    ))}
-                  {(content.platforms || content.platform || []).length > 3 && (
-                    <div className='w-5 h-5 sm:w-6 sm:h-6 bg-gray-50 dark:bg-slate-700/50 rounded flex items-center justify-center'>
-                      <span className='text-[9px] sm:text-[10px] text-gray-500 dark:text-slate-400'>
-                        +
-                        {(content.platforms || content.platform || []).length -
-                          3}
-                      </span>
-                    </div>
+                  {safeContent.platforms.length > 0 ? (
+                    <>
+                      {safeContent.platforms
+                        .slice(0, 3)
+                        .map((platform, index) => (
+                          <div
+                            key={index}
+                            className='w-5 h-5 sm:w-6 sm:h-6 bg-gray-100 dark:bg-slate-700 rounded flex items-center justify-center'
+                            title={
+                              typeof platform === 'string'
+                                ? platform
+                                : platform.name
+                            }
+                          >
+                            <span className='text-[9px] sm:text-[10px] font-medium text-gray-600 dark:text-slate-300'>
+                              {(typeof platform === 'string'
+                                ? platform
+                                : platform.name
+                              )
+                                .charAt(0)
+                                .toUpperCase()}
+                            </span>
+                          </div>
+                        ))}
+                      {safeContent.platforms.length > 3 && (
+                        <div className='w-5 h-5 sm:w-6 sm:h-6 bg-gray-50 dark:bg-slate-700/50 rounded flex items-center justify-center'>
+                          <span className='text-[9px] sm:text-[10px] text-gray-500 dark:text-slate-400'>
+                            +{safeContent.platforms.length - 3}
+                          </span>
+                        </div>
+                      )}
+                    </>
+                  ) : (
+                    <span className='text-xs text-gray-500 dark:text-slate-400'>
+                      No platforms selected
+                    </span>
                   )}
                 </div>
               </div>
@@ -397,14 +417,14 @@ export const ContentCard = ({
               {/* Footer */}
               <div className='flex items-center justify-between pt-2 border-t border-gray-200 dark:border-slate-600 text-xs'>
                 <div className='flex items-center gap-1.5 sm:gap-2 min-w-0'>
-                  {content.author?.avatar && (
+                  {safeContent.author?.avatar && (
                     <Avatar
-                      src={content.author?.avatar}
-                      name={content.author?.name || 'Author'}
+                      src={safeContent.author.avatar}
+                      name={safeContent.author.name || 'Author'}
                     />
                   )}
                   <span className='text-gray-500 dark:text-slate-400 truncate'>
-                    {content.author?.name || 'Unknown Author'}
+                    {safeContent.author.name}
                   </span>
                 </div>
                 <div className='flex items-center gap-1 sm:gap-2 text-gray-500 dark:text-slate-400 flex-shrink-0'>

@@ -1,6 +1,12 @@
 'use client';
 
-import React, { useState, useRef, useEffect } from 'react';
+import React, {
+  useState,
+  useRef,
+  useEffect,
+  useCallback,
+  useMemo,
+} from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   X,
@@ -27,6 +33,7 @@ interface StreamingTextProps {
   speed?: number;
   onComplete?: () => void;
   shouldAnimate?: boolean;
+  messageId: string;
 }
 
 const StreamingText = ({
@@ -34,38 +41,67 @@ const StreamingText = ({
   speed = 20,
   onComplete,
   shouldAnimate = true,
+  messageId,
 }: StreamingTextProps) => {
   const [displayedText, setDisplayedText] = useState('');
   const [currentIndex, setCurrentIndex] = useState(0);
-  const [isStreaming, setIsStreaming] = useState(shouldAnimate);
+  const [isStreaming, setIsStreaming] = useState(false);
+  const [hasAnimated, setHasAnimated] = useState(false);
+  const [initializedForMessage, setInitializedForMessage] = useState<
+    string | null
+  >(null);
 
-  // Reset when text changes
+  // Memoize the onComplete callback to prevent unnecessary re-renders
+  const stableOnComplete = useCallback(() => {
+    if (onComplete) {
+      onComplete();
+    }
+  }, [onComplete]);
+
+  // Initialize the component state when message changes or first loads
   useEffect(() => {
-    if (shouldAnimate) {
-      setDisplayedText('');
-      setCurrentIndex(0);
-      setIsStreaming(true);
-    } else {
-      // For existing messages, show full text immediately
-      setDisplayedText(text);
-      setCurrentIndex(text.length);
-      setIsStreaming(false);
-      if (onComplete) {
-        onComplete();
+    // If this is a new message or we haven't initialized for this message yet
+    if (messageId !== initializedForMessage || !shouldAnimate) {
+      setInitializedForMessage(messageId);
+
+      if (shouldAnimate && !hasAnimated) {
+        // Start fresh animation only for truly new messages
+        setDisplayedText('');
+        setCurrentIndex(0);
+        setIsStreaming(true);
+        setHasAnimated(false);
+      } else {
+        // Show full text immediately for existing messages or when shouldn't animate
+        setDisplayedText(text);
+        setCurrentIndex(text.length);
+        setIsStreaming(false);
+        setHasAnimated(true);
+        // Call completion immediately for non-animated messages
+        setTimeout(() => {
+          stableOnComplete();
+        }, 0);
       }
     }
-  }, [text, shouldAnimate, onComplete]);
+  }, [
+    messageId,
+    shouldAnimate,
+    text,
+    hasAnimated,
+    initializedForMessage,
+    stableOnComplete,
+  ]);
 
   // Handle the streaming effect
   useEffect(() => {
-    // Skip animation if shouldn't animate
-    if (!shouldAnimate) return;
+    // Only animate if we should animate and we're currently streaming
+    if (!isStreaming || hasAnimated) return;
 
     if (currentIndex >= text.length) {
       setIsStreaming(false);
-      if (onComplete) {
-        setTimeout(onComplete, 300);
-      }
+      setHasAnimated(true);
+      setTimeout(() => {
+        stableOnComplete();
+      }, 300);
       return;
     }
 
@@ -79,7 +115,7 @@ const StreamingText = ({
     }, speed + Math.random() * 20);
 
     return () => clearTimeout(timer);
-  }, [currentIndex, text, speed, onComplete, shouldAnimate]);
+  }, [currentIndex, text, speed, isStreaming, hasAnimated, stableOnComplete]);
 
   // Parse markdown and render formatted text
   const renderFormattedText = (text: string) => {
@@ -255,27 +291,57 @@ const AIChatModal: React.FC = () => {
     conversationStarters,
     actions,
     clearAllConversations,
+    initialPrompt,
   } = useAIChat();
 
   const [inputMessage, setInputMessage] = useState('');
   const [isMinimized, setIsMinimized] = useState(false);
   const [copiedMessageId, setCopiedMessageId] = useState<string | null>(null);
-  const [lastMessageId, setLastMessageId] = useState<string | null>(null);
+  const [animatedMessages, setAnimatedMessages] = useState<Set<string>>(
+    new Set()
+  );
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
 
-  // Track the most recent message ID to determine which message should animate
+  // Add ref to track if we've already prefilled for this session
+  const hasPrefilledRef = useRef(false);
+
   useEffect(() => {
-    if (messages.length > 0) {
-      const lastMessage = messages[messages.length - 1];
-      if (
-        lastMessage.role === 'assistant' &&
-        lastMessage.id !== lastMessageId
-      ) {
-        setLastMessageId(lastMessage.id || null);
-      }
+    if (isOpen && initialPrompt && !hasPrefilledRef.current) {
+      setInputMessage(initialPrompt);
+      hasPrefilledRef.current = true;
+      // Focus the input and move cursor to the end
+      setTimeout(() => {
+        if (inputRef.current) {
+          inputRef.current.focus();
+          inputRef.current.setSelectionRange(
+            initialPrompt.length,
+            initialPrompt.length
+          );
+        }
+      }, 100);
     }
-  }, [messages, lastMessageId]);
+  }, [isOpen, initialPrompt]);
+
+  // Reset the prefilled flag when modal closes or when starting a new chat session
+  useEffect(() => {
+    if (!isOpen) {
+      hasPrefilledRef.current = false;
+    }
+  }, [isOpen]);
+
+  // Memoize the most recent assistant message ID to prevent unnecessary re-calculations
+  const lastAssistantMessageId = useMemo(() => {
+    const assistantMessages = messages.filter((m) => m.role === 'assistant');
+    return assistantMessages.length > 0
+      ? assistantMessages[assistantMessages.length - 1].id
+      : null;
+  }, [messages]);
+
+  // Stable callback for animation completion
+  const handleAnimationComplete = useCallback((messageId: string) => {
+    setAnimatedMessages((prev) => new Set([...prev, messageId]));
+  }, []);
 
   // Auto-scroll to bottom when new messages arrive
   useEffect(() => {
@@ -289,38 +355,47 @@ const AIChatModal: React.FC = () => {
     }
   }, [isOpen, isMinimized]);
 
-  const handleSendMessage = async () => {
+  const handleSendMessage = useCallback(async () => {
     if (!inputMessage.trim() || isLoading) return;
 
     const message = inputMessage.trim();
     setInputMessage('');
     await sendMessage(message);
-  };
+  }, [inputMessage, isLoading, sendMessage]);
 
-  const handleKeyPress = (e: React.KeyboardEvent) => {
-    if (e.key === 'Enter' && !e.shiftKey) {
-      e.preventDefault();
-      handleSendMessage();
-    }
-  };
+  const handleKeyPress = useCallback(
+    (e: React.KeyboardEvent) => {
+      if (e.key === 'Enter' && !e.shiftKey) {
+        e.preventDefault();
+        handleSendMessage();
+      }
+    },
+    [handleSendMessage]
+  );
 
-  const handleCopyMessage = async (messageId: string, content: string) => {
-    try {
-      await navigator.clipboard.writeText(content);
-      setCopiedMessageId(messageId);
-      setTimeout(() => setCopiedMessageId(null), 2000);
-    } catch (err) {
-      console.error('Failed to copy message:', err);
-    }
-  };
+  const handleCopyMessage = useCallback(
+    async (messageId: string, content: string) => {
+      try {
+        await navigator.clipboard.writeText(content);
+        setCopiedMessageId(messageId);
+        setTimeout(() => setCopiedMessageId(null), 2000);
+      } catch (err) {
+        console.error('Failed to copy message:', err);
+      }
+    },
+    []
+  );
 
-  const handleConversationStarter = async (prompt: string) => {
-    if (isLoading) return;
-    setInputMessage(prompt);
-    await sendMessage(prompt);
-  };
+  const handleConversationStarter = useCallback(
+    async (prompt: string) => {
+      if (isLoading) return;
+      setInputMessage(prompt);
+      await sendMessage(prompt);
+    },
+    [isLoading, sendMessage]
+  );
 
-  const handleClearAllConversations = () => {
+  const handleClearAllConversations = useCallback(() => {
     if (
       window.confirm(
         'Are you sure you want to clear all chat conversations? This will start fresh with new server sessions.'
@@ -329,21 +404,17 @@ const AIChatModal: React.FC = () => {
       clearAllConversations();
       window.location.reload(); // Refresh to ensure clean state
     }
-  };
+  }, [clearAllConversations]);
 
-  const handleAnimationComplete = () => {
-    // Animation completed, now show copy button
-  };
-
-  const formatTime = (date: Date | string) => {
+  const formatTime = useCallback((date: Date | string) => {
     const dateObj = typeof date === 'string' ? new Date(date) : date;
     return dateObj.toLocaleTimeString([], {
       hour: '2-digit',
       minute: '2-digit',
     });
-  };
+  }, []);
 
-  const getActionIcon = (type: string) => {
+  const getActionIcon = useCallback((type: string) => {
     switch (type) {
       case 'optimize':
         return <Zap className='w-4 h-4' />;
@@ -356,7 +427,7 @@ const AIChatModal: React.FC = () => {
       default:
         return <Sparkles className='w-4 h-4' />;
     }
-  };
+  }, []);
 
   if (!isOpen) return null;
 
@@ -629,13 +700,15 @@ const AIChatModal: React.FC = () => {
                                   <StreamingText
                                     text={message.content}
                                     speed={15}
+                                    messageId={message.id || ''}
                                     shouldAnimate={
-                                      message.id === lastMessageId &&
-                                      (isLoading ||
-                                        messages[messages.length - 1]?.id ===
-                                          message.id)
+                                      message.id === lastAssistantMessageId &&
+                                      !animatedMessages.has(message.id || '') &&
+                                      !isLoading
                                     }
-                                    onComplete={handleAnimationComplete}
+                                    onComplete={() =>
+                                      handleAnimationComplete(message.id || '')
+                                    }
                                   />
                                 ) : (
                                   message.content

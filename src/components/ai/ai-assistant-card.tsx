@@ -19,8 +19,27 @@ export const AIAssistantCard: React.FC<AIAssistantCardProps> = ({
 }) => {
   const { openChat } = useAIChat();
 
-  const handleAIAction = () => {
-    openChat(contentId, contentTitle);
+  const handleAIAction = (actionType?: string) => {
+    let initialPrompt = '';
+
+    switch (actionType) {
+      case 'optimize':
+        initialPrompt = `How can I optimize "${contentTitle}" for better engagement and performance?`;
+        break;
+      case 'ideas':
+        initialPrompt = `What are some creative ideas to expand on "${contentTitle}" and create more engaging content?`;
+        break;
+      case 'strategy':
+        initialPrompt = `What content strategy would you recommend for "${contentTitle}" to maximize its reach and impact?`;
+        break;
+      case 'analyze':
+        initialPrompt = `Can you analyze "${contentTitle}" and provide insights on how to improve it?`;
+        break;
+      default:
+        initialPrompt = '';
+    }
+
+    openChat(contentId, contentTitle, initialPrompt);
   };
 
   if (variant === 'compact') {
@@ -43,7 +62,7 @@ export const AIAssistantCard: React.FC<AIAssistantCardProps> = ({
         </div>
 
         <button
-          onClick={handleAIAction}
+          onClick={() => handleAIAction()}
           className='w-full flex items-center justify-center gap-2 px-4 py-2 bg-gradient-to-r from-purple-600 to-indigo-600 dark:from-purple-500 dark:to-indigo-600 text-white rounded-lg hover:from-purple-700 hover:to-indigo-700 dark:hover:from-purple-600 dark:hover:to-indigo-700 transition-all duration-200 shadow-md hover:shadow-lg'
         >
           <MessageCircle className='w-4 h-4' />
@@ -73,7 +92,7 @@ export const AIAssistantCard: React.FC<AIAssistantCardProps> = ({
 
       <div className='grid grid-cols-2 gap-2 mb-4'>
         <button
-          onClick={handleAIAction}
+          onClick={() => handleAIAction('optimize')}
           className='flex items-center gap-2 p-3 bg-white/80 dark:bg-slate-700/50 hover:bg-white dark:hover:bg-slate-600 rounded-xl transition-all duration-200 hover:shadow-md group border border-white/50 dark:border-slate-600/50'
         >
           <Zap className='w-4 h-4 text-purple-600 dark:text-purple-400 group-hover:text-purple-700 dark:group-hover:text-purple-300' />
@@ -83,7 +102,7 @@ export const AIAssistantCard: React.FC<AIAssistantCardProps> = ({
         </button>
 
         <button
-          onClick={handleAIAction}
+          onClick={() => handleAIAction('ideas')}
           className='flex items-center gap-2 p-3 bg-white/80 dark:bg-slate-700/50 hover:bg-white dark:hover:bg-slate-600 rounded-xl transition-all duration-200 hover:shadow-md group border border-white/50 dark:border-slate-600/50'
         >
           <Sparkles className='w-4 h-4 text-purple-600 dark:text-purple-400 group-hover:text-purple-700 dark:group-hover:text-purple-300' />
@@ -93,7 +112,7 @@ export const AIAssistantCard: React.FC<AIAssistantCardProps> = ({
         </button>
 
         <button
-          onClick={handleAIAction}
+          onClick={() => handleAIAction('strategy')}
           className='flex items-center gap-2 p-3 bg-white/80 dark:bg-slate-700/50 hover:bg-white dark:hover:bg-slate-600 rounded-xl transition-all duration-200 hover:shadow-md group border border-white/50 dark:border-slate-600/50'
         >
           <Target className='w-4 h-4 text-purple-600 dark:text-purple-400 group-hover:text-purple-700 dark:group-hover:text-purple-300' />
@@ -103,7 +122,7 @@ export const AIAssistantCard: React.FC<AIAssistantCardProps> = ({
         </button>
 
         <button
-          onClick={handleAIAction}
+          onClick={() => handleAIAction('analyze')}
           className='flex items-center gap-2 p-3 bg-white/80 dark:bg-slate-700/50 hover:bg-white dark:hover:bg-slate-600 rounded-xl transition-all duration-200 hover:shadow-md group border border-white/50 dark:border-slate-600/50'
         >
           <Sparkles className='w-4 h-4 text-purple-600 dark:text-purple-400 group-hover:text-purple-700 dark:group-hover:text-purple-300' />
@@ -114,7 +133,7 @@ export const AIAssistantCard: React.FC<AIAssistantCardProps> = ({
       </div>
 
       <button
-        onClick={handleAIAction}
+        onClick={() => handleAIAction()}
         className='w-full flex items-center justify-center gap-2 px-4 py-3 bg-gradient-to-r from-purple-600 to-indigo-600 dark:from-purple-500 dark:to-indigo-600 text-white rounded-xl hover:from-purple-700 hover:to-indigo-700 dark:hover:from-purple-600 dark:hover:to-indigo-700 transition-all duration-200 shadow-lg hover:shadow-xl font-medium'
       >
         <MessageCircle className='w-4 h-4' />
