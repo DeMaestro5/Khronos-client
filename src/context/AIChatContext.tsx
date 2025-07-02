@@ -25,6 +25,7 @@ interface AIChatState {
   currentContentTitle: string | null;
   isLoading: boolean;
   error: string | null;
+  initialPrompt: string;
 }
 
 interface AIChatContextType {
@@ -36,7 +37,12 @@ interface AIChatContextType {
   currentContentTitle: string | null;
   conversationStarters: ConversationStarter[];
   actions: ChatUIAction[];
-  openChat: (contentId?: string, contentTitle?: string) => Promise<void>;
+  initialPrompt: string;
+  openChat: (
+    contentId?: string,
+    contentTitle?: string,
+    initialPrompt?: string
+  ) => Promise<void>;
   closeChat: () => void;
   sendMessage: (message: string) => Promise<void>;
   clearMessages: () => void;
@@ -58,6 +64,7 @@ export const AIChatProvider: React.FC<{ children: ReactNode }> = ({
     currentContentTitle: null,
     isLoading: false,
     error: null,
+    initialPrompt: '',
   });
 
   // Load conversations from localStorage on mount
@@ -124,7 +131,11 @@ export const AIChatProvider: React.FC<{ children: ReactNode }> = ({
     }
   };
 
-  const openChat = async (contentId?: string, contentTitle?: string) => {
+  const openChat = async (
+    contentId?: string,
+    contentTitle?: string,
+    initialPrompt?: string
+  ) => {
     if (!contentId) {
       // General chat (no specific content) - not supported in enhanced mode
       setState((prev) => ({
@@ -132,6 +143,7 @@ export const AIChatProvider: React.FC<{ children: ReactNode }> = ({
         isOpen: true,
         currentContentId: null,
         currentContentTitle: null,
+        initialPrompt: initialPrompt || '',
         error: 'Content ID is required for AI chat',
       }));
       return;
@@ -142,6 +154,7 @@ export const AIChatProvider: React.FC<{ children: ReactNode }> = ({
       isOpen: true,
       currentContentId: contentId,
       currentContentTitle: contentTitle || null,
+      initialPrompt: initialPrompt || '',
       isLoading: true,
       error: null,
     }));
@@ -287,6 +300,7 @@ export const AIChatProvider: React.FC<{ children: ReactNode }> = ({
     setState((prev) => ({
       ...prev,
       isOpen: false,
+      initialPrompt: '', // Clear initial prompt when closing
       error: null,
     }));
   };
@@ -337,6 +351,7 @@ export const AIChatProvider: React.FC<{ children: ReactNode }> = ({
         conversations: updatedConversations,
         isLoading: true,
         error: null,
+        initialPrompt: '', // Clear initial prompt after sending message
       };
     });
 
@@ -468,6 +483,7 @@ export const AIChatProvider: React.FC<{ children: ReactNode }> = ({
       conversations: {},
       currentContentId: null,
       currentContentTitle: null,
+      initialPrompt: '',
       error: null,
     }));
     localStorage.removeItem(STORAGE_KEY);
@@ -500,6 +516,7 @@ export const AIChatProvider: React.FC<{ children: ReactNode }> = ({
         currentContentTitle: state.currentContentTitle,
         conversationStarters,
         actions,
+        initialPrompt: state.initialPrompt,
         openChat,
         closeChat,
         sendMessage,

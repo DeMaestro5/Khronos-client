@@ -8,16 +8,16 @@ import {
   FiBarChart2,
   FiTrendingUp,
   FiLoader,
+  FiRefreshCw,
 } from 'react-icons/fi';
 import Link from 'next/link';
-import { contentAPI, aiAPI } from '../../../lib/api';
 import { Content } from '../../../types/content';
 import { format, isToday, isTomorrow, parseISO } from 'date-fns';
-import { toast } from 'react-hot-toast';
+import toast from 'react-hot-toast';
 import CreateContentModal from '../../../components/content/content-creation-modal';
-import { ContentFormData } from '../../../types/modal';
 import { useUserData } from '@/src/context/UserDataContext';
 import { useGlobalConfetti } from '@/src/context/ConfettiContext';
+import { CreatedContent } from '../../../types/modal';
 
 interface DashboardStats {
   totalContent: number;
@@ -40,6 +40,13 @@ interface AIContentSuggestion {
   trendingTopic?: boolean;
 }
 
+// Type for modal initial data
+interface ModalInitialData {
+  title: string;
+  description: string;
+  tags: string[];
+}
+
 export default function Dashboard() {
   const [stats, setStats] = useState<DashboardStats>({
     totalContent: 0,
@@ -49,6 +56,9 @@ export default function Dashboard() {
   });
   const [upcomingContent, setUpcomingContent] = useState<Content[]>([]);
   const [showModal, setShowModal] = useState(false);
+  const [modalInitialData, setModalInitialData] =
+    useState<ModalInitialData | null>(null);
+  const [isRefreshingSuggestions, setIsRefreshingSuggestions] = useState(false);
 
   // Use cached user data instead of fetching directly
   const {
@@ -165,253 +175,91 @@ export default function Dashboard() {
     }
   };
 
-  const truncateDescription = (
-    description: string | undefined,
-    maxLength: number = 120
-  ) => {
-    if (!description) return 'No description available';
-    if (description.length <= maxLength) return description;
-    return description.substring(0, maxLength).trim() + '...';
+  // const truncateDescription = (
+  //   description: string | undefined,
+  //   maxLength: number = 120
+  // ) => {
+  //   if (!description) return 'No description available';
+  //   if (description.length <= maxLength) return description;
+  //   return description.substring(0, maxLength).trim() + '...';
+  // };
+
+  // Updated function to open modal with prefilled data instead of creating content directly
+  const handleCreateFromSuggestion = (suggestion: AIContentSuggestion) => {
+    // Set the initial data for the modal
+    setModalInitialData({
+      title: suggestion.title || '',
+      description: suggestion.description || '',
+      tags: Array.isArray(suggestion.tags) ? suggestion.tags : [],
+    });
+
+    // Open the modal
+    setShowModal(true);
+
+    // Show a helpful toast
+    toast.success(
+      '✨ AI suggestion loaded! Complete the form to create your content.',
+      {
+        duration: 4000,
+        style: {
+          background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+          color: 'white',
+          border: 'none',
+          fontWeight: '500',
+        },
+        icon: '🚀',
+      }
+    );
   };
 
-  const handleCreateFromSuggestion = async (
-    suggestion: AIContentSuggestion
-  ) => {
-    // Directly create content using the AI endpoint with just the title
+  const handleRefreshSuggestions = async () => {
+    setIsRefreshingSuggestions(true);
     try {
-      // Show creating toast with loading indicator
-      const creatingToastId = toast.loading(
-        '🚀 Creating AI-powered content... This will be amazing!',
-        {
-          style: {
-            background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
-            color: 'white',
-            border: 'none',
-            fontWeight: '500',
-          },
-        }
-      );
-
-      // Call the new AI content creation endpoint
-      const response = await aiAPI.createSuggestedContent(suggestion.title);
-
-      if (
-        response.data?.statusCode === '10000' ||
-        response.status === 200 ||
-        response.status === 201
-      ) {
-        // Dismiss the creating toast
-        toast.dismiss(creatingToastId);
-
-        // Show success toast
-        toast.success('🎉 AI-powered content created successfully!', {
-          duration: 5000,
-          style: {
-            background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
-            color: 'white',
-            border: 'none',
-            fontWeight: '500',
-            fontSize: '16px',
-          },
-          icon: '🤖',
-        });
-
-        // Celebrate with confetti
-        setTimeout(() => {
-          triggerContentCreationCelebration();
-        }, 100);
-
-        // Add the new content to the cached data
-        if (response.data?.data) {
-          addContent(response.data.data);
-        }
-      } else {
-        throw new Error(
-          response.data?.message || 'Failed to create AI content'
-        );
-      }
-    } catch (error: unknown) {
-      console.error('Failed to create AI content:', error);
-
-      let errorMessage =
-        'Failed to create AI-powered content. Please try again.';
-
-      if (error instanceof Error) {
-        errorMessage = error.message;
-      } else if (
-        typeof error === 'object' &&
-        error !== null &&
-        'response' in error
-      ) {
-        const axiosError = error as {
-          response?: { data?: { message?: string } };
-        };
-        errorMessage = axiosError.response?.data?.message || errorMessage;
-      }
-
-      toast.error(`❌ ${errorMessage}`, {
-        duration: 6000,
+      await refreshAISuggestions();
+      toast.success('✨ AI suggestions refreshed!', {
+        duration: 3000,
         style: {
-          background: '#ef4444',
+          background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
           color: 'white',
           border: 'none',
           fontWeight: '500',
         },
       });
+    } catch (error) {
+      console.error('Failed to refresh suggestions:', error);
+      toast.error('Failed to refresh suggestions. Please try again.', {
+        duration: 4000,
+      });
+    } finally {
+      setIsRefreshingSuggestions(false);
     }
   };
 
-  const handleCreateContent = async (contentData: ContentFormData) => {
-    // Declare creatingToastId variable at function scope
-    let creatingToastId: string | undefined;
+  const handleContentCreated = (createdContent?: CreatedContent) => {
+    // Clear modal initial data
+    setModalInitialData(null);
 
-    try {
-      // Validate required fields first
-      if (!contentData.title.trim()) {
-        toast.error('Content title is required');
-        return;
-      }
-
-      if (contentData.platforms.length === 0) {
-        toast.error('Please select at least one platform');
-        return;
-      }
-
-      // Close modal immediately
-      setShowModal(false);
-
-      // Show creating toast with loading indicator
-      creatingToastId = toast.loading(
-        '🚀 Creating your content... AI is working its magic!',
-        {
-          style: {
-            background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
-            color: 'white',
-            border: 'none',
-            fontWeight: '500',
-          },
-        }
-      );
-
-      // Determine status based on whether scheduled date/time is provided
-      const hasScheduledDate = !!(
-        contentData.scheduledDate && contentData.scheduledTime
-      );
-
-      // Prepare the payload for API
-      const newContentPayload: {
-        title: string;
-        type: string;
-        platform: string[];
-        description?: string;
-        tags?: string[];
-        scheduledDate?: string;
-      } = {
-        title: contentData.title.trim(),
-        type: contentData.contentType,
-        platform: contentData.platforms,
-        description: contentData.description?.trim() || undefined,
-        tags:
-          contentData.tags.length > 0
-            ? contentData.tags.filter((tag) => tag.trim())
-            : undefined,
-      };
-
-      // Add scheduled date if provided
-      if (hasScheduledDate) {
-        const scheduledDateTime = `${contentData.scheduledDate}T${contentData.scheduledTime}:00.000Z`;
-        newContentPayload.scheduledDate = scheduledDateTime;
-      }
-
-      const response = await contentAPI.create(newContentPayload);
-
-      if (
-        response.data?.statusCode === '10000' ||
-        response.status === 200 ||
-        response.status === 201
-      ) {
-        // Dismiss the creating toast
-        toast.dismiss(creatingToastId);
-
-        // Show success toast with confetti
-        if (hasScheduledDate) {
-          toast.success(
-            '🎉 Content created and scheduled successfully! Check your calendar!',
-            {
-              duration: 5000,
-              style: {
-                background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
-                color: 'white',
-                border: 'none',
-                fontWeight: '500',
-                fontSize: '16px',
-              },
-              icon: '📅',
-            }
-          );
-          // Celebrate with confetti after successful scheduled content creation
-          setTimeout(() => {
-            triggerContentCreationCelebration();
-          }, 100);
-        } else {
-          toast.success('🎉 Content created as draft successfully!', {
-            duration: 5000,
-            style: {
-              background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
-              color: 'white',
-              border: 'none',
-              fontWeight: '500',
-              fontSize: '16px',
-            },
-            icon: '📝',
-          });
-          // Celebrate with confetti after successful draft content creation
-          setTimeout(() => {
-            triggerContentCreationCelebration();
-          }, 100);
-        }
-
-        // Add the new content to the cached data instead of refetching everything
-        if (response.data?.data) {
-          addContent(response.data.data);
-        }
-      } else {
-        throw new Error(response.data?.message || 'Failed to create content');
-      }
-    } catch (error: unknown) {
-      console.error('Failed to create content:', error);
-
-      // Dismiss the creating toast if it was created
-      if (creatingToastId) {
-        toast.dismiss(creatingToastId);
-      }
-
-      // Show error notification with specific message
-      let errorMessage = 'Failed to create content. Please try again.';
-
-      if (error instanceof Error) {
-        errorMessage = error.message;
-      } else if (
-        typeof error === 'object' &&
-        error !== null &&
-        'response' in error
-      ) {
-        const axiosError = error as {
-          response?: { data?: { message?: string } };
-        };
-        errorMessage = axiosError.response?.data?.message || errorMessage;
-      }
-
-      toast.error(`❌ ${errorMessage}`, {
-        duration: 6000,
-        style: {
-          background: '#ef4444',
-          color: 'white',
-          border: 'none',
-          fontWeight: '500',
-        },
-      });
+    // Add the new content to the cached data
+    if (createdContent) {
+      addContent(createdContent);
     }
+
+    // Celebrate with confetti
+    setTimeout(() => {
+      triggerContentCreationCelebration();
+    }, 100);
+  };
+
+  // Function to handle opening the modal without prefilled data
+  const handleOpenEmptyModal = () => {
+    setModalInitialData(null);
+    setShowModal(true);
+  };
+
+  // Function to handle closing the modal
+  const handleCloseModal = () => {
+    setShowModal(false);
+    setModalInitialData(null);
   };
 
   // Get AI suggestions from cached data or empty array
@@ -562,7 +410,7 @@ export default function Dashboard() {
                 Create your first piece of content to get started!
               </p>
               <button
-                onClick={() => setShowModal(true)}
+                onClick={handleOpenEmptyModal}
                 className='inline-flex items-center px-3 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 dark:bg-blue-600 dark:hover:bg-blue-700 transition-colors duration-150'
               >
                 <FiFileText className='h-4 w-4 mr-2' />
@@ -633,19 +481,32 @@ export default function Dashboard() {
             </h3>
             {!contextLoading && (
               <button
-                onClick={refreshAISuggestions}
-                className='text-sm text-purple-600 dark:text-violet-400 hover:text-purple-500 dark:hover:text-violet-300 transition-colors duration-150'
+                onClick={handleRefreshSuggestions}
+                disabled={isRefreshingSuggestions}
+                className='inline-flex items-center gap-2 text-sm text-purple-600 dark:text-violet-400 hover:text-purple-500 dark:hover:text-violet-300 transition-colors duration-150 disabled:opacity-50 disabled:cursor-not-allowed'
               >
-                Refresh
+                {isRefreshingSuggestions ? (
+                  <>
+                    <FiLoader className='h-4 w-4 animate-spin' />
+                    Refreshing...
+                  </>
+                ) : (
+                  <>
+                    <FiRefreshCw className='h-4 w-4' />
+                    Refresh
+                  </>
+                )}
               </button>
             )}
           </div>
 
-          {contextLoading ? (
+          {contextLoading || isRefreshingSuggestions ? (
             <div className='px-4 py-6 text-center'>
               <FiLoader className='h-6 w-6 animate-spin mx-auto text-purple-600 dark:text-violet-400' />
               <p className='mt-2 text-sm text-gray-500 dark:text-slate-400'>
-                Loading AI suggestions...
+                {isRefreshingSuggestions
+                  ? 'Refreshing AI suggestions...'
+                  : 'Loading AI suggestions...'}
               </p>
             </div>
           ) : displaySuggestions.length === 0 ? (
@@ -661,10 +522,21 @@ export default function Dashboard() {
                 first to get personalized recommendations.
               </p>
               <button
-                onClick={refreshAISuggestions}
-                className='text-sm text-purple-600 dark:text-violet-400 hover:text-purple-500 dark:hover:text-violet-300 transition-colors duration-150'
+                onClick={handleRefreshSuggestions}
+                disabled={isRefreshingSuggestions}
+                className='inline-flex items-center gap-2 text-sm text-purple-600 dark:text-violet-400 hover:text-purple-500 dark:hover:text-violet-300 transition-colors duration-150 disabled:opacity-50'
               >
-                Refresh Suggestions
+                {isRefreshingSuggestions ? (
+                  <>
+                    <FiLoader className='h-4 w-4 animate-spin' />
+                    Refreshing...
+                  </>
+                ) : (
+                  <>
+                    <FiRefreshCw className='h-4 w-4' />
+                    Refresh Suggestions
+                  </>
+                )}
               </button>
             </div>
           ) : (
@@ -673,41 +545,56 @@ export default function Dashboard() {
                 {displaySuggestions.map((suggestion) => (
                   <li
                     key={suggestion.id}
-                    className='px-4 py-3 hover:bg-gray-50 dark:hover:bg-slate-700/50 transition-colors duration-150'
+                    className='px-4 py-4 hover:bg-gray-50 dark:hover:bg-slate-700/50 transition-colors duration-150'
                   >
                     <div className='flex items-start space-x-3'>
                       <div className='flex-shrink-0 h-8 w-8 rounded-full bg-purple-100 dark:bg-violet-900/50 flex items-center justify-center'>
                         <FiMessageSquare className='h-4 w-4 text-purple-600 dark:text-violet-400' />
                       </div>
                       <div className='min-w-0 flex-1'>
-                        <div className='text-sm font-medium text-purple-600 dark:text-violet-400 mb-1'>
+                        <div className='text-sm font-medium text-purple-600 dark:text-violet-400 mb-2 leading-tight'>
                           {suggestion.title}
                         </div>
-                        <div className='text-xs text-gray-500 dark:text-slate-400 mb-2 line-clamp-2'>
-                          {truncateDescription(suggestion.description, 80)}
+                        {/* Display full description */}
+                        <div className='text-xs text-gray-600 dark:text-slate-400 mb-3 leading-relaxed'>
+                          {suggestion.description || 'No description available'}
                         </div>
                         <div className='flex items-center justify-between'>
-                          <div className='flex items-center text-xs text-gray-500 dark:text-slate-400'>
+                          <div className='flex items-center gap-2 text-xs text-gray-500 dark:text-slate-400'>
                             {suggestion.trendingScore &&
                               suggestion.trendingScore > 70 && (
-                                <span className='px-2 py-1 text-xs rounded-full bg-purple-100 dark:bg-violet-900/50 text-purple-800 dark:text-violet-300 mr-2'>
+                                <span className='inline-flex items-center px-2 py-1 text-xs rounded-full bg-orange-100 dark:bg-orange-900/50 text-orange-800 dark:text-orange-300'>
                                   🔥 Trending
                                 </span>
                               )}
-                            <span>
-                              Est. {suggestion.estimatedTime} to create
-                            </span>
+                            {suggestion.estimatedTime && (
+                              <span className='text-xs text-gray-500 dark:text-slate-400'>
+                                ⏱️ {suggestion.estimatedTime}
+                              </span>
+                            )}
+                            {suggestion.difficulty && (
+                              <span
+                                className={`inline-flex items-center px-2 py-1 text-xs rounded-full ${
+                                  suggestion.difficulty === 'easy'
+                                    ? 'bg-green-100 dark:bg-green-900/50 text-green-800 dark:text-green-300'
+                                    : suggestion.difficulty === 'medium'
+                                    ? 'bg-yellow-100 dark:bg-yellow-900/50 text-yellow-800 dark:text-yellow-300'
+                                    : 'bg-red-100 dark:bg-red-900/50 text-red-800 dark:text-red-300'
+                                }`}
+                              >
+                                {suggestion.difficulty}
+                              </span>
+                            )}
                           </div>
-                          <div className='flex space-x-2'>
-                            <button
-                              onClick={() =>
-                                handleCreateFromSuggestion(suggestion)
-                              }
-                              className='inline-flex items-center px-2 py-1 text-xs font-medium rounded bg-purple-100 dark:bg-violet-900/50 text-purple-700 dark:text-violet-300 hover:bg-purple-200 dark:hover:bg-violet-800/50 transition-colors duration-150'
-                            >
-                              Create
-                            </button>
-                          </div>
+                          <button
+                            onClick={() =>
+                              handleCreateFromSuggestion(suggestion)
+                            }
+                            className='inline-flex items-center px-3 py-1.5 text-xs font-medium rounded-md bg-purple-100 dark:bg-violet-900/50 text-purple-700 dark:text-violet-300 hover:bg-purple-200 dark:hover:bg-violet-800/50 transition-colors duration-150 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:ring-offset-1'
+                          >
+                            <FiFileText className='h-3 w-3 mr-1' />
+                            Use Suggestion
+                          </button>
                         </div>
                       </div>
                     </div>
@@ -732,7 +619,7 @@ export default function Dashboard() {
         </h2>
         <div className='mt-3 grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-4'>
           <button
-            onClick={() => setShowModal(true)}
+            onClick={handleOpenEmptyModal}
             className='bg-white dark:bg-slate-800 overflow-hidden shadow dark:shadow-slate-700/20 rounded-lg p-6 hover:bg-gray-50 dark:hover:bg-slate-700/50 border border-gray-200 dark:border-slate-700 transition-colors duration-150 text-left w-full'
           >
             <div className='flex items-center'>
@@ -740,7 +627,7 @@ export default function Dashboard() {
                 <FiFileText className='h-6 w-6 text-white' />
               </div>
               <div className='ml-4'>
-                <h3 className='text-lg font-medium text-gray-900 dark:text-slate-100'>
+                <h3 className='text-lg font-medium text-gray-900 dark:text-slate-100 cursor-pointer'>
                   Create Content
                 </h3>
                 <p className='text-sm text-gray-500 dark:text-slate-400'>
@@ -809,11 +696,9 @@ export default function Dashboard() {
       {/* Create Content Modal */}
       <CreateContentModal
         isOpen={showModal}
-        onClose={() => {
-          setShowModal(false);
-        }}
-        onSubmit={handleCreateContent}
-        initialData={null}
+        onClose={handleCloseModal}
+        onSubmit={handleContentCreated}
+        initialData={modalInitialData}
       />
     </div>
   );
