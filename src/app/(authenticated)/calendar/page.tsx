@@ -5,22 +5,24 @@ import { Plus } from 'lucide-react';
 import StatsCard from '@/src/components/stats-card';
 import Calendar from '@/src/components/calender/calendar';
 import CreateContentModal from '@/src/components/content/content-creation-modal';
-import { ContentFormData } from '@/src/types/modal';
 import { useCalendar } from '@/src/context/CalendarContext';
+import { useUserData } from '@/src/context/UserDataContext';
 import { useGlobalConfetti } from '@/src/context/ConfettiContext';
-import { contentAPI } from '@/src/lib/api';
-import toast from 'react-hot-toast';
+import { CreatedContent } from '@/src/types/modal';
 
 const CalendarPage = () => {
   const [showModal, setShowModal] = useState(false);
   const [animateStats, setAnimateStats] = useState(false);
 
+  // Get calendar data and user data
   const {
     scheduledContent,
     loadScheduledContent,
-
-    isLoading,
+    isLoading: calendarLoading,
   } = useCalendar();
+
+  // Get user data for stats in the top cards
+  const { userStats, loading: userDataLoading } = useUserData();
 
   const { triggerContentCreationCelebration } = useGlobalConfetti();
 
@@ -29,157 +31,18 @@ const CalendarPage = () => {
     setAnimateStats(true);
   }, []);
 
-  const handleCreateContent = async (contentData: ContentFormData) => {
-    // Validate required fields first
-    if (!contentData.title.trim()) {
-      toast.error('Content title is required');
-      return;
-    }
+  // Handle content creation completion (called after modal handles API call)
+  // Handle content creation completion (called after modal handles API call)
+  const handleContentCreated = (createdContent?: CreatedContent) => {
+    console.log('📅 Calendar Page: Content created:', createdContent);
 
-    if (contentData.platforms.length === 0) {
-      toast.error('Please select at least one platform');
-      return;
-    }
+    // Trigger confetti celebration
+    setTimeout(() => {
+      triggerContentCreationCelebration();
+    }, 100);
 
-    // Close modal immediately
-    setShowModal(false);
-
-    // Show creating toast with loading indicator
-    const creatingToastId = toast.loading(
-      '🚀 Creating your content... AI is working its magic!',
-      {
-        style: {
-          background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
-          color: 'white',
-          border: 'none',
-          fontWeight: '500',
-        },
-      }
-    );
-
-    try {
-      // Determine status based on whether scheduled date/time is provided
-      const hasScheduledDate = !!(
-        contentData.scheduledDate && contentData.scheduledTime
-      );
-
-      // Prepare the payload for API
-      const newContentPayload: {
-        title: string;
-        type: string;
-        platform: string[];
-        description?: string;
-        tags?: string[];
-        scheduledDate?: string;
-      } = {
-        title: contentData.title.trim(),
-        type: contentData.contentType,
-        platform: contentData.platforms,
-        description: contentData.description?.trim() || undefined,
-        tags:
-          contentData.tags.length > 0
-            ? contentData.tags.filter((tag) => tag.trim())
-            : undefined,
-      };
-
-      // Add scheduled date if provided
-      if (hasScheduledDate) {
-        const scheduledDateTime = `${contentData.scheduledDate}T${contentData.scheduledTime}:00.000Z`;
-        newContentPayload.scheduledDate = scheduledDateTime;
-      }
-
-      console.log('Creating content with payload:', newContentPayload);
-
-      // ALWAYS call the API to create content
-      const response = await contentAPI.create(newContentPayload);
-
-      console.log('Content creation response:', response.data);
-
-      // Check if the creation was successful
-      if (
-        response.data?.statusCode === '10000' ||
-        response.status === 200 ||
-        response.status === 201
-      ) {
-        // Dismiss the creating toast
-        toast.dismiss(creatingToastId);
-
-        // If content has a scheduled date, it will automatically appear in calendar
-        // after we reload the scheduled content
-        if (hasScheduledDate) {
-          toast.success(
-            '🎉 Content created and scheduled successfully! Check your calendar!',
-            {
-              duration: 5000,
-              style: {
-                background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
-                color: 'white',
-                border: 'none',
-                fontWeight: '500',
-                fontSize: '16px',
-              },
-              icon: '📅',
-            }
-          );
-          // Celebrate with confetti after successful scheduled content creation
-          setTimeout(() => {
-            triggerContentCreationCelebration();
-          }, 100);
-        } else {
-          toast.success('🎉 Content created as draft successfully!', {
-            duration: 5000,
-            style: {
-              background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
-              color: 'white',
-              border: 'none',
-              fontWeight: '500',
-              fontSize: '16px',
-            },
-            icon: '📝',
-          });
-          // Celebrate with confetti after successful draft content creation
-          setTimeout(() => {
-            triggerContentCreationCelebration();
-          }, 100);
-        }
-
-        // Refresh the calendar to show the new content
-        await loadScheduledContent();
-      } else {
-        throw new Error(response.data?.message || 'Failed to create content');
-      }
-    } catch (error: unknown) {
-      console.error('Failed to create content:', error);
-
-      // Dismiss the creating toast
-      toast.dismiss(creatingToastId);
-
-      // Show error notification with specific message
-      let errorMessage = 'Failed to create content. Please try again.';
-
-      if (error instanceof Error) {
-        errorMessage = error.message;
-      } else if (
-        typeof error === 'object' &&
-        error !== null &&
-        'response' in error
-      ) {
-        const axiosError = error as {
-          response?: { data?: { message?: string } };
-        };
-        errorMessage = axiosError.response?.data?.message || errorMessage;
-      }
-
-      toast.error(`❌ ${errorMessage}`, {
-        duration: 6000,
-        style: {
-          background: '#ef4444',
-          color: 'white',
-          border: 'none',
-          fontWeight: '500',
-        },
-      });
-    }
+    // Refresh the calendar to show the new content
+    loadScheduledContent();
   };
 
   const handleDateSelect = (dateKey: string) => {
@@ -188,7 +51,7 @@ const CalendarPage = () => {
   };
 
   // Show loading state while calendar data is being fetched
-  if (isLoading) {
+  if (calendarLoading || userDataLoading) {
     return (
       <div className='h-full bg-gradient-to-br from-slate-50 via-blue-50 to-slate-100 dark:from-slate-950 dark:via-purple-950 dark:to-slate-950 relative overflow-y-auto transition-colors duration-300'>
         {/* Animated Background Elements */}
@@ -246,6 +109,23 @@ const CalendarPage = () => {
     );
   }
 
+  // Use user stats for the top cards (from UserDataContext)
+  const calendarStatsForTopCards = {
+    totalContent: userStats?.totalContent || 0,
+    scheduledPosts: userStats?.scheduledContent || 0, // scheduledContent from UserStats is the count
+    activeDays: Object.keys(scheduledContent).length, // Use calendar context for active days
+    engagementRate: userStats?.engagementRate || 0,
+  };
+
+  console.log('📅 Calendar Page: Using stats:', {
+    fromUserStats: userStats,
+    fromCalendarContext: {
+      totalDates: Object.keys(scheduledContent).length,
+      totalItems: Object.values(scheduledContent).flat().length,
+    },
+    finalStats: calendarStatsForTopCards,
+  });
+
   return (
     <div className='h-full bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 relative overflow-y-auto'>
       {/* Animated Background Elements */}
@@ -277,18 +157,16 @@ const CalendarPage = () => {
                   <Plus className='h-4 w-4 sm:h-5 sm:w-5 group-hover:rotate-90 transition-transform duration-300' />
                   <span className='text-sm sm:text-base'>Create Content</span>
                 </button>
-
-                {/* Force Refresh Button for fixing old data */}
               </div>
             </div>
 
-            {/* Stats Cards */}
+            {/* Stats Cards - Using user data for top cards */}
             <StatsCard
               animateStats={animateStats}
-              scheduledContent={scheduledContent}
+              userStats={calendarStatsForTopCards}
             />
 
-            {/* Enhanced Calendar */}
+            {/* Enhanced Calendar - Uses calendar context internally */}
             <Calendar
               scheduledContent={scheduledContent}
               onDateSelect={handleDateSelect}
@@ -302,7 +180,7 @@ const CalendarPage = () => {
       <CreateContentModal
         isOpen={showModal}
         onClose={() => setShowModal(false)}
-        onSubmit={handleCreateContent}
+        onSubmit={handleContentCreated}
       />
 
       <style jsx>{`
