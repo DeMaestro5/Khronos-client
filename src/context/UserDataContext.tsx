@@ -262,88 +262,99 @@ export function UserDataProvider({ children }: { children: React.ReactNode }) {
     []
   );
 
-  // Calculate real user stats
-  const calculateUserStats = useCallback(
-    (
-      content: {
-        status: string;
-        likes?: number;
-        comments?: number;
-        shares?: number;
-        views?: number;
-        createdAt?: string;
-      }[]
-    ): UserStats => {
-      const scheduled = content.filter(
-        (item: { status: string }) => item.status === 'scheduled'
-      ).length;
-
-      // Calculate real engagement rate based on content performance
-      const published = content.filter(
-        (item: { status: string }) => item.status === 'published'
-      );
-      let engagementRate = 0;
-      if (published.length > 0) {
-        const totalEngagement = published.reduce(
-          (
-            sum: number,
-            item: { likes?: number; comments?: number; shares?: number }
-          ) => {
-            return (
-              sum +
-              (item.likes || 0) +
-              (item.comments || 0) +
-              (item.shares || 0)
-            );
-          },
-          0
-        );
-        const totalViews = published.reduce(
-          (sum: number, item: { views?: number }) => {
-            return sum + (item.views || 1); // Avoid division by zero
-          },
-          0
-        );
-        engagementRate = Math.round((totalEngagement / totalViews) * 100);
-      }
-
-      // Calculate streak based on content creation frequency
-      const sortedContent = content
-        .filter((item) => item.createdAt)
-        .sort(
-          (a, b) =>
-            new Date(b.createdAt!).getTime() - new Date(a.createdAt!).getTime()
-        );
-
-      let streak = 0;
-      const currentDate = new Date();
-      currentDate.setHours(0, 0, 0, 0);
-
-      for (const item of sortedContent) {
-        const itemDate = new Date(item.createdAt!);
-        itemDate.setHours(0, 0, 0, 0);
-
-        const daysDiff = Math.floor(
-          (currentDate.getTime() - itemDate.getTime()) / (1000 * 60 * 60 * 24)
-        );
-
-        if (daysDiff === streak) {
-          streak++;
-        } else if (daysDiff > streak) {
-          break;
-        }
-      }
-
+  // Calculate real user stats using the Content type structure
+  const calculateUserStats = useCallback((content: Content[]): UserStats => {
+    // Defensive check: ensure content is an array
+    if (!Array.isArray(content)) {
+      console.warn('calculateUserStats: content is not an array:', content);
       return {
-        totalContent: content.length,
-        scheduledContent: scheduled,
-        engagementRate: Math.max(0, Math.min(100, engagementRate)),
-        streak: streak,
+        totalContent: 0,
+        scheduledContent: 0,
+        engagementRate: 0,
+        streak: 0,
         lastUpdated: new Date().toISOString(),
       };
-    },
-    []
-  );
+    }
+
+    // Count scheduled content using the ContentStatus enum values
+    const scheduled = content.filter(
+      (item) =>
+        item.status === 'scheduled' || item.metadata?.status === 'scheduled'
+    ).length;
+
+    // Calculate engagement rate based on published content
+    const published = content.filter(
+      (item) =>
+        item.status === 'published' || item.metadata?.status === 'published'
+    );
+
+    let engagementRate = 0;
+    if (published.length > 0) {
+      const totalEngagement = published.reduce((sum, item) => {
+        // Use engagement object or stats object for metrics
+        const engagement = item.engagement;
+        const stats = item.stats;
+        return (
+          sum +
+          (engagement?.likes || 0) +
+          (engagement?.comments || 0) +
+          (engagement?.shares || stats?.shares || 0)
+        );
+      }, 0);
+
+      const totalViews = published.reduce((sum, item) => {
+        const engagement = item.engagement;
+        const stats = item.stats;
+        return sum + (engagement?.views || stats?.views || 1); // Avoid division by zero
+      }, 0);
+
+      engagementRate =
+        totalViews > 0 ? Math.round((totalEngagement / totalViews) * 100) : 0;
+    }
+
+    // Calculate streak based on content creation frequency
+    const sortedContent = content
+      .filter((item) => item.createdAt)
+      .sort(
+        (a, b) =>
+          new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+      );
+
+    let streak = 0;
+    const currentDate = new Date();
+    currentDate.setHours(0, 0, 0, 0);
+
+    for (const item of sortedContent) {
+      const itemDate = new Date(item.createdAt);
+      itemDate.setHours(0, 0, 0, 0);
+
+      const daysDiff = Math.floor(
+        (currentDate.getTime() - itemDate.getTime()) / (1000 * 60 * 60 * 24)
+      );
+
+      if (daysDiff === streak) {
+        streak++;
+      } else if (daysDiff > streak) {
+        break;
+      }
+    }
+
+    console.log('📊 Stats calculated:', {
+      total: content.length,
+      scheduled,
+      published: published.length,
+      engagementRate,
+      streak,
+    });
+
+    return {
+      totalContent: content.length,
+      scheduledContent: scheduled,
+      engagementRate: Math.max(0, Math.min(100, engagementRate)),
+      streak: streak,
+      lastUpdated: new Date().toISOString(),
+    };
+  }, []);
 
   // Fetch fresh user data from API
   const fetchUserData = useCallback(async () => {
@@ -373,9 +384,130 @@ export function UserDataProvider({ children }: { children: React.ReactNode }) {
       };
 
       let content: Content[] = [];
-      if (contentResponse.data?.data) {
-        content = contentResponse.data.data;
+
+      // Handle the contentAPI.getUserContent response structure
+      console.log('Content API Response:', contentResponse.data);
+
+      if (contentResponse.data) {
+        const apiResponse = contentResponse.data;
+
+        // Check if this matches your API structure: { statusCode: '10000', message: '...', data: {...} }
+        if (
+          apiResponse.statusCode === '10000' &&
+          apiResponse.data !== undefined
+        ) {
+          const responseData = apiResponse.data;
+
+          if (Array.isArray(responseData)) {
+            content = responseData;
+            console.log(
+              '✅ UserDataContext: Found content array with',
+              content.length,
+              'items'
+            );
+          } else if (responseData && typeof responseData === 'object') {
+            // Check for contents property (this is the actual structure from your API)
+            if (Array.isArray(responseData.contents)) {
+              content = responseData.contents;
+              console.log(
+                '✅ UserDataContext: Found content in contents property with',
+                content.length,
+                'items'
+              );
+            } else if (Array.isArray(responseData.content)) {
+              content = responseData.content;
+              console.log(
+                '✅ UserDataContext: Found content in content property with',
+                content.length,
+                'items'
+              );
+            } else if (Array.isArray(responseData.items)) {
+              content = responseData.items;
+              console.log(
+                '✅ UserDataContext: Found content in items property with',
+                content.length,
+                'items'
+              );
+            } else if (Array.isArray(responseData.results)) {
+              content = responseData.results;
+              console.log(
+                '✅ UserDataContext: Found content in results property with',
+                content.length,
+                'items'
+              );
+            } else {
+              console.warn(
+                '❌ UserDataContext: Could not find content array in response data:',
+                responseData
+              );
+              content = [];
+            }
+          } else if (responseData === null || responseData === undefined) {
+            // Handle null/undefined data (empty result)
+            content = [];
+            console.log(
+              '✅ UserDataContext: API returned null/undefined data, using empty array'
+            );
+          } else {
+            console.warn(
+              '❌ UserDataContext: API data is not an array or object:',
+              responseData
+            );
+            content = [];
+          }
+        } else {
+          // Fallback: try to find array in different response structures
+          const fallbackData = apiResponse.data || apiResponse;
+
+          if (Array.isArray(fallbackData)) {
+            content = fallbackData;
+          } else if (fallbackData && typeof fallbackData === 'object') {
+            // Check common array property names including 'contents'
+            if (Array.isArray(fallbackData.contents)) {
+              content = fallbackData.contents;
+              console.log(
+                '✅ UserDataContext: Found content in fallback contents property with',
+                content.length,
+                'items'
+              );
+            } else if (Array.isArray(fallbackData.content)) {
+              content = fallbackData.content;
+            } else if (Array.isArray(fallbackData.items)) {
+              content = fallbackData.items;
+            } else if (Array.isArray(fallbackData.results)) {
+              content = fallbackData.results;
+            } else {
+              console.warn(
+                '❌ UserDataContext: Could not find content array in fallback response:',
+                fallbackData
+              );
+              content = [];
+            }
+          } else {
+            console.warn(
+              '❌ UserDataContext: Unexpected response structure:',
+              apiResponse
+            );
+            content = [];
+          }
+        }
+      } else {
+        console.warn('❌ UserDataContext: No data in content response');
+        content = [];
+      }
+
+      // Calculate stats only if we have content
+      if (content.length > 0) {
         stats = calculateUserStats(content);
+        console.log(
+          '✅ UserDataContext: Calculated stats for',
+          content.length,
+          'content items'
+        );
+      } else {
+        console.log(
+          '✅ UserDataContext: No content found, using default stats'
+        );
       }
 
       // Update state
@@ -385,6 +517,8 @@ export function UserDataProvider({ children }: { children: React.ReactNode }) {
 
       // Save to cache
       saveToCache(profile, stats, content);
+
+      console.log('✅ UserDataContext: User data updated successfully');
     } catch (error) {
       console.error('Failed to fetch user data:', error);
       setError('Failed to load user data');
@@ -399,35 +533,82 @@ export function UserDataProvider({ children }: { children: React.ReactNode }) {
   // Fetch AI suggestions
   const fetchAISuggestions = useCallback(async () => {
     try {
+      console.log('🤖 Fetching AI suggestions...');
       const response = await aiAPI.getContentFeed();
+      console.log('🤖 AI API Response:', response.data);
 
       // Handle the correct response structure
-      let suggestions = [];
-      if (
-        response.data?.data?.suggestions &&
-        Array.isArray(response.data.data.suggestions)
-      ) {
-        suggestions = response.data.data.suggestions;
-      } else if (response.data?.data && Array.isArray(response.data.data)) {
-        suggestions = response.data.data;
-      } else if (Array.isArray(response.data)) {
-        suggestions = response.data;
-      } else if (
-        response.data?.suggestions &&
-        Array.isArray(response.data.suggestions)
-      ) {
-        suggestions = response.data.suggestions;
-      } else {
-        console.warn('AI suggestions response is not an array:', response.data);
-        suggestions = [];
+      let suggestions: AIContentSuggestion[] = [];
+
+      if (response.data) {
+        const apiResponse = response.data;
+
+        // Check for standard API response structure
+        if (
+          apiResponse.statusCode === '10000' &&
+          apiResponse.data !== undefined
+        ) {
+          const responseData = apiResponse.data;
+
+          if (Array.isArray(responseData)) {
+            suggestions = responseData;
+          } else if (responseData && typeof responseData === 'object') {
+            // Check for suggestions in nested object
+            if (Array.isArray(responseData.suggestions)) {
+              suggestions = responseData.suggestions;
+            } else if (Array.isArray(responseData.items)) {
+              suggestions = responseData.items;
+            } else if (Array.isArray(responseData.feed)) {
+              suggestions = responseData.feed;
+            } else {
+              console.warn(
+                '❌ AI suggestions: Could not find suggestions array:',
+                responseData
+              );
+              suggestions = [];
+            }
+          }
+        } else {
+          // Fallback for different response structures
+          if (Array.isArray(apiResponse.suggestions)) {
+            suggestions = apiResponse.suggestions;
+          } else if (Array.isArray(apiResponse.data)) {
+            suggestions = apiResponse.data;
+          } else if (Array.isArray(apiResponse)) {
+            suggestions = apiResponse;
+          } else {
+            console.warn(
+              '❌ AI suggestions: Unexpected response structure:',
+              apiResponse
+            );
+            suggestions = [];
+          }
+        }
       }
 
+      console.log(
+        '✅ AI suggestions processed:',
+        suggestions.length,
+        'suggestions found'
+      );
       setAiSuggestions(suggestions);
       saveAISuggestionsToCache(suggestions);
-      console.log('✅ UserDataContext: AI suggestions updated');
     } catch (error) {
-      console.error('Failed to fetch AI suggestions:', error);
+      console.error('❌ Failed to fetch AI suggestions:', error);
       // Don't throw error for AI suggestions as it's not critical
+      // Try to load from cache if available
+      try {
+        const cachedAI = localStorage.getItem(STORAGE_KEYS.AI_SUGGESTIONS);
+        if (cachedAI) {
+          console.log('💾 Loading AI suggestions from cache as fallback');
+          setAiSuggestions(JSON.parse(cachedAI));
+        }
+      } catch (cacheError) {
+        console.error(
+          '❌ Failed to load AI suggestions from cache:',
+          cacheError
+        );
+      }
     }
   }, [saveAISuggestionsToCache]);
 
@@ -631,9 +812,12 @@ export function UserDataProvider({ children }: { children: React.ReactNode }) {
     (content: Content) => {
       setUserContent((prev) => {
         const newContent = [content, ...(prev || [])];
+        console.log('➕ Adding content:', content._id, content.title);
+
         // Update stats
         const newStats = calculateUserStats(newContent);
         setUserStats(newStats);
+
         // Update cache
         if (profileData) {
           saveToCache(profileData, newStats, newContent);
@@ -647,13 +831,21 @@ export function UserDataProvider({ children }: { children: React.ReactNode }) {
   const updateContent = useCallback(
     (contentId: string, updates: Partial<Content>) => {
       setUserContent((prev) => {
-        if (!prev) return prev;
+        if (!prev) {
+          console.warn('❌ updateContent: No content array to update');
+          return prev;
+        }
+
         const newContent = prev.map((content) =>
           content._id === contentId ? { ...content, ...updates } : content
         );
+
+        console.log('✏️ Updating content:', contentId, Object.keys(updates));
+
         // Update stats
         const newStats = calculateUserStats(newContent);
         setUserStats(newStats);
+
         // Update cache
         if (profileData) {
           saveToCache(profileData, newStats, newContent);
@@ -667,11 +859,18 @@ export function UserDataProvider({ children }: { children: React.ReactNode }) {
   const removeContent = useCallback(
     (contentId: string) => {
       setUserContent((prev) => {
-        if (!prev) return prev;
+        if (!prev) {
+          console.warn('❌ removeContent: No content array to remove from');
+          return prev;
+        }
+
         const newContent = prev.filter((content) => content._id !== contentId);
+        console.log('🗑️ Removing content:', contentId);
+
         // Update stats
         const newStats = calculateUserStats(newContent);
         setUserStats(newStats);
+
         // Update cache
         if (profileData) {
           saveToCache(profileData, newStats, newContent);

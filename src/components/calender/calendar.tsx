@@ -21,6 +21,14 @@ export default function CalendarComponent({
   const [isEmptyModalOpen, setIsEmptyModalOpen] = useState(false);
   const [animatingOut, setAnimatingOut] = useState(false);
 
+  // Log the received scheduled content for debugging
+  console.log('📅 Calendar Component: Received scheduled content:', {
+    totalDates: Object.keys(scheduledContent).length,
+    totalItems: Object.values(scheduledContent).flat().length,
+    dates: Object.keys(scheduledContent).sort(),
+    content: scheduledContent,
+  });
+
   const PlatformIcons: Record<Platform['id'], () => ReactElement> = {
     instagram: () => (
       <div className='w-4 h-4 bg-gradient-to-r from-pink-500 to-orange-500 rounded-full shadow-sm' />
@@ -85,7 +93,14 @@ export default function CalendarComponent({
       currentDate.getMonth(),
       day
     );
-    return scheduledContent[dateKey] || [];
+    const content = scheduledContent[dateKey] || [];
+
+    // Log content for debugging
+    if (content.length > 0) {
+      console.log(`📅 Content for ${dateKey}:`, content);
+    }
+
+    return content;
   };
 
   const isToday = (day: number) => {
@@ -152,6 +167,10 @@ export default function CalendarComponent({
     const isContentCreationAllowed = canCreateContent(day);
     setSelectedDate(dateKey);
 
+    console.log(
+      `📅 Date clicked: ${dateKey}, Content count: ${content.length}`
+    );
+
     if (content.length > 0) {
       // Always show existing content, regardless of date
       setIsContentModalOpen(true);
@@ -181,6 +200,27 @@ export default function CalendarComponent({
   const monthYear = currentDate.toLocaleDateString('en-US', {
     month: 'long',
     year: 'numeric',
+  });
+
+  // Calculate stats from the scheduled content provided by context
+  const totalPosts = Object.values(scheduledContent).flat().length;
+  const scheduledPosts = Object.values(scheduledContent)
+    .flat()
+    .filter((item) => item.status === 'scheduled').length;
+  const draftPosts = Object.values(scheduledContent)
+    .flat()
+    .filter((item) => item.status === 'draft').length;
+  const publishedPosts = Object.values(scheduledContent)
+    .flat()
+    .filter((item) => item.status === 'published').length;
+  const activeDays = Object.keys(scheduledContent).length;
+
+  console.log('📅 Calendar Stats:', {
+    totalPosts,
+    scheduledPosts,
+    draftPosts,
+    publishedPosts,
+    activeDays,
   });
 
   return (
@@ -334,12 +374,14 @@ export default function CalendarComponent({
                           <div className='flex items-center justify-center space-x-0.5 sm:space-x-1'>
                             {content.slice(0, 4).map((item, idx) => {
                               const IconComponent =
-                                PlatformIcons[item.platform];
+                                PlatformIcons[item.platform as Platform['id']];
                               return (
                                 <div
                                   key={idx}
                                   className={`w-4 h-4 sm:w-6 sm:h-6 rounded-md sm:rounded-lg bg-gradient-to-r ${
-                                    platformColors[item.platform]
+                                    platformColors[
+                                      item.platform as Platform['id']
+                                    ] || 'from-gray-500 to-gray-600'
                                   } flex items-center justify-center shadow-lg border border-white/30 transition-all duration-200 hover:scale-125 group-hover:shadow-xl`}
                                 >
                                   {IconComponent && <IconComponent />}
@@ -386,7 +428,7 @@ export default function CalendarComponent({
           <div className='grid grid-cols-2 md:grid-cols-4 gap-3 sm:gap-4 md:gap-6'>
             <div className='text-center group cursor-pointer transition-all duration-300 hover:scale-110 bg-white/5 rounded-xl sm:rounded-2xl p-3 sm:p-4 hover:bg-white/10'>
               <div className='text-2xl sm:text-3xl md:text-4xl font-bold text-white group-hover:text-purple-400 transition-colors mb-1 sm:mb-2 drop-shadow-lg'>
-                {Object.values(scheduledContent).flat().length}
+                {totalPosts}
               </div>
               <div className='text-xs sm:text-sm text-slate-400 group-hover:text-slate-300 font-medium'>
                 Total Posts
@@ -394,11 +436,7 @@ export default function CalendarComponent({
             </div>
             <div className='text-center group cursor-pointer transition-all duration-300 hover:scale-110 bg-white/5 rounded-xl sm:rounded-2xl p-3 sm:p-4 hover:bg-white/10'>
               <div className='text-2xl sm:text-3xl md:text-4xl font-bold text-emerald-400 group-hover:text-emerald-300 transition-colors mb-1 sm:mb-2 drop-shadow-lg'>
-                {
-                  Object.values(scheduledContent)
-                    .flat()
-                    .filter((item) => item.status === 'scheduled').length
-                }
+                {scheduledPosts}
               </div>
               <div className='text-xs sm:text-sm text-slate-400 group-hover:text-slate-300 font-medium'>
                 Scheduled
@@ -406,11 +444,7 @@ export default function CalendarComponent({
             </div>
             <div className='text-center group cursor-pointer transition-all duration-300 hover:scale-110 bg-white/5 rounded-xl sm:rounded-2xl p-3 sm:p-4 hover:bg-white/10'>
               <div className='text-2xl sm:text-3xl md:text-4xl font-bold text-amber-400 group-hover:text-amber-300 transition-colors mb-1 sm:mb-2 drop-shadow-lg'>
-                {
-                  Object.values(scheduledContent)
-                    .flat()
-                    .filter((item) => item.status === 'draft').length
-                }
+                {draftPosts}
               </div>
               <div className='text-xs sm:text-sm text-slate-400 group-hover:text-slate-300 font-medium'>
                 Drafts
@@ -418,7 +452,7 @@ export default function CalendarComponent({
             </div>
             <div className='text-center group cursor-pointer transition-all duration-300 hover:scale-110 bg-white/5 rounded-xl sm:rounded-2xl p-3 sm:p-4 hover:bg-white/10'>
               <div className='text-2xl sm:text-3xl md:text-4xl font-bold text-purple-400 group-hover:text-purple-300 transition-colors mb-1 sm:mb-2 drop-shadow-lg'>
-                {Object.keys(scheduledContent).length}
+                {activeDays}
               </div>
               <div className='text-xs sm:text-sm text-slate-400 group-hover:text-slate-300 font-medium'>
                 Active Days

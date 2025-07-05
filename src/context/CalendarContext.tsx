@@ -11,13 +11,18 @@ import { Platform } from '@/src/types/modal';
 import { contentAPI } from '@/src/lib/api';
 
 export interface ScheduledContentItem {
-  id: string;
+  _id: string; // Use _id to match API response
+  id: string; // Keep for backward compatibility
   title: string;
   platform: Platform['id'];
+  platforms?: string[]; // Array of platforms
   time: string;
   type: string;
   status: 'draft' | 'scheduled' | 'published';
   description?: string;
+  scheduledDate?: string;
+  createdAt?: string;
+  updatedAt?: string;
 }
 
 export type ScheduledContent = {
@@ -53,138 +58,266 @@ export const CalendarProvider = ({ children }: CalendarProviderProps) => {
   );
   const [isLoading, setIsLoading] = useState(false);
 
-  // Convert API content to calendar format
-  const convertAPIContentToCalendar = (
-    apiContent: unknown[]
-  ): ScheduledContent => {
+  // Convert API content to calendar format with proper error handling
+  const convertAPIContentToCalendar = (apiData: unknown): ScheduledContent => {
     const calendarData: ScheduledContent = {};
 
-    apiContent.forEach((contentItem) => {
-      const content = contentItem as {
-        _id: string; // MongoDB ObjectID
-        title: string;
-        status: string;
-        scheduledDate?: string;
-        platform?: string[];
-        platforms?: { id: string }[];
-        type?: string;
-        description?: string;
-        excerpt?: string;
-        userId?: string;
-        author?: { id: string };
-        scheduling?: {
-          scheduledDate?: string;
-          startDate?: string;
+    try {
+      // Handle the API response structure: { contents: [...], totalContents: number }
+      let contentArray: unknown[] = [];
+
+      if (Array.isArray(apiData)) {
+        contentArray = apiData;
+      } else if (apiData && typeof apiData === 'object') {
+        const dataObj = apiData as {
+          contents?: unknown[];
+          content?: unknown[];
+          items?: unknown[];
         };
-        metadata?: {
-          scheduledDate?: string;
-        };
-        createdAt?: string;
-        updatedAt?: string;
-      };
-
-      // Try to find scheduled date in multiple possible locations
-      const possibleScheduledDate =
-        content.scheduledDate ||
-        content.scheduling?.scheduledDate ||
-        content.scheduling?.startDate ||
-        content.metadata?.scheduledDate;
-
-      // Check if content has a scheduled date and belongs to current user
-      if (
-        content.status === 'scheduled' &&
-        possibleScheduledDate &&
-        content._id
-      ) {
-        // Extract date from ISO string (e.g., "2024-01-24T11:15:00.000Z" -> "2024-01-24")
-        const dateKey = possibleScheduledDate.split('T')[0];
-
-        // Extract time from ISO string (e.g., "2024-01-24T11:15:00.000Z" -> "11:15")
-        const timeMatch = possibleScheduledDate.match(/T(\d{2}:\d{2})/);
-        const time = timeMatch ? timeMatch[1] : '09:00';
-
-        const calendarItem: ScheduledContentItem = {
-          id: content._id, // Use the actual MongoDB ObjectID
-          title: content.title,
-          platform: (content.platform?.[0] ||
-            content.platforms?.[0]?.id ||
-            'linkedin') as Platform['id'],
-          time: time,
-          type: content.type || 'post',
-          status: content.status as 'draft' | 'scheduled' | 'published',
-          description: content.description || content.excerpt,
-        };
-
-        if (!calendarData[dateKey]) {
-          calendarData[dateKey] = [];
+        if (Array.isArray(dataObj.contents)) {
+          contentArray = dataObj.contents;
+        } else if (Array.isArray(dataObj.content)) {
+          contentArray = dataObj.content;
+        } else if (Array.isArray(dataObj.items)) {
+          contentArray = dataObj.items;
         }
-        calendarData[dateKey].push(calendarItem);
       }
-    });
+
+      console.log(
+        '📅 CalendarContext: Processing',
+        contentArray.length,
+        'content items'
+      );
+
+      contentArray.forEach((contentItem) => {
+        try {
+          const content = contentItem as {
+            _id: string;
+            title: string;
+            status: string;
+            scheduledDate?: string;
+            platform?: string[];
+            platforms?: { id: string }[] | string[];
+            type?: string;
+            description?: string;
+            excerpt?: string;
+            userId?: string;
+            author?: { id: string };
+            scheduling?: {
+              scheduledDate?: string;
+              startDate?: string;
+            };
+            metadata?: {
+              scheduledDate?: string;
+              status?: string;
+              title?: string;
+              description?: string;
+              platform?: string[];
+              type?: string;
+            };
+            createdAt?: string;
+            updatedAt?: string;
+          };
+
+          // Safely extract properties with fallbacks to metadata
+          const title = content.title || content.metadata?.title || 'Untitled';
+          const status = content.status || content.metadata?.status || 'draft';
+          const description =
+            content.description ||
+            content.metadata?.description ||
+            content.excerpt ||
+            '';
+          const type = content.type || content.metadata?.type || 'social';
+
+          // Extract platform information
+          let platformArray: string[] = [];
+          if (content.platform && Array.isArray(content.platform)) {
+            platformArray = content.platform;
+          } else if (
+            content.metadata?.platform &&
+            Array.isArray(content.metadata.platform)
+          ) {
+            platformArray = content.metadata.platform;
+          } else if (content.platforms) {
+            if (Array.isArray(content.platforms)) {
+              platformArray = content.platforms.map((p) =>
+                typeof p === 'string' ? p : (p as { id: string }).id
+              );
+            }
+          }
+
+          const primaryPlatform = (platformArray[0] ||
+            'instagram') as Platform['id'];
+
+          // Try to find scheduled date in multiple possible locations
+          const possibleScheduledDate =
+            content.scheduledDate ||
+            content.scheduling?.scheduledDate ||
+            content.scheduling?.startDate ||
+            content.metadata?.scheduledDate;
+
+          // Only process items that have a scheduled date or are scheduled status
+          const hasScheduledDate =
+            possibleScheduledDate && possibleScheduledDate.trim() !== '';
+          const isScheduledStatus = status === 'scheduled';
+
+          if ((hasScheduledDate || isScheduledStatus) && content._id) {
+            let dateToUse = possibleScheduledDate;
+
+            // If no specific scheduled date but status is scheduled, use creation date
+            if (!hasScheduledDate && isScheduledStatus && content.createdAt) {
+              dateToUse = content.createdAt;
+            }
+
+            if (dateToUse) {
+              try {
+                // Parse the date and extract components
+                const scheduledDate = new Date(dateToUse);
+
+                if (!isNaN(scheduledDate.getTime())) {
+                  // Extract date key (YYYY-MM-DD format)
+                  const dateKey = `${scheduledDate.getFullYear()}-${String(
+                    scheduledDate.getMonth() + 1
+                  ).padStart(2, '0')}-${String(
+                    scheduledDate.getDate()
+                  ).padStart(2, '0')}`;
+
+                  // Extract time (HH:MM format)
+                  const time = `${String(scheduledDate.getHours()).padStart(
+                    2,
+                    '0'
+                  )}:${String(scheduledDate.getMinutes()).padStart(2, '0')}`;
+
+                  const calendarItem: ScheduledContentItem = {
+                    _id: content._id,
+                    id: content._id, // Keep for backward compatibility
+                    title: title,
+                    platform: primaryPlatform,
+                    platforms: platformArray,
+                    time: time,
+                    type: type,
+                    status: status as 'draft' | 'scheduled' | 'published',
+                    description: description,
+                    scheduledDate: dateToUse,
+                    createdAt: content.createdAt,
+                    updatedAt: content.updatedAt,
+                  };
+
+                  if (!calendarData[dateKey]) {
+                    calendarData[dateKey] = [];
+                  }
+                  calendarData[dateKey].push(calendarItem);
+
+                  console.log('📅 Added to calendar:', {
+                    dateKey,
+                    title,
+                    status,
+                    platform: primaryPlatform,
+                  });
+                } else {
+                  console.warn('📅 Invalid date format:', dateToUse);
+                }
+              } catch (dateError) {
+                console.warn('📅 Error parsing date:', dateToUse, dateError);
+              }
+            }
+          } else {
+            // Log why content was skipped
+            console.log('📅 Skipped content:', {
+              id: content._id,
+              title,
+              status,
+              hasScheduledDate,
+              isScheduledStatus,
+              reason:
+                !hasScheduledDate && !isScheduledStatus
+                  ? 'No scheduled date and not scheduled status'
+                  : 'Missing ID',
+            });
+          }
+        } catch (itemError) {
+          console.error('📅 Error processing content item:', itemError);
+        }
+      });
+
+      console.log('📅 CalendarContext: Processed calendar data:', {
+        totalDates: Object.keys(calendarData).length,
+        totalItems: Object.values(calendarData).flat().length,
+        dates: Object.keys(calendarData).sort(),
+      });
+    } catch (error) {
+      console.error('📅 Error in convertAPIContentToCalendar:', error);
+    }
 
     return calendarData;
   };
 
-  // Load scheduled content from both API and localStorage
+  // Load scheduled content from API
   const loadScheduledContent = async () => {
     setIsLoading(true);
 
     try {
-      // First, fetch from API (actual scheduled content)
-      try {
-        const response = await contentAPI.getUserContent();
+      console.log('📅 CalendarContext: Loading scheduled content...');
 
-        if (response.data?.statusCode === '10000' && response.data?.data) {
-          const apiCalendarData = convertAPIContentToCalendar(
-            response.data.data
+      const response = await contentAPI.getUserContent();
+      console.log('📅 CalendarContext: API Response:', response.data);
+
+      if (
+        response.data?.statusCode === '10000' &&
+        response.data?.data !== undefined
+      ) {
+        const apiCalendarData = convertAPIContentToCalendar(response.data.data);
+
+        console.log('📅 CalendarContext: Setting calendar data:', {
+          totalDates: Object.keys(apiCalendarData).length,
+          totalItems: Object.values(apiCalendarData).flat().length,
+        });
+
+        setScheduledContent(apiCalendarData);
+
+        // Optional: Save to localStorage for caching (but API is the source of truth)
+        try {
+          localStorage.setItem(
+            'khronos-scheduled-content-cache',
+            JSON.stringify({
+              data: apiCalendarData,
+              timestamp: Date.now(),
+              version: '2.0', // Version to handle future changes
+            })
           );
-
-          setScheduledContent(apiCalendarData);
-
-          // Clear old localStorage data that might have invalid IDs
-          // Only keep localStorage as backup for manual entries in the future
-          const storedContent = localStorage.getItem(
-            'khronos-scheduled-content'
-          );
-          if (storedContent) {
-            try {
-              const localCalendarData = JSON.parse(
-                storedContent
-              ) as ScheduledContent;
-              // Check if any items have invalid IDs (not MongoDB ObjectIDs)
-              let hasInvalidIds = false;
-              Object.values(localCalendarData).forEach(
-                (dateContent: ScheduledContentItem[]) => {
-                  dateContent.forEach((item: ScheduledContentItem) => {
-                    // MongoDB ObjectIDs are 24 character hex strings
-                    if (
-                      !item.id ||
-                      typeof item.id !== 'string' ||
-                      item.id.length !== 24 ||
-                      !/^[a-f\d]{24}$/i.test(item.id)
-                    ) {
-                      hasInvalidIds = true;
-                    }
-                  });
-                }
-              );
-
-              if (hasInvalidIds) {
-                localStorage.removeItem('khronos-scheduled-content');
-              }
-            } catch {
-              localStorage.removeItem('khronos-scheduled-content');
-            }
-          }
-        } else {
-          // If API fails, show empty calendar
-          setScheduledContent({});
+        } catch (storageError) {
+          console.warn('📅 Could not save to localStorage:', storageError);
         }
-      } catch {
+      } else {
+        console.warn('📅 CalendarContext: Invalid API response structure');
         setScheduledContent({});
       }
-    } catch {
-      setScheduledContent({});
+    } catch (error) {
+      console.error(
+        '📅 CalendarContext: Failed to load scheduled content:',
+        error
+      );
+
+      // Try to load from cache as fallback
+      try {
+        const cachedData = localStorage.getItem(
+          'khronos-scheduled-content-cache'
+        );
+        if (cachedData) {
+          const parsed = JSON.parse(cachedData);
+          if (parsed.data && parsed.version === '2.0') {
+            console.log('📅 CalendarContext: Loaded from cache as fallback');
+            setScheduledContent(parsed.data);
+          } else {
+            setScheduledContent({});
+          }
+        } else {
+          setScheduledContent({});
+        }
+      } catch (cacheError) {
+        console.error('📅 CalendarContext: Cache fallback failed:', cacheError);
+        setScheduledContent({});
+      }
     } finally {
       setIsLoading(false);
     }
@@ -192,23 +325,35 @@ export const CalendarProvider = ({ children }: CalendarProviderProps) => {
 
   // Force refresh calendar by clearing cache and reloading
   const forceRefreshCalendar = async () => {
-    localStorage.removeItem('khronos-scheduled-content');
+    console.log('📅 CalendarContext: Force refreshing calendar...');
+    localStorage.removeItem('khronos-scheduled-content-cache');
+    localStorage.removeItem('khronos-scheduled-content'); // Remove old cache
     await loadScheduledContent();
   };
 
-  // Add new scheduled content
+  // Add new scheduled content (for manual additions)
   const addScheduledContent = (content: ScheduledContentItem, date: string) => {
+    console.log('📅 CalendarContext: Adding scheduled content for date:', date);
     setScheduledContent((prev) => {
       const updated = {
         ...prev,
         [date]: prev[date] ? [...prev[date], content] : [content],
       };
 
-      // Persist to localStorage for now
-      localStorage.setItem(
-        'khronos-scheduled-content',
-        JSON.stringify(updated)
-      );
+      // Update cache
+      try {
+        localStorage.setItem(
+          'khronos-scheduled-content-cache',
+          JSON.stringify({
+            data: updated,
+            timestamp: Date.now(),
+            version: '2.0',
+          })
+        );
+      } catch (storageError) {
+        console.warn('📅 Could not update cache:', storageError);
+      }
+
       return updated;
     });
   };
@@ -219,10 +364,11 @@ export const CalendarProvider = ({ children }: CalendarProviderProps) => {
     date: string,
     updates: Partial<ScheduledContentItem>
   ) => {
+    console.log('📅 CalendarContext: Updating scheduled content:', id);
     setScheduledContent((prev) => {
       const dateContent = prev[date] || [];
       const updatedDateContent = dateContent.map((item) =>
-        item.id === id ? { ...item, ...updates } : item
+        item.id === id || item._id === id ? { ...item, ...updates } : item
       );
 
       const updated = {
@@ -230,47 +376,70 @@ export const CalendarProvider = ({ children }: CalendarProviderProps) => {
         [date]: updatedDateContent,
       };
 
-      localStorage.setItem(
-        'khronos-scheduled-content',
-        JSON.stringify(updated)
-      );
+      // Update cache
+      try {
+        localStorage.setItem(
+          'khronos-scheduled-content-cache',
+          JSON.stringify({
+            data: updated,
+            timestamp: Date.now(),
+            version: '2.0',
+          })
+        );
+      } catch (storageError) {
+        console.warn('📅 Could not update cache:', storageError);
+      }
+
       return updated;
     });
   };
 
   // Delete scheduled content
   const deleteScheduledContent = (id: string, date: string) => {
+    console.log('📅 CalendarContext: Deleting scheduled content:', id);
     setScheduledContent((prev) => {
       const dateContent = prev[date] || [];
-      const filteredContent = dateContent.filter((item) => item.id !== id);
+      const filteredContent = dateContent.filter(
+        (item) => item.id !== id && item._id !== id
+      );
 
+      let updated;
       // Remove the date key if no content remains
       if (filteredContent.length === 0) {
         const rest = { ...prev };
         delete rest[date];
-        localStorage.setItem('khronos-scheduled-content', JSON.stringify(rest));
-        return rest;
+        updated = rest;
+      } else {
+        updated = {
+          ...prev,
+          [date]: filteredContent,
+        };
       }
 
-      const updated = {
-        ...prev,
-        [date]: filteredContent,
-      };
+      // Update cache
+      try {
+        localStorage.setItem(
+          'khronos-scheduled-content-cache',
+          JSON.stringify({
+            data: updated,
+            timestamp: Date.now(),
+            version: '2.0',
+          })
+        );
+      } catch (storageError) {
+        console.warn('📅 Could not update cache:', storageError);
+      }
 
-      localStorage.setItem(
-        'khronos-scheduled-content',
-        JSON.stringify(updated)
-      );
       return updated;
     });
   };
 
-  // Add sample data for demonstration
-
   // Clear all data
   const clearAllData = () => {
+    console.log('📅 CalendarContext: Clearing all data');
     setScheduledContent({});
-    localStorage.removeItem('khronos-scheduled-content');
+    localStorage.removeItem('khronos-scheduled-content-cache');
+    localStorage.removeItem('khronos-scheduled-content'); // Remove old cache
   };
 
   // Load content on mount

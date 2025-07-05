@@ -1,26 +1,46 @@
 import { BarChart3, Clock, TrendingUp } from 'lucide-react';
 import { Calendar } from 'lucide-react';
-
 import React from 'react';
 
 export default function StatsCard({
   animateStats,
   scheduledContent,
+  userStats,
 }: {
   animateStats: boolean;
-  scheduledContent: {
+  scheduledContent?: {
     [key: string]: {
       status: string;
     }[];
   };
+  userStats?: {
+    totalContent: number;
+    scheduledPosts: number;
+    activeDays: number;
+    engagementRate: number;
+  };
 }) {
-  const totalPosts = Object.values(scheduledContent).flat().length;
+  // Use userStats if provided (for calendar page), otherwise calculate from scheduledContent (for other pages)
+  let totalPosts = 0;
+  let scheduledPosts = 0;
+  let activeDays = 0;
+  let engagementRate = '0%';
 
-  const scheduledPosts = Object.values(scheduledContent)
-    .flat()
-    .filter((item) => item.status === 'scheduled').length;
-
-  const activeDays = Object.keys(scheduledContent).length;
+  if (userStats) {
+    // Use the calculated stats from UserDataContext
+    totalPosts = userStats.totalContent;
+    scheduledPosts = userStats.scheduledPosts;
+    activeDays = userStats.activeDays;
+    engagementRate = `${userStats.engagementRate}%`;
+  } else if (scheduledContent) {
+    // Fallback to the old calculation method
+    totalPosts = Object.values(scheduledContent).flat().length;
+    scheduledPosts = Object.values(scheduledContent)
+      .flat()
+      .filter((item) => item.status === 'scheduled').length;
+    activeDays = Object.keys(scheduledContent).length;
+    engagementRate = '94.2%'; // Default fallback
+  }
 
   const stats = [
     {
@@ -49,7 +69,7 @@ export default function StatsCard({
     },
     {
       title: 'Engagement Rate',
-      value: '94.2%',
+      value: engagementRate,
       change: '+5%',
       positive: true,
       icon: <TrendingUp className='h-8 w-8' />,
