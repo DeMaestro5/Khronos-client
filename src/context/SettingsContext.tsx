@@ -331,8 +331,6 @@ export function SettingsProvider({ children }: { children: React.ReactNode }) {
     updateState({ loading: true, error: null });
 
     try {
-      console.log('🔧 SettingsContext: Fetching user settings...');
-
       const response: ApiResponse<SettingsApiResponse> =
         await settingsApi.getSettings();
 
@@ -349,8 +347,6 @@ export function SettingsProvider({ children }: { children: React.ReactNode }) {
           loading: false,
           error: null,
         });
-
-        console.log('✅ SettingsContext: Settings loaded successfully');
       } else {
         throw new Error('Invalid response format');
       }
@@ -391,7 +387,6 @@ export function SettingsProvider({ children }: { children: React.ReactNode }) {
         if (response.data?.statusCode === '10000') {
           await fetchSettings(); // Refresh the full settings
           toast.success(successMessage);
-          console.log('✅ SettingsContext: Settings updated successfully');
         } else {
           throw new Error('Invalid response format');
         }
