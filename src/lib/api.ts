@@ -111,8 +111,6 @@ api.interceptors.response.use(
         isRefreshing = true;
 
         try {
-          console.log('Attempting to refresh access token...');
-
           // Create a separate axios instance for refresh to avoid interceptors
           const refreshResponse = await axios.post(
             `${
@@ -135,8 +133,6 @@ api.interceptors.response.use(
             originalRequest.headers.Authorization = `Bearer ${newTokens.accessToken}`;
 
             processQueue(null);
-
-            console.log('Access token refreshed successfully');
 
             // Retry the original request
             return api(originalRequest);
@@ -262,8 +258,6 @@ export const contentAPI = {
       });
     }
 
-    console.log('Fetching user content for userId:', userId);
-
     // Use the correct backend endpoint: /api/v1/content/user/:userId
     try {
       return await api.get(`/api/v1/content/user/${userId}`, {
@@ -316,6 +310,118 @@ export const contentAPI = {
       restoreCalendarEvents?: boolean;
     }
   ) => api.put(`/api/v1/content/${id}/unarchive`, unarchiveData),
+
+  // Get user content by platform
+  getUserPlatformContent: async (platform: string) => {
+    const userId = AuthUtils.getUserId();
+    if (!userId) {
+      console.warn('No user ID available for platform content');
+      return Promise.resolve({
+        data: {
+          statusCode: '10000',
+          message: 'No user authenticated',
+          data: {
+            total: 0,
+            userPlatformContents: [],
+          },
+        },
+      });
+    }
+
+    try {
+      return await api.get(`/api/v1/content/user/${userId}/${platform}`);
+    } catch (error) {
+      console.error(`Failed to fetch user ${platform} content:`, error);
+      return Promise.resolve({
+        data: {
+          statusCode: '10000',
+          message: `Failed to fetch user ${platform} content`,
+          data: {
+            total: 0,
+            userPlatformContents: [],
+          },
+        },
+      });
+    }
+  },
+
+  // Get all user platform content (for platform performance)
+  getUserPlatformData: async () => {
+    const userId = AuthUtils.getUserId();
+    if (!userId) {
+      console.warn('No user ID available for platform data');
+      return Promise.resolve({
+        data: {
+          statusCode: '10000',
+          message: 'No user authenticated',
+          data: {},
+        },
+      });
+    }
+
+    const platforms = [
+      'youtube',
+      'instagram',
+      'linkedin',
+      'twitter',
+      'facebook',
+      'tiktok',
+      'medium',
+    ];
+
+    try {
+      const platformDataPromises = platforms.map(async (platform) => {
+        try {
+          const response = await api.get(
+            `/api/v1/content/user/${userId}/${platform}`
+          );
+          const data = response.data?.data || {
+            total: 0,
+            userPlatformContents: [],
+          };
+          return {
+            platform,
+            total: data.total || 0,
+            contents: data.userPlatformContents || [],
+          };
+        } catch (error) {
+          console.warn(`Failed to fetch ${platform} data:`, error);
+          return {
+            platform,
+            total: 0,
+            contents: [],
+          };
+        }
+      });
+
+      const platformResults = await Promise.all(platformDataPromises);
+
+      const platformData = platformResults.reduce((acc, result) => {
+        acc[result.platform] = {
+          total: result.total,
+          contents: result.contents,
+        };
+        return acc;
+      }, {} as Record<string, { total: number; contents: Content[] }>);
+
+      return Promise.resolve({
+        data: {
+          statusCode: '10000',
+          message: 'Platform data retrieved successfully',
+          data: platformData,
+        },
+      });
+    } catch (error) {
+      console.error('Failed to fetch user platform data:', error);
+      return Promise.resolve({
+        data: {
+          statusCode: '10000',
+          message: 'Failed to fetch user platform data',
+          data: {},
+        },
+      });
+    }
+  },
 };
 
 // Calendar API methods

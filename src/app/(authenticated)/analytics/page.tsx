@@ -58,17 +58,14 @@ export default function AnalyticsPage() {
   const {
     userContent,
     analyticsData,
+    platformData,
     loading: userDataLoading,
     refreshAnalyticsData,
+    refreshPlatformData,
   } = useUserData();
 
   // Use cached analytics data instead of fetching directly
   useEffect(() => {
-    console.log('Analytics page: Using cached data', {
-      analyticsData,
-      userDataLoading,
-    });
-
     if (userDataLoading) {
       setState((prev) => ({ ...prev, loading: true }));
       return;
@@ -97,7 +94,7 @@ export default function AnalyticsPage() {
 
   const handleRefresh = async () => {
     setState((prev) => ({ ...prev, refreshing: true }));
-    await refreshAnalyticsData();
+    await Promise.all([refreshAnalyticsData(), refreshPlatformData()]);
     setState((prev) => ({ ...prev, refreshing: false }));
   };
 
@@ -145,6 +142,21 @@ export default function AnalyticsPage() {
   };
 
   const getPlatformData = () => {
+    // Use user-specific platform data from UserDataContext
+    if (platformData && platformData.platforms.length > 0) {
+      return platformData.platforms.map((platform) => ({
+        platform: platform.platform,
+        metrics: platform.metrics,
+        growth: {
+          content: 0,
+          engagement: 0,
+          reach: 0,
+        },
+        status: platform.status,
+      }));
+    }
+
+    // Fallback to analytics API data if platform data not available
     if (state.dashboard?.dashboard?.platformPerformance) {
       return state.dashboard.dashboard.platformPerformance;
     }
@@ -172,32 +184,6 @@ export default function AnalyticsPage() {
             : 'good') as 'excellent' | 'good' | 'needs_improvement',
         })
       );
-    }
-
-    // Fallback to cached content data
-    if (userContent && userContent.length > 0) {
-      const platformCounts = userContent.reduce((acc, content) => {
-        content.platform?.forEach((platform) => {
-          acc[platform] = (acc[platform] || 0) + 1;
-        });
-        return acc;
-      }, {} as Record<string, number>);
-
-      return Object.entries(platformCounts).map(([platform, count]) => ({
-        platform,
-        metrics: {
-          content: count,
-          engagement: Math.floor(Math.random() * 1000) + 100, // Placeholder
-          reach: Math.floor(Math.random() * 10000) + 1000, // Placeholder
-          engagementRate: Math.floor(Math.random() * 10) + 1, // Placeholder
-        },
-        growth: {
-          content: 0,
-          engagement: 0,
-          reach: 0,
-        },
-        status: 'good' as const,
-      }));
     }
 
     return [];
