@@ -4,7 +4,6 @@ import FloatingOrbs from '@/src/components/ui/floating-animation';
 import React, { useEffect, useState } from 'react';
 import LoginForm from '@/src/components/auth/LoginForm';
 import SocialsAuth from '@/src/components/auth/SocialsAuth';
-import { Button } from '@/src/components/ui/button';
 import { useRouter } from 'next/navigation';
 
 export default function LoginPage() {
@@ -63,20 +62,20 @@ export default function LoginPage() {
 
         {/* Sign Up Link */}
         <div className='text-center mt-2 animate-slideUp animation-delay-400'>
-          <p className='text-amber-50'>
-            Don&apos;t have an account?
-            <Button
-              variant='link'
-              className='text-indigo-200 hover:text-indigo-500 font-semibold transition-colors hover:underline cursor-pointer'
+          <p className='text-slate-900'>
+            Don&apos;t have an account?{' '}
+            <button
+              type='button'
+              className='text-slate-900 hover:text-indigo-600 font-semibold transition-colors hover:underline cursor-pointer ml-1'
               onClick={() => router.push('/auth/signup')}
             >
               Sign up for free
-            </Button>
+            </button>
           </p>
         </div>
 
         {/* Footer */}
-        <div className='text-center text-xs text-white animate-slideUp animation-delay-600'>
+        <div className='text-center text-xs text-slate-900 animate-slideUp animation-delay-600'>
           <p>© 2025 KHRONOS. All rights reserved.</p>
         </div>
       </div>

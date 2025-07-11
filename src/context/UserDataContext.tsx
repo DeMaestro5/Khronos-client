@@ -85,6 +85,24 @@ interface TrendsData {
   lastUpdated: string;
 }
 
+interface UserPlatformData {
+  platform: string;
+  total: number;
+  contents: Content[];
+  metrics: {
+    content: number;
+    engagement: number;
+    reach: number;
+    engagementRate: number;
+  };
+  status: 'excellent' | 'good' | 'needs_improvement';
+}
+
+interface PlatformPerformanceData {
+  platforms: UserPlatformData[];
+  lastUpdated: string;
+}
+
 interface UserDataContextType {
   profileData: ExtendedUserData | null;
   userStats: UserStats | null;
@@ -92,12 +110,14 @@ interface UserDataContextType {
   aiSuggestions: AIContentSuggestion[] | null;
   analyticsData: AnalyticsData | null;
   trendsData: TrendsData | null;
+  platformData: PlatformPerformanceData | null;
   loading: boolean;
   error: string | null;
   refreshUserData: () => Promise<void>;
   refreshAISuggestions: () => Promise<void>;
   refreshAnalyticsData: () => Promise<void>;
   refreshTrendsData: () => Promise<void>;
+  refreshPlatformData: () => Promise<void>;
   clearUserData: () => void;
   addContent: (content: Content) => void;
   updateContent: (contentId: string, updates: Partial<Content>) => void;
@@ -116,10 +136,12 @@ const STORAGE_KEYS = {
   AI_SUGGESTIONS: 'khronos_ai_suggestions',
   ANALYTICS_DATA: 'khronos_analytics_data',
   TRENDS_DATA: 'khronos_trends_data',
+  PLATFORM_DATA: 'khronos_platform_data',
   LAST_FETCH: 'khronos_data_last_fetch',
   AI_LAST_FETCH: 'khronos_ai_last_fetch',
   ANALYTICS_LAST_FETCH: 'khronos_analytics_last_fetch',
   TRENDS_LAST_FETCH: 'khronos_trends_last_fetch',
+  PLATFORM_LAST_FETCH: 'khronos_platform_last_fetch',
 } as const;
 
 // Cache duration (24 hours for user data, 1 hour for AI suggestions)
@@ -139,19 +161,13 @@ export function UserDataProvider({ children }: { children: React.ReactNode }) {
     null
   );
   const [trendsData, setTrendsData] = useState<TrendsData | null>(null);
+  const [platformData, setPlatformData] =
+    useState<PlatformPerformanceData | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   // Add ref to track if initial data load has completed for this user
   const initialLoadCompleteRef = useRef<string | null>(null);
-
-  // Add mount/unmount logging
-  useEffect(() => {
-    console.log('🔧 UserDataProvider: Component mounted');
-    return () => {
-      console.log('🔧 UserDataProvider: Component unmounting');
-    };
-  }, []);
 
   // Check if cached data is still valid
   const isCacheValid = useCallback(
@@ -163,13 +179,7 @@ export function UserDataProvider({ children }: { children: React.ReactNode }) {
 
       const lastFetchTime = parseInt(lastFetch, 10);
       const now = Date.now();
-      const ageHours =
-        Math.round(((now - lastFetchTime) / (1000 * 60 * 60)) * 100) / 100;
-
-      const isValid = now - lastFetchTime < duration;
-      console.log(`📅 Cache ${cacheKey}: Age ${ageHours}h, Valid: ${isValid}`);
-
-      return isValid;
+      return now - lastFetchTime < duration;
     },
     []
   );
@@ -186,9 +196,15 @@ export function UserDataProvider({ children }: { children: React.ReactNode }) {
       const cachedContent = localStorage.getItem(STORAGE_KEYS.USER_CONTENT);
 
       if (cachedProfile && cachedStats && cachedContent) {
+        const parsedContent = JSON.parse(cachedContent);
+        console.log(
+          '🔍 DEBUG: Loading cached content:',
+          parsedContent.length,
+          'items'
+        );
         setProfileData(JSON.parse(cachedProfile));
         setUserStats(JSON.parse(cachedStats));
-        setUserContent(JSON.parse(cachedContent));
+        setUserContent(parsedContent);
         return true;
       } else {
         console.log(
@@ -209,6 +225,7 @@ export function UserDataProvider({ children }: { children: React.ReactNode }) {
     setAiSuggestions(null);
     setAnalyticsData(null);
     setTrendsData(null);
+    setPlatformData(null);
     setError(null);
     localStorage.removeItem(STORAGE_KEYS.PROFILE_DATA);
     localStorage.removeItem(STORAGE_KEYS.USER_STATS);
@@ -216,10 +233,12 @@ export function UserDataProvider({ children }: { children: React.ReactNode }) {
     localStorage.removeItem(STORAGE_KEYS.AI_SUGGESTIONS);
     localStorage.removeItem(STORAGE_KEYS.ANALYTICS_DATA);
     localStorage.removeItem(STORAGE_KEYS.TRENDS_DATA);
+    localStorage.removeItem(STORAGE_KEYS.PLATFORM_DATA);
     localStorage.removeItem(STORAGE_KEYS.LAST_FETCH);
     localStorage.removeItem(STORAGE_KEYS.AI_LAST_FETCH);
     localStorage.removeItem(STORAGE_KEYS.ANALYTICS_LAST_FETCH);
     localStorage.removeItem(STORAGE_KEYS.TRENDS_LAST_FETCH);
+    localStorage.removeItem(STORAGE_KEYS.PLATFORM_LAST_FETCH);
   }, []);
 
   // Save data to localStorage
@@ -236,9 +255,6 @@ export function UserDataProvider({ children }: { children: React.ReactNode }) {
           JSON.stringify(content)
         );
         localStorage.setItem(STORAGE_KEYS.LAST_FETCH, Date.now().toString());
-        console.log(
-          '✅ UserDataContext: User data saved to cache successfully'
-        );
       } catch (error) {
         console.error('❌ Error saving user data to cache:', error);
       }
@@ -339,14 +355,6 @@ export function UserDataProvider({ children }: { children: React.ReactNode }) {
       }
     }
 
-    console.log('📊 Stats calculated:', {
-      total: content.length,
-      scheduled,
-      published: published.length,
-      engagementRate,
-      streak,
-    });
-
     return {
       totalContent: content.length,
       scheduledContent: scheduled,
@@ -386,55 +394,34 @@ export function UserDataProvider({ children }: { children: React.ReactNode }) {
       let content: Content[] = [];
 
       // Handle the contentAPI.getUserContent response structure
-      console.log('Content API Response:', contentResponse.data);
-
+      console.log('🔍 DEBUG: Content response received:', contentResponse.data);
       if (contentResponse.data) {
         const apiResponse = contentResponse.data;
+        console.log('🔍 DEBUG: API response structure:', apiResponse);
 
         // Check if this matches your API structure: { statusCode: '10000', message: '...', data: {...} }
         if (
           apiResponse.statusCode === '10000' &&
           apiResponse.data !== undefined
         ) {
+          console.log(
+            '🔍 DEBUG: API response is valid, data:',
+            apiResponse.data
+          );
           const responseData = apiResponse.data;
 
           if (Array.isArray(responseData)) {
             content = responseData;
-            console.log(
-              '✅ UserDataContext: Found content array with',
-              content.length,
-              'items'
-            );
           } else if (responseData && typeof responseData === 'object') {
             // Check for contents property (this is the actual structure from your API)
             if (Array.isArray(responseData.contents)) {
               content = responseData.contents;
-              console.log(
-                '✅ UserDataContext: Found content in contents property with',
-                content.length,
-                'items'
-              );
             } else if (Array.isArray(responseData.content)) {
               content = responseData.content;
-              console.log(
-                '✅ UserDataContext: Found content in content property with',
-                content.length,
-                'items'
-              );
             } else if (Array.isArray(responseData.items)) {
               content = responseData.items;
-              console.log(
-                '✅ UserDataContext: Found content in items property with',
-                content.length,
-                'items'
-              );
             } else if (Array.isArray(responseData.results)) {
               content = responseData.results;
-              console.log(
-                '✅ UserDataContext: Found content in results property with',
-                content.length,
-                'items'
-              );
             } else {
               console.warn(
                 '❌ UserDataContext: Could not find content array in response data:',
@@ -445,9 +432,6 @@ export function UserDataProvider({ children }: { children: React.ReactNode }) {
           } else if (responseData === null || responseData === undefined) {
             // Handle null/undefined data (empty result)
             content = [];
-            console.log(
-              '✅ UserDataContext: API returned null/undefined data, using empty array'
-            );
           } else {
             console.warn(
               '❌ UserDataContext: API data is not an array or object:',
@@ -465,11 +449,6 @@ export function UserDataProvider({ children }: { children: React.ReactNode }) {
             // Check common array property names including 'contents'
             if (Array.isArray(fallbackData.contents)) {
               content = fallbackData.contents;
-              console.log(
-                '✅ UserDataContext: Found content in fallback contents property with',
-                content.length,
-                'items'
-              );
             } else if (Array.isArray(fallbackData.content)) {
               content = fallbackData.content;
             } else if (Array.isArray(fallbackData.items)) {
@@ -499,26 +478,17 @@ export function UserDataProvider({ children }: { children: React.ReactNode }) {
       // Calculate stats only if we have content
       if (content.length > 0) {
         stats = calculateUserStats(content);
-        console.log(
-          '✅ UserDataContext: Calculated stats for',
-          content.length,
-          'content items'
-        );
-      } else {
-        console.log(
-          '✅ UserDataContext: No content found, using default stats'
-        );
       }
 
       // Update state
+      console.log('🔍 DEBUG: Setting user content:', content.length, 'items');
+      console.log('🔍 DEBUG: Content sample:', content.slice(0, 2));
       setProfileData(profile);
       setUserStats(stats);
       setUserContent(content);
 
       // Save to cache
       saveToCache(profile, stats, content);
-
-      console.log('✅ UserDataContext: User data updated successfully');
     } catch (error) {
       console.error('Failed to fetch user data:', error);
       setError('Failed to load user data');
@@ -533,9 +503,7 @@ export function UserDataProvider({ children }: { children: React.ReactNode }) {
   // Fetch AI suggestions
   const fetchAISuggestions = useCallback(async () => {
     try {
-      console.log('🤖 Fetching AI suggestions...');
       const response = await aiAPI.getContentFeed();
-      console.log('🤖 AI API Response:', response.data);
 
       // Handle the correct response structure
       let suggestions: AIContentSuggestion[] = [];
@@ -586,11 +554,6 @@ export function UserDataProvider({ children }: { children: React.ReactNode }) {
         }
       }
 
-      console.log(
-        '✅ AI suggestions processed:',
-        suggestions.length,
-        'suggestions found'
-      );
       setAiSuggestions(suggestions);
       saveAISuggestionsToCache(suggestions);
     } catch (error) {
@@ -600,7 +563,6 @@ export function UserDataProvider({ children }: { children: React.ReactNode }) {
       try {
         const cachedAI = localStorage.getItem(STORAGE_KEYS.AI_SUGGESTIONS);
         if (cachedAI) {
-          console.log('💾 Loading AI suggestions from cache as fallback');
           setAiSuggestions(JSON.parse(cachedAI));
         }
       } catch (cacheError) {
@@ -696,7 +658,6 @@ export function UserDataProvider({ children }: { children: React.ReactNode }) {
         STORAGE_KEYS.ANALYTICS_LAST_FETCH,
         Date.now().toString()
       );
-      console.log('✅ UserDataContext: Analytics data updated and cached');
     } catch (error) {
       console.error('Failed to fetch analytics data:', error);
     }
@@ -705,7 +666,6 @@ export function UserDataProvider({ children }: { children: React.ReactNode }) {
   // Fetch trends data
   const fetchTrendsData = useCallback(async () => {
     try {
-      console.log('📈 UserDataContext: Fetching trends data...');
       const [platformsResponse, categoriesResponse, trendsResponse] =
         await Promise.all([
           trendsAPI.getPlatforms().catch(() => null),
@@ -791,7 +751,6 @@ export function UserDataProvider({ children }: { children: React.ReactNode }) {
         STORAGE_KEYS.TRENDS_LAST_FETCH,
         Date.now().toString()
       );
-      console.log('✅ UserDataContext: Trends data updated and cached');
     } catch (error) {
       console.error('Failed to fetch trends data:', error);
     }
@@ -807,12 +766,97 @@ export function UserDataProvider({ children }: { children: React.ReactNode }) {
     await fetchTrendsData();
   }, [fetchTrendsData]);
 
+  // Fetch platform performance data
+  const fetchPlatformData = useCallback(async () => {
+    try {
+      const response = await contentAPI.getUserPlatformData();
+
+      if (response.data?.statusCode === '10000' && response.data?.data) {
+        const rawPlatformData = response.data.data;
+
+        // Transform the raw data into UserPlatformData format
+        const platforms: UserPlatformData[] = Object.entries(rawPlatformData)
+          .map(([platform, data]) => {
+            const { total, contents } = data as {
+              total: number;
+              contents: Content[];
+            };
+
+            // Calculate metrics from the content
+            const engagement = contents.reduce((sum, content) => {
+              const contentEngagement = content.engagement;
+              const contentStats = content.stats;
+              return (
+                sum +
+                (contentEngagement?.likes || 0) +
+                (contentEngagement?.comments || 0) +
+                (contentEngagement?.shares || contentStats?.shares || 0)
+              );
+            }, 0);
+
+            const reach = contents.reduce((sum, content) => {
+              const contentEngagement = content.engagement;
+              const contentStats = content.stats;
+              return (
+                sum + (contentEngagement?.views || contentStats?.views || 0)
+              );
+            }, 0);
+
+            const engagementRate = reach > 0 ? (engagement / reach) * 100 : 0;
+
+            // Determine status based on content count and engagement
+            let status: 'excellent' | 'good' | 'needs_improvement' = 'good';
+            if (total >= 10 && engagementRate >= 5) {
+              status = 'excellent';
+            } else if (total < 3 || engagementRate < 2) {
+              status = 'needs_improvement';
+            }
+
+            return {
+              platform: platform.charAt(0).toUpperCase() + platform.slice(1),
+              total,
+              contents,
+              metrics: {
+                content: total,
+                engagement,
+                reach,
+                engagementRate: Number(engagementRate.toFixed(1)),
+              },
+              status,
+            };
+          })
+          .filter((platform) => platform.total > 0); // Only show platforms with content
+
+        const platformPerformanceData: PlatformPerformanceData = {
+          platforms,
+          lastUpdated: new Date().toISOString(),
+        };
+
+        setPlatformData(platformPerformanceData);
+        localStorage.setItem(
+          STORAGE_KEYS.PLATFORM_DATA,
+          JSON.stringify(platformPerformanceData)
+        );
+        localStorage.setItem(
+          STORAGE_KEYS.PLATFORM_LAST_FETCH,
+          Date.now().toString()
+        );
+      }
+    } catch (error) {
+      console.error('Failed to fetch platform performance data:', error);
+    }
+  }, []);
+
+  // Public method to refresh platform data
+  const refreshPlatformData = useCallback(async () => {
+    await fetchPlatformData();
+  }, [fetchPlatformData]);
+
   // Helper methods for content management
   const addContent = useCallback(
     (content: Content) => {
       setUserContent((prev) => {
         const newContent = [content, ...(prev || [])];
-        console.log('➕ Adding content:', content._id, content.title);
 
         // Update stats
         const newStats = calculateUserStats(newContent);
@@ -840,8 +884,6 @@ export function UserDataProvider({ children }: { children: React.ReactNode }) {
           content._id === contentId ? { ...content, ...updates } : content
         );
 
-        console.log('✏️ Updating content:', contentId, Object.keys(updates));
-
         // Update stats
         const newStats = calculateUserStats(newContent);
         setUserStats(newStats);
@@ -865,7 +907,6 @@ export function UserDataProvider({ children }: { children: React.ReactNode }) {
         }
 
         const newContent = prev.filter((content) => content._id !== contentId);
-        console.log('🗑️ Removing content:', contentId);
 
         // Update stats
         const newStats = calculateUserStats(newContent);
@@ -891,6 +932,7 @@ export function UserDataProvider({ children }: { children: React.ReactNode }) {
       setAiSuggestions(null);
       setAnalyticsData(null);
       setTrendsData(null);
+      setPlatformData(null);
       setError(null);
       localStorage.removeItem(STORAGE_KEYS.PROFILE_DATA);
       localStorage.removeItem(STORAGE_KEYS.USER_STATS);
@@ -898,10 +940,12 @@ export function UserDataProvider({ children }: { children: React.ReactNode }) {
       localStorage.removeItem(STORAGE_KEYS.AI_SUGGESTIONS);
       localStorage.removeItem(STORAGE_KEYS.ANALYTICS_DATA);
       localStorage.removeItem(STORAGE_KEYS.TRENDS_DATA);
+      localStorage.removeItem(STORAGE_KEYS.PLATFORM_DATA);
       localStorage.removeItem(STORAGE_KEYS.LAST_FETCH);
       localStorage.removeItem(STORAGE_KEYS.AI_LAST_FETCH);
       localStorage.removeItem(STORAGE_KEYS.ANALYTICS_LAST_FETCH);
       localStorage.removeItem(STORAGE_KEYS.TRENDS_LAST_FETCH);
+      localStorage.removeItem(STORAGE_KEYS.PLATFORM_LAST_FETCH);
       initialLoadCompleteRef.current = null;
       return;
     }
@@ -920,13 +964,7 @@ export function UserDataProvider({ children }: { children: React.ReactNode }) {
 
       const lastFetchTime = parseInt(lastFetch, 10);
       const now = Date.now();
-      const isValid = now - lastFetchTime < CACHE_DURATION;
-      console.log('🔧 Cache Validity Check:', {
-        isValid,
-        ageMs: now - lastFetchTime,
-        maxAge: CACHE_DURATION,
-      });
-      return isValid;
+      return now - lastFetchTime < CACHE_DURATION;
     })();
 
     // Check AI cache validity
@@ -956,19 +994,37 @@ export function UserDataProvider({ children }: { children: React.ReactNode }) {
       return now - lastFetchTime < CACHE_DURATION;
     })();
 
+    // Check platform data cache validity
+    const isPlatformCacheValid = (() => {
+      const lastFetch = localStorage.getItem(STORAGE_KEYS.PLATFORM_LAST_FETCH);
+      if (!lastFetch) return false;
+      const lastFetchTime = parseInt(lastFetch, 10);
+      const now = Date.now();
+      return now - lastFetchTime < CACHE_DURATION;
+    })();
+
     // Load user data cache
+    console.log('🔍 DEBUG: Cache valid?', isUserDataCacheValid);
     if (isUserDataCacheValid) {
+      console.log('🔍 DEBUG: Loading from cache...');
       try {
         const cachedProfile = localStorage.getItem(STORAGE_KEYS.PROFILE_DATA);
         const cachedStats = localStorage.getItem(STORAGE_KEYS.USER_STATS);
         const cachedContent = localStorage.getItem(STORAGE_KEYS.USER_CONTENT);
 
         if (cachedProfile && cachedStats && cachedContent) {
+          const parsedContent = JSON.parse(cachedContent);
+          console.log(
+            '🔍 DEBUG: Loading cached content:',
+            parsedContent.length,
+            'items'
+          );
           setProfileData(JSON.parse(cachedProfile));
           setUserStats(JSON.parse(cachedStats));
-          setUserContent(JSON.parse(cachedContent));
+          setUserContent(parsedContent);
         } else {
           // Cache invalid, fetch fresh data
+          console.log('🔍 DEBUG: Cache invalid, fetching fresh data...');
           fetchUserData();
         }
       } catch (error) {
@@ -977,9 +1033,7 @@ export function UserDataProvider({ children }: { children: React.ReactNode }) {
       }
     } else {
       // Cache expired or missing, fetch fresh data
-      console.log(
-        '🌐 UserDataContext: No valid user data cache found, fetching fresh data...'
-      );
+      console.log('🔍 DEBUG: Cache expired, fetching fresh data...');
       fetchUserData();
     }
 
@@ -988,7 +1042,6 @@ export function UserDataProvider({ children }: { children: React.ReactNode }) {
       try {
         const cachedAI = localStorage.getItem(STORAGE_KEYS.AI_SUGGESTIONS);
         if (cachedAI) {
-          console.log('💾 Cache: Loading cached AI suggestions');
           setAiSuggestions(JSON.parse(cachedAI));
         } else {
           fetchAISuggestions();
@@ -998,9 +1051,6 @@ export function UserDataProvider({ children }: { children: React.ReactNode }) {
         fetchAISuggestions();
       }
     } else {
-      console.log(
-        '🤖 UserDataContext: No valid AI cache found, fetching AI suggestions...'
-      );
       fetchAISuggestions();
     }
 
@@ -1028,7 +1078,6 @@ export function UserDataProvider({ children }: { children: React.ReactNode }) {
       try {
         const cachedTrends = localStorage.getItem(STORAGE_KEYS.TRENDS_DATA);
         if (cachedTrends) {
-          console.log('💾 Cache: Loading cached trends data');
           setTrendsData(JSON.parse(cachedTrends));
         } else {
           fetchTrendsData();
@@ -1038,10 +1087,26 @@ export function UserDataProvider({ children }: { children: React.ReactNode }) {
         fetchTrendsData();
       }
     } else {
-      console.log(
-        '📈 UserDataContext: No valid trends cache found, fetching trends data...'
-      );
       fetchTrendsData();
+    }
+
+    // Load platform data cache
+    if (isPlatformCacheValid) {
+      try {
+        const cachedPlatformData = localStorage.getItem(
+          STORAGE_KEYS.PLATFORM_DATA
+        );
+        if (cachedPlatformData) {
+          setPlatformData(JSON.parse(cachedPlatformData));
+        } else {
+          fetchPlatformData();
+        }
+      } catch (error) {
+        console.error('Error loading cached platform data:', error);
+        fetchPlatformData();
+      }
+    } else {
+      fetchPlatformData();
     }
 
     // Mark initial load as complete for this user
@@ -1055,12 +1120,14 @@ export function UserDataProvider({ children }: { children: React.ReactNode }) {
     aiSuggestions,
     analyticsData,
     trendsData,
+    platformData,
     loading,
     error,
     refreshUserData,
     refreshAISuggestions,
     refreshAnalyticsData,
     refreshTrendsData,
+    refreshPlatformData,
     clearUserData,
     addContent,
     updateContent,

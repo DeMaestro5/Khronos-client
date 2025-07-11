@@ -83,12 +83,6 @@ export const CalendarProvider = ({ children }: CalendarProviderProps) => {
         }
       }
 
-      console.log(
-        '📅 CalendarContext: Processing',
-        contentArray.length,
-        'content items'
-      );
-
       contentArray.forEach((contentItem) => {
         try {
           const content = contentItem as {
@@ -207,13 +201,6 @@ export const CalendarProvider = ({ children }: CalendarProviderProps) => {
                     calendarData[dateKey] = [];
                   }
                   calendarData[dateKey].push(calendarItem);
-
-                  console.log('📅 Added to calendar:', {
-                    dateKey,
-                    title,
-                    status,
-                    platform: primaryPlatform,
-                  });
                 } else {
                   console.warn('📅 Invalid date format:', dateToUse);
                 }
@@ -221,29 +208,10 @@ export const CalendarProvider = ({ children }: CalendarProviderProps) => {
                 console.warn('📅 Error parsing date:', dateToUse, dateError);
               }
             }
-          } else {
-            // Log why content was skipped
-            console.log('📅 Skipped content:', {
-              id: content._id,
-              title,
-              status,
-              hasScheduledDate,
-              isScheduledStatus,
-              reason:
-                !hasScheduledDate && !isScheduledStatus
-                  ? 'No scheduled date and not scheduled status'
-                  : 'Missing ID',
-            });
           }
         } catch (itemError) {
           console.error('📅 Error processing content item:', itemError);
         }
-      });
-
-      console.log('📅 CalendarContext: Processed calendar data:', {
-        totalDates: Object.keys(calendarData).length,
-        totalItems: Object.values(calendarData).flat().length,
-        dates: Object.keys(calendarData).sort(),
       });
     } catch (error) {
       console.error('📅 Error in convertAPIContentToCalendar:', error);
@@ -257,21 +225,13 @@ export const CalendarProvider = ({ children }: CalendarProviderProps) => {
     setIsLoading(true);
 
     try {
-      console.log('📅 CalendarContext: Loading scheduled content...');
-
       const response = await contentAPI.getUserContent();
-      console.log('📅 CalendarContext: API Response:', response.data);
 
       if (
         response.data?.statusCode === '10000' &&
         response.data?.data !== undefined
       ) {
         const apiCalendarData = convertAPIContentToCalendar(response.data.data);
-
-        console.log('📅 CalendarContext: Setting calendar data:', {
-          totalDates: Object.keys(apiCalendarData).length,
-          totalItems: Object.values(apiCalendarData).flat().length,
-        });
 
         setScheduledContent(apiCalendarData);
 
@@ -306,7 +266,6 @@ export const CalendarProvider = ({ children }: CalendarProviderProps) => {
         if (cachedData) {
           const parsed = JSON.parse(cachedData);
           if (parsed.data && parsed.version === '2.0') {
-            console.log('📅 CalendarContext: Loaded from cache as fallback');
             setScheduledContent(parsed.data);
           } else {
             setScheduledContent({});
@@ -325,7 +284,6 @@ export const CalendarProvider = ({ children }: CalendarProviderProps) => {
 
   // Force refresh calendar by clearing cache and reloading
   const forceRefreshCalendar = async () => {
-    console.log('📅 CalendarContext: Force refreshing calendar...');
     localStorage.removeItem('khronos-scheduled-content-cache');
     localStorage.removeItem('khronos-scheduled-content'); // Remove old cache
     await loadScheduledContent();
@@ -333,7 +291,6 @@ export const CalendarProvider = ({ children }: CalendarProviderProps) => {
 
   // Add new scheduled content (for manual additions)
   const addScheduledContent = (content: ScheduledContentItem, date: string) => {
-    console.log('📅 CalendarContext: Adding scheduled content for date:', date);
     setScheduledContent((prev) => {
       const updated = {
         ...prev,
@@ -364,7 +321,6 @@ export const CalendarProvider = ({ children }: CalendarProviderProps) => {
     date: string,
     updates: Partial<ScheduledContentItem>
   ) => {
-    console.log('📅 CalendarContext: Updating scheduled content:', id);
     setScheduledContent((prev) => {
       const dateContent = prev[date] || [];
       const updatedDateContent = dateContent.map((item) =>
@@ -396,7 +352,6 @@ export const CalendarProvider = ({ children }: CalendarProviderProps) => {
 
   // Delete scheduled content
   const deleteScheduledContent = (id: string, date: string) => {
-    console.log('📅 CalendarContext: Deleting scheduled content:', id);
     setScheduledContent((prev) => {
       const dateContent = prev[date] || [];
       const filteredContent = dateContent.filter(
@@ -436,7 +391,6 @@ export const CalendarProvider = ({ children }: CalendarProviderProps) => {
 
   // Clear all data
   const clearAllData = () => {
-    console.log('📅 CalendarContext: Clearing all data');
     setScheduledContent({});
     localStorage.removeItem('khronos-scheduled-content-cache');
     localStorage.removeItem('khronos-scheduled-content'); // Remove old cache

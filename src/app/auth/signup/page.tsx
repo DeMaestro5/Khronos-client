@@ -2,7 +2,6 @@
 
 import PasswordStrength from '@/src/components/auth/password-strength-ind';
 import SocialsAuth from '@/src/components/auth/SocialsAuth';
-import { Button } from '@/src/components/ui/button';
 import FloatingOrbs from '@/src/components/ui/floating-animation';
 import { useRouter } from 'next/navigation';
 import React, { useState, useEffect } from 'react';
@@ -172,15 +171,15 @@ export default function SignupPage() {
 
           {/* Sign In Link */}
           <div className='text-center mt-2 animate-slideInRight animation-delay-600'>
-            <p className='text-amber-50 text-sm'>
+            <p className='text-slate-900 text-sm'>
               Already have an account?{' '}
-              <Button
-                variant='link'
-                className='text-indigo-200 hover:text-indigo-400 font-semibold transition-colors hover:underline cursor-pointer p-0 h-auto'
+              <button
+                type='button'
+                className='text-slate-900 hover:text-indigo-600 font-semibold transition-colors hover:underline cursor-pointer ml-1'
                 onClick={() => router.push('/auth/login')}
               >
                 Sign in here
-              </Button>
+              </button>
             </p>
           </div>
 

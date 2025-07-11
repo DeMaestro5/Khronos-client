@@ -55,24 +55,16 @@ export default function AISuggestionButton({
 
   const generateSuggestion = async (): Promise<AISuggestionResult> => {
     try {
-      console.log('🤖 Calling AI API for suggestions...');
       const response: { data: AIFormFillResponse } =
         await aiAPI.getFormFillSuggestions();
-
-      console.log('🔍 Full AI API response:', response);
-      console.log('🔍 Response data:', response.data);
 
       // Check if the API response is successful
       if (response.data?.statusCode === '10000' && response.data?.data) {
         const apiData = response.data.data;
-        console.log('📊 API Data object:', apiData);
 
         // Extract from either formData or suggestion object
         const formData = apiData.formData;
         const suggestion = apiData.suggestion;
-
-        console.log('📝 Form Data:', formData);
-        console.log('💡 Suggestion Data:', suggestion);
 
         // Transform the API response to match our expected format
         const result = {
@@ -81,31 +73,20 @@ export default function AISuggestionButton({
           tags: formData?.tags || suggestion?.tags || [],
         };
 
-        console.log('✅ Transformed result:', result);
-
         // Check if we got meaningful data
         const hasTitle = result.title && result.title.trim().length > 0;
         const hasDescription =
           result.description && result.description.trim().length > 0;
         const hasTags = result.tags && result.tags.length > 0;
 
-        console.log('📊 Data quality check:', {
-          hasTitle,
-          hasDescription,
-          hasTags,
-        });
-
         // If all fields are empty, use fallback
         if (!hasTitle && !hasDescription && !hasTags) {
-          console.log('⚠️ AI returned empty data, using fallback suggestion');
           const fallback = getFallbackSuggestion();
-          console.log('🔄 Fallback suggestion:', fallback);
           return fallback;
         }
 
         // If some fields are empty, enhance with fallback data
         if (!hasTitle || !hasDescription) {
-          console.log('⚠️ AI returned partial data, enhancing with fallback');
           const fallback = getFallbackSuggestion();
 
           const enhanced = {
@@ -116,13 +97,11 @@ export default function AISuggestionButton({
             tags: hasTags ? result.tags : fallback.tags,
           };
 
-          console.log('🔄 Enhanced suggestion:', enhanced);
           return enhanced;
         }
 
         return result;
       } else {
-        console.log('❌ AI API response not successful:', response.data);
         throw new Error(
           response.data?.message ||
             'AI service returned an unsuccessful response'
@@ -132,9 +111,7 @@ export default function AISuggestionButton({
       console.error('❌ AI suggestion API error:', error);
 
       // Use fallback data instead of throwing error
-      console.log('🔄 Using fallback suggestion due to API error');
       const fallback = getFallbackSuggestion();
-      console.log('🔄 Fallback suggestion:', fallback);
 
       // Show info toast that we're using fallback
       toast('🤖 Using sample suggestion (AI service unavailable)', {
@@ -157,11 +134,8 @@ export default function AISuggestionButton({
     setIsLoading(true);
     try {
       const suggestion = await generateSuggestion();
-      console.log('✅ Final suggestion to apply:', suggestion);
 
-      console.log('🔗 Calling onSuggestion callback with:', suggestion);
       onSuggestion(suggestion);
-      console.log('✅ onSuggestion callback completed');
 
       // Show success message
       toast.success('🎉 AI suggestions applied to your form!', {

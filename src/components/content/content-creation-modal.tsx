@@ -358,14 +358,10 @@ export default function CreateContentModal({
         newContentPayload.scheduledDate = scheduledDateTime;
       }
 
-      console.log('Creating content with payload:', newContentPayload);
-
       // Call the API directly from the modal
       const response: AxiosResponse<APIResponse> = await contentAPI.create(
         newContentPayload
       );
-
-      console.log('Create content response:', response);
 
       // Fixed response checking - properly access properties from response.data
       const isSuccessful =
@@ -473,12 +469,10 @@ export default function CreateContentModal({
         }
 
         if (createdContentData && onSubmit) {
-          console.log('Calling onSubmit with:', createdContentData);
           onSubmit(createdContentData as CreatedContent);
         } else if (onSubmit) {
           // Still call onSubmit even if we don't have the exact content data
           // This ensures confetti still triggers
-          console.log('Calling onSubmit without content data');
           onSubmit();
         }
       } else {
