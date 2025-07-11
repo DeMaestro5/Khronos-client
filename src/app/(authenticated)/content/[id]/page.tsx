@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect, useMemo, use } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { ArrowLeft, Edit, Share2, FileText } from 'lucide-react';
 import { useRouter, useParams } from 'next/navigation';
 import { contentAPI } from '@/src/lib/api';
@@ -18,7 +18,7 @@ const ContentDetailPage = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const router = useRouter();
-  const params = use(useParams());
+  const params = useParams();
   const contentId = params.id as string;
 
   // Use cached data from UserDataContext

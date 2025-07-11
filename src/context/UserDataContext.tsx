@@ -196,9 +196,15 @@ export function UserDataProvider({ children }: { children: React.ReactNode }) {
       const cachedContent = localStorage.getItem(STORAGE_KEYS.USER_CONTENT);
 
       if (cachedProfile && cachedStats && cachedContent) {
+        const parsedContent = JSON.parse(cachedContent);
+        console.log(
+          '🔍 DEBUG: Loading cached content:',
+          parsedContent.length,
+          'items'
+        );
         setProfileData(JSON.parse(cachedProfile));
         setUserStats(JSON.parse(cachedStats));
-        setUserContent(JSON.parse(cachedContent));
+        setUserContent(parsedContent);
         return true;
       } else {
         console.log(
@@ -388,14 +394,20 @@ export function UserDataProvider({ children }: { children: React.ReactNode }) {
       let content: Content[] = [];
 
       // Handle the contentAPI.getUserContent response structure
+      console.log('🔍 DEBUG: Content response received:', contentResponse.data);
       if (contentResponse.data) {
         const apiResponse = contentResponse.data;
+        console.log('🔍 DEBUG: API response structure:', apiResponse);
 
         // Check if this matches your API structure: { statusCode: '10000', message: '...', data: {...} }
         if (
           apiResponse.statusCode === '10000' &&
           apiResponse.data !== undefined
         ) {
+          console.log(
+            '🔍 DEBUG: API response is valid, data:',
+            apiResponse.data
+          );
           const responseData = apiResponse.data;
 
           if (Array.isArray(responseData)) {
@@ -469,6 +481,8 @@ export function UserDataProvider({ children }: { children: React.ReactNode }) {
       }
 
       // Update state
+      console.log('🔍 DEBUG: Setting user content:', content.length, 'items');
+      console.log('🔍 DEBUG: Content sample:', content.slice(0, 2));
       setProfileData(profile);
       setUserStats(stats);
       setUserContent(content);
@@ -990,18 +1004,27 @@ export function UserDataProvider({ children }: { children: React.ReactNode }) {
     })();
 
     // Load user data cache
+    console.log('🔍 DEBUG: Cache valid?', isUserDataCacheValid);
     if (isUserDataCacheValid) {
+      console.log('🔍 DEBUG: Loading from cache...');
       try {
         const cachedProfile = localStorage.getItem(STORAGE_KEYS.PROFILE_DATA);
         const cachedStats = localStorage.getItem(STORAGE_KEYS.USER_STATS);
         const cachedContent = localStorage.getItem(STORAGE_KEYS.USER_CONTENT);
 
         if (cachedProfile && cachedStats && cachedContent) {
+          const parsedContent = JSON.parse(cachedContent);
+          console.log(
+            '🔍 DEBUG: Loading cached content:',
+            parsedContent.length,
+            'items'
+          );
           setProfileData(JSON.parse(cachedProfile));
           setUserStats(JSON.parse(cachedStats));
-          setUserContent(JSON.parse(cachedContent));
+          setUserContent(parsedContent);
         } else {
           // Cache invalid, fetch fresh data
+          console.log('🔍 DEBUG: Cache invalid, fetching fresh data...');
           fetchUserData();
         }
       } catch (error) {
@@ -1010,6 +1033,7 @@ export function UserDataProvider({ children }: { children: React.ReactNode }) {
       }
     } else {
       // Cache expired or missing, fetch fresh data
+      console.log('🔍 DEBUG: Cache expired, fetching fresh data...');
       fetchUserData();
     }
 

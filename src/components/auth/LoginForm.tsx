@@ -1,12 +1,12 @@
 'use client';
 
 import { useState, ChangeEvent, MouseEvent } from 'react';
-import { Button } from '../ui/button';
 import { Input } from '../ui/input';
 import { authAPI } from '@/src/lib/api';
 import { AuthUtils } from '@/src/lib/auth-utils';
 import { AxiosError } from 'axios';
 import { useRouter } from 'next/navigation';
+import { Eye, EyeOff, Mail, Lock, CheckCircle } from 'lucide-react';
 
 interface FormData {
   email: string;
@@ -111,22 +111,31 @@ export default function LoginForm() {
   };
 
   return (
-    <div className='max-w-md mx-auto p-8 bg-white rounded-2xl shadow-xl'>
+    <div className='max-w-md mx-auto p-8 bg-white/95 backdrop-blur-sm rounded-2xl shadow-2xl border border-slate-200/50'>
       <div className='space-y-6'>
         <div className='space-y-5'>
           {/* Email Field */}
           <div className='group'>
             <label
               htmlFor='email'
-              className={`block text-sm font-medium mb-2 transition-all duration-200 ${
+              className={`block text-sm font-bold mb-3 transition-all duration-200 ${
                 focusedField === 'email' || formData.email
-                  ? 'text-indigo-600 transform -translate-y-1'
-                  : 'text-slate-700'
+                  ? 'text-purple-600'
+                  : 'text-purple-800 dark:text-purple-400'
               }`}
             >
               Email Address
             </label>
             <div className='relative'>
+              <div className='absolute left-3 top-1/2 transform -translate-y-1/2 z-10'>
+                <Mail
+                  className={`w-5 h-5 transition-colors duration-200 ${
+                    focusedField === 'email' || formData.email
+                      ? 'text-purple-600'
+                      : 'text-purple-500'
+                  }`}
+                />
+              </div>
               <Input
                 id='email'
                 name='email'
@@ -136,25 +145,37 @@ export default function LoginForm() {
                 onChange={handleChange}
                 onFocus={() => setFocusedField('email')}
                 onBlur={() => setFocusedField('')}
-                className={`w-full px-4 py-3 border rounded-xl transition-all duration-300 bg-white text-black hover:bg-gray-50 focus:bg-white focus:scale-[1.02] focus:shadow-lg placeholder:text-gray-500 placeholder:font-medium ${
+                className={`w-full pl-12 pr-4 py-4 border-2 rounded-xl transition-all duration-300 text-purple-900 placeholder:text-purple-500 placeholder:font-medium ${
                   errors.email
-                    ? 'border-red-300 focus:border-red-500 focus:ring-red-200'
-                    : 'border-slate-200 focus:border-indigo-500 focus:ring-indigo-200'
+                    ? 'border-red-400 focus:border-red-500 focus:ring-red-100 !bg-red-50/20 dark:!bg-red-50/20'
+                    : focusedField === 'email'
+                    ? 'border-purple-400 focus:border-purple-500 focus:ring-purple-100 !bg-white dark:!bg-white shadow-lg'
+                    : 'border-purple-200 hover:border-purple-300 focus:border-purple-400 focus:ring-purple-100 !bg-white dark:!bg-white hover:!bg-purple-50/20 dark:hover:!bg-purple-50/20'
                 }`}
                 style={{
-                  // Ensure crisp text rendering
                   WebkitFontSmoothing: 'antialiased',
                   MozOsxFontSmoothing: 'grayscale',
+                  backgroundColor: errors.email
+                    ? 'rgba(254, 242, 242, 0.2)'
+                    : 'white',
+                  color: '#581c87', // purple-900
                 }}
               />
-              <div
-                className={`absolute inset-0 rounded-xl bg-gradient-to-r from-indigo-500/10 to-purple-500/10 transition-opacity duration-300 pointer-events-none ${
-                  focusedField === 'email' ? 'opacity-100' : 'opacity-0'
-                }`}
-              />
+              {formData.email && !errors.email && (
+                <div className='absolute right-3 top-1/2 transform -translate-y-1/2'>
+                  <CheckCircle className='w-5 h-5 text-green-500' />
+                </div>
+              )}
             </div>
             {errors.email && (
-              <p className='mt-1 text-sm text-red-600 animate-pulse'>
+              <p className='mt-2 text-sm text-red-600 flex items-center gap-1 font-medium'>
+                <svg
+                  className='w-4 h-4'
+                  viewBox='0 0 24 24'
+                  fill='currentColor'
+                >
+                  <path d='M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z' />
+                </svg>
                 {errors.email}
               </p>
             )}
@@ -164,15 +185,24 @@ export default function LoginForm() {
           <div className='group'>
             <label
               htmlFor='password'
-              className={`block text-sm font-medium mb-2 transition-all duration-200 ${
+              className={`block text-sm font-bold mb-3 transition-all duration-200 ${
                 focusedField === 'password' || formData.password
-                  ? 'text-indigo-600 transform -translate-y-1'
-                  : 'text-slate-700'
+                  ? 'text-purple-600'
+                  : 'text-purple-800 dark:text-purple-400'
               }`}
             >
               Password
             </label>
             <div className='relative'>
+              <div className='absolute left-3 top-1/2 transform -translate-y-1/2 z-10'>
+                <Lock
+                  className={`w-5 h-5 transition-colors duration-200 ${
+                    focusedField === 'password' || formData.password
+                      ? 'text-purple-600'
+                      : 'text-purple-500'
+                  }`}
+                />
+              </div>
               <Input
                 id='password'
                 name='password'
@@ -182,66 +212,48 @@ export default function LoginForm() {
                 onChange={handleChange}
                 onFocus={() => setFocusedField('password')}
                 onBlur={() => setFocusedField('')}
-                className={`w-full px-4 py-3 pr-12 border rounded-xl transition-all text-black duration-300 bg-white hover:bg-gray-50 focus:bg-white focus:scale-[1.02] focus:shadow-lg placeholder:text-gray-500 placeholder:font-medium ${
+                className={`w-full pl-12 pr-12 py-4 border-2 rounded-xl transition-all duration-300 text-purple-900 placeholder:text-purple-500 placeholder:font-medium ${
                   errors.password
-                    ? 'border-red-300 focus:border-red-500 focus:ring-red-200'
-                    : 'border-slate-200 focus:border-indigo-500 focus:ring-indigo-200'
+                    ? 'border-red-400 focus:border-red-500 focus:ring-red-100 !bg-red-50/20 dark:!bg-red-50/20'
+                    : focusedField === 'password'
+                    ? 'border-purple-400 focus:border-purple-500 focus:ring-purple-100 !bg-white dark:!bg-white shadow-lg'
+                    : 'border-purple-200 hover:border-purple-300 focus:border-purple-400 focus:ring-purple-100 !bg-white dark:!bg-white hover:!bg-purple-50/20 dark:hover:!bg-purple-50/20'
                 }`}
                 style={{
-                  // Ensure crisp text rendering
                   WebkitFontSmoothing: 'antialiased',
                   MozOsxFontSmoothing: 'grayscale',
+                  backgroundColor: errors.password
+                    ? 'rgba(254, 242, 242, 0.2)'
+                    : 'white',
+                  color: '#581c87', // purple-900
                 }}
               />
               <button
                 type='button'
                 onClick={() => setShowPassword(!showPassword)}
-                className='absolute right-3 top-1/2 transform -translate-y-1/2 text-slate-500 hover:text-slate-700 transition-colors p-1 rounded-lg hover:bg-slate-100'
+                className='absolute right-3 top-1/2 transform -translate-y-1/2 text-purple-500 hover:text-purple-700 transition-colors p-1 rounded-lg hover:bg-purple-50'
               >
                 {showPassword ? (
-                  <svg
-                    className='w-5 h-5'
-                    fill='none'
-                    stroke='currentColor'
-                    viewBox='0 0 24 24'
-                  >
-                    <path
-                      strokeLinecap='round'
-                      strokeLinejoin='round'
-                      strokeWidth={2}
-                      d='M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.878 9.878L3 3m6.878 6.878L21 21'
-                    />
-                  </svg>
+                  <EyeOff className='w-5 h-5' />
                 ) : (
-                  <svg
-                    className='w-5 h-5'
-                    fill='none'
-                    stroke='currentColor'
-                    viewBox='0 0 24 24'
-                  >
-                    <path
-                      strokeLinecap='round'
-                      strokeLinejoin='round'
-                      strokeWidth={2}
-                      d='M15 12a3 3 0 11-6 0 3 3 0 016 0z'
-                    />
-                    <path
-                      strokeLinecap='round'
-                      strokeLinejoin='round'
-                      strokeWidth={2}
-                      d='M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z'
-                    />
-                  </svg>
+                  <Eye className='w-5 h-5' />
                 )}
               </button>
-              <div
-                className={`absolute inset-0 rounded-xl bg-gradient-to-r from-indigo-500/10 to-purple-500/10 transition-opacity duration-300 pointer-events-none ${
-                  focusedField === 'password' ? 'opacity-100' : 'opacity-0'
-                }`}
-              />
+              {formData.password && !errors.password && (
+                <div className='absolute right-12 top-1/2 transform -translate-y-1/2'>
+                  <CheckCircle className='w-5 h-5 text-green-500' />
+                </div>
+              )}
             </div>
             {errors.password && (
-              <p className='mt-1 text-sm text-red-600 animate-pulse'>
+              <p className='mt-2 text-sm text-red-600 flex items-center gap-1 font-medium'>
+                <svg
+                  className='w-4 h-4'
+                  viewBox='0 0 24 24'
+                  fill='currentColor'
+                >
+                  <path d='M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z' />
+                </svg>
                 {errors.password}
               </p>
             )}
@@ -249,7 +261,7 @@ export default function LoginForm() {
         </div>
 
         {/* Remember me and Forgot password */}
-        <div className='flex items-center justify-between'>
+        <div className='flex items-center justify-between pt-2'>
           <div className='flex items-center space-x-3'>
             <div className='relative'>
               <input
@@ -262,82 +274,72 @@ export default function LoginForm() {
               />
               <label
                 htmlFor='remember'
-                className={`flex items-center cursor-pointer group`}
+                className='flex items-center cursor-pointer group'
               >
                 <div
-                  className={`w-5 h-5 border-2 rounded transition-all duration-200 flex items-center justify-center ${
+                  className={`w-5 h-5 border-2 rounded-md transition-all duration-200 flex items-center justify-center ${
                     formData.remember
-                      ? 'bg-indigo-600 border-indigo-600 scale-110'
-                      : 'border-slate-300 group-hover:border-indigo-400'
+                      ? 'bg-purple-600 border-purple-600 scale-110'
+                      : 'border-purple-300 group-hover:border-purple-500'
                   }`}
                 >
                   {formData.remember && (
-                    <svg
-                      className='w-3 h-3 text-white'
-                      fill='none'
-                      stroke='currentColor'
-                      viewBox='0 0 24 24'
-                    >
-                      <path
-                        strokeLinecap='round'
-                        strokeLinejoin='round'
-                        strokeWidth={3}
-                        d='M5 13l4 4L19 7'
-                      />
-                    </svg>
+                    <CheckCircle className='w-3 h-3 text-white' />
                   )}
                 </div>
-                <span className='ml-2 text-sm text-slate-600 group-hover:text-slate-800 transition-colors'>
+                <span className='ml-3 text-sm text-purple-700 group-hover:text-purple-900 transition-colors font-semibold'>
                   Remember me
                 </span>
               </label>
             </div>
           </div>
-          <Button
-            variant='link'
-            className='text-sm font-medium text-indigo-600 hover:text-indigo-700 transition-colors hover:underline'
+          <button
+            type='button'
+            className='text-sm font-bold text-purple-600 hover:text-purple-800 transition-colors hover:underline bg-purple-50 hover:bg-purple-100 px-3 py-1 rounded-lg'
           >
             Forgot password?
-          </Button>
+          </button>
         </div>
 
         {/* Submit Button */}
-        <Button
+        <button
           type='submit'
           disabled={isLoading}
-          variant='gradient'
-          size='xl'
-          className='w-full group'
+          className='w-full group relative overflow-hidden bg-gradient-to-r from-purple-600 via-purple-700 to-indigo-600 hover:from-purple-700 hover:via-purple-800 hover:to-indigo-700 text-white py-4 rounded-xl font-bold text-base shadow-2xl hover:shadow-purple-500/25 transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed transform hover:scale-[1.02] active:scale-[0.98]'
           onClick={handleSubmit}
-          style={{
-            backgroundSize: '200% 100%',
-            backgroundPosition: isLoading ? '100% 0' : '0% 0',
-          }}
         >
-          {isLoading ? (
-            <div className='flex items-center justify-center space-x-2'>
-              <div className='w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin' />
-              <span>Logging you in...</span>
-            </div>
-          ) : (
-            <span className='flex items-center justify-center space-x-2'>
-              <span>Login</span>
-              <svg
-                className='w-4 h-4 transform group-hover:translate-x-1 transition-transform duration-200'
-                fill='none'
-                stroke='currentColor'
-                viewBox='0 0 24 24'
-              >
-                <path
-                  strokeLinecap='round'
-                  strokeLinejoin='round'
-                  strokeWidth={2}
-                  d='M17 8l4 4m0 0l-4 4m4-4H3'
-                />
-              </svg>
-            </span>
-          )}
-        </Button>
+          {/* Animated background gradient */}
+          <div className='absolute inset-0 bg-gradient-to-r from-purple-500 via-purple-600 to-indigo-500 opacity-0 group-hover:opacity-100 transition-opacity duration-300' />
+
+          {/* Shimmer effect */}
+          <div className='absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-700' />
+
+          <div className='relative z-10'>
+            {isLoading ? (
+              <div className='flex items-center justify-center space-x-2'>
+                <div className='w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin' />
+                <span className='font-bold'>Login you in...</span>
+              </div>
+            ) : (
+              <span className='flex items-center justify-center space-x-2'>
+                <span className='font-bold'>Login</span>
+                <svg
+                  className='w-5 h-5 transform group-hover:translate-x-1 transition-transform duration-200'
+                  fill='none'
+                  stroke='currentColor'
+                  viewBox='0 0 24 24'
+                >
+                  <path
+                    strokeLinecap='round'
+                    strokeLinejoin='round'
+                    strokeWidth={2}
+                    d='M17 8l4 4m0 0l-4 4m4-4H3'
+                  />
+                </svg>
+              </span>
+            )}
+          </div>
+        </button>
       </div>
     </div>
   );
