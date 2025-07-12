@@ -174,8 +174,8 @@ api.interceptors.response.use(
 
 // Auth API methods
 export const authAPI = {
-  login: (email: string, password: string) =>
-    api.post('/api/v1/login', { email, password }),
+  login: (email: string, password: string, rememberMe: boolean = false) =>
+    api.post('/api/v1/login', { email, password, rememberMe }),
 
   signup: (name: string, email: string, password: string) => {
     const [firstName, lastName] = name.split(' ');

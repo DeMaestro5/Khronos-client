@@ -12,7 +12,11 @@ import { AuthUtils } from '../lib/auth-utils';
 import { authAPI } from '../lib/api';
 
 interface AuthContextType extends AuthState {
-  login: (email: string, password: string) => Promise<void>;
+  login: (
+    email: string,
+    password: string,
+    rememberMe?: boolean
+  ) => Promise<void>;
   logout: () => void;
   refreshTokens: () => Promise<boolean>;
   checkAuthStatus: () => void;
@@ -120,11 +124,15 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   };
 
   // Login function
-  const login = async (email: string, password: string): Promise<void> => {
+  const login = async (
+    email: string,
+    password: string,
+    rememberMe: boolean = false
+  ): Promise<void> => {
     try {
       setAuthState((prev) => ({ ...prev, loading: true, error: null }));
 
-      const response = await authAPI.login(email, password);
+      const response = await authAPI.login(email, password, rememberMe);
 
       if (response.data?.data?.tokens) {
         // Store both tokens and user data

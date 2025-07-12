@@ -2,8 +2,7 @@
 
 import { useState, ChangeEvent, MouseEvent } from 'react';
 import { Input } from '../ui/input';
-import { authAPI } from '@/src/lib/api';
-import { AuthUtils } from '@/src/lib/auth-utils';
+import { useAuth } from '@/src/context/AuthContext';
 import { AxiosError } from 'axios';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
@@ -22,6 +21,7 @@ interface FormErrors {
 
 export default function LoginForm() {
   const router = useRouter();
+  const { login } = useAuth();
   const [isLoading, setIsLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [formData, setFormData] = useState<FormData>({
@@ -55,24 +55,11 @@ export default function LoginForm() {
     }
 
     try {
-      const response = await authAPI.login(formData.email, formData.password);
-      // Handle success
-      if (response.data.data?.tokens) {
-        // Use AuthUtils to store tokens and user data properly
-        AuthUtils.storeTokens(response.data.data.tokens);
-
-        // Store user data if available
-        if (response.data.data.user) {
-          AuthUtils.storeUser(response.data.data.user);
-        }
-
-        router.replace('/dashboard');
-        // Force a refresh to ensure the new auth state is picked up
-        window.location.href = '/dashboard';
-      } else {
-        console.log('No tokens in response:', response.data);
-        setErrors({ email: 'Login failed. Please try again.' });
-      }
+      await login(formData.email, formData.password, formData.remember);
+      // Handle success - login function in AuthContext handles token storage
+      router.replace('/dashboard');
+      // Force a refresh to ensure the new auth state is picked up
+      window.location.href = '/dashboard';
     } catch (error) {
       console.error('Login error:', error);
 
