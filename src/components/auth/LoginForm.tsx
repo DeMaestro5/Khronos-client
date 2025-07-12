@@ -6,6 +6,7 @@ import { authAPI } from '@/src/lib/api';
 import { AuthUtils } from '@/src/lib/auth-utils';
 import { AxiosError } from 'axios';
 import { useRouter } from 'next/navigation';
+import Link from 'next/link';
 import { Eye, EyeOff, Mail, Lock, CheckCircle } from 'lucide-react';
 
 interface FormData {
@@ -293,12 +294,12 @@ export default function LoginForm() {
               </label>
             </div>
           </div>
-          <button
-            type='button'
+          <Link
+            href='/auth/forgot-password'
             className='text-sm font-bold text-purple-600 hover:text-purple-800 transition-colors hover:underline bg-purple-50 hover:bg-purple-100 px-3 py-1 rounded-lg'
           >
             Forgot password?
-          </button>
+          </Link>
         </div>
 
         {/* Submit Button */}
