@@ -117,15 +117,6 @@ const CalendarPage = () => {
     engagementRate: userStats?.engagementRate || 0,
   };
 
-  console.log('📅 Calendar Page: Using stats:', {
-    fromUserStats: userStats,
-    fromCalendarContext: {
-      totalDates: Object.keys(scheduledContent).length,
-      totalItems: Object.values(scheduledContent).flat().length,
-    },
-    finalStats: calendarStatsForTopCards,
-  });
-
   return (
     <div className='h-full bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 relative overflow-y-auto'>
       {/* Animated Background Elements */}

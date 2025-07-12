@@ -204,6 +204,9 @@ export const authAPI = {
 
   forgotPassword: (email: string) =>
     api.post('/api/v1/forgot-password', { email }),
+
+  resetPassword: (code: string, password: string) =>
+    api.post('/api/v1/reset-password', { code, password }),
 };
 
 // Profile API methods
