@@ -46,6 +46,14 @@ const api = axios.create({
   },
 });
 
+// Create separate axios instance for OAuth routes (no API key required)
+const oauthApi = axios.create({
+  baseURL: process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000',
+  headers: {
+    'Content-Type': 'application/json',
+  },
+});
+
 // Request interceptor for adding auth token
 api.interceptors.request.use(
   (config: InternalAxiosRequestConfig) => {
@@ -111,18 +119,10 @@ api.interceptors.response.use(
         isRefreshing = true;
 
         try {
-          // Create a separate axios instance for refresh to avoid interceptors
-          const refreshResponse = await axios.post(
-            `${
-              process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000'
-            }/api/v1/token/refresh-token`,
-            { refreshToken },
-            {
-              headers: {
-                'Content-Type': 'application/json',
-                'x-api-key': process.env.NEXT_PUBLIC_API_KEY,
-              },
-            }
+          // Use oauthApi for refresh token (no API key required)
+          const refreshResponse = await oauthApi.post(
+            '/api/v1/token/refresh-token',
+            { refreshToken }
           );
 
           if (refreshResponse.data?.data?.tokens) {
@@ -189,7 +189,7 @@ export const authAPI = {
   },
 
   refreshToken: (refreshToken: string) =>
-    api.post('/api/v1/token/refresh-token', { refreshToken }),
+    oauthApi.post('/api/v1/token/refresh-token', { refreshToken }),
 
   logout: () => {
     const refreshToken = AuthUtils.getRefreshToken();
@@ -207,6 +207,30 @@ export const authAPI = {
 
   resetPassword: (code: string, password: string) =>
     api.post('/api/v1/reset-password', { code, password }),
+
+  // Google Auth endpoints
+  googleAuth: {
+    // Initiate Google OAuth flow - redirects to backend login route
+    initiate: () => {
+      const baseUrl =
+        process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000';
+      return `${baseUrl}/api/v1/auth/google/login`;
+    },
+
+    // Handle Google OAuth callback (no API key required)
+    callback: (code: string, state?: string) =>
+      oauthApi.get('/api/v1/auth/google/callback', { params: { code, state } }),
+
+    // Get Google auth URL (alternative approach)
+    getAuthUrl: () => oauthApi.get('/api/v1/auth/google/url'),
+
+    // Get direct Google OAuth URL with state
+    getDirectAuthUrl: (state: string) => {
+      const baseUrl =
+        process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000';
+      return `${baseUrl}/api/v1/auth/google/login?state=${state}`;
+    },
+  },
 };
 
 // Profile API methods

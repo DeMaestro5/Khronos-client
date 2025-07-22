@@ -5,6 +5,7 @@ const TOKEN_KEYS = {
   REFRESH_TOKEN: 'refreshToken',
   TOKEN_EXPIRY: 'tokenExpiry',
   USER_DATA: 'userData',
+  GOOGLE_STATE: 'googleAuthState', // For CSRF protection
 } as const;
 
 export class AuthUtils {
@@ -129,6 +130,7 @@ export class AuthUtils {
       localStorage.removeItem(TOKEN_KEYS.REFRESH_TOKEN);
       localStorage.removeItem(TOKEN_KEYS.TOKEN_EXPIRY);
       localStorage.removeItem(TOKEN_KEYS.USER_DATA);
+      localStorage.removeItem(TOKEN_KEYS.GOOGLE_STATE);
       // Also remove the old 'token' key for backward compatibility
       localStorage.removeItem('token');
     } catch (error) {
@@ -160,5 +162,132 @@ export class AuthUtils {
    */
   static shouldRefreshToken(): boolean {
     return this.hasValidTokens() && this.isTokenExpired();
+  }
+
+  // Google Auth specific methods
+  /**
+   * Generate a random state parameter for CSRF protection
+   */
+  static generateGoogleState(): string {
+    const state =
+      Math.random().toString(36).substring(2, 15) +
+      Math.random().toString(36).substring(2, 15);
+
+    if (typeof window !== 'undefined') {
+      localStorage.setItem(TOKEN_KEYS.GOOGLE_STATE, state);
+    }
+
+    return state;
+  }
+
+  /**
+   * Get stored Google state parameter
+   */
+  static getGoogleState(): string | null {
+    if (typeof window === 'undefined') return null;
+    return localStorage.getItem(TOKEN_KEYS.GOOGLE_STATE);
+  }
+
+  /**
+   * Clear stored Google state parameter
+   */
+  static clearGoogleState(): void {
+    if (typeof window === 'undefined') return;
+    localStorage.removeItem(TOKEN_KEYS.GOOGLE_STATE);
+  }
+
+  /**
+   * Validate Google state parameter
+   */
+  static validateGoogleState(state: string): boolean {
+    const storedState = this.getGoogleState();
+    if (!storedState) return false;
+
+    const isValid = storedState === state;
+    if (isValid) {
+      this.clearGoogleState(); // Clear after successful validation
+    }
+    return isValid;
+  }
+
+  /**
+   * Initiate Google OAuth flow
+   */
+  static async initiateGoogleAuth(): Promise<void> {
+    const state = this.generateGoogleState();
+
+    try {
+      // Use the API client to get the correct backend route
+      const { authAPI } = await import('./api');
+      const googleAuthUrl = `${authAPI.googleAuth.initiate()}?state=${encodeURIComponent(
+        state
+      )}`;
+
+      console.log('Initiating Google OAuth via backend:', googleAuthUrl);
+      window.location.href = googleAuthUrl;
+    } catch (error) {
+      console.error('Failed to initiate Google auth:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Handle Google OAuth callback
+   */
+  static async handleGoogleCallback(
+    code: string,
+    state: string
+  ): Promise<{
+    success: boolean;
+    user?: User;
+    tokens?: AuthTokens;
+    error?: string;
+  }> {
+    try {
+      // Validate state parameter
+      if (!this.validateGoogleState(state)) {
+        throw new Error('Invalid state parameter');
+      }
+
+      // Use the existing axios instance with proper headers
+      const { authAPI } = await import('./api');
+
+      const response = await authAPI.googleAuth.callback(code, state);
+
+      if (response.data?.data?.tokens && response.data?.data?.user) {
+        // Store tokens and user data
+        this.storeAuthData(response.data.data.tokens, response.data.data.user);
+
+        return {
+          success: true,
+          user: response.data.data.user,
+          tokens: response.data.data.tokens,
+        };
+      } else {
+        throw new Error('Invalid response from server');
+      }
+    } catch (error) {
+      console.error('Google auth callback error:', error);
+
+      // Handle specific error cases
+      if (error instanceof Error) {
+        if (error.message.includes('x-api-key')) {
+          return {
+            success: false,
+            error:
+              'Authentication service configuration error. Please contact support.',
+          };
+        }
+        return {
+          success: false,
+          error: error.message,
+        };
+      }
+
+      return {
+        success: false,
+        error: 'Authentication failed',
+      };
+    }
   }
 }
