@@ -1,7 +1,9 @@
 import { useState } from 'react';
+import { useAuth } from '@/src/context/AuthContext';
 
 export default function SocialsAuth() {
   const [hoveredButton, setHoveredButton] = useState('');
+  const { googleLogin, isGoogleAuthenticating } = useAuth();
 
   const socialProviders = [
     {
@@ -27,7 +29,16 @@ export default function SocialsAuth() {
         </svg>
       ),
       hoverColor: 'hover:bg-red-50 hover:border-red-200',
-      onClick: () => console.log('Google login clicked'),
+      onClick: async () => {
+        if (!isGoogleAuthenticating) {
+          try {
+            await googleLogin();
+          } catch (error) {
+            console.error('Google login failed:', error);
+          }
+        }
+      },
+      isLoading: isGoogleAuthenticating,
     },
     // {
     //   name: 'GitHub',
@@ -66,16 +77,21 @@ export default function SocialsAuth() {
           <button
             key={provider.name}
             onClick={provider.onClick}
+            disabled={provider.isLoading}
             onMouseEnter={() => setHoveredButton(provider.name)}
             onMouseLeave={() => setHoveredButton('')}
-            className={`flex items-center justify-center space-x-2 px-4 py-3 border border-slate-200 rounded-xl bg-white/50 backdrop-blur-sm font-medium text-slate-700 transition-all duration-200 transform hover:scale-[1.02] hover:shadow-lg ${
+            className={`flex items-center justify-center space-x-2 px-4 py-3 border border-slate-200 rounded-xl bg-white/50 backdrop-blur-sm font-medium text-slate-700 transition-all duration-200 transform hover:scale-[1.02] hover:shadow-lg disabled:opacity-50 disabled:cursor-not-allowed ${
               provider.hoverColor
             } ${hoveredButton === provider.name ? 'animate-pulse' : ''}`}
           >
-            <span className='transform transition-transform duration-200 hover:scale-110'>
-              {provider.icon}
-            </span>
-            <span>{provider.name}</span>
+            {provider.isLoading ? (
+              <div className='w-5 h-5 border-2 border-slate-300 border-t-slate-600 rounded-full animate-spin' />
+            ) : (
+              <span className='transform transition-transform duration-200 hover:scale-110'>
+                {provider.icon}
+              </span>
+            )}
+            <span>{provider.isLoading ? 'Connecting...' : provider.name}</span>
           </button>
         ))}
       </div>

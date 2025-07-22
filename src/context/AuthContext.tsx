@@ -7,7 +7,7 @@ import React, {
   useState,
   ReactNode,
 } from 'react';
-import { AuthState } from '../types/auth';
+import { AuthState, GoogleAuthResponse } from '../types/auth';
 import { AuthUtils } from '../lib/auth-utils';
 import { authAPI } from '../lib/api';
 
@@ -21,6 +21,13 @@ interface AuthContextType extends AuthState {
   refreshTokens: () => Promise<boolean>;
   checkAuthStatus: () => void;
   updateUser: (user: Partial<AuthState['user']>) => void;
+  // Google Auth methods
+  googleLogin: () => void;
+  handleGoogleCallback: (
+    code: string,
+    state: string
+  ) => Promise<GoogleAuthResponse>;
+  isGoogleAuthenticating: boolean;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -44,6 +51,9 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     loading: true,
     error: null,
   });
+
+  // Google Auth state
+  const [isGoogleAuthenticating, setIsGoogleAuthenticating] = useState(false);
 
   // Refresh tokens function
   const refreshTokens = async (): Promise<boolean> => {
@@ -184,6 +194,67 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     }
   };
 
+  // Google Auth methods
+  const googleLogin = async () => {
+    setIsGoogleAuthenticating(true);
+    try {
+      await AuthUtils.initiateGoogleAuth();
+    } catch (error) {
+      console.error('Failed to initiate Google auth:', error);
+      setIsGoogleAuthenticating(false);
+      setAuthState((prev) => ({
+        ...prev,
+        error: 'Failed to start Google authentication',
+      }));
+    }
+  };
+
+  const handleGoogleCallback = async (
+    code: string,
+    state: string
+  ): Promise<GoogleAuthResponse> => {
+    try {
+      setIsGoogleAuthenticating(true);
+      setAuthState((prev) => ({ ...prev, error: null }));
+
+      const result = await AuthUtils.handleGoogleCallback(code, state);
+
+      if (result.success && result.user && result.tokens) {
+        setAuthState({
+          isAuthenticated: true,
+          user: result.user,
+          loading: false,
+          error: null,
+        });
+      } else {
+        setAuthState((prev) => ({
+          ...prev,
+          loading: false,
+          error: result.error || 'Google authentication failed',
+        }));
+      }
+
+      return result;
+    } catch (error) {
+      console.error('Google callback error:', error);
+      const errorMessage =
+        error instanceof Error ? error.message : 'Google authentication failed';
+
+      setAuthState((prev) => ({
+        ...prev,
+        loading: false,
+        error: errorMessage,
+      }));
+
+      return {
+        success: false,
+        error: errorMessage,
+      };
+    } finally {
+      setIsGoogleAuthenticating(false);
+    }
+  };
+
   // Set up automatic token refresh check
   useEffect(() => {
     checkAuthStatus();
@@ -217,8 +288,39 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       }
     };
 
+    const handleTokensUpdated = () => {
+      // Re-check authentication status when tokens are updated
+      checkAuthStatus();
+    };
+
+    const handleUserUpdated = (e: CustomEvent) => {
+      // Update user data directly in the context
+      const user = e.detail.user;
+      setAuthState((prev) => ({
+        ...prev,
+        user,
+        loading: false,
+      }));
+    };
+
     window.addEventListener('storage', handleStorageChange);
-    return () => window.removeEventListener('storage', handleStorageChange);
+    window.addEventListener(
+      'tokensUpdated',
+      handleTokensUpdated as EventListener
+    );
+    window.addEventListener('userUpdated', handleUserUpdated as EventListener);
+
+    return () => {
+      window.removeEventListener('storage', handleStorageChange);
+      window.removeEventListener(
+        'tokensUpdated',
+        handleTokensUpdated as EventListener
+      );
+      window.removeEventListener(
+        'userUpdated',
+        handleUserUpdated as EventListener
+      );
+    };
   }, []);
 
   const contextValue: AuthContextType = {
@@ -228,6 +330,9 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     refreshTokens,
     checkAuthStatus,
     updateUser,
+    googleLogin,
+    handleGoogleCallback,
+    isGoogleAuthenticating,
   };
 
   return (

@@ -9,7 +9,7 @@ interface AuthGuardProps {
 }
 
 export default function AuthGuard({ children }: AuthGuardProps) {
-  const { isAuthenticated, loading, user } = useAuth();
+  const { isAuthenticated, loading } = useAuth();
   const router = useRouter();
 
   useEffect(() => {
@@ -34,7 +34,7 @@ export default function AuthGuard({ children }: AuthGuardProps) {
   }
 
   // Don't render children if not authenticated (redirect will happen in useEffect)
-  if (!isAuthenticated || !user) {
+  if (!isAuthenticated) {
     return (
       <div className='min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50 dark:from-slate-950 dark:via-blue-950 dark:to-indigo-950 flex items-center justify-center'>
         <div className='text-center'>

@@ -153,7 +153,7 @@ function LoginComponent() {
 - **SignupForm**: Now uses AuthUtils.storeTokens()
 - **NavBar**: Now uses authAPI.logout()
 - **Content pages**: Now use AuthUtils for token checking
-- **AuthDebug**: Enhanced with refresh token information
+- **Authentication components**: Enhanced with refresh token information
 
 ### Backward Compatibility
 
@@ -186,9 +186,9 @@ function LoginComponent() {
 
 ## Monitoring and Debugging
 
-### Debug Component
+### Debug Information
 
-The AuthDebug component now shows:
+The authentication system now provides:
 
 - Access token status and preview
 - Refresh token status and preview
