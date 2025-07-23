@@ -32,7 +32,7 @@ export const ContentListItem = ({ content }: ContentListItemProps) => (
             <div className='flex-1'>
               <div className='flex items-center gap-3 mb-2'>
                 {getStatusIcon(content.status as ContentStatus)}
-                <h3 className='font-semibold text-lg group-hover:text-blue-600 text-gray-900 transition-colors'>
+                <h3 className='font-semibold text-lg group-hover:text-blue-600 text-gray-400 transition-colors'>
                   {content.title}
                 </h3>
                 <span
@@ -50,18 +50,14 @@ export const ContentListItem = ({ content }: ContentListItemProps) => (
                   {content.type.replace('_', ' ')}
                 </span>
               </div>
-              <p className='text-gray-600 text-sm mb-3 line-clamp-2'>
+              <p className='text-gray-200 text-sm mb-3 line-clamp-2'>
                 {content.description}
               </p>
               <div className='flex items-center gap-4 text-xs text-gray-500'>
                 <div className='flex items-center gap-1'>
                   <Calendar className='w-3 h-3' />
-                  {content.publishedDate || content.metadata?.publishedDate
-                    ? formatDate(
-                        content.publishedDate ||
-                          content.metadata?.publishedDate ||
-                          ''
-                      )
+                  {content.metadata?.publishedDate
+                    ? formatDate(content.metadata.publishedDate)
                     : formatDate(content.createdAt)}
                 </div>
                 <div className='flex items-center gap-1'>

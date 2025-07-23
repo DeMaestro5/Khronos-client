@@ -3,9 +3,8 @@
 import React, { useState, useEffect } from 'react';
 import { Search, Plus, FileText } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
-
 import { useUserData } from '@/src/context/UserDataContext';
-import { useGlobalConfetti } from '@/src/context/ConfettiContext'; // Add this import
+import { useGlobalConfetti } from '@/src/context/ConfettiContext';
 import { Content, ContentStatus, ContentType } from '@/src/types/content';
 import { ContentCard } from '@/src/components/content/content-card';
 import { ContentListItem } from '@/src/components/content/content-list-items';
@@ -45,11 +44,6 @@ export default function ContentPage() {
   const { triggerContentCreationCelebration } = useGlobalConfetti();
 
   useEffect(() => {
-    console.log('Content page: Using cached data', {
-      userContent,
-      contextLoading,
-    });
-
     // Use cached content data instead of API call
     if (userContent) {
       setContents(userContent);
