@@ -26,9 +26,7 @@ const ToggleSwitch: React.FC<ToggleSwitchProps> = ({
       <div className='flex-1'>
         <h4
           className={`text-sm font-medium ${
-            disabled
-              ? 'text-gray-400 dark:text-gray-500'
-              : 'text-gray-900 dark:text-gray-100'
+            disabled ? 'text-theme-muted' : 'text-theme-primary'
           }`}
         >
           {label}
@@ -36,9 +34,7 @@ const ToggleSwitch: React.FC<ToggleSwitchProps> = ({
         {description && (
           <p
             className={`text-xs mt-1 ${
-              disabled
-                ? 'text-gray-400 dark:text-gray-500'
-                : 'text-gray-500 dark:text-gray-400'
+              disabled ? 'text-theme-muted' : 'text-theme-secondary'
             }`}
           >
             {description}
@@ -102,13 +98,11 @@ const MultiSelectField: React.FC<MultiSelectFieldProps> = ({
   return (
     <div className='space-y-2'>
       <div>
-        <label className='text-sm font-medium text-gray-900 dark:text-gray-100'>
+        <label className='text-sm font-medium text-theme-primary'>
           {label}
         </label>
         {description && (
-          <p className='text-xs text-gray-500 dark:text-gray-400 mt-1'>
-            {description}
-          </p>
+          <p className='text-xs text-theme-secondary mt-1'>{description}</p>
         )}
       </div>
 
@@ -116,22 +110,22 @@ const MultiSelectField: React.FC<MultiSelectFieldProps> = ({
         <button
           type='button'
           onClick={() => setIsOpen(!isOpen)}
-          className={`w-full border rounded-lg px-3 py-2 text-left shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 flex items-center justify-between ${
+          className={`w-full border rounded-lg px-3 py-2 text-left shadow-sm focus:outline-none focus:ring-2 focus:ring-accent-primary focus:border-accent-primary flex items-center justify-between ${
             error
               ? 'border-red-300 dark:border-red-600 bg-red-50 dark:bg-red-900/20'
-              : 'border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800'
+              : 'border-theme-primary bg-theme-card'
           }`}
         >
           <div className='flex flex-wrap gap-1'>
             {value.length === 0 ? (
-              <span className='text-gray-500'>Select platforms...</span>
+              <span className='text-theme-muted'>Select platforms...</span>
             ) : (
               value.map((val) => {
                 const option = options.find((opt) => opt.value === val);
                 return (
                   <span
                     key={val}
-                    className='inline-flex items-center px-2 py-1 text-xs font-medium bg-blue-100 dark:bg-blue-900/20 text-blue-700 dark:text-blue-300 rounded'
+                    className='inline-flex items-center px-2 py-1 text-xs font-medium bg-accent-primary/20 dark:bg-accent-primary/40 text-theme-primary rounded'
                   >
                     {option?.icon && (
                       <span className='mr-1'>{option.icon}</span>
@@ -143,7 +137,7 @@ const MultiSelectField: React.FC<MultiSelectFieldProps> = ({
             )}
           </div>
           <svg
-            className='h-4 w-4 text-gray-400 flex-shrink-0'
+            className='h-4 w-4 text-theme-muted flex-shrink-0'
             fill='none'
             stroke='currentColor'
             viewBox='0 0 24 24'
@@ -158,17 +152,17 @@ const MultiSelectField: React.FC<MultiSelectFieldProps> = ({
         </button>
 
         {isOpen && (
-          <div className='absolute z-10 mt-1 w-full bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg shadow-lg'>
+          <div className='absolute z-10 mt-1 w-full bg-theme-card border border-theme-primary rounded-lg shadow-lg'>
             <div className='max-h-60 overflow-auto py-1'>
               {options.map((option) => (
                 <button
                   key={option.value}
                   type='button'
                   onClick={() => handleToggleOption(option.value)}
-                  className={`w-full text-left px-3 py-2 text-sm hover:bg-gray-100 dark:hover:bg-gray-700 flex items-center ${
+                  className={`w-full text-left px-3 py-2 text-sm hover:bg-theme-hover flex items-center ${
                     value.includes(option.value)
-                      ? 'bg-blue-50 dark:bg-blue-900/20 text-blue-700 dark:text-blue-300'
-                      : 'text-gray-900 dark:text-gray-100'
+                      ? 'bg-accent-primary/10 text-accent-primary'
+                      : 'text-theme-primary'
                   }`}
                 >
                   <input
@@ -218,13 +212,11 @@ const SelectField: React.FC<SelectFieldProps> = ({
   return (
     <div className='space-y-2'>
       <div>
-        <label className='text-sm font-medium text-gray-900 dark:text-gray-100'>
+        <label className='text-sm font-medium text-theme-primary'>
           {label}
         </label>
         {description && (
-          <p className='text-xs text-gray-500 dark:text-gray-400 mt-1'>
-            {description}
-          </p>
+          <p className='text-xs text-theme-secondary mt-1'>{description}</p>
         )}
       </div>
 
@@ -232,7 +224,7 @@ const SelectField: React.FC<SelectFieldProps> = ({
         <button
           type='button'
           onClick={() => setIsOpen(!isOpen)}
-          className='w-full bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg px-3 py-2 text-left shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 flex items-center justify-between'
+          className='w-full bg-theme-card border border-theme-primary rounded-lg px-3 py-2 text-left shadow-sm focus:outline-none focus:ring-2 focus:ring-accent-primary focus:border-accent-primary flex items-center justify-between'
         >
           <div className='flex items-center'>
             {(() => {
@@ -240,8 +232,8 @@ const SelectField: React.FC<SelectFieldProps> = ({
               const Icon = selectedOption?.icon;
               return (
                 <>
-                  {Icon && <Icon className='h-4 w-4 mr-2 text-gray-400' />}
-                  <span className='text-gray-900 dark:text-gray-100'>
+                  {Icon && <Icon className='h-4 w-4 mr-2 text-theme-muted' />}
+                  <span className='text-theme-primary'>
                     {selectedOption?.label || 'Select...'}
                   </span>
                 </>
@@ -249,7 +241,7 @@ const SelectField: React.FC<SelectFieldProps> = ({
             })()}
           </div>
           <svg
-            className='h-4 w-4 text-gray-400'
+            className='h-4 w-4 text-theme-muted'
             fill='none'
             stroke='currentColor'
             viewBox='0 0 24 24'
@@ -264,7 +256,7 @@ const SelectField: React.FC<SelectFieldProps> = ({
         </button>
 
         {isOpen && (
-          <div className='absolute z-10 mt-1 w-full bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg shadow-lg'>
+          <div className='absolute z-10 mt-1 w-full bg-theme-card border border-theme-primary rounded-lg shadow-lg'>
             <div className='max-h-60 overflow-auto py-1'>
               {options.map((option) => {
                 const Icon = option.icon;
@@ -276,20 +268,20 @@ const SelectField: React.FC<SelectFieldProps> = ({
                       onChange(option.value);
                       setIsOpen(false);
                     }}
-                    className={`w-full text-left px-3 py-2 text-sm hover:bg-gray-100 dark:hover:bg-gray-700 ${
+                    className={`w-full text-left px-3 py-2 text-sm hover:bg-theme-hover ${
                       value === option.value
-                        ? 'bg-blue-50 dark:bg-blue-900/20 text-blue-700 dark:text-blue-300'
-                        : 'text-gray-900 dark:text-gray-100'
+                        ? 'bg-accent-primary/10 text-accent-primary'
+                        : 'text-theme-primary'
                     }`}
                   >
                     <div className='flex items-start'>
                       {Icon && (
-                        <Icon className='h-4 w-4 mr-2 mt-0.5 text-gray-400' />
+                        <Icon className='h-4 w-4 mr-2 mt-0.5 text-theme-muted' />
                       )}
                       <div>
                         <div className='font-medium'>{option.label}</div>
                         {option.description && (
-                          <div className='text-xs text-gray-500 dark:text-gray-400 mt-1'>
+                          <div className='text-xs text-theme-secondary mt-1'>
                             {option.description}
                           </div>
                         )}
@@ -509,11 +501,11 @@ const ContentSettingsSection: React.FC = () => {
     <div className='space-y-6'>
       {/* Unsaved Changes Banner */}
       {hasChanges && (
-        <div className='bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 rounded-lg p-4'>
+        <div className='bg-accent-warning/10 dark:bg-accent-warning/20 border border-accent-warning/30 dark:border-accent-warning/40 rounded-lg p-4'>
           <div className='flex items-center justify-between'>
             <div className='flex items-center'>
-              <div className='h-2 w-2 bg-yellow-400 rounded-full mr-3' />
-              <p className='text-sm font-medium text-yellow-800 dark:text-yellow-200'>
+              <div className='h-2 w-2 bg-accent-warning rounded-full mr-3' />
+              <p className='text-sm font-medium text-theme-primary'>
                 You have unsaved changes
               </p>
             </div>
@@ -521,14 +513,14 @@ const ContentSettingsSection: React.FC = () => {
               <button
                 onClick={handleDiscard}
                 disabled={isSaving}
-                className='text-sm text-yellow-700 dark:text-yellow-300 hover:text-yellow-900 dark:hover:text-yellow-100 disabled:opacity-50'
+                className='text-sm text-theme-secondary hover:text-theme-primary disabled:opacity-50'
               >
                 Discard
               </button>
               <button
                 onClick={handleSave}
                 disabled={isSaving}
-                className='bg-yellow-600 hover:bg-yellow-700 text-white px-3 py-1 rounded-md text-sm font-medium disabled:opacity-50 disabled:cursor-not-allowed'
+                className='bg-accent-warning hover:bg-accent-warning/90 text-white px-3 py-1 rounded-md text-sm font-medium disabled:opacity-50 disabled:cursor-not-allowed'
               >
                 {isSaving ? 'Saving...' : 'Save Changes'}
               </button>
@@ -538,8 +530,8 @@ const ContentSettingsSection: React.FC = () => {
       )}
 
       {/* Default Settings */}
-      <div className='bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-6'>
-        <h3 className='text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4'>
+      <div className='bg-theme-card rounded-lg border border-theme-primary p-6'>
+        <h3 className='text-lg font-semibold text-theme-primary mb-4'>
           Default Content Settings
         </h3>
 
@@ -581,8 +573,8 @@ const ContentSettingsSection: React.FC = () => {
       </div>
 
       {/* Content Behavior */}
-      <div className='bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-6'>
-        <h3 className='text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4'>
+      <div className='bg-theme-card rounded-lg border border-theme-primary p-6'>
+        <h3 className='text-lg font-semibold text-theme-primary mb-4'>
           Content Behavior
         </h3>
 
@@ -606,8 +598,8 @@ const ContentSettingsSection: React.FC = () => {
       </div>
 
       {/* AI & Automation */}
-      <div className='bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-6'>
-        <h3 className='text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4'>
+      <div className='bg-theme-card rounded-lg border border-theme-primary p-6'>
+        <h3 className='text-lg font-semibold text-theme-primary mb-4'>
           AI & Automation
         </h3>
 
@@ -623,34 +615,34 @@ const ContentSettingsSection: React.FC = () => {
       </div>
 
       {/* Content Summary */}
-      <div className='bg-gray-50 dark:bg-gray-900 rounded-lg border border-gray-200 dark:border-gray-700 p-6'>
-        <h3 className='text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4'>
+      <div className='bg-theme-secondary/10 rounded-lg border border-theme-primary p-6'>
+        <h3 className='text-lg font-semibold text-theme-primary mb-4'>
           Content Summary
         </h3>
 
         <div className='grid grid-cols-1 md:grid-cols-2 gap-4 text-sm'>
           <div className='space-y-2'>
             <div className='flex items-center justify-between'>
-              <span className='font-medium text-gray-600 dark:text-gray-400'>
+              <span className='font-medium text-theme-secondary'>
                 Default Platforms:
               </span>
-              <span className='text-gray-900 dark:text-gray-100'>
+              <span className='text-theme-primary'>
                 {localSettings.defaultPlatforms?.length || 0} selected
               </span>
             </div>
             <div className='flex items-center justify-between'>
-              <span className='font-medium text-gray-600 dark:text-gray-400'>
+              <span className='font-medium text-theme-secondary'>
                 Content Type:
               </span>
-              <span className='text-gray-900 dark:text-gray-100 capitalize'>
+              <span className='text-theme-primary capitalize'>
                 {localSettings.defaultContentType}
               </span>
             </div>
             <div className='flex items-center justify-between'>
-              <span className='font-medium text-gray-600 dark:text-gray-400'>
+              <span className='font-medium text-theme-secondary'>
                 Content Language:
               </span>
-              <span className='text-gray-900 dark:text-gray-100 uppercase'>
+              <span className='text-theme-primary uppercase'>
                 {localSettings.contentLanguage}
               </span>
             </div>
@@ -658,26 +650,26 @@ const ContentSettingsSection: React.FC = () => {
 
           <div className='space-y-2'>
             <div className='flex items-center justify-between'>
-              <span className='font-medium text-gray-600 dark:text-gray-400'>
+              <span className='font-medium text-theme-secondary'>
                 Auto-Save:
               </span>
-              <span className='text-gray-900 dark:text-gray-100'>
+              <span className='text-theme-primary'>
                 {localSettings.autoSave ? 'Enabled' : 'Disabled'}
               </span>
             </div>
             <div className='flex items-center justify-between'>
-              <span className='font-medium text-gray-600 dark:text-gray-400'>
+              <span className='font-medium text-theme-secondary'>
                 Auto-Scheduling:
               </span>
-              <span className='text-gray-900 dark:text-gray-100'>
+              <span className='text-theme-primary'>
                 {localSettings.autoScheduling ? 'Enabled' : 'Disabled'}
               </span>
             </div>
             <div className='flex items-center justify-between'>
-              <span className='font-medium text-gray-600 dark:text-gray-400'>
+              <span className='font-medium text-theme-secondary'>
                 AI Suggestions:
               </span>
-              <span className='text-gray-900 dark:text-gray-100'>
+              <span className='text-theme-primary'>
                 {localSettings.aiSuggestions ? 'Enabled' : 'Disabled'}
               </span>
             </div>
@@ -686,8 +678,8 @@ const ContentSettingsSection: React.FC = () => {
 
         {localSettings.defaultPlatforms &&
           localSettings.defaultPlatforms.length > 0 && (
-            <div className='mt-4 p-3 bg-blue-50 dark:bg-blue-900/20 rounded-lg'>
-              <p className='text-sm text-blue-800 dark:text-blue-200 mb-2'>
+            <div className='mt-4 p-3 bg-accent-primary/10 dark:bg-accent-primary/20 rounded-lg'>
+              <p className='text-sm text-theme-primary mb-2'>
                 <span className='font-medium'>Selected Platforms:</span>
               </p>
               <div className='flex flex-wrap gap-1'>
@@ -698,7 +690,7 @@ const ContentSettingsSection: React.FC = () => {
                   return (
                     <span
                       key={platform}
-                      className='inline-flex items-center px-2 py-1 text-xs font-medium bg-blue-100 dark:bg-blue-900/40 text-blue-700 dark:text-blue-300 rounded'
+                      className='inline-flex items-center px-2 py-1 text-xs font-medium bg-accent-primary/20 dark:bg-accent-primary/40 text-theme-primary rounded'
                     >
                       {platformOption?.icon && (
                         <span className='mr-1'>{platformOption.icon}</span>

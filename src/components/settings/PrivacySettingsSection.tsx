@@ -36,9 +36,7 @@ const ToggleSwitch: React.FC<ToggleSwitchProps> = ({
       <div className='flex-1'>
         <h4
           className={`text-sm font-medium ${
-            disabled
-              ? 'text-gray-400 dark:text-gray-500'
-              : 'text-gray-900 dark:text-gray-100'
+            disabled ? 'text-theme-muted' : 'text-theme-primary'
           }`}
         >
           {label}
@@ -46,9 +44,7 @@ const ToggleSwitch: React.FC<ToggleSwitchProps> = ({
         {description && (
           <p
             className={`text-xs mt-1 ${
-              disabled
-                ? 'text-gray-400 dark:text-gray-500'
-                : 'text-gray-500 dark:text-gray-400'
+              disabled ? 'text-theme-muted' : 'text-theme-secondary'
             }`}
           >
             {description}
@@ -98,13 +94,11 @@ const SelectField: React.FC<SelectFieldProps> = ({
   return (
     <div className='space-y-2'>
       <div>
-        <label className='text-sm font-medium text-gray-900 dark:text-gray-100'>
+        <label className='text-sm font-medium text-theme-primary'>
           {label}
         </label>
         {description && (
-          <p className='text-xs text-gray-500 dark:text-gray-400 mt-1'>
-            {description}
-          </p>
+          <p className='text-xs text-theme-secondary mt-1'>{description}</p>
         )}
       </div>
 
@@ -112,13 +106,13 @@ const SelectField: React.FC<SelectFieldProps> = ({
         <button
           type='button'
           onClick={() => setIsOpen(!isOpen)}
-          className='w-full bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg px-3 py-2 text-left shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 flex items-center justify-between'
+          className='w-full bg-theme-card border border-theme-primary rounded-lg px-3 py-2 text-left shadow-sm focus:outline-none focus:ring-2 focus:ring-accent-primary focus:border-accent-primary flex items-center justify-between'
         >
-          <span className='text-gray-900 dark:text-gray-100'>
+          <span className='text-theme-primary'>
             {options.find((opt) => opt.value === value)?.label || 'Select...'}
           </span>
           <svg
-            className='h-4 w-4 text-gray-400'
+            className='h-4 w-4 text-theme-muted'
             fill='none'
             stroke='currentColor'
             viewBox='0 0 24 24'
@@ -133,7 +127,7 @@ const SelectField: React.FC<SelectFieldProps> = ({
         </button>
 
         {isOpen && (
-          <div className='absolute z-10 mt-1 w-full bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg shadow-lg'>
+          <div className='absolute z-10 mt-1 w-full bg-theme-card border border-theme-primary rounded-lg shadow-lg'>
             <div className='max-h-60 overflow-auto py-1'>
               {options.map((option) => (
                 <button
@@ -143,16 +137,16 @@ const SelectField: React.FC<SelectFieldProps> = ({
                     onChange(option.value);
                     setIsOpen(false);
                   }}
-                  className={`w-full text-left px-3 py-2 text-sm hover:bg-gray-100 dark:hover:bg-gray-700 ${
+                  className={`w-full text-left px-3 py-2 text-sm hover:bg-theme-hover ${
                     value === option.value
-                      ? 'bg-blue-50 dark:bg-blue-900/20 text-blue-700 dark:text-blue-300'
-                      : 'text-gray-900 dark:text-gray-100'
+                      ? 'bg-accent-primary/10 text-accent-primary'
+                      : 'text-theme-primary'
                   }`}
                 >
                   <div>
                     <div className='font-medium'>{option.label}</div>
                     {option.description && (
-                      <div className='text-xs text-gray-500 dark:text-gray-400 mt-1'>
+                      <div className='text-xs text-theme-secondary mt-1'>
                         {option.description}
                       </div>
                     )}
@@ -306,14 +300,14 @@ const PrivacySettingsSection: React.FC = () => {
   return (
     <div className='space-y-6'>
       {/* Privacy Notice */}
-      <div className='bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-4'>
+      <div className='bg-accent-primary/10 dark:bg-accent-primary/20 border border-accent-primary/30 dark:border-accent-primary/40 rounded-lg p-4'>
         <div className='flex items-center'>
-          <ShieldCheckIcon className='h-5 w-5 text-blue-600 dark:text-blue-400 mr-3' />
+          <ShieldCheckIcon className='h-5 w-5 text-accent-primary mr-3' />
           <div>
-            <p className='text-sm font-medium text-blue-800 dark:text-blue-200'>
+            <p className='text-sm font-medium text-theme-primary'>
               Privacy Settings
             </p>
-            <p className='text-xs text-blue-700 dark:text-blue-300 mt-1'>
+            <p className='text-xs text-theme-secondary mt-1'>
               Control who can see your information and how your data is used.
             </p>
           </div>
@@ -322,24 +316,24 @@ const PrivacySettingsSection: React.FC = () => {
 
       {/* Unsaved Changes Banner */}
       {hasChanges && (
-        <div className='bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 rounded-lg p-4'>
+        <div className='bg-accent-warning/10 dark:bg-accent-warning/20 border border-accent-warning/30 dark:border-accent-warning/40 rounded-lg p-4'>
           <div className='flex items-center justify-between'>
             <div className='flex items-center'>
-              <div className='h-2 w-2 bg-yellow-400 rounded-full mr-3' />
-              <p className='text-sm font-medium text-yellow-800 dark:text-yellow-200'>
+              <div className='h-2 w-2 bg-accent-warning rounded-full mr-3' />
+              <p className='text-sm font-medium text-theme-primary'>
                 You have unsaved changes
               </p>
             </div>
             <div className='flex items-center space-x-3'>
               <button
                 onClick={handleDiscard}
-                className='text-sm text-yellow-700 dark:text-yellow-300 hover:text-yellow-900 dark:hover:text-yellow-100'
+                className='text-sm text-theme-secondary hover:text-theme-primary'
               >
                 Discard
               </button>
               <button
                 onClick={handleSave}
-                className='bg-yellow-600 hover:bg-yellow-700 text-white px-3 py-1 rounded-md text-sm font-medium'
+                className='bg-accent-warning hover:bg-accent-warning/90 text-white px-3 py-1 rounded-md text-sm font-medium'
               >
                 Save Changes
               </button>
@@ -349,8 +343,8 @@ const PrivacySettingsSection: React.FC = () => {
       )}
 
       {/* Profile Visibility */}
-      <div className='bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-6'>
-        <h3 className='text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4'>
+      <div className='bg-theme-card rounded-lg border border-theme-primary p-6'>
+        <h3 className='text-lg font-semibold text-theme-primary mb-4'>
           Profile Visibility
         </h3>
 
@@ -367,7 +361,7 @@ const PrivacySettingsSection: React.FC = () => {
           description='Control who can view your profile information and content'
         />
 
-        <div className='mt-6 p-4 bg-gray-50 dark:bg-gray-900 rounded-lg'>
+        <div className='mt-6 p-4 bg-theme-secondary/10 rounded-lg'>
           <div className='flex items-center mb-2'>
             {localSettings.profileVisibility === 'public' && (
               <>
@@ -394,7 +388,7 @@ const PrivacySettingsSection: React.FC = () => {
               </>
             )}
           </div>
-          <p className='text-xs text-gray-600 dark:text-gray-400'>
+          <p className='text-xs text-theme-secondary'>
             {
               visibilityOptions.find(
                 (opt) => opt.value === localSettings.profileVisibility
@@ -405,8 +399,8 @@ const PrivacySettingsSection: React.FC = () => {
       </div>
 
       {/* Personal Information */}
-      <div className='bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-6'>
-        <h3 className='text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4'>
+      <div className='bg-theme-card rounded-lg border border-theme-primary p-6'>
+        <h3 className='text-lg font-semibold text-theme-primary mb-4'>
           Personal Information
         </h3>
 
@@ -428,8 +422,8 @@ const PrivacySettingsSection: React.FC = () => {
       </div>
 
       {/* Data & Analytics */}
-      <div className='bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-6'>
-        <h3 className='text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4'>
+      <div className='bg-theme-card rounded-lg border border-theme-primary p-6'>
+        <h3 className='text-lg font-semibold text-theme-primary mb-4'>
           Data & Analytics
         </h3>
 
@@ -451,34 +445,34 @@ const PrivacySettingsSection: React.FC = () => {
       </div>
 
       {/* Privacy Summary */}
-      <div className='bg-gray-50 dark:bg-gray-900 rounded-lg border border-gray-200 dark:border-gray-700 p-6'>
-        <h3 className='text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4'>
+      <div className='bg-theme-secondary/10 rounded-lg border border-theme-primary p-6'>
+        <h3 className='text-lg font-semibold text-theme-primary mb-4'>
           Privacy Summary
         </h3>
 
         <div className='grid grid-cols-1 md:grid-cols-2 gap-4 text-sm'>
           <div className='space-y-2'>
             <div className='flex items-center justify-between'>
-              <span className='font-medium text-gray-600 dark:text-gray-400'>
+              <span className='font-medium text-theme-secondary'>
                 Profile Visibility:
               </span>
-              <span className='text-gray-900 dark:text-gray-100 capitalize'>
+              <span className='text-theme-primary capitalize'>
                 {localSettings.profileVisibility}
               </span>
             </div>
             <div className='flex items-center justify-between'>
-              <span className='font-medium text-gray-600 dark:text-gray-400'>
+              <span className='font-medium text-theme-secondary'>
                 Show Email:
               </span>
-              <span className='text-gray-900 dark:text-gray-100'>
+              <span className='text-theme-primary'>
                 {localSettings.showEmail ? 'Yes' : 'No'}
               </span>
             </div>
             <div className='flex items-center justify-between'>
-              <span className='font-medium text-gray-600 dark:text-gray-400'>
+              <span className='font-medium text-theme-secondary'>
                 Show Location:
               </span>
-              <span className='text-gray-900 dark:text-gray-100'>
+              <span className='text-theme-primary'>
                 {localSettings.showLocation ? 'Yes' : 'No'}
               </span>
             </div>
@@ -486,18 +480,18 @@ const PrivacySettingsSection: React.FC = () => {
 
           <div className='space-y-2'>
             <div className='flex items-center justify-between'>
-              <span className='font-medium text-gray-600 dark:text-gray-400'>
+              <span className='font-medium text-theme-secondary'>
                 Analytics:
               </span>
-              <span className='text-gray-900 dark:text-gray-100'>
+              <span className='text-theme-primary'>
                 {localSettings.allowAnalytics ? 'Enabled' : 'Disabled'}
               </span>
             </div>
             <div className='flex items-center justify-between'>
-              <span className='font-medium text-gray-600 dark:text-gray-400'>
+              <span className='font-medium text-theme-secondary'>
                 Data Sharing:
               </span>
-              <span className='text-gray-900 dark:text-gray-100'>
+              <span className='text-theme-primary'>
                 {localSettings.dataSharing ? 'Enabled' : 'Disabled'}
               </span>
             </div>

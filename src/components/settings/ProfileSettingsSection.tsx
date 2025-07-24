@@ -406,11 +406,11 @@ const ProfileSettingsSection: React.FC = () => {
     <div className='space-y-6'>
       {/* Unsaved Changes Banner */}
       {hasChanges && (
-        <div className='bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 rounded-lg p-4'>
+        <div className='bg-accent-warning/10 dark:bg-accent-warning/20 border border-accent-warning/30 dark:border-accent-warning/40 rounded-lg p-4'>
           <div className='flex items-center justify-between'>
             <div className='flex items-center'>
-              <div className='h-2 w-2 bg-yellow-400 rounded-full mr-3' />
-              <p className='text-sm font-medium text-yellow-800 dark:text-yellow-200'>
+              <div className='h-2 w-2 bg-accent-warning rounded-full mr-3' />
+              <p className='text-sm font-medium text-theme-primary'>
                 You have unsaved changes
               </p>
             </div>
@@ -418,14 +418,14 @@ const ProfileSettingsSection: React.FC = () => {
               <button
                 onClick={handleDiscard}
                 disabled={isSaving}
-                className='text-sm text-yellow-700 dark:text-yellow-300 hover:text-yellow-900 dark:hover:text-yellow-100 disabled:opacity-50'
+                className='text-sm text-theme-secondary hover:text-theme-primary disabled:opacity-50'
               >
                 Discard
               </button>
               <button
                 onClick={handleSave}
                 disabled={isSaving}
-                className='bg-yellow-600 hover:bg-yellow-700 text-white px-3 py-1 rounded-md text-sm font-medium disabled:opacity-50 disabled:cursor-not-allowed'
+                className='bg-accent-warning hover:bg-accent-warning/90 text-white px-3 py-1 rounded-md text-sm font-medium disabled:opacity-50 disabled:cursor-not-allowed'
               >
                 {isSaving ? 'Saving...' : 'Save Changes'}
               </button>
@@ -559,65 +559,59 @@ const ProfileSettingsSection: React.FC = () => {
       </div>
 
       {/* Profile Summary */}
-      <div className='bg-gray-50 dark:bg-gray-900 rounded-lg border border-gray-200 dark:border-gray-700 p-6'>
-        <h3 className='text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4'>
+      <div className='bg-theme-secondary/10 rounded-lg border border-theme-primary p-6'>
+        <h3 className='text-lg font-semibold text-theme-primary mb-4'>
           Profile Summary
         </h3>
 
         <div className='grid grid-cols-1 md:grid-cols-2 gap-4 text-sm'>
           <div>
-            <span className='font-medium text-gray-600 dark:text-gray-400'>
+            <span className='font-medium text-theme-secondary'>
               Display Name:
             </span>
-            <span className='ml-2 text-gray-900 dark:text-gray-100'>
+            <span className='ml-2 text-theme-primary'>
               {localSettings.displayName || 'Not set'}
             </span>
           </div>
           <div>
-            <span className='font-medium text-gray-600 dark:text-gray-400'>
-              Location:
-            </span>
-            <span className='ml-2 text-gray-900 dark:text-gray-100'>
+            <span className='font-medium text-theme-secondary'>Location:</span>
+            <span className='ml-2 text-theme-primary'>
               {localSettings.location || 'Not set'}
             </span>
           </div>
           <div>
-            <span className='font-medium text-gray-600 dark:text-gray-400'>
-              Language:
-            </span>
-            <span className='ml-2 text-gray-900 dark:text-gray-100'>
+            <span className='font-medium text-theme-secondary'>Language:</span>
+            <span className='ml-2 text-theme-primary'>
               {localSettings.language || 'English'}
             </span>
           </div>
           <div>
-            <span className='font-medium text-gray-600 dark:text-gray-400'>
-              Timezone:
-            </span>
-            <span className='ml-2 text-gray-900 dark:text-gray-100'>
+            <span className='font-medium text-theme-secondary'>Timezone:</span>
+            <span className='ml-2 text-theme-primary'>
               {localSettings.timezone || 'UTC'}
             </span>
           </div>
           <div>
-            <span className='font-medium text-gray-600 dark:text-gray-400'>
+            <span className='font-medium text-theme-secondary'>
               Date Format:
             </span>
-            <span className='ml-2 text-gray-900 dark:text-gray-100'>
+            <span className='ml-2 text-theme-primary'>
               {localSettings.dateFormat || 'MM/DD/YYYY'}
             </span>
           </div>
           <div>
-            <span className='font-medium text-gray-600 dark:text-gray-400'>
+            <span className='font-medium text-theme-secondary'>
               Time Format:
             </span>
-            <span className='ml-2 text-gray-900 dark:text-gray-100'>
+            <span className='ml-2 text-theme-primary'>
               {localSettings.timeFormat || '12h'}
             </span>
           </div>
         </div>
 
         {localSettings.bio && (
-          <div className='mt-4 p-3 bg-blue-50 dark:bg-blue-900/20 rounded-lg'>
-            <p className='text-sm text-blue-800 dark:text-blue-200'>
+          <div className='mt-4 p-3 bg-accent-primary/10 dark:bg-accent-primary/20 rounded-lg'>
+            <p className='text-sm text-theme-primary'>
               <span className='font-medium'>Bio:</span> {localSettings.bio}
             </p>
           </div>
