@@ -292,7 +292,7 @@ export default function AnalyticsPage() {
   // Error state
   if (state.error) {
     return (
-      <div className='min-h-screen bg-white dark:bg-slate-900 flex items-center justify-center p-6'>
+      <div className='min-h-screen bg-theme-primary flex items-center justify-center p-6'>
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
@@ -301,12 +301,10 @@ export default function AnalyticsPage() {
           <div className='w-16 h-16 bg-red-100 dark:bg-red-900/50 rounded-full flex items-center justify-center mx-auto mb-4'>
             <AlertTriangle className='w-8 h-8 text-red-600 dark:text-red-400' />
           </div>
-          <h1 className='text-xl font-semibold text-gray-900 dark:text-slate-100 mb-2'>
+          <h1 className='text-xl font-semibold text-theme-primary mb-2'>
             Analytics Unavailable
           </h1>
-          <p className='text-gray-600 dark:text-slate-400 mb-6'>
-            {state.error}
-          </p>
+          <p className='text-theme-secondary mb-6'>{state.error}</p>
           <button
             onClick={handleRefresh}
             className='inline-flex items-center px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg transition-colors duration-200'
@@ -320,21 +318,21 @@ export default function AnalyticsPage() {
   }
 
   return (
-    <div className='p-4 lg:p-6 space-y-4 bg-white dark:bg-slate-900 min-h-screen transition-colors duration-200'>
+    <div className='p-4 lg:p-6 space-y-4 bg-theme-primary min-h-screen transition-colors duration-200'>
       {/* Header */}
       <div className='flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4'>
         <div>
-          <h1 className='text-2xl sm:text-3xl font-bold text-gray-900 dark:text-slate-100'>
+          <h1 className='text-2xl sm:text-3xl font-bold text-theme-primary'>
             Analytics Dashboard
           </h1>
-          <p className='text-gray-600 dark:text-slate-400 mt-1'>
+          <p className='text-theme-secondary mt-1'>
             Track your content performance and discover growth opportunities
           </p>
         </div>
         <button
           onClick={handleRefresh}
           disabled={state.refreshing}
-          className='inline-flex items-center px-4 py-2 bg-indigo-600 hover:bg-indigo-700 disabled:opacity-50 text-white rounded-lg transition-colors duration-200'
+          className='inline-flex items-center px-4 py-2 bg-accent-primary hover:bg-accent-secondary disabled:opacity-50 text-white rounded-lg transition-colors duration-200'
         >
           <RefreshCw
             className={`w-4 h-4 mr-2 ${state.refreshing ? 'animate-spin' : ''}`}
@@ -379,14 +377,14 @@ export default function AnalyticsPage() {
             key={metric.title}
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            className='bg-white dark:bg-slate-800 p-4 lg:p-5 rounded-xl border border-gray-200 dark:border-slate-700 shadow-sm hover:shadow-md transition-shadow duration-200'
+            className='bg-theme-card p-4 lg:p-5 rounded-xl border border-theme-primary shadow-theme-sm hover:shadow-theme-md transition-shadow duration-200'
           >
             <div className='flex items-center justify-between'>
               <div>
-                <p className='text-xs lg:text-sm font-medium text-gray-500 dark:text-slate-400'>
+                <p className='text-xs lg:text-sm font-medium text-theme-secondary'>
                   {metric.title}
                 </p>
-                <p className='text-lg lg:text-2xl font-bold text-gray-900 dark:text-slate-100 mt-1'>
+                <p className='text-lg lg:text-2xl font-bold text-theme-primary mt-1'>
                   {metric.value.toLocaleString()}
                   {metric.suffix}
                 </p>
@@ -394,23 +392,23 @@ export default function AnalyticsPage() {
               <div
                 className={`w-8 h-8 lg:w-10 lg:h-10 rounded-lg flex items-center justify-center ${
                   metric.color === 'blue'
-                    ? 'bg-blue-100 dark:bg-blue-900/50'
+                    ? 'bg-accent-primary/10'
                     : metric.color === 'pink'
-                    ? 'bg-pink-100 dark:bg-pink-900/50'
+                    ? 'bg-accent-primary/10'
                     : metric.color === 'purple'
-                    ? 'bg-purple-100 dark:bg-purple-900/50'
-                    : 'bg-green-100 dark:bg-green-900/50'
+                    ? 'bg-accent-primary/10'
+                    : 'bg-accent-primary/10'
                 }`}
               >
                 <metric.icon
                   className={`w-4 h-4 lg:w-5 lg:h-5 ${
                     metric.color === 'blue'
-                      ? 'text-blue-600 dark:text-blue-400'
+                      ? 'text-accent-primary'
                       : metric.color === 'pink'
-                      ? 'text-pink-600 dark:text-pink-400'
+                      ? 'text-accent-primary'
                       : metric.color === 'purple'
-                      ? 'text-purple-600 dark:text-purple-400'
-                      : 'text-green-600 dark:text-green-400'
+                      ? 'text-accent-primary'
+                      : 'text-accent-primary'
                   }`}
                 />
               </div>
@@ -425,13 +423,13 @@ export default function AnalyticsPage() {
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          className='lg:col-span-2 bg-white dark:bg-slate-800 p-4 rounded-xl border border-gray-200 dark:border-slate-700'
+          className='lg:col-span-2 bg-theme-card p-4 rounded-xl border border-theme-primary'
         >
           <div className='flex items-center justify-between'>
             <div className='flex items-center space-x-3'>
               <div className='flex items-center space-x-2'>
                 <CheckCircle className='w-5 h-5 text-green-500' />
-                <span className='text-sm font-medium text-gray-900 dark:text-slate-100'>
+                <span className='text-sm font-medium text-theme-primary'>
                   Data Quality: {Math.round(getDataQuality().score)}%
                 </span>
               </div>
@@ -444,7 +442,7 @@ export default function AnalyticsPage() {
                 </div>
               )}
             </div>
-            <span className='text-xs text-gray-500 dark:text-slate-400'>
+            <span className='text-xs text-theme-secondary'>
               Last updated:{' '}
               {new Date(getDataQuality().lastUpdated).toLocaleTimeString()}
             </span>

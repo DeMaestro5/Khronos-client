@@ -146,7 +146,7 @@ export default function CalendarComponent({
       case 'scheduled':
         return 'bg-emerald-500';
       case 'draft':
-        return 'bg-amber-500';
+        return 'bg-gray-500';
       case 'published':
         return 'bg-blue-500';
       default:

@@ -18,7 +18,7 @@ export default function TrendingOpportunities({
 }: TrendingOpportunitiesProps) {
   if (isLoading) {
     return (
-      <div className='bg-white/95 dark:bg-slate-800/90 backdrop-blur-lg border border-white/20 dark:border-slate-700/60 rounded-xl p-4 shadow-sm h-fit'>
+      <div className='bg-theme-card backdrop-blur-lg border border-theme-primary rounded-xl p-4 shadow-sm h-fit'>
         <div className='animate-pulse'>
           <div className='h-5 bg-slate-200 dark:bg-slate-700 rounded w-32 mb-4'></div>
           <div className='space-y-3'>
@@ -40,9 +40,9 @@ export default function TrendingOpportunities({
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.5 }}
-        className='bg-white/95 dark:bg-slate-800/90 backdrop-blur-lg border border-white/20 dark:border-slate-700/60 rounded-xl p-4 shadow-sm h-fit'
+        className='bg-theme-card backdrop-blur-lg border border-theme-tertiary rounded-xl p-4 shadow-sm h-fit'
       >
-        <h3 className='text-lg font-bold text-slate-900 dark:text-slate-100 mb-4 flex items-center gap-2'>
+        <h3 className='text-lg font-bold text-theme-primary mb-4 flex items-center gap-2'>
           <div className='p-1.5 bg-gradient-to-r from-emerald-500 to-green-500 rounded-lg'>
             <TrendingUp className='h-4 w-4 text-white' />
           </div>
@@ -53,10 +53,10 @@ export default function TrendingOpportunities({
           <div className='mx-auto h-10 w-10 rounded-full bg-emerald-100 dark:bg-emerald-900/50 flex items-center justify-center mb-3'>
             <Target className='h-5 w-5 text-emerald-600 dark:text-emerald-400' />
           </div>
-          <h4 className='text-sm font-medium text-slate-900 dark:text-slate-100 mb-1'>
+          <h4 className='text-sm font-medium text-theme-primary mb-1'>
             No Opportunities Yet
           </h4>
-          <p className='text-xs text-slate-600 dark:text-slate-400'>
+          <p className='text-xs text-theme-secondary'>
             Create more content to discover trending opportunities!
           </p>
         </div>
@@ -71,15 +71,15 @@ export default function TrendingOpportunities({
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ delay: 0.5 }}
-      className='bg-white/95 dark:bg-slate-800/90 backdrop-blur-lg border border-white/20 dark:border-slate-700/60 rounded-xl p-4 shadow-sm h-fit'
+      className='bg-theme-card backdrop-blur-lg border border-theme-tertiary rounded-xl p-4 shadow-sm h-fit'
     >
-      <h3 className='text-lg font-bold text-slate-900 dark:text-slate-100 mb-4 flex items-center gap-2'>
+      <h3 className='text-lg font-bold text-theme-primary mb-4 flex items-center gap-2'>
         <div className='p-1.5 bg-gradient-to-r from-emerald-500 to-green-500 rounded-lg'>
           <TrendingUp className='h-4 w-4 text-white' />
         </div>
         <span className='text-sm'>Trending Opportunities</span>
         {opportunities.length > maxItems && (
-          <span className='ml-auto text-xs text-slate-500 dark:text-slate-400 bg-slate-100 dark:bg-slate-700 px-2 py-0.5 rounded-full'>
+          <span className='ml-auto text-xs text-theme-secondary bg-theme-secondary px-2 py-0.5 rounded-full'>
             +{opportunities.length - maxItems}
           </span>
         )}
@@ -92,14 +92,14 @@ export default function TrendingOpportunities({
             initial={{ opacity: 0, x: -10 }}
             animate={{ opacity: 1, x: 0 }}
             transition={{ delay: 0.6 + index * 0.1 }}
-            className='bg-white/60 dark:bg-slate-700/60 border border-white/40 dark:border-slate-600/40 rounded-lg p-3 hover:bg-white/80 dark:hover:bg-slate-600/70 transition-all duration-200 backdrop-blur-sm'
+            className='bg-theme-secondary/10 border border-theme-tertiary rounded-lg p-3 hover:bg-theme-secondary/20 transition-all duration-200 backdrop-blur-sm'
           >
             <div className='flex items-start justify-between mb-2'>
               <div className='flex-1 min-w-0 pr-2'>
-                <h4 className='font-medium text-slate-900 dark:text-slate-100 text-xs line-clamp-1'>
+                <h4 className='font-medium text-theme-primary text-xs line-clamp-1'>
                   {opportunity.trend.topic}
                 </h4>
-                <div className='flex items-center gap-1 mt-1 text-xs text-slate-600 dark:text-slate-400'>
+                <div className='flex items-center gap-1 mt-1 text-xs text-theme-secondary'>
                   <Clock className='h-3 w-3' />
                   <span className='text-xs'>
                     {opportunity.opportunity.timeWindow}
@@ -112,13 +112,13 @@ export default function TrendingOpportunities({
                     opportunity.opportunity.difficulty === 'easy'
                       ? 'bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-300'
                       : opportunity.opportunity.difficulty === 'medium'
-                      ? 'bg-yellow-100 dark:bg-yellow-900/30 text-yellow-700 dark:text-yellow-300'
+                      ? 'bg-gray-500 text-amber-300'
                       : 'bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-300'
                   }`}
                 >
                   {opportunity.opportunity.difficulty}
                 </span>
-                <span className='text-xs font-bold text-slate-900 dark:text-slate-100'>
+                <span className='text-xs font-bold text-theme-primary'>
                   {opportunity.opportunity.score}%
                 </span>
               </div>

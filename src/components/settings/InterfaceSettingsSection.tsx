@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { useSettings } from '@/src/context/SettingsContext';
-import { useTheme } from 'next-themes';
+import { useTheme } from '@/src/hooks/useTheme';
 import { InterfaceSettingsUpdate } from '@/src/types/settings';
 import {
   ChevronDownIcon,
@@ -34,13 +34,11 @@ const SelectField: React.FC<SelectFieldProps> = ({
   return (
     <div className='space-y-2'>
       <div>
-        <label className='text-sm font-medium text-gray-900 dark:text-gray-100'>
+        <label className='text-sm font-medium text-theme-primary'>
           {label}
         </label>
         {description && (
-          <p className='text-xs text-gray-500 dark:text-gray-400 mt-1'>
-            {description}
-          </p>
+          <p className='text-xs text-theme-muted mt-1'>{description}</p>
         )}
       </div>
 
@@ -48,24 +46,24 @@ const SelectField: React.FC<SelectFieldProps> = ({
         <button
           type='button'
           onClick={() => setIsOpen(!isOpen)}
-          className={`w-full border rounded-lg px-3 py-2 text-left shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 flex items-center justify-between ${
+          className={`w-full border rounded-lg px-3 py-2 text-left shadow-sm focus:outline-none focus:ring-2 focus:ring-accent-primary focus:border-accent-primary flex items-center justify-between ${
             error
-              ? 'border-red-300 dark:border-red-600 bg-red-50 dark:bg-red-900/20'
-              : 'border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800'
+              ? 'border-red-300 bg-red-50'
+              : 'border-theme-primary bg-theme-card'
           }`}
         >
-          <span className='text-gray-900 dark:text-gray-100'>
+          <span className='text-theme-primary'>
             {options.find((opt) => opt.value === value)?.label || 'Select...'}
           </span>
           <ChevronDownIcon
-            className={`h-4 w-4 text-gray-400 transition-transform ${
+            className={`h-4 w-4 text-theme-muted transition-transform ${
               isOpen ? 'rotate-180' : ''
             }`}
           />
         </button>
 
         {isOpen && (
-          <div className='absolute z-10 mt-1 w-full bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg shadow-lg'>
+          <div className='absolute z-10 mt-1 w-full bg-theme-card border border-theme-primary rounded-lg shadow-lg'>
             <div className='max-h-60 overflow-auto py-1'>
               {options.map((option) => (
                 <button
@@ -75,10 +73,10 @@ const SelectField: React.FC<SelectFieldProps> = ({
                     onChange(option.value);
                     setIsOpen(false);
                   }}
-                  className={`w-full text-left px-3 py-2 text-sm hover:bg-gray-100 dark:hover:bg-gray-700 ${
+                  className={`w-full text-left px-3 py-2 text-sm hover:bg-theme-hover ${
                     value === option.value
-                      ? 'bg-blue-50 dark:bg-blue-900/20 text-blue-700 dark:text-blue-300'
-                      : 'text-gray-900 dark:text-gray-100'
+                      ? 'bg-accent-primary/10 text-accent-primary'
+                      : 'text-theme-primary'
                   }`}
                 >
                   {option.label}
@@ -89,9 +87,7 @@ const SelectField: React.FC<SelectFieldProps> = ({
         )}
       </div>
 
-      {error && (
-        <p className='text-xs text-red-600 dark:text-red-400'>{error}</p>
-      )}
+      {error && <p className='text-xs text-red-600'>{error}</p>}
     </div>
   );
 };
@@ -140,13 +136,11 @@ const ThemeSelector: React.FC<ThemeSelectorProps> = ({
   return (
     <div className='space-y-3'>
       <div>
-        <label className='text-sm font-medium text-gray-900 dark:text-gray-100'>
+        <label className='text-sm font-medium text-theme-primary'>
           {label}
         </label>
         {description && (
-          <p className='text-xs text-gray-500 dark:text-gray-400 mt-1'>
-            {description}
-          </p>
+          <p className='text-xs text-theme-muted mt-1'>{description}</p>
         )}
       </div>
 
@@ -166,7 +160,7 @@ const ThemeSelector: React.FC<ThemeSelectorProps> = ({
             }`}
           >
             <Icon className='h-5 w-5 text-gray-600 dark:text-gray-400' />
-            <span className='text-sm font-medium text-gray-900 dark:text-gray-100'>
+            <span className='text-sm font-medium text-theme-primary'>
               {label}
             </span>
           </button>
@@ -403,11 +397,11 @@ const InterfaceSettingsSection: React.FC = () => {
     <div className='space-y-6'>
       {/* Unsaved Changes Banner */}
       {hasChanges && (
-        <div className='bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 rounded-lg p-4'>
+        <div className='bg-yellow-50 border border-yellow-200 rounded-lg p-4'>
           <div className='flex items-center justify-between'>
             <div className='flex items-center'>
               <div className='h-2 w-2 bg-yellow-400 rounded-full mr-3' />
-              <p className='text-sm font-medium text-yellow-800 dark:text-yellow-200'>
+              <p className='text-sm font-medium text-yellow-800'>
                 You have unsaved changes
               </p>
             </div>
@@ -415,7 +409,7 @@ const InterfaceSettingsSection: React.FC = () => {
               <button
                 onClick={handleDiscard}
                 disabled={isSaving}
-                className='text-sm text-yellow-700 dark:text-yellow-300 hover:text-yellow-900 dark:hover:text-yellow-100 disabled:opacity-50'
+                className='text-sm text-yellow-700 hover:text-yellow-900 disabled:opacity-50'
               >
                 Discard
               </button>
@@ -432,8 +426,8 @@ const InterfaceSettingsSection: React.FC = () => {
       )}
 
       {/* Theme Settings */}
-      <div className='bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-6'>
-        <h3 className='text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4'>
+      <div className='bg-theme-card rounded-lg border border-theme-primary p-6'>
+        <h3 className='text-lg font-semibold text-theme-primary mb-4'>
           Appearance
         </h3>
 
@@ -447,8 +441,8 @@ const InterfaceSettingsSection: React.FC = () => {
       </div>
 
       {/* Layout Settings */}
-      <div className='bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-6'>
-        <h3 className='text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4'>
+      <div className='bg-theme-card rounded-lg border border-theme-primary p-6'>
+        <h3 className='text-lg font-semibold text-theme-primary mb-4'>
           Layout & Navigation
         </h3>
 
@@ -484,8 +478,8 @@ const InterfaceSettingsSection: React.FC = () => {
       </div>
 
       {/* Display Preferences */}
-      <div className='bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-6'>
-        <h3 className='text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4'>
+      <div className='bg-theme-card rounded-lg border border-theme-primary p-6'>
+        <h3 className='text-lg font-semibold text-theme-primary mb-4'>
           Display Preferences
         </h3>
 

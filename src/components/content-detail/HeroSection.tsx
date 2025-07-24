@@ -14,7 +14,7 @@ interface HeroSectionProps {
 
 export const HeroSection: React.FC<HeroSectionProps> = ({ content }) => {
   return (
-    <div className='bg-white rounded-2xl shadow-sm border border-white/20 backdrop-blur-sm mb-8 overflow-hidden'>
+    <div className='bg-theme-card rounded-2xl shadow-sm border border-theme-primary/20 backdrop-blur-sm mb-8 overflow-hidden'>
       <div
         className={`bg-gradient-to-r ${getContentTypeGradient(
           content.type
@@ -26,7 +26,7 @@ export const HeroSection: React.FC<HeroSectionProps> = ({ content }) => {
             <span
               className={`px-4 py-2 rounded-full text-sm font-semibold border ${getStatusStyle(
                 content.status
-              )} bg-white/90`}
+              )}`}
             >
               {content.status.replace('_', ' ')}
             </span>

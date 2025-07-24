@@ -68,7 +68,7 @@ export const getStatusStyle = (status: string): string => {
     case 'scheduled':
       return 'bg-blue-50 text-blue-700 border-blue-200';
     case 'draft':
-      return 'bg-amber-50 text-amber-700 border-amber-200';
+      return 'bg-gray-500 text-amber-300 border-gray-600';
     case 'archived':
       return 'bg-gray-50 text-gray-700 border-gray-200';
     default:

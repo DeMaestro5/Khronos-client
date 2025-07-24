@@ -65,16 +65,16 @@ const TrendCard: React.FC<TrendCardProps> = ({ trend, onClick }) => {
 
   return (
     <Card
-      className='bg-white/95 dark:bg-slate-800/90 backdrop-blur-sm border border-slate-200/60 dark:border-slate-700/60 hover:shadow-xl dark:hover:shadow-slate-900/40 transition-all duration-300 cursor-pointer group transform hover:-translate-y-2'
+      className='bg-theme-card/95 backdrop-blur-sm border border-theme-tertiary hover:shadow-xl transition-all duration-300 cursor-pointer group transform hover:-translate-y-2'
       onClick={() => onClick(trend)}
     >
       <CardContent className='p-6'>
         <div className='flex items-start justify-between mb-4'>
           <div className='flex-1'>
-            <h3 className='font-bold text-gray-900 dark:text-slate-100 group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors text-lg'>
+            <h3 className='font-bold text-theme-primary group-hover:text-accent-primary transition-colors text-lg'>
               #{trend.keyword}
             </h3>
-            <p className='text-sm text-gray-600 dark:text-slate-400 capitalize mt-1'>
+            <p className='text-sm text-theme-secondary capitalize mt-1'>
               {trend.category}
             </p>
           </div>
@@ -85,32 +85,28 @@ const TrendCard: React.FC<TrendCardProps> = ({ trend, onClick }) => {
         </div>
 
         <div className='grid grid-cols-2 gap-4 mb-4'>
-          <div className='bg-slate-50 dark:bg-slate-700/50 rounded-lg p-3 backdrop-blur-sm'>
+          <div className='bg-theme-secondary rounded-lg p-3 backdrop-blur-sm'>
             <div className='flex items-center space-x-2 mb-1'>
-              <Users className='w-4 h-4 text-blue-500 dark:text-blue-400' />
-              <span className='text-xs text-gray-500 dark:text-slate-400'>
-                Volume
-              </span>
+              <Users className='w-4 h-4 text-accent-primary' />
+              <span className='text-xs text-theme-secondary'>Volume</span>
             </div>
-            <p className='text-lg font-bold text-gray-900 dark:text-slate-100'>
+            <p className='text-lg font-bold text-theme-primary'>
               {formatNumber(trend.volume)}
             </p>
           </div>
 
-          <div className='bg-slate-50 dark:bg-slate-700/50 rounded-lg p-3 backdrop-blur-sm'>
+          <div className='bg-theme-secondary rounded-lg p-3 backdrop-blur-sm'>
             <div className='flex items-center space-x-2 mb-1'>
               {getGrowthIcon(trend.growth)}
-              <span className='text-xs text-gray-500 dark:text-slate-400'>
-                Growth
-              </span>
+              <span className='text-xs text-theme-secondary'>Growth</span>
             </div>
             <p
               className={`text-lg font-bold ${
                 trend.growth > 0
-                  ? 'text-emerald-600 dark:text-emerald-400'
+                  ? 'text-emerald-600'
                   : trend.growth < 0
-                  ? 'text-red-600 dark:text-red-400'
-                  : 'text-gray-600 dark:text-slate-400'
+                  ? 'text-red-600'
+                  : 'text-theme-secondary'
               }`}
             >
               {formatPercentage(trend.growth)}
@@ -118,37 +114,37 @@ const TrendCard: React.FC<TrendCardProps> = ({ trend, onClick }) => {
           </div>
         </div>
 
-        <div className='flex items-center justify-between pt-3 border-t border-gray-200 dark:border-slate-600'>
+        <div className='flex items-center justify-between pt-3 border-t border-theme-tertiary'>
           <div className='flex items-center space-x-2'>
-            <Globe className='w-4 h-4 text-gray-500 dark:text-slate-400' />
-            <span className='text-sm text-gray-600 dark:text-slate-400 capitalize'>
+            <Globe className='w-4 h-4 text-theme-muted' />
+            <span className='text-sm text-theme-secondary capitalize'>
               {trend.platform || 'All Platforms'}
             </span>
           </div>
           <div className='flex items-center space-x-1'>
             {getSentimentIcon(trend.sentiment)}
-            <span className='text-sm text-gray-600 dark:text-slate-400 capitalize'>
+            <span className='text-sm text-theme-secondary capitalize'>
               {trend.sentiment}
             </span>
           </div>
         </div>
 
         {trend.relatedTopics && trend.relatedTopics.length > 0 && (
-          <div className='mt-4 pt-3 border-t border-gray-200 dark:border-slate-600'>
-            <span className='text-xs text-gray-500 dark:text-slate-400 mb-2 block'>
+          <div className='mt-4 pt-3 border-t border-theme-tertiary'>
+            <span className='text-xs text-theme-secondary mb-2 block'>
               Related Topics:
             </span>
             <div className='flex flex-wrap gap-1'>
               {trend.relatedTopics.slice(0, 3).map((topic, index) => (
                 <span
                   key={index}
-                  className='px-2 py-1 bg-blue-50 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 text-xs rounded-md border border-blue-200 dark:border-blue-700'
+                  className='px-2 py-1 bg-accent-primary/10 text-accent-primary text-xs rounded-md border border-accent-primary/20'
                 >
                   {topic}
                 </span>
               ))}
               {trend.relatedTopics.length > 3 && (
-                <span className='px-2 py-1 bg-gray-50 dark:bg-slate-700/50 text-gray-600 dark:text-slate-400 text-xs rounded-md'>
+                <span className='px-2 py-1 bg-theme-secondary text-theme-secondary text-xs rounded-md'>
                   +{trend.relatedTopics.length - 3} more
                 </span>
               )}

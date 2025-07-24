@@ -147,14 +147,14 @@ export default function ContentPage() {
   }
 
   return (
-    <div className='p-3 sm:p-4 lg:p-6 space-y-4 sm:space-y-6 bg-white dark:bg-slate-900 transition-colors duration-200'>
+    <div className='p-3 sm:p-4 lg:p-6 space-y-4 sm:space-y-6 bg-theme-primary transition-colors duration-200'>
       {/* Header */}
       <div className='flex flex-col space-y-3 sm:space-y-4 lg:flex-row lg:items-center lg:justify-between lg:space-y-0 gap-4'>
         <div className='text-center sm:text-left'>
-          <h1 className='text-xl sm:text-2xl lg:text-3xl font-bold text-gray-900 dark:text-slate-100'>
+          <h1 className='text-xl sm:text-2xl lg:text-3xl font-bold text-theme-primary'>
             Content Library
           </h1>
-          <p className='text-sm sm:text-base text-gray-600 dark:text-slate-400 mt-1'>
+          <p className='text-sm sm:text-base text-theme-secondary mt-1'>
             Manage and organize all your content in one place
           </p>
         </div>
@@ -178,7 +178,7 @@ export default function ContentPage() {
             placeholder='Search content...'
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className='w-full pl-10 pr-4 py-3 border border-gray-300 dark:border-slate-600 rounded-xl focus:ring-2 text-gray-900 dark:text-slate-100 focus:ring-purple-500 dark:focus:ring-blue-500 focus:border-transparent placeholder:text-gray-500 dark:placeholder:text-slate-400 text-sm bg-white dark:bg-slate-800 shadow-sm transition-all duration-200'
+            className='w-full pl-10 pr-4 py-3 border border-theme-primary rounded-xl focus:ring-2 text-theme-primary focus:ring-accent-primary focus:border-transparent placeholder:text-theme-muted text-sm bg-theme-card shadow-theme-sm transition-all duration-200'
           />
         </div>
 
@@ -206,20 +206,20 @@ export default function ContentPage() {
             className='text-center py-8 sm:py-12'
           >
             <div className='max-w-md mx-auto px-4'>
-              <div className='w-12 h-12 sm:w-16 sm:h-16 bg-gray-100 dark:bg-slate-800 rounded-full flex items-center justify-center mx-auto mb-4'>
+              <div className='w-12 h-12 sm:w-16 sm:h-16 bg-theme-secondary rounded-full flex items-center justify-center mx-auto mb-4'>
                 <FileText className='w-6 h-6 sm:w-8 sm:h-8 text-gray-400 dark:text-slate-500' />
               </div>
-              <h3 className='text-base sm:text-lg font-medium text-gray-900 dark:text-slate-100 mb-2'>
+              <h3 className='text-base sm:text-lg font-medium text-theme-primary mb-2'>
                 No content found
               </h3>
-              <p className='text-sm sm:text-base text-gray-600 dark:text-slate-400 mb-4'>
+              <p className='text-sm sm:text-base text-theme-secondary mb-4'>
                 {searchQuery || statusFilter !== 'all' || typeFilter !== 'all'
                   ? 'Try adjusting your search or filters'
                   : "You haven't created any content yet"}
               </p>
               <button
                 onClick={() => setShowModal(true)}
-                className='inline-flex items-center px-4 py-2 bg-purple-600 dark:bg-blue-600 hover:bg-purple-700 dark:hover:bg-blue-700 text-white text-sm font-medium rounded-lg transition-colors duration-200'
+                className='inline-flex items-center px-4 py-2 bg-accent-primary hover:bg-accent-secondary text-theme-inverse text-sm font-medium rounded-lg transition-colors duration-200'
               >
                 <Plus className='w-4 h-4 mr-2' />
                 Create Your First Content

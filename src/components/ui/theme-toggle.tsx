@@ -1,44 +1,48 @@
 'use client';
 
-import { useState, useEffect } from 'react';
-import { useTheme } from 'next-themes';
+import { useState } from 'react';
 import { Sun, Moon, Monitor, Check } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { useTheme } from '@/src/hooks/useTheme';
 
 interface ThemeToggleProps {
-  variant?: 'compact' | 'dropdown' | 'tabs';
+  variant?: 'compact' | 'dropdown' | 'tabs' | 'button';
   showLabels?: boolean;
   size?: 'sm' | 'md' | 'lg';
+  className?: string;
 }
 
 export function ThemeToggle({
   variant = 'tabs',
   showLabels = true,
   size = 'md',
+  className = '',
 }: ThemeToggleProps) {
-  const [mounted, setMounted] = useState(false);
+  const { theme, setTheme, mounted } = useTheme();
   const [dropdownOpen, setDropdownOpen] = useState(false);
-  const { setTheme, theme } = useTheme();
 
-  useEffect(() => {
-    setMounted(true);
-  }, []);
-
+  // Prevent hydration mismatch
   if (!mounted) {
     return (
       <div
         className={`
-        ${variant === 'compact' ? 'w-10 h-10' : 'w-32 h-10'} 
-        bg-gray-200 dark:bg-slate-700 rounded-lg animate-pulse
-      `}
+          ${
+            variant === 'compact'
+              ? 'w-10 h-10'
+              : variant === 'button'
+              ? 'w-10 h-10'
+              : 'w-32 h-10'
+          } 
+          bg-gray-200 dark:bg-slate-700 rounded-lg animate-pulse ${className}
+        `}
       />
     );
   }
 
   const themes = [
-    { key: 'light', icon: Sun, label: 'Light' },
-    { key: 'dark', icon: Moon, label: 'Dark' },
-    { key: 'system', icon: Monitor, label: 'System' },
+    { key: 'light' as const, icon: Sun, label: 'Light' },
+    { key: 'dark' as const, icon: Moon, label: 'Dark' },
+    { key: 'system' as const, icon: Monitor, label: 'System' },
   ];
 
   const currentTheme = themes.find((t) => t.key === theme);
@@ -56,52 +60,48 @@ export function ThemeToggle({
     lg: 'h-5 w-5',
   };
 
+  // Compact variant - just an icon button
   if (variant === 'compact') {
     return (
       <button
-        onClick={() => {
-          const nextTheme =
-            theme === 'light' ? 'dark' : theme === 'dark' ? 'system' : 'light';
-          setTheme(nextTheme);
-        }}
+        onClick={() => setTheme(theme === 'light' ? 'dark' : 'light')}
+        disabled={false}
         className={`
           flex items-center justify-center ${sizeClasses[size]}
           text-gray-600 dark:text-slate-400 
-          hover:text-indigo-600 dark:hover:text-indigo-400 
-          hover:bg-gray-100 dark:hover:bg-slate-800 
+          hover:text-accent-primary dark:hover:text-accent-primary
+          hover:bg-interactive-hover dark:hover:bg-interactive-hover
           rounded-lg transition-all duration-200 
-          focus:outline-none focus:ring-2 focus:ring-indigo-500/20
+          focus:outline-none focus:ring-2 focus:ring-accent-primary/20
+          disabled:opacity-50 disabled:cursor-not-allowed
+          ${className}
         `}
-        title={`Current: ${currentTheme?.label}. Click to cycle themes.`}
+        title={`Current: ${currentTheme?.label}. Click to change theme.`}
       >
-        <motion.div
-          key={theme}
-          initial={{ rotate: -90, opacity: 0 }}
-          animate={{ rotate: 0, opacity: 1 }}
-          transition={{ duration: 0.2 }}
-        >
-          <Icon className={iconSizes[size]} />
-        </motion.div>
+        <Icon className={iconSizes[size]} />
       </button>
     );
   }
 
-  if (variant === 'dropdown') {
+  // Button variant - single button with icon and optional label
+  if (variant === 'button') {
     return (
-      <div className='relative'>
+      <div className={`relative ${className}`}>
         <button
           onClick={() => setDropdownOpen(!dropdownOpen)}
+          disabled={false}
           className={`
-            flex items-center gap-2 ${sizeClasses[size]}
+            flex items-center justify-center ${sizeClasses[size]}
             text-gray-600 dark:text-slate-400 
-            hover:text-indigo-600 dark:hover:text-indigo-400 
-            hover:bg-gray-100 dark:hover:bg-slate-800 
+            hover:text-accent-primary dark:hover:text-accent-primary
+            hover:bg-interactive-hover dark:hover:bg-interactive-hover
             rounded-lg transition-all duration-200 
-            focus:outline-none focus:ring-2 focus:ring-indigo-500/20
+            focus:outline-none focus:ring-2 focus:ring-accent-primary/20
+            disabled:opacity-50 disabled:cursor-not-allowed
           `}
+          title={`Current: ${currentTheme?.label}. Click to change theme.`}
         >
           <Icon className={iconSizes[size]} />
-          {showLabels && <span>{currentTheme?.label}</span>}
         </button>
 
         <AnimatePresence>
@@ -110,7 +110,8 @@ export function ThemeToggle({
               initial={{ opacity: 0, scale: 0.95, y: -10 }}
               animate={{ opacity: 1, scale: 1, y: 0 }}
               exit={{ opacity: 0, scale: 0.95, y: -10 }}
-              className='absolute top-full mt-2 right-0 bg-white dark:bg-slate-800 rounded-lg shadow-lg border border-gray-200 dark:border-slate-700 py-1 z-50'
+              transition={{ duration: 0.15 }}
+              className='absolute right-0 top-full mt-2 w-48 bg-white dark:bg-slate-800 rounded-lg shadow-lg border border-gray-200 dark:border-slate-700 py-1 z-50'
             >
               {themes.map(({ key, icon: ThemeIcon, label }) => (
                 <button
@@ -121,11 +122,11 @@ export function ThemeToggle({
                   }}
                   className={`
                     flex items-center gap-2 w-full px-3 py-2 text-sm
-                    hover:bg-gray-100 dark:hover:bg-slate-700
+                    hover:bg-interactive-hover dark:hover:bg-interactive-hover
                     transition-colors duration-150
                     ${
                       theme === key
-                        ? 'text-indigo-600 dark:text-indigo-400'
+                        ? 'text-accent-primary dark:text-accent-primary'
                         : 'text-gray-700 dark:text-slate-300'
                     }
                   `}
@@ -149,20 +150,91 @@ export function ThemeToggle({
     );
   }
 
-  // Tabs variant (default)
+  // Dropdown variant - button with dropdown
+  if (variant === 'dropdown') {
+    return (
+      <div className={`relative ${className}`}>
+        <button
+          onClick={() => setDropdownOpen(!dropdownOpen)}
+          disabled={false}
+          className={`
+            flex items-center gap-2 px-3 py-2 rounded-lg
+            text-theme-primary
+            hover:bg-theme-hover
+            transition-all duration-200
+            focus:outline-none focus:ring-2 focus:ring-accent-primary/20
+            disabled:opacity-50 disabled:cursor-not-allowed
+            border border-theme-primary
+          `}
+        >
+          <Icon className={iconSizes[size]} />
+          {showLabels && <span>{currentTheme?.label}</span>}
+        </button>
+
+        <AnimatePresence>
+          {dropdownOpen && (
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95, y: -10 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.95, y: -10 }}
+              transition={{ duration: 0.15 }}
+              className='absolute right-0 top-full mt-2 w-48 bg-white dark:bg-slate-800 rounded-lg shadow-lg border border-gray-200 dark:border-slate-700 py-1 z-50'
+            >
+              {themes.map(({ key, icon: ThemeIcon, label }) => (
+                <button
+                  key={key}
+                  onClick={() => {
+                    setTheme(key);
+                    setDropdownOpen(false);
+                  }}
+                  className={`
+                    flex items-center gap-2 w-full px-3 py-2 text-sm
+                    hover:bg-interactive-hover dark:hover:bg-interactive-hover
+                    transition-colors duration-150
+                    ${
+                      theme === key
+                        ? 'text-accent-primary dark:text-accent-primary'
+                        : 'text-gray-700 dark:text-slate-300'
+                    }
+                  `}
+                >
+                  <ThemeIcon className='h-4 w-4' />
+                  <span className='flex-1 text-left'>{label}</span>
+                  {theme === key && <Check className='h-3 w-3' />}
+                </button>
+              ))}
+            </motion.div>
+          )}
+        </AnimatePresence>
+
+        {dropdownOpen && (
+          <div
+            className='fixed inset-0 z-40'
+            onClick={() => setDropdownOpen(false)}
+          />
+        )}
+      </div>
+    );
+  }
+
+  // Tabs variant (default) - three buttons side by side
   return (
-    <div className='flex items-center bg-gray-100 dark:bg-slate-800 rounded-lg p-1 border border-gray-200 dark:border-slate-700 shadow-sm'>
+    <div
+      className={`flex items-center bg-theme-secondary rounded-lg p-1 border border-theme-primary shadow-theme-sm ${className}`}
+    >
       {themes.map(({ key, icon: ThemeIcon, label }) => (
         <motion.button
           key={key}
           onClick={() => setTheme(key)}
+          disabled={false}
           className={`
             flex items-center gap-1.5 px-3 py-2 rounded-md ${sizeClasses[size]}
             font-medium transition-all duration-200
+            disabled:opacity-50 disabled:cursor-not-allowed
             ${
               theme === key
-                ? 'bg-white dark:bg-slate-700 text-gray-900 dark:text-slate-100 shadow-sm border border-gray-200 dark:border-slate-600'
-                : 'text-gray-600 dark:text-slate-400 hover:bg-gray-50 dark:hover:bg-slate-700 hover:text-gray-900 dark:hover:text-slate-200'
+                ? 'bg-theme-card text-theme-primary shadow-theme-sm border border-theme-primary'
+                : 'text-theme-secondary hover:bg-theme-hover hover:text-theme-primary'
             }
           `}
           whileTap={{ scale: 0.95 }}
@@ -175,5 +247,3 @@ export function ThemeToggle({
     </div>
   );
 }
-
-export default ThemeToggle;

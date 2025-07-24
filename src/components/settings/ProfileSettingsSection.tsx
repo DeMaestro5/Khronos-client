@@ -35,12 +35,12 @@ const InputField: React.FC<InputFieldProps> = ({
   return (
     <div className='space-y-2'>
       <div className='flex items-center justify-between'>
-        <label className='text-sm font-medium text-gray-900 dark:text-gray-100'>
+        <label className='text-sm font-medium text-theme-primary'>
           {label}
           {required && <span className='text-red-500 ml-1'>*</span>}
         </label>
         {maxLength && (
-          <span className='text-xs text-gray-500 dark:text-gray-400'>
+          <span className='text-xs text-theme-muted'>
             {value.length}/{maxLength}
           </span>
         )}
@@ -53,18 +53,18 @@ const InputField: React.FC<InputFieldProps> = ({
           onChange={(e) => onChange(e.target.value)}
           placeholder={placeholder}
           maxLength={maxLength}
-          className={`w-full px-3 py-2 border rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 ${
+          className={`w-full px-3 py-2 border rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-accent-primary focus:border-accent-primary ${
             error
-              ? 'border-red-300 dark:border-red-600 bg-red-50 dark:bg-red-900/20'
-              : 'border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800'
-          } text-gray-900 dark:text-gray-100 placeholder-gray-500 dark:placeholder-gray-400`}
+              ? 'border-red-300 bg-red-50'
+              : 'border-theme-primary bg-theme-card'
+          } text-theme-primary placeholder-theme-muted`}
         />
 
         {type === 'password' && (
           <button
             type='button'
             onClick={() => setShowPassword(!showPassword)}
-            className='absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300'
+            className='absolute right-3 top-1/2 transform -translate-y-1/2 text-theme-muted hover:text-theme-primary'
           >
             {showPassword ? (
               <EyeSlashIcon className='h-4 w-4' />
@@ -75,15 +75,9 @@ const InputField: React.FC<InputFieldProps> = ({
         )}
       </div>
 
-      {description && (
-        <p className='text-xs text-gray-500 dark:text-gray-400'>
-          {description}
-        </p>
-      )}
+      {description && <p className='text-xs text-theme-muted'>{description}</p>}
 
-      {error && (
-        <p className='text-xs text-red-600 dark:text-red-400'>{error}</p>
-      )}
+      {error && <p className='text-xs text-red-600'>{error}</p>}
     </div>
   );
 };
@@ -110,11 +104,11 @@ const TextAreaField: React.FC<TextAreaFieldProps> = ({
   return (
     <div className='space-y-2'>
       <div className='flex items-center justify-between'>
-        <label className='text-sm font-medium text-gray-900 dark:text-gray-100'>
+        <label className='text-sm font-medium text-theme-primary'>
           {label}
         </label>
         {maxLength && (
-          <span className='text-xs text-gray-500 dark:text-gray-400'>
+          <span className='text-xs text-theme-muted'>
             {value.length}/{maxLength}
           </span>
         )}
@@ -126,14 +120,10 @@ const TextAreaField: React.FC<TextAreaFieldProps> = ({
         placeholder={placeholder}
         maxLength={maxLength}
         rows={rows}
-        className='w-full px-3 py-2 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-gray-900 dark:text-gray-100 placeholder-gray-500 dark:placeholder-gray-400 resize-none'
+        className='w-full px-3 py-2 border border-theme-primary bg-theme-card rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-accent-primary focus:border-accent-primary text-theme-primary placeholder-theme-muted resize-none'
       />
 
-      {description && (
-        <p className='text-xs text-gray-500 dark:text-gray-400'>
-          {description}
-        </p>
-      )}
+      {description && <p className='text-xs text-theme-muted'>{description}</p>}
     </div>
   );
 };
@@ -158,13 +148,11 @@ const SelectField: React.FC<SelectFieldProps> = ({
   return (
     <div className='space-y-2'>
       <div>
-        <label className='text-sm font-medium text-gray-900 dark:text-gray-100'>
+        <label className='text-sm font-medium text-theme-primary'>
           {label}
         </label>
         {description && (
-          <p className='text-xs text-gray-500 dark:text-gray-400 mt-1'>
-            {description}
-          </p>
+          <p className='text-xs text-theme-muted mt-1'>{description}</p>
         )}
       </div>
 
@@ -172,13 +160,13 @@ const SelectField: React.FC<SelectFieldProps> = ({
         <button
           type='button'
           onClick={() => setIsOpen(!isOpen)}
-          className='w-full bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg px-3 py-2 text-left shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 flex items-center justify-between'
+          className='w-full bg-theme-card border border-theme-primary rounded-lg px-3 py-2 text-left shadow-sm focus:outline-none focus:ring-2 focus:ring-accent-primary focus:border-accent-primary flex items-center justify-between'
         >
-          <span className='text-gray-900 dark:text-gray-100'>
+          <span className='text-theme-primary'>
             {options.find((opt) => opt.value === value)?.label || 'Select...'}
           </span>
           <svg
-            className='h-4 w-4 text-gray-400'
+            className='h-4 w-4 text-theme-muted'
             fill='none'
             stroke='currentColor'
             viewBox='0 0 24 24'
@@ -193,7 +181,7 @@ const SelectField: React.FC<SelectFieldProps> = ({
         </button>
 
         {isOpen && (
-          <div className='absolute z-10 mt-1 w-full bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg shadow-lg'>
+          <div className='absolute z-10 mt-1 w-full bg-theme-card border border-theme-primary rounded-lg shadow-lg'>
             <div className='max-h-60 overflow-auto py-1'>
               {options.map((option) => (
                 <button
@@ -203,10 +191,10 @@ const SelectField: React.FC<SelectFieldProps> = ({
                     onChange(option.value);
                     setIsOpen(false);
                   }}
-                  className={`w-full text-left px-3 py-2 text-sm hover:bg-gray-100 dark:hover:bg-gray-700 ${
+                  className={`w-full text-left px-3 py-2 text-sm hover:bg-theme-hover ${
                     value === option.value
-                      ? 'bg-blue-50 dark:bg-blue-900/20 text-blue-700 dark:text-blue-300'
-                      : 'text-gray-900 dark:text-gray-100'
+                      ? 'bg-accent-primary/10 text-accent-primary'
+                      : 'text-theme-primary'
                   }`}
                 >
                   {option.label}
@@ -447,8 +435,8 @@ const ProfileSettingsSection: React.FC = () => {
       )}
 
       {/* Basic Information */}
-      <div className='bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-6'>
-        <h3 className='text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4'>
+      <div className='bg-theme-card rounded-lg border border-theme-primary p-6'>
+        <h3 className='text-lg font-semibold text-theme-primary mb-4'>
           Basic Information
         </h3>
 
@@ -499,8 +487,8 @@ const ProfileSettingsSection: React.FC = () => {
       </div>
 
       {/* Language & Regional Preferences */}
-      <div className='bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-6'>
-        <h3 className='text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4'>
+      <div className='bg-theme-card rounded-lg border border-theme-primary p-6'>
+        <h3 className='text-lg font-semibold text-theme-primary mb-4'>
           Language & Regional Preferences
         </h3>
 

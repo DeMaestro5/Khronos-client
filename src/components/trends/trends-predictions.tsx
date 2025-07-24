@@ -30,19 +30,21 @@ const TrendsPredictions: React.FC<TrendsPredictionsProps> = ({
 
   return (
     <div className='mb-8'>
-      <h2 className='text-2xl font-bold text-gray-900 mb-6'>AI Predictions</h2>
+      <h2 className='text-2xl font-bold text-theme-primary mb-6'>
+        AI Predictions
+      </h2>
       <div className='grid grid-cols-1 lg:grid-cols-2 gap-6'>
         {predictions.map((prediction, index) => (
           <Card
             key={index}
-            className='bg-gradient-to-br from-indigo-50 to-purple-50 border-indigo-200 shadow-lg'
+            className='bg-gradient-to-br from-indigo-50 to-purple-50 border border-theme-tertiary shadow-lg'
           >
             <CardHeader>
               <CardTitle className='flex items-center space-x-2'>
                 <div className='p-2 bg-indigo-100 rounded-xl'>
                   <Target className='w-5 h-5 text-indigo-600' />
                 </div>
-                <span className='text-gray-900'>
+                <span className='text-theme-primary'>
                   Prediction for &quot;{prediction.keyword}&quot;
                 </span>
               </CardTitle>

@@ -87,8 +87,8 @@ const ContentEditModal: React.FC<ContentEditModalProps> = ({
       value: 'draft',
       label: 'Draft',
       icon: '📝',
-      color: 'border-amber-200 bg-amber-50 text-amber-700',
-      activeColor: 'border-amber-500 bg-amber-100 text-amber-800',
+      color: 'border-gray-600 bg-gray-500 text-amber-300',
+      activeColor: 'border-gray-700 bg-gray-600 text-amber-200',
     },
     {
       value: 'scheduled',
