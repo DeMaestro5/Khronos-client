@@ -47,7 +47,7 @@ export default function PerformanceInsights({
       case 'good':
         return 'text-blue-600 dark:text-blue-400';
       case 'needs_improvement':
-        return 'text-yellow-600 dark:text-yellow-400';
+        return 'text-amber-900 dark:text-amber-400';
       default:
         return 'text-slate-600 dark:text-slate-400';
     }
@@ -63,7 +63,7 @@ export default function PerformanceInsights({
         return <Target className='h-4 w-4 text-blue-600 dark:text-blue-400' />;
       case 'needs_improvement':
         return (
-          <AlertCircle className='h-4 w-4 text-yellow-600 dark:text-yellow-400' />
+          <AlertCircle className='h-4 w-4 text-amber-600 dark:text-amber-400' />
         );
       default:
         return (
@@ -77,9 +77,9 @@ export default function PerformanceInsights({
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ delay: 0.7 }}
-      className='bg-white/95 dark:bg-slate-800/90 backdrop-blur-lg border border-white/20 dark:border-slate-700/60 rounded-2xl p-6 shadow-lg'
+      className='bg-theme-card backdrop-blur-lg border border-theme-tertiary rounded-2xl p-6 shadow-lg'
     >
-      <h3 className='text-xl font-bold text-slate-900 dark:text-slate-100 mb-6 flex items-center gap-2'>
+      <h3 className='text-xl font-bold text-theme-primary mb-6 flex items-center gap-2'>
         <div className='p-2 bg-gradient-to-r from-blue-500 to-indigo-500 rounded-lg'>
           <Activity className='h-5 w-5 text-white' />
         </div>
@@ -92,20 +92,16 @@ export default function PerformanceInsights({
           initial={{ opacity: 0, scale: 0.95 }}
           animate={{ opacity: 1, scale: 1 }}
           transition={{ delay: 0.8 }}
-          className='bg-white/60 dark:bg-slate-700/60 border border-white/40 dark:border-slate-600/40 rounded-xl p-4 hover:bg-white/80 dark:hover:bg-slate-600/70 transition-all duration-200 backdrop-blur-sm'
+          className='bg-theme-secondary/10 border border-theme-tertiary rounded-xl p-4 hover:bg-theme-secondary/20 transition-all duration-200 backdrop-blur-sm'
         >
           <div className='flex items-center gap-2 mb-2'>
             <TrendingUp className='h-4 w-4 text-emerald-600 dark:text-emerald-400' />
-            <h4 className='font-semibold text-slate-900 dark:text-slate-100'>
-              Growth Metric
-            </h4>
+            <h4 className='font-semibold text-theme-primary'>Growth Metric</h4>
           </div>
-          <p className='text-2xl font-bold text-slate-900 dark:text-slate-100 capitalize'>
+          <p className='text-2xl font-bold text-theme-primary capitalize'>
             {performance.insights.topGrowthMetric}
           </p>
-          <p className='text-xs text-slate-600 dark:text-slate-400'>
-            Top performing area
-          </p>
+          <p className='text-xs text-theme-secondary'>Top performing area</p>
         </motion.div>
 
         {/* Performance Status */}
@@ -113,13 +109,11 @@ export default function PerformanceInsights({
           initial={{ opacity: 0, scale: 0.95 }}
           animate={{ opacity: 1, scale: 1 }}
           transition={{ delay: 0.85 }}
-          className='bg-white/60 dark:bg-slate-700/60 border border-white/40 dark:border-slate-600/40 rounded-xl p-4 hover:bg-white/80 dark:hover:bg-slate-600/70 transition-all duration-200 backdrop-blur-sm'
+          className='bg-theme-secondary/10 border border-theme-tertiary rounded-xl p-4 hover:bg-theme-secondary/20 transition-all duration-200 backdrop-blur-sm'
         >
           <div className='flex items-center gap-2 mb-2'>
             {getStatusIcon(performance.insights.performanceStatus)}
-            <h4 className='font-semibold text-slate-900 dark:text-slate-100'>
-              Status
-            </h4>
+            <h4 className='font-semibold text-theme-primary'>Status</h4>
           </div>
           <p
             className={`text-2xl font-bold capitalize ${getStatusColor(
@@ -128,9 +122,7 @@ export default function PerformanceInsights({
           >
             {performance.insights.performanceStatus}
           </p>
-          <p className='text-xs text-slate-600 dark:text-slate-400'>
-            Overall performance
-          </p>
+          <p className='text-xs text-theme-secondary'>Overall performance</p>
         </motion.div>
 
         {/* Recommendation */}
@@ -138,20 +130,16 @@ export default function PerformanceInsights({
           initial={{ opacity: 0, scale: 0.95 }}
           animate={{ opacity: 1, scale: 1 }}
           transition={{ delay: 0.9 }}
-          className='bg-white/60 dark:bg-slate-700/60 border border-white/40 dark:border-slate-600/40 rounded-xl p-4 hover:bg-white/80 dark:hover:bg-slate-600/70 transition-all duration-200 backdrop-blur-sm'
+          className='bg-theme-secondary/10 border border-theme-tertiary rounded-xl p-4 hover:bg-theme-secondary/20 transition-all duration-200 backdrop-blur-sm'
         >
           <div className='flex items-center gap-2 mb-2'>
             <Target className='h-4 w-4 text-purple-600 dark:text-purple-400' />
-            <h4 className='font-semibold text-slate-900 dark:text-slate-100'>
-              Recommendation
-            </h4>
+            <h4 className='font-semibold text-theme-primary'>Recommendation</h4>
           </div>
-          <p className='text-sm font-medium text-slate-900 dark:text-slate-100 capitalize'>
+          <p className='text-sm font-medium text-theme-primary capitalize'>
             {performance.insights.contentRecommendation.replace('_', ' ')}
           </p>
-          <p className='text-xs text-slate-600 dark:text-slate-400'>
-            Next action
-          </p>
+          <p className='text-xs text-theme-secondary'>Next action</p>
         </motion.div>
       </div>
 
@@ -160,33 +148,25 @@ export default function PerformanceInsights({
         initial={{ opacity: 0, y: 10 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.95 }}
-        className='bg-white/50 dark:bg-slate-700/50 border border-white/50 dark:border-slate-600/50 rounded-xl p-4 backdrop-blur-sm'
+        className='bg-theme-secondary/10 border border-theme-tertiary rounded-xl p-4 backdrop-blur-sm'
       >
-        <h4 className='font-semibold text-slate-900 dark:text-slate-100 mb-3'>
-          Key Metrics
-        </h4>
+        <h4 className='font-semibold text-theme-primary mb-3'>Key Metrics</h4>
         <div className='grid grid-cols-1 md:grid-cols-3 gap-4 text-sm'>
           <div className='flex justify-between items-center'>
-            <span className='text-slate-600 dark:text-slate-400'>
-              Engagement Rate:
-            </span>
-            <span className='font-medium text-slate-900 dark:text-slate-100'>
+            <span className='text-theme-secondary'>Engagement Rate:</span>
+            <span className='font-medium text-theme-primary'>
               {performance.analytics.metrics.averageEngagementRate.toFixed(1)}%
             </span>
           </div>
           <div className='flex justify-between items-center'>
-            <span className='text-slate-600 dark:text-slate-400'>
-              Total Reach:
-            </span>
-            <span className='font-medium text-slate-900 dark:text-slate-100'>
+            <span className='text-theme-secondary'>Total Reach:</span>
+            <span className='font-medium text-theme-primary'>
               {performance.analytics.metrics.totalReach.toLocaleString()}
             </span>
           </div>
           <div className='flex justify-between items-center'>
-            <span className='text-slate-600 dark:text-slate-400'>
-              Total Content:
-            </span>
-            <span className='font-medium text-slate-900 dark:text-slate-100'>
+            <span className='text-theme-secondary'>Total Content:</span>
+            <span className='font-medium text-theme-primary'>
               {performance.analytics.totalContent}
             </span>
           </div>
@@ -198,16 +178,12 @@ export default function PerformanceInsights({
         initial={{ opacity: 0, y: 10 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 1.0 }}
-        className='mt-4 bg-white/50 dark:bg-slate-700/50 border border-white/50 dark:border-slate-600/50 rounded-xl p-4 backdrop-blur-sm'
+        className='mt-4 bg-theme-secondary/10 border border-theme-tertiary rounded-xl p-4 backdrop-blur-sm'
       >
-        <h4 className='font-semibold text-slate-900 dark:text-slate-100 mb-3'>
-          Growth Trends
-        </h4>
+        <h4 className='font-semibold text-theme-primary mb-3'>Growth Trends</h4>
         <div className='grid grid-cols-1 md:grid-cols-2 gap-4 text-sm'>
           <div className='flex justify-between items-center'>
-            <span className='text-slate-600 dark:text-slate-400'>
-              Engagement Growth:
-            </span>
+            <span className='text-theme-secondary'>Engagement Growth:</span>
             <span
               className={`font-medium flex items-center gap-1 ${
                 performance.analytics.trends.engagement > 0
@@ -227,9 +203,7 @@ export default function PerformanceInsights({
             </span>
           </div>
           <div className='flex justify-between items-center'>
-            <span className='text-slate-600 dark:text-slate-400'>
-              Reach Growth:
-            </span>
+            <span className='text-theme-secondary'>Reach Growth:</span>
             <span
               className={`font-medium flex items-center gap-1 ${
                 performance.analytics.trends.reach > 0

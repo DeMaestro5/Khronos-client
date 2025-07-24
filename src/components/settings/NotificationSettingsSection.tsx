@@ -212,7 +212,7 @@ const QuietHours: React.FC<QuietHoursProps> = ({
       </div>
 
       {enabled && (
-        <div className='border-t border-gray-200 dark:border-gray-700 -mx-6 px-6 pt-4'>
+        <div className='border-t border-theme-primary -mx-6 px-6 pt-4'>
           <div className='grid grid-cols-2 gap-4'>
             <div>
               <label className='text-sm font-medium text-gray-900 dark:text-gray-100 mb-2 block'>
@@ -222,10 +222,10 @@ const QuietHours: React.FC<QuietHoursProps> = ({
                 type='time'
                 value={startTime}
                 onChange={(e) => onStartTimeChange(e.target.value)}
-                className={`w-full px-3 py-2 border rounded-lg text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 ${
+                className={`w-full px-3 py-2 border rounded-lg text-theme-primary focus:outline-none focus:ring-2 focus:ring-accent-primary focus:border-accent-primary ${
                   error
-                    ? 'border-red-300 dark:border-red-600 bg-red-50 dark:bg-red-900/20'
-                    : 'border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800'
+                    ? 'border-red-300 bg-red-50'
+                    : 'border-theme-primary bg-theme-card'
                 }`}
               />
             </div>

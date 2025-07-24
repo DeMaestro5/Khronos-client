@@ -16,7 +16,7 @@ import {
   FiMoon,
   FiMonitor,
 } from 'react-icons/fi';
-import { useTheme } from 'next-themes';
+import { useTheme } from '@/src/hooks/useTheme';
 // Removed profileAPI and contentAPI imports - now using cached data from UserDataContext
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/src/context/AuthContext';
@@ -34,7 +34,7 @@ export default function Navbar() {
   const { user: contextUser, logout } = useAuth();
   const { unreadCount } = useNotifications();
   const { profileData, loading: userDataLoading } = useUserData();
-  const { theme, setTheme } = useTheme();
+  const { theme, cycleTheme, mounted: themeMounted } = useTheme();
 
   // Handle theme mounting
   useEffect(() => {
@@ -112,7 +112,7 @@ export default function Navbar() {
   };
 
   const getThemeIcon = () => {
-    if (!mounted) return <FiSun className='h-4 w-4' />;
+    if (!mounted || !themeMounted) return <FiSun className='h-4 w-4' />;
 
     switch (theme) {
       case 'light':
@@ -126,18 +126,8 @@ export default function Navbar() {
     }
   };
 
-  const cycleTheme = () => {
-    if (theme === 'light') {
-      setTheme('dark');
-    } else if (theme === 'dark') {
-      setTheme('system');
-    } else {
-      setTheme('light');
-    }
-  };
-
   return (
-    <nav className='bg-white dark:bg-slate-900 border-b border-slate-200 dark:border-slate-700 shadow-lg sticky top-0 z-50 transition-colors duration-200'>
+    <nav className='bg-theme-card border-b border-theme-primary shadow-theme-lg sticky top-0 z-50 transition-colors duration-200'>
       <div className='max-w-7xl mx-auto px-4 sm:px-6 lg:px-8'>
         <div className='flex justify-between items-center h-16'>
           {/* Enhanced Logo/Branding */}
@@ -166,13 +156,13 @@ export default function Navbar() {
           </div>
 
           {/* Center Section - Status/Activity Indicator */}
-          <div className='hidden md:flex items-center space-x-3 bg-gray-50 dark:bg-slate-800 backdrop-blur-sm rounded-full px-4 py-2 border border-slate-200 dark:border-slate-700 shadow-sm'>
+          <div className='hidden md:flex items-center space-x-3 bg-theme-secondary backdrop-blur-sm rounded-full px-4 py-2 border border-theme-primary shadow-theme-sm'>
             <div className='flex items-center space-x-2'>
               <div className='relative'>
                 <FiActivity className='h-4 w-4 text-green-600 dark:text-green-400' />
                 <div className='absolute -top-1 -right-1 w-2 h-2 bg-green-400 dark:bg-green-500 rounded-full animate-pulse'></div>
               </div>
-              <span className='text-sm font-medium text-gray-700 dark:text-slate-200'>
+              <span className='text-sm font-medium text-theme-primary'>
                 All Systems Operational
               </span>
             </div>
@@ -181,10 +171,10 @@ export default function Navbar() {
           {/* Right side actions */}
           <div className='flex items-center space-x-2'>
             {/* Theme Toggle Button */}
-            {mounted && (
+            {mounted && themeMounted && (
               <button
                 onClick={cycleTheme}
-                className='p-3 text-gray-600 dark:text-slate-400 hover:text-indigo-600 dark:hover:text-indigo-400 hover:bg-gray-50 dark:hover:bg-slate-800 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500/20 dark:focus:ring-blue-500/20 transition-all duration-200 shadow-sm hover:shadow-md group'
+                className='p-3 text-theme-secondary hover:text-accent-primary hover:bg-theme-hover rounded-xl focus:outline-none focus:ring-2 focus:ring-accent-primary/20 transition-all duration-200 shadow-theme-sm hover:shadow-theme-md group'
                 title={`Switch to ${
                   theme === 'light'
                     ? 'dark'
@@ -202,7 +192,7 @@ export default function Navbar() {
             {/* Enhanced Notifications */}
             <div className='relative'>
               <button
-                className='notification-button relative p-3 text-gray-600 dark:text-slate-400 hover:text-indigo-600 dark:hover:text-indigo-400 hover:bg-gray-50 dark:hover:bg-slate-800 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500/20 dark:focus:ring-blue-500/20 transition-all duration-200 shadow-sm hover:shadow-md group'
+                className='notification-button relative p-3 text-theme-secondary hover:text-accent-primary hover:bg-theme-hover rounded-xl focus:outline-none focus:ring-2 focus:ring-accent-primary/20 transition-all duration-200 shadow-theme-sm hover:shadow-theme-md group'
                 onClick={() => setNotificationsOpen(!notificationsOpen)}
               >
                 <FiBell className='h-5 w-5 group-hover:scale-110 transition-transform duration-200' />
@@ -272,7 +262,7 @@ export default function Navbar() {
 
               {/* Simplified Profile Dropdown Menu */}
               {profileOpen && user && (
-                <div className='profile-dropdown origin-top-right absolute right-0 mt-3 w-56 rounded-xl shadow-xl bg-white dark:bg-slate-800 backdrop-blur-2xl ring-1 ring-black ring-opacity-5 dark:ring-slate-600 z-20 border border-slate-200 dark:border-slate-600 overflow-hidden'>
+                <div className='profile-dropdown origin-top-right absolute right-0 mt-3 w-56 rounded-xl shadow-xl bg-theme-card backdrop-blur-2xl ring-1 ring-black ring-opacity-5 dark:ring-slate-600 z-20 border border-theme-primary overflow-hidden'>
                   {/* Simple Menu Items */}
                   <div className='py-2'>
                     <Link
@@ -324,10 +314,10 @@ export default function Navbar() {
 
       {/* Enhanced Mobile menu */}
       {mobileMenuOpen && (
-        <div className='md:hidden border-t border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-800 shadow-lg'>
+        <div className='md:hidden border-t border-theme-primary bg-theme-card shadow-theme-lg'>
           {/* Mobile Profile Section */}
           {user && (
-            <div className='px-6 py-4 border-b border-slate-200 dark:border-slate-600 bg-gray-50 dark:bg-slate-900'>
+            <div className='px-6 py-4 border-b border-theme-primary bg-theme-secondary'>
               <div className='flex items-center space-x-3'>
                 <div className='relative'>
                   {user.profilePicUrl || user.avatar ? (
@@ -372,7 +362,7 @@ export default function Navbar() {
           <div className='py-3 space-y-1'>
             <Link
               href='/dashboard'
-              className='flex items-center px-6 py-4 text-base font-semibold text-indigo-600 dark:text-indigo-400 bg-indigo-50 dark:bg-indigo-900/20 border-l-4 border-indigo-500 transition-all duration-200'
+              className='flex items-center px-6 py-4 text-base font-semibold text-accent-primary bg-accent-primary/10 border-l-4 border-accent-primary transition-all duration-200'
               onClick={() => setMobileMenuOpen(false)}
             >
               <span className='mr-3'>🏠</span>

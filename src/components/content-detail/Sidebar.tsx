@@ -28,16 +28,14 @@ export const Sidebar: React.FC<SidebarProps> = ({ content }) => {
 
       {/* Attachments */}
       {content.attachments && content.attachments.length > 0 && (
-        <div className='bg-white/95 dark:bg-slate-800/90 rounded-2xl shadow-sm border border-white/20 dark:border-slate-700/60 p-6 backdrop-blur-sm'>
-          <h3 className='font-bold text-gray-900 dark:text-slate-100 mb-4'>
-            Attachments
-          </h3>
+        <div className='bg-theme-card/95 rounded-2xl shadow-sm border border-theme-tertiary p-6 backdrop-blur-sm'>
+          <h3 className='font-bold text-theme-primary mb-4'>Attachments</h3>
           <div className='space-y-3'>
             {content.attachments.map(
               (attachment: ContentAttachment, index: number) => (
                 <div
                   key={index}
-                  className='flex items-center gap-3 p-3 bg-gray-50 dark:bg-slate-700/50 rounded-xl hover:bg-gray-100 dark:hover:bg-slate-600/60 transition-colors group backdrop-blur-sm'
+                  className='flex items-center gap-3 p-3 bg-theme-secondary rounded-xl hover:bg-theme-hover transition-colors group backdrop-blur-sm'
                 >
                   <div className='w-10 h-10 bg-blue-100 dark:bg-blue-900/50 rounded-lg flex items-center justify-center'>
                     <span className='text-xs font-bold text-blue-700 dark:text-blue-300'>
@@ -45,14 +43,14 @@ export const Sidebar: React.FC<SidebarProps> = ({ content }) => {
                     </span>
                   </div>
                   <div className='flex-1 min-w-0'>
-                    <div className='font-medium text-gray-900 dark:text-slate-100 truncate'>
+                    <div className='font-medium text-theme-primary truncate'>
                       {attachment.name}
                     </div>
-                    <div className='text-sm text-gray-500 dark:text-slate-400'>
+                    <div className='text-sm text-theme-secondary'>
                       {attachment.size}
                     </div>
                   </div>
-                  <button className='p-2 text-gray-400 dark:text-slate-500 hover:text-blue-600 dark:hover:text-blue-400 transition-colors opacity-0 group-hover:opacity-100'>
+                  <button className='p-2 text-theme-muted hover:text-accent-primary transition-colors opacity-0 group-hover:opacity-100'>
                     <Download className='w-4 h-4' />
                   </button>
                 </div>
@@ -64,9 +62,9 @@ export const Sidebar: React.FC<SidebarProps> = ({ content }) => {
 
       {/* Recommendations */}
       {content.recommendations && content.recommendations.length > 0 && (
-        <div className='bg-white/95 dark:bg-slate-800/90 rounded-2xl shadow-sm border border-white/20 dark:border-slate-700/60 p-6 backdrop-blur-sm'>
-          <h3 className='font-bold text-gray-900 dark:text-slate-100 mb-4 flex items-center gap-2'>
-            <Sparkles className='w-5 h-5 text-purple-600 dark:text-purple-400' />
+        <div className='bg-theme-card/95 rounded-2xl shadow-sm border border-theme-tertiary p-6 backdrop-blur-sm'>
+          <h3 className='font-bold text-theme-primary mb-4 flex items-center gap-2'>
+            <Sparkles className='w-5 h-5 text-accent-primary' />
             Recommended Content Ideas
           </h3>
           <div className='space-y-4'>
@@ -75,12 +73,12 @@ export const Sidebar: React.FC<SidebarProps> = ({ content }) => {
               .map((rec: ContentIdea, index: number) => (
                 <div
                   key={index}
-                  className='p-4 bg-gradient-to-r from-purple-50 to-pink-50 dark:from-purple-900/20 dark:to-pink-900/20 rounded-xl border border-purple-100 dark:border-purple-800/30 hover:shadow-md dark:hover:shadow-slate-900/20 transition-all duration-200 backdrop-blur-sm'
+                  className='p-4 bg-accent-primary/5 rounded-xl border border-accent-primary/20 hover:shadow-md transition-all duration-200 backdrop-blur-sm'
                 >
-                  <h4 className='font-semibold text-gray-900 dark:text-slate-100 mb-2 text-sm'>
+                  <h4 className='font-semibold text-theme-primary mb-2 text-sm'>
                     {rec.title}
                   </h4>
-                  <p className='text-gray-700 dark:text-slate-200 text-xs mb-3 line-clamp-2'>
+                  <p className='text-theme-secondary text-xs mb-3 line-clamp-2'>
                     {rec.description}
                   </p>
                   <div className='flex items-center justify-between text-xs'>
@@ -98,7 +96,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ content }) => {
                       </span>
                     )}
                     {rec.estimatedEngagement && (
-                      <span className='text-gray-600 dark:text-slate-400'>
+                      <span className='text-theme-secondary'>
                         {rec.estimatedEngagement}/10 engagement
                       </span>
                     )}
@@ -107,7 +105,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ content }) => {
               ))}
             {content.recommendations.length > 3 && (
               <div className='text-center'>
-                <span className='text-sm text-gray-500 dark:text-slate-400'>
+                <span className='text-sm text-theme-secondary'>
                   +{content.recommendations.length - 3} more recommendations
                 </span>
               </div>

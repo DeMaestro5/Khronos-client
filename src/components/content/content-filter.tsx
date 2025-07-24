@@ -88,13 +88,13 @@ const ContentFilter: React.FC<ContentFilterProps> = ({
   return (
     <div className='space-y-4'>
       {/* Filter Controls */}
-      <div className='bg-white dark:bg-slate-800/80 rounded-2xl border border-gray-200 dark:border-slate-600 shadow-sm p-4'>
+      <div className='bg-theme-card rounded-2xl border border-theme-primary shadow-theme-sm p-4'>
         <div className='flex items-center justify-between gap-4'>
           {/* Status Filters */}
           <div className='flex items-center gap-3 flex-1'>
             <div className='flex items-center gap-2 flex-shrink-0'>
-              <div className='w-2 h-2 rounded-full bg-purple-500 dark:bg-blue-500'></div>
-              <span className='text-sm font-medium text-gray-700 dark:text-slate-300'>
+              <div className='w-2 h-2 rounded-full bg-accent-primary'></div>
+              <span className='text-sm font-medium text-theme-primary'>
                 Status
               </span>
             </div>
@@ -103,8 +103,8 @@ const ContentFilter: React.FC<ContentFilterProps> = ({
                 onClick={() => setStatusFilter('all')}
                 className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-all duration-200 ${
                   statusFilter === 'all'
-                    ? 'bg-purple-100 dark:bg-blue-900/50 text-purple-700 dark:text-blue-300 border border-purple-200 dark:border-blue-600'
-                    : 'text-gray-600 dark:text-slate-400 hover:text-gray-900 dark:hover:text-slate-200 hover:bg-gray-50 dark:hover:bg-slate-700 border border-transparent'
+                    ? 'bg-accent-primary/10 text-accent-primary border border-accent-primary/20'
+                    : 'text-theme-secondary hover:text-theme-primary hover:bg-theme-secondary/10 border border-transparent'
                 }`}
               >
                 All
@@ -115,8 +115,8 @@ const ContentFilter: React.FC<ContentFilterProps> = ({
                   onClick={() => setStatusFilter(status)}
                   className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-all duration-200 border ${
                     statusFilter === status
-                      ? 'bg-purple-100 dark:bg-blue-900/50 text-purple-700 dark:text-blue-300 border-purple-200 dark:border-blue-600'
-                      : 'text-gray-600 dark:text-slate-400 hover:text-gray-900 dark:hover:text-slate-200 hover:bg-gray-50 dark:hover:bg-slate-700 border-transparent'
+                      ? 'bg-accent-primary/10 text-accent-primary border-accent-primary/20'
+                      : 'text-theme-secondary hover:text-theme-primary hover:bg-theme-secondary/10 border-transparent'
                   }`}
                 >
                   {status.charAt(0).toUpperCase() +
@@ -127,13 +127,13 @@ const ContentFilter: React.FC<ContentFilterProps> = ({
           </div>
 
           {/* Vertical Separator */}
-          <div className='h-8 w-px bg-gray-200 dark:bg-slate-600 flex-shrink-0'></div>
+          <div className='h-8 w-px bg-theme-primary/20 flex-shrink-0'></div>
 
           {/* Type Filters */}
           <div className='flex items-center gap-3 flex-1'>
             <div className='flex items-center gap-2 flex-shrink-0'>
-              <div className='w-2 h-2 rounded-full bg-blue-500 dark:bg-indigo-500'></div>
-              <span className='text-sm font-medium text-gray-700 dark:text-slate-300'>
+              <div className='w-2 h-2 rounded-full bg-accent-primary'></div>
+              <span className='text-sm font-medium text-theme-primary'>
                 Type
               </span>
             </div>
@@ -142,8 +142,8 @@ const ContentFilter: React.FC<ContentFilterProps> = ({
                 onClick={() => setTypeFilter('all')}
                 className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-all duration-200 border ${
                   typeFilter === 'all'
-                    ? 'bg-blue-100 dark:bg-indigo-900/50 text-blue-700 dark:text-indigo-300 border border-blue-200 dark:border-indigo-600'
-                    : 'text-gray-600 dark:text-slate-400 hover:text-gray-900 dark:hover:text-slate-200 hover:bg-gray-50 dark:hover:bg-slate-700 border border-transparent'
+                    ? 'bg-accent-primary/10 text-accent-primary border border-accent-primary/20'
+                    : 'text-theme-secondary hover:text-theme-primary hover:bg-theme-secondary/10 border border-transparent'
                 }`}
               >
                 All
@@ -154,8 +154,8 @@ const ContentFilter: React.FC<ContentFilterProps> = ({
                   onClick={() => setTypeFilter(type)}
                   className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-medium transition-all duration-200 border ${
                     typeFilter === type
-                      ? 'bg-blue-100 dark:bg-indigo-900/50 text-blue-700 dark:text-indigo-300 border-blue-200 dark:border-indigo-600'
-                      : 'text-gray-600 dark:text-slate-400 hover:text-gray-900 dark:hover:text-slate-200 hover:bg-gray-50 dark:hover:bg-slate-700 border-transparent'
+                      ? 'bg-accent-primary/10 text-accent-primary border-accent-primary/20'
+                      : 'text-theme-secondary hover:text-theme-primary hover:bg-theme-secondary/10 border-transparent'
                   }`}
                 >
                   <span className='text-xs'>{getTypeIcon(type)}</span>
@@ -167,16 +167,14 @@ const ContentFilter: React.FC<ContentFilterProps> = ({
 
           {/* View Mode Toggle */}
           <div className='flex items-center gap-3 flex-shrink-0'>
-            <span className='text-xs text-gray-500 dark:text-slate-400'>
-              View:
-            </span>
-            <div className='flex bg-gray-100 dark:bg-slate-700 rounded-lg p-0.5'>
+            <span className='text-xs text-theme-secondary'>View:</span>
+            <div className='flex bg-theme-secondary/20 rounded-lg p-0.5'>
               <button
                 onClick={() => setViewMode('grid')}
                 className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-md text-xs font-medium transition-all duration-200 ${
                   viewMode === 'grid'
-                    ? 'bg-white dark:bg-slate-800 text-gray-900 dark:text-slate-100 shadow-sm'
-                    : 'text-gray-600 dark:text-slate-400 hover:text-gray-900 dark:hover:text-slate-200'
+                    ? 'bg-theme-card text-theme-primary shadow-sm'
+                    : 'text-theme-secondary hover:text-theme-primary'
                 }`}
                 title='Grid View'
               >
@@ -187,8 +185,8 @@ const ContentFilter: React.FC<ContentFilterProps> = ({
                 onClick={() => setViewMode('list')}
                 className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-md text-xs font-medium transition-all duration-200 ${
                   viewMode === 'list'
-                    ? 'bg-white dark:bg-slate-800 text-gray-900 dark:text-slate-100 shadow-sm'
-                    : 'text-gray-600 dark:text-slate-400 hover:text-gray-900 dark:hover:text-slate-200'
+                    ? 'bg-theme-card text-theme-primary shadow-sm'
+                    : 'text-theme-secondary hover:text-theme-primary'
                 }`}
                 title='List View'
               >
@@ -201,32 +199,32 @@ const ContentFilter: React.FC<ContentFilterProps> = ({
       </div>
 
       {/* Results Summary */}
-      <div className='flex items-center justify-between bg-gray-50 dark:bg-slate-800/40 rounded-xl px-4 py-3'>
+      <div className='flex items-center justify-between bg-theme-secondary/10 rounded-xl px-4 py-3'>
         <div className='flex items-center gap-4'>
-          <p className='text-sm font-medium text-gray-700 dark:text-slate-300'>
+          <p className='text-sm font-medium text-theme-secondary'>
             Showing{' '}
-            <span className='text-purple-600 dark:text-blue-400 font-semibold'>
+            <span className='text-accent-primary font-semibold'>
               {filteredCount}
             </span>{' '}
             of{' '}
-            <span className='text-gray-900 dark:text-slate-100 font-semibold'>
+            <span className='text-theme-primary font-semibold'>
               {statusFilter === 'all' ? totalCount - archivedCount : totalCount}
             </span>{' '}
             {statusFilter === 'all' ? 'active ' : ''}content items
             {statusFilter === 'all' && archivedCount > 0 && (
-              <span className='text-xs text-gray-500 dark:text-slate-400 ml-1'>
+              <span className='text-xs text-theme-secondary ml-1'>
                 ({archivedCount} archived)
               </span>
             )}
           </p>
           {getActiveFiltersText() && (
-            <span className='px-2 py-1 bg-green-100 dark:bg-green-900/40 text-green-700 dark:text-green-300 text-xs font-medium rounded-full'>
+            <span className='px-2 py-1 bg-accent-primary/10 text-accent-primary text-xs font-medium rounded-full'>
               Filtered by: {getActiveFiltersText()}
             </span>
           )}
         </div>
         {searchQuery && (
-          <span className='px-2 py-1 bg-blue-100 dark:bg-blue-900/40 text-blue-700 dark:text-blue-300 text-xs font-medium rounded-full'>
+          <span className='px-2 py-1 bg-accent-primary/10 text-accent-primary text-xs font-medium rounded-full'>
             Search: &ldquo;{searchQuery}&rdquo;
           </span>
         )}

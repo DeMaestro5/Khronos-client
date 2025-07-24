@@ -95,8 +95,8 @@ export default function ProfilePictureSection({
   const errorMessage = errors || localError;
 
   return (
-    <div className='bg-white dark:bg-slate-800/80 rounded-xl shadow-sm border border-gray-200 dark:border-slate-600 p-6'>
-      <h2 className='text-lg font-semibold text-gray-900 dark:text-slate-100 mb-6'>
+    <div className='bg-theme-card rounded-xl shadow-theme-sm border border-theme-primary p-6'>
+      <h2 className='text-lg font-semibold text-theme-primary mb-6'>
         Profile Picture
       </h2>
 

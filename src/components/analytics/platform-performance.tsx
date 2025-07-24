@@ -16,7 +16,7 @@ export default function PlatformPerformance({
 }: PlatformPerformanceProps) {
   if (isLoading) {
     return (
-      <div className='bg-white/60 dark:bg-slate-800/60 backdrop-blur-lg border border-white/20 dark:border-slate-600/20 rounded-2xl p-6 shadow-lg'>
+      <div className='bg-theme-card backdrop-blur-lg border border-theme-primary rounded-2xl p-6 shadow-lg'>
         <div className='animate-pulse'>
           <div className='h-6 bg-slate-200 dark:bg-slate-700 rounded w-48 mb-6'></div>
           <div className='grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4'>
@@ -49,9 +49,9 @@ export default function PlatformPerformance({
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ delay: 0.4 }}
-      className='bg-white/60 dark:bg-slate-800/60 backdrop-blur-lg border border-white/20 dark:border-slate-600/20 rounded-2xl p-6 shadow-lg'
+      className='bg-theme-card backdrop-blur-lg border border-theme-tertiary rounded-2xl p-6 shadow-lg'
     >
-      <h3 className='text-xl font-bold text-slate-900 dark:text-slate-100 mb-6 flex items-center gap-2'>
+      <h3 className='text-xl font-bold text-theme-primary mb-6 flex items-center gap-2'>
         <div className='p-2 bg-gradient-to-r from-purple-500 to-pink-500 dark:from-blue-600 dark:to-indigo-700 rounded-lg'>
           <BarChart3 className='h-5 w-5 text-white' />
         </div>
@@ -65,10 +65,10 @@ export default function PlatformPerformance({
             initial={{ opacity: 0, scale: 0.95 }}
             animate={{ opacity: 1, scale: 1 }}
             transition={{ delay: 0.5 + index * 0.1 }}
-            className='bg-white/40 dark:bg-slate-700/40 border border-white/30 dark:border-slate-600/30 rounded-xl p-4 hover:bg-white/60 dark:hover:bg-slate-700/60 transition-all duration-200'
+            className='bg-theme-secondary/10 border border-theme-tertiary rounded-xl p-4 hover:bg-theme-hover transition-all duration-200'
           >
             <div className='flex items-center justify-between mb-3'>
-              <h4 className='font-semibold text-slate-900 dark:text-slate-100 capitalize'>
+              <h4 className='font-semibold text-theme-primary capitalize'>
                 {platform.platform}
               </h4>
               <span
@@ -77,7 +77,7 @@ export default function PlatformPerformance({
                     ? 'bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400'
                     : platform.status === 'good'
                     ? 'bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-400'
-                    : 'bg-yellow-100 dark:bg-yellow-900/30 text-yellow-700 dark:text-yellow-400'
+                    : 'bg-gray-500 text-amber-300'
                 }`}
               >
                 {platform.status}
@@ -86,34 +86,26 @@ export default function PlatformPerformance({
 
             <div className='space-y-2 text-sm'>
               <div className='flex justify-between'>
-                <span className='text-slate-600 dark:text-slate-400'>
-                  Content:
-                </span>
-                <span className='font-medium text-slate-900 dark:text-slate-100'>
+                <span className='text-theme-secondary'>Content:</span>
+                <span className='font-medium text-theme-primary'>
                   {platform.metrics.content}
                 </span>
               </div>
               <div className='flex justify-between'>
-                <span className='text-slate-600 dark:text-slate-400'>
-                  Engagement:
-                </span>
-                <span className='font-medium text-slate-900 dark:text-slate-100'>
+                <span className='text-theme-secondary'>Engagement:</span>
+                <span className='font-medium text-theme-primary'>
                   {platform.metrics.engagement.toLocaleString()}
                 </span>
               </div>
               <div className='flex justify-between'>
-                <span className='text-slate-600 dark:text-slate-400'>
-                  Reach:
-                </span>
-                <span className='font-medium text-slate-900 dark:text-slate-100'>
+                <span className='text-theme-secondary'>Reach:</span>
+                <span className='font-medium text-theme-primary'>
                   {platform.metrics.reach.toLocaleString()}
                 </span>
               </div>
               <div className='flex justify-between'>
-                <span className='text-slate-600 dark:text-slate-400'>
-                  Rate:
-                </span>
-                <span className='font-medium text-slate-900 dark:text-slate-100'>
+                <span className='text-theme-secondary'>Rate:</span>
+                <span className='font-medium text-theme-primary'>
                   {platform.metrics.engagementRate.toFixed(1)}%
                 </span>
               </div>

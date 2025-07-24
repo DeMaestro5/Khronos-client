@@ -11,9 +11,9 @@ export const AuthorCard: React.FC<AuthorCardProps> = ({ author }) => {
   if (!author) return null;
 
   return (
-    <div className='bg-white/95 dark:bg-slate-800/90 rounded-2xl shadow-sm border border-white/20 dark:border-slate-700/60 p-6 backdrop-blur-sm'>
-      <h3 className='font-bold text-gray-900 dark:text-slate-100 mb-4 flex items-center gap-2'>
-        <User className='w-5 h-5 text-blue-600 dark:text-blue-400' />
+    <div className='bg-theme-card/95 rounded-2xl shadow-sm border border-theme-tertiary p-6 backdrop-blur-sm'>
+      <h3 className='font-bold text-theme-primary mb-4 flex items-center gap-2'>
+        <User className='w-5 h-5 text-accent-primary' />
         Author
       </h3>
       <div className='flex items-center gap-4'>
@@ -25,12 +25,8 @@ export const AuthorCard: React.FC<AuthorCardProps> = ({ author }) => {
           height={56}
         />
         <div>
-          <div className='font-semibold text-gray-900 dark:text-slate-100'>
-            {author.name}
-          </div>
-          <div className='text-sm text-gray-600 dark:text-slate-400'>
-            {author.role}
-          </div>
+          <div className='font-semibold text-theme-primary'>{author.name}</div>
+          <div className='text-sm text-theme-secondary'>{author.role}</div>
         </div>
       </div>
     </div>

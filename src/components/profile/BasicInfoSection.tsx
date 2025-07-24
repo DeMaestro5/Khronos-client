@@ -15,8 +15,8 @@ export default function BasicInfoSection({
   onInputChange,
 }: BasicInfoSectionProps) {
   return (
-    <div className='bg-white dark:bg-slate-800/80 rounded-xl shadow-sm border border-gray-200 dark:border-slate-600 p-6'>
-      <h2 className='text-lg font-semibold text-gray-900 dark:text-slate-100 mb-6'>
+    <div className='bg-theme-card rounded-xl shadow-theme-sm border border-theme-primary p-6'>
+      <h2 className='text-lg font-semibold text-theme-primary mb-6'>
         Basic Information
       </h2>
 
@@ -25,22 +25,22 @@ export default function BasicInfoSection({
         <div className='md:col-span-2'>
           <label
             htmlFor='name'
-            className='block text-sm font-semibold text-gray-900 dark:text-slate-100 mb-2'
+            className='block text-sm font-semibold text-theme-primary mb-2'
           >
             Full Name *
           </label>
           <div className='relative'>
-            <FiUser className='absolute left-4 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400 dark:text-slate-500' />
+            <FiUser className='absolute left-4 top-1/2 transform -translate-y-1/2 h-5 w-5 text-theme-muted' />
             <input
               type='text'
               id='name'
               name='name'
               value={formData.name}
               onChange={onInputChange}
-              className={`w-full pl-12 pr-4 py-3 bg-gray-50 dark:bg-slate-700 border text-gray-900 dark:text-slate-100 rounded-lg focus:outline-none focus:bg-white dark:focus:bg-slate-600 focus:ring-2 focus:ring-indigo-500 dark:focus:ring-blue-400 focus:ring-offset-0 transition-all duration-200 ${
+              className={`w-full pl-12 pr-4 py-3 bg-theme-secondary border text-theme-primary rounded-lg focus:outline-none focus:bg-theme-card focus:ring-2 focus:ring-accent-primary focus:ring-offset-0 transition-all duration-200 ${
                 errors.name
                   ? 'border-red-300 dark:border-red-600 focus:border-red-500 focus:ring-red-500 dark:focus:ring-red-400'
-                  : 'border-gray-200 dark:border-slate-600 focus:border-indigo-500 dark:focus:border-blue-400'
+                  : 'border-theme-primary focus:border-accent-primary'
               }`}
               placeholder='Enter your full name'
             />

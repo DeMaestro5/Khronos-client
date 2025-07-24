@@ -266,26 +266,26 @@ export default function Dashboard() {
   const displaySuggestions = aiSuggestions?.slice(0, 3) || [];
 
   return (
-    <div className='p-6 min-h-screen bg-white dark:bg-slate-900 transition-colors duration-200'>
-      <h1 className='text-2xl font-semibold text-purple-800 dark:text-blue-300'>
+    <div className='p-6 min-h-screen bg-theme-primary transition-colors duration-200'>
+      <h1 className='text-2xl font-semibold text-accent-primary font-bold'>
         Khronos Dashboard
       </h1>
 
       {/* Quick stats */}
       <div className='mt-4 grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-4'>
-        <div className='bg-white dark:bg-slate-800 overflow-hidden shadow dark:shadow-slate-700/20 rounded-lg border border-gray-200 dark:border-slate-700'>
+        <div className='bg-theme-card overflow-hidden shadow-theme-md rounded-lg border border-theme-primary hover:shadow-theme-lg transition-shadow duration-200'>
           <div className='px-4 py-5 sm:p-6'>
             <div className='flex items-center'>
-              <div className='flex-shrink-0 bg-indigo-500 dark:bg-blue-600 rounded-md p-3'>
+              <div className='flex-shrink-0 bg-accent-primary rounded-md p-3'>
                 <FiFileText className='h-6 w-6 text-white' />
               </div>
               <div className='ml-5 w-0 flex-1'>
                 <dl>
-                  <dt className='text-sm font-medium text-gray-500 dark:text-slate-400 truncate'>
+                  <dt className='text-sm font-medium text-theme-secondary truncate'>
                     Total Content
                   </dt>
                   <dd className='flex items-baseline'>
-                    <div className='text-2xl font-semibold text-gray-900 dark:text-slate-100'>
+                    <div className='text-2xl font-semibold text-theme-primary'>
                       {contextLoading ? (
                         <FiLoader className='h-6 w-6 animate-spin' />
                       ) : (
@@ -299,19 +299,19 @@ export default function Dashboard() {
           </div>
         </div>
 
-        <div className='bg-white dark:bg-slate-800 overflow-hidden shadow dark:shadow-slate-700/20 rounded-lg border border-gray-200 dark:border-slate-700'>
+        <div className='bg-theme-card overflow-hidden shadow-theme-md rounded-lg border border-theme-primary'>
           <div className='px-4 py-5 sm:p-6'>
             <div className='flex items-center'>
-              <div className='flex-shrink-0 bg-green-500 dark:bg-emerald-600 rounded-md p-3'>
+              <div className='flex-shrink-0 bg-accent-success rounded-md p-3'>
                 <FiCalendar className='h-6 w-6 text-white' />
               </div>
               <div className='ml-5 w-0 flex-1'>
                 <dl>
-                  <dt className='text-sm font-medium text-gray-500 dark:text-slate-400 truncate'>
+                  <dt className='text-sm font-medium text-theme-secondary truncate'>
                     Scheduled Posts
                   </dt>
                   <dd className='flex items-baseline'>
-                    <div className='text-2xl font-semibold text-gray-900 dark:text-slate-100'>
+                    <div className='text-2xl font-semibold text-theme-primary'>
                       {contextLoading ? (
                         <FiLoader className='h-6 w-6 animate-spin' />
                       ) : (
@@ -325,19 +325,19 @@ export default function Dashboard() {
           </div>
         </div>
 
-        <div className='bg-white dark:bg-slate-800 overflow-hidden shadow dark:shadow-slate-700/20 rounded-lg border border-gray-200 dark:border-slate-700'>
+        <div className='bg-theme-card overflow-hidden shadow-theme-md rounded-lg border border-theme-primary'>
           <div className='px-4 py-5 sm:p-6'>
             <div className='flex items-center'>
-              <div className='flex-shrink-0 bg-purple-500 dark:bg-violet-600 rounded-md p-3'>
+              <div className='flex-shrink-0 bg-accent-secondary rounded-md p-3'>
                 <FiBarChart2 className='h-6 w-6 text-white' />
               </div>
               <div className='ml-5 w-0 flex-1'>
                 <dl>
-                  <dt className='text-sm font-medium text-gray-500 dark:text-slate-400 truncate'>
+                  <dt className='text-sm font-medium text-theme-secondary truncate'>
                     Avg. Engagement
                   </dt>
                   <dd className='flex items-baseline'>
-                    <div className='text-2xl font-semibold text-gray-900 dark:text-slate-100'>
+                    <div className='text-2xl font-semibold text-theme-primary'>
                       {contextLoading ? (
                         <FiLoader className='h-6 w-6 animate-spin' />
                       ) : (
@@ -351,19 +351,19 @@ export default function Dashboard() {
           </div>
         </div>
 
-        <div className='bg-white dark:bg-slate-800 overflow-hidden shadow dark:shadow-slate-700/20 rounded-lg border border-gray-200 dark:border-slate-700'>
+        <div className='bg-theme-card overflow-hidden shadow-theme-md rounded-lg border border-theme-primary'>
           <div className='px-4 py-5 sm:p-6'>
             <div className='flex items-center'>
-              <div className='flex-shrink-0 bg-blue-500 dark:bg-sky-600 rounded-md p-3'>
+              <div className='flex-shrink-0 bg-accent-info rounded-md p-3'>
                 <FiTrendingUp className='h-6 w-6 text-white' />
               </div>
               <div className='ml-5 w-0 flex-1'>
                 <dl>
-                  <dt className='text-sm font-medium text-gray-500 dark:text-slate-400 truncate'>
+                  <dt className='text-sm font-medium text-theme-secondary truncate'>
                     Content Ideas
                   </dt>
                   <dd className='flex items-baseline'>
-                    <div className='text-2xl font-semibold text-gray-900 dark:text-slate-100'>
+                    <div className='text-2xl font-semibold text-theme-primary'>
                       {contextLoading ? (
                         <FiLoader className='h-6 w-6 animate-spin' />
                       ) : (
@@ -384,9 +384,9 @@ export default function Dashboard() {
       {/* Main content sections */}
       <div className='mt-6 grid grid-cols-1 gap-5 lg:grid-cols-2'>
         {/* Upcoming content */}
-        <div className='bg-white dark:bg-slate-800 shadow dark:shadow-slate-700/20 rounded-lg border border-gray-200 dark:border-slate-700 overflow-hidden'>
-          <div className='px-4 py-5 border-b border-gray-200 dark:border-slate-700 sm:px-6'>
-            <h3 className='text-lg font-medium leading-6 text-gray-900 dark:text-slate-100'>
+        <div className='bg-theme-card shadow-theme-md rounded-lg border border-theme-primary overflow-hidden'>
+          <div className='px-4 py-5 border-b border-theme-primary sm:px-6'>
+            <h3 className='text-lg font-medium leading-6 text-theme-primary'>
               Upcoming Content
             </h3>
           </div>
@@ -394,7 +394,7 @@ export default function Dashboard() {
           {contextLoading ? (
             <div className='px-4 py-6 text-center'>
               <FiLoader className='h-6 w-6 animate-spin mx-auto text-indigo-600 dark:text-blue-400' />
-              <p className='mt-2 text-sm text-gray-500 dark:text-slate-400'>
+              <p className='mt-2 text-sm text-theme-secondary'>
                 Loading upcoming content...
               </p>
             </div>
@@ -403,15 +403,15 @@ export default function Dashboard() {
               <div className='mx-auto h-10 w-10 rounded-full bg-gray-100 dark:bg-slate-700 flex items-center justify-center mb-3'>
                 <FiCalendar className='h-5 w-5 text-gray-400 dark:text-slate-400' />
               </div>
-              <h3 className='text-sm font-medium text-gray-900 dark:text-slate-100 mb-1'>
+              <h3 className='text-sm font-medium text-theme-primary mb-1'>
                 No scheduled content
               </h3>
-              <p className='text-xs text-gray-500 dark:text-slate-400 mb-4'>
+              <p className='text-xs text-theme-secondary mb-4'>
                 Create your first piece of content to get started!
               </p>
               <button
                 onClick={handleOpenEmptyModal}
-                className='inline-flex items-center px-3 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 dark:bg-blue-600 dark:hover:bg-blue-700 transition-colors duration-150'
+                className='inline-flex items-center px-3 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-accent-primary hover:bg-accent-secondary transition-colors duration-150'
               >
                 <FiFileText className='h-4 w-4 mr-2' />
                 Create Content
@@ -423,7 +423,7 @@ export default function Dashboard() {
                 {upcomingContent.map((content) => (
                   <li
                     key={content._id}
-                    className='px-4 py-3 hover:bg-gray-50 dark:hover:bg-slate-700/50 transition-colors duration-150'
+                    className='px-4 py-3 hover:bg-theme-hover transition-colors duration-150'
                   >
                     <div className='flex items-center justify-between'>
                       <div className='flex items-center min-w-0 flex-1'>
@@ -433,17 +433,17 @@ export default function Dashboard() {
                           </span>
                         </div>
                         <div className='ml-3 min-w-0 flex-1'>
-                          <div className='text-sm font-medium text-indigo-600 dark:text-blue-400 truncate'>
+                          <div className='text-sm font-medium text-accent-primary truncate'>
                             {content.title}
                           </div>
-                          <div className='text-xs text-gray-500 dark:text-slate-400'>
+                          <div className='text-xs text-theme-secondary'>
                             {content.metadata?.scheduledDate &&
                               formatScheduledDate(
                                 content.metadata.scheduledDate
                               )}
                           </div>
                           {content.platform && content.platform.length > 0 && (
-                            <div className='text-xs text-gray-400 dark:text-slate-500 mt-1'>
+                            <div className='text-xs text-theme-tertiary mt-1'>
                               {content.platform
                                 .map((p) => getPlatformIcon(p))
                                 .join(' ')}
@@ -463,10 +463,10 @@ export default function Dashboard() {
             </div>
           )}
 
-          <div className='px-4 py-3 border-t border-gray-200 dark:border-slate-700 bg-gray-50 dark:bg-slate-700/50'>
+          <div className='px-4 py-3 border-t border-theme-primary bg-theme-secondary'>
             <Link
               href='/calendar'
-              className='text-sm font-medium text-indigo-600 dark:text-blue-400 hover:text-indigo-500 dark:hover:text-blue-300 transition-colors duration-150'
+              className='text-sm font-medium text-accent-primary hover:text-accent-secondary transition-colors duration-150'
             >
               View full calendar →
             </Link>
@@ -474,16 +474,16 @@ export default function Dashboard() {
         </div>
 
         {/* AI Content Suggestions */}
-        <div className='bg-white dark:bg-slate-800 shadow dark:shadow-slate-700/20 rounded-lg border border-gray-200 dark:border-slate-700 overflow-hidden'>
-          <div className='px-4 py-5 border-b border-gray-200 dark:border-slate-700 sm:px-6 flex items-center justify-between'>
-            <h3 className='text-lg font-medium leading-6 text-gray-900 dark:text-slate-100'>
+        <div className='bg-theme-card shadow-theme-md rounded-lg border border-theme-primary overflow-hidden hover:shadow-theme-lg transition-shadow duration-200'>
+          <div className='px-4 py-5 border-b border-theme-primary sm:px-6 flex items-center justify-between'>
+            <h3 className='text-lg font-medium leading-6 text-theme-primary'>
               AI Content Suggestions
             </h3>
             {!contextLoading && (
               <button
                 onClick={handleRefreshSuggestions}
                 disabled={isRefreshingSuggestions}
-                className='inline-flex items-center gap-2 text-sm text-purple-600 dark:text-violet-400 hover:text-purple-500 dark:hover:text-violet-300 transition-colors duration-150 disabled:opacity-50 disabled:cursor-not-allowed'
+                className='inline-flex items-center gap-2 text-sm text-accent-primary hover:text-accent-secondary transition-colors duration-150 disabled:opacity-50 disabled:cursor-not-allowed'
               >
                 {isRefreshingSuggestions ? (
                   <>
@@ -604,8 +604,8 @@ export default function Dashboard() {
             </div>
           )}
 
-          <div className='px-4 py-3 border-t border-gray-200 dark:border-slate-700 bg-gray-50 dark:bg-slate-700/50'>
-            <span className='text-sm font-medium text-purple-600 dark:text-violet-400'>
+          <div className='px-4 py-3 border-t border-theme-primary bg-theme-secondary'>
+            <span className='text-sm font-medium text-accent-primary'>
               Chat with AI using the floating button! ✨
             </span>
           </div>
@@ -614,23 +614,21 @@ export default function Dashboard() {
 
       {/* Quick access */}
       <div className='mt-6'>
-        <h2 className='text-lg font-medium text-gray-900 dark:text-slate-100'>
-          Quick Access
-        </h2>
+        <h2 className='text-lg font-medium text-theme-primary'>Quick Access</h2>
         <div className='mt-3 grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-4'>
           <button
             onClick={handleOpenEmptyModal}
-            className='bg-white dark:bg-slate-800 overflow-hidden shadow dark:shadow-slate-700/20 rounded-lg p-6 hover:bg-gray-50 dark:hover:bg-slate-700/50 border border-gray-200 dark:border-slate-700 transition-colors duration-150 text-left w-full'
+            className='bg-theme-card overflow-hidden shadow-theme-md rounded-lg p-6 hover:bg-theme-hover border border-theme-primary transition-colors duration-150 text-left w-full'
           >
             <div className='flex items-center'>
-              <div className='flex-shrink-0 bg-indigo-500 dark:bg-blue-600 rounded-md p-3'>
+              <div className='flex-shrink-0 bg-accent-primary rounded-md p-3'>
                 <FiFileText className='h-6 w-6 text-white' />
               </div>
               <div className='ml-4'>
-                <h3 className='text-lg font-medium text-gray-900 dark:text-slate-100 cursor-pointer'>
+                <h3 className='text-lg font-medium text-theme-primary cursor-pointer'>
                   Create Content
                 </h3>
-                <p className='text-sm text-gray-500 dark:text-slate-400'>
+                <p className='text-sm text-theme-secondary'>
                   Add new content to your calendar
                 </p>
               </div>
@@ -639,33 +637,33 @@ export default function Dashboard() {
 
           <Link
             href='/calendar'
-            className='bg-white dark:bg-slate-800 overflow-hidden shadow dark:shadow-slate-700/20 rounded-lg p-6 hover:bg-gray-50 dark:hover:bg-slate-700/50 border border-gray-200 dark:border-slate-700 transition-colors duration-150'
+            className='bg-theme-card overflow-hidden shadow-theme-md rounded-lg p-6 hover:bg-theme-hover border border-theme-primary transition-colors duration-150'
           >
             <div className='flex items-center'>
               <div className='flex-shrink-0 bg-green-500 dark:bg-emerald-600 rounded-md p-3'>
                 <FiCalendar className='h-6 w-6 text-white' />
               </div>
               <div className='ml-4'>
-                <h3 className='text-lg font-medium text-gray-900 dark:text-slate-100'>
+                <h3 className='text-lg font-medium text-theme-primary'>
                   View Calendar
                 </h3>
-                <p className='text-sm text-gray-500 dark:text-slate-400'>
+                <p className='text-sm text-theme-secondary'>
                   Manage your content schedule
                 </p>
               </div>
             </div>
           </Link>
 
-          <div className='bg-white dark:bg-slate-800 overflow-hidden shadow dark:shadow-slate-700/20 rounded-lg p-6 border-2 border-purple-200 dark:border-violet-600/50 transition-colors duration-150'>
+          <div className='bg-theme-card overflow-hidden shadow-theme-md rounded-lg p-6 border-2 border-accent-primary/30 transition-colors duration-150'>
             <div className='flex items-center'>
               <div className='flex-shrink-0 bg-purple-500 dark:bg-violet-600 rounded-md p-3'>
                 <FiMessageSquare className='h-6 w-6 text-white' />
               </div>
               <div className='ml-4'>
-                <h3 className='text-lg font-medium text-gray-900 dark:text-slate-100'>
+                <h3 className='text-lg font-medium text-theme-primary'>
                   AI Chat
                 </h3>
-                <p className='text-sm text-gray-500 dark:text-slate-400'>
+                <p className='text-sm text-theme-secondary'>
                   Use the floating button for AI assistance ✨
                 </p>
               </div>
@@ -674,17 +672,17 @@ export default function Dashboard() {
 
           <Link
             href='/analytics'
-            className='bg-white dark:bg-slate-800 overflow-hidden shadow dark:shadow-slate-700/20 rounded-lg p-6 hover:bg-gray-50 dark:hover:bg-slate-700/50 border border-gray-200 dark:border-slate-700 transition-colors duration-150'
+            className='bg-theme-card overflow-hidden shadow-theme-md rounded-lg p-6 hover:bg-theme-hover border border-theme-primary transition-colors duration-150'
           >
             <div className='flex items-center'>
               <div className='flex-shrink-0 bg-blue-500 dark:bg-sky-600 rounded-md p-3'>
                 <FiBarChart2 className='h-6 w-6 text-white' />
               </div>
               <div className='ml-4'>
-                <h3 className='text-lg font-medium text-gray-900 dark:text-slate-100'>
+                <h3 className='text-lg font-medium text-theme-primary'>
                   Analytics
                 </h3>
-                <p className='text-sm text-gray-500 dark:text-slate-400'>
+                <p className='text-sm text-theme-secondary'>
                   Track content performance
                 </p>
               </div>

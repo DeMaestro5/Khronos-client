@@ -21,13 +21,13 @@ export default function DashboardLayout({
         <ContentCreationProvider>
           <AIChatProvider>
             <CalendarProvider>
-              <div className='h-screen flex overflow-hidden bg-gray-50 dark:bg-slate-950 w-full transition-colors duration-200'>
+              <div className='h-screen flex overflow-hidden bg-theme-secondary w-full transition-colors duration-200'>
                 <Sidebar />
 
                 <div className='flex flex-col w-0 flex-1 overflow-hidden'>
                   <Navbar />
 
-                  <main className='flex-1 relative overflow-y-auto focus:outline-none bg-white dark:bg-slate-900 transition-colors duration-200'>
+                  <main className='flex-1 relative overflow-y-auto focus:outline-none bg-theme-primary transition-colors duration-200'>
                     {children}
                   </main>
                 </div>

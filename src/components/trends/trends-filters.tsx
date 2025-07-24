@@ -157,9 +157,9 @@ const TrendsFilters: React.FC<TrendsFiltersProps> = ({
       transition={{ duration: 0.3 }}
       className='mb-8'
     >
-      <div className='bg-gradient-to-r from-white to-blue-50 dark:from-slate-800 dark:to-slate-700 rounded-2xl border border-gray-200 dark:border-slate-600 shadow-lg backdrop-blur-sm'>
+      <div className='bg-gradient-to-r from-white to-blue-50 dark:from-slate-800 dark:to-slate-700 rounded-2xl border border-theme-tertiary shadow-lg backdrop-blur-sm'>
         {/* Header */}
-        <div className='px-6 py-4 border-b border-gray-200 dark:border-slate-600'>
+        <div className='px-6 py-4 border-b border-theme-tertiary'>
           <div className='flex items-center justify-between'>
             <div className='flex items-center space-x-3'>
               <div className='p-2 bg-blue-100 dark:bg-blue-900/50 rounded-lg'>
@@ -242,7 +242,7 @@ const TrendsFilters: React.FC<TrendsFiltersProps> = ({
             <motion.div
               initial={{ opacity: 0, height: 0 }}
               animate={{ opacity: 1, height: 'auto' }}
-              className='mt-6 pt-4 border-t border-gray-200 dark:border-slate-600'
+              className='mt-6 pt-4 border-t border-theme-tertiary'
             >
               <div className='flex flex-wrap gap-2'>
                 <span className='text-sm font-medium text-gray-600 dark:text-slate-400'>

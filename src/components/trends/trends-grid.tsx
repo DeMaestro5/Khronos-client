@@ -21,13 +21,13 @@ const TrendsGrid: React.FC<TrendsGridProps> = ({
   if (!hasTrends) {
     return (
       <div className='text-center py-16'>
-        <div className='text-gray-400 mb-6'>
+        <div className='text-theme-muted mb-6'>
           <TrendingUp className='w-20 h-20 mx-auto' />
         </div>
-        <h3 className='text-xl font-bold text-gray-900 mb-3'>
+        <h3 className='text-xl font-bold text-theme-primary mb-3'>
           No trends found
         </h3>
-        <p className='text-gray-600 max-w-md mx-auto'>
+        <p className='text-theme-secondary max-w-md mx-auto'>
           Try adjusting your filters or search for specific keywords to discover
           trending topics.
         </p>
@@ -38,8 +38,10 @@ const TrendsGrid: React.FC<TrendsGridProps> = ({
   return (
     <div className='mb-8'>
       <div className='flex items-center justify-between mb-6'>
-        <h2 className='text-2xl font-bold text-gray-200'>Current Trends</h2>
-        <div className='flex items-center space-x-2 text-sm text-gray-600 bg-white/80 backdrop-blur-sm px-4 py-2 rounded-xl'>
+        <h2 className='text-2xl font-bold text-theme-primary'>
+          Current Trends
+        </h2>
+        <div className='flex items-center space-x-2 text-sm text-theme-secondary bg-theme-card/80 backdrop-blur-sm px-4 py-2 rounded-xl'>
           <Activity className='w-4 h-4' />
           <span>Showing {currentTrends.trends.length} trends</span>
         </div>

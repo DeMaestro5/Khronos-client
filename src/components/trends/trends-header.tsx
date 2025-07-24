@@ -22,7 +22,7 @@ const TrendsHeader: React.FC<TrendsHeaderProps> = ({
   onRefresh,
 }) => {
   return (
-    <div className='bg-white/90 dark:bg-slate-900/90 backdrop-blur-sm border-b border-gray-200/60 dark:border-slate-700/60 shadow-sm transition-colors duration-300'>
+    <div className='bg-theme-card/90 backdrop-blur-sm border-b border-theme-tertiary shadow-sm transition-colors duration-300'>
       <div className='max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8'>
         <div className='flex items-center justify-between'>
           <div className='flex items-center space-x-4'>
@@ -30,10 +30,10 @@ const TrendsHeader: React.FC<TrendsHeaderProps> = ({
               <TrendingUp className='w-7 h-7 text-white' />
             </div>
             <div>
-              <h1 className='text-3xl font-bold bg-gradient-to-r from-gray-900 to-gray-700 dark:from-slate-100 dark:to-slate-400 bg-clip-text text-transparent'>
+              <h1 className='text-3xl font-bold text-theme-primary'>
                 Trends & Analytics
               </h1>
-              <p className='text-gray-600 dark:text-slate-400 mt-1 font-medium'>
+              <p className='text-theme-secondary mt-1 font-medium'>
                 Real-time social media insights
               </p>
             </div>
@@ -43,7 +43,7 @@ const TrendsHeader: React.FC<TrendsHeaderProps> = ({
               variant='outline'
               size='sm'
               onClick={() => setShowFilters(!showFilters)}
-              className='flex items-center space-x-2 text-gray-600 dark:text-slate-400 bg-white/80 dark:bg-slate-800/80 backdrop-blur-sm border-gray-200 dark:border-slate-600 hover:bg-white dark:hover:bg-slate-800 hover:shadow-md transition-all duration-200'
+              className='flex items-center space-x-2 text-theme-secondary bg-theme-card/80 backdrop-blur-sm border-theme-primary hover:bg-theme-card hover:shadow-md transition-all duration-200'
             >
               <FilterIcon className='w-4 h-4' />
               <span>Filters</span>
@@ -53,7 +53,7 @@ const TrendsHeader: React.FC<TrendsHeaderProps> = ({
               size='sm'
               onClick={onRefresh}
               disabled={isRefreshing}
-              className='flex items-center space-x-2 text-gray-600 dark:text-slate-400 bg-white/80 dark:bg-slate-800/80 backdrop-blur-sm border-gray-200 dark:border-slate-600 hover:bg-white dark:hover:bg-slate-800 hover:shadow-md transition-all duration-200'
+              className='flex items-center space-x-2 text-theme-secondary bg-theme-card/80 backdrop-blur-sm border-theme-primary hover:bg-theme-card hover:shadow-md transition-all duration-200'
             >
               <RefreshCwIcon
                 className={`w-4 h-4 ${isRefreshing ? 'animate-spin' : ''}`}

@@ -87,7 +87,7 @@ const SimpleAnimatedToast: React.FC<SimpleAnimatedToastProps> = ({
   }, []);
 
   return (
-    <div className='bg-white dark:bg-slate-800 rounded-xl shadow-lg border border-gray-200 dark:border-slate-600 p-4 flex items-center space-x-3 min-w-[280px]'>
+    <div className='bg-theme-card rounded-xl shadow-theme-lg border border-theme-primary p-4 flex items-center space-x-3 min-w-[280px]'>
       {/* Simple rotating spinner */}
       <div className='relative'>
         <div className='w-6 h-6 border-2 border-purple-200 border-t-purple-600 rounded-full animate-spin' />
@@ -549,7 +549,7 @@ export default function CreateContentModal({
           {/* Title and Description */}
           <div className='grid grid-cols-1 gap-4 sm:gap-6'>
             <div>
-              <label className='block text-sm font-medium text-slate-300 mb-2'>
+              <label className='block text-sm font-medium text-theme-primary mb-2'>
                 Content Title *
               </label>
               <input
@@ -569,7 +569,7 @@ export default function CreateContentModal({
             </div>
 
             <div>
-              <label className='block text-sm font-medium text-slate-300 mb-2'>
+              <label className='block text-sm font-medium text-theme-primary mb-2'>
                 Description
               </label>
               <textarea
@@ -593,7 +593,7 @@ export default function CreateContentModal({
 
           {/* Content Type */}
           <div>
-            <label className='block text-sm font-medium text-slate-300 mb-3'>
+            <label className='block text-sm font-medium text-theme-primary mb-3'>
               Content Type
             </label>
             <div className='grid grid-cols-2 sm:grid-cols-3 gap-2 sm:gap-3'>
@@ -611,7 +611,7 @@ export default function CreateContentModal({
                     }`}
                   >
                     <Icon className='h-5 w-5 sm:h-6 sm:w-6 mx-auto mb-1 sm:mb-2 text-white' />
-                    <span className='text-xs sm:text-sm text-slate-300 block'>
+                    <span className='text-xs sm:text-sm text-theme-primary block'>
                       {type.label}
                     </span>
                   </button>
@@ -622,7 +622,7 @@ export default function CreateContentModal({
 
           {/* Platforms */}
           <div>
-            <label className='block text-sm font-medium text-slate-300 mb-3'>
+            <label className='block text-sm font-medium text-theme-primary mb-3'>
               Platforms *
             </label>
             <div className='grid grid-cols-2 sm:grid-cols-3 gap-2 sm:gap-3'>
@@ -642,7 +642,7 @@ export default function CreateContentModal({
                   >
                     <div className='flex items-center space-x-2'>
                       <Icon className='h-4 w-4 sm:h-5 sm:w-5 text-white flex-shrink-0' />
-                      <span className='text-xs sm:text-sm text-slate-300 truncate'>
+                      <span className='text-xs sm:text-sm text-theme-primary truncate'>
                         {platform.label}
                       </span>
                     </div>
@@ -660,7 +660,7 @@ export default function CreateContentModal({
           {/* Schedule */}
           <div className='grid grid-cols-1 md:grid-cols-2 gap-3 sm:gap-4'>
             <div>
-              <label className='block text-sm font-medium text-slate-300 mb-2'>
+              <label className='block text-sm font-medium text-theme-primary mb-2'>
                 Scheduled Date
               </label>
               <input
@@ -682,7 +682,7 @@ export default function CreateContentModal({
             </div>
 
             <div>
-              <label className='block text-sm font-medium text-slate-300 mb-2'>
+              <label className='block text-sm font-medium text-theme-primary mb-2'>
                 Scheduled Time
               </label>
               <input
@@ -705,7 +705,7 @@ export default function CreateContentModal({
 
           {/* Tags */}
           <div>
-            <label className='block text-sm font-medium text-slate-300 mb-2'>
+            <label className='block text-sm font-medium text-theme-primary mb-2'>
               Tags
             </label>
             <div className='flex flex-wrap gap-1.5 sm:gap-2 mb-3'>
@@ -748,7 +748,7 @@ export default function CreateContentModal({
 
           {/* Priority */}
           <div>
-            <label className='block text-sm font-medium text-slate-300 mb-3'>
+            <label className='block text-sm font-medium text-theme-primary mb-3'>
               Priority
             </label>
             <div className='flex flex-col sm:flex-row space-y-2 sm:space-y-0 sm:space-x-3'>

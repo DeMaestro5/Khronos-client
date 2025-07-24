@@ -7,14 +7,14 @@ import ContentCalendar from '../components/ui/content-calendar';
 import FeaturesSection from '../components/features';
 import Testimonial from '../components/testimonial';
 import StatsSection from '../components/stats';
-import ThemeToggle from '../components/ui/theme-toggle';
+import { ThemeToggle } from '../components/ui/theme-toggle';
 
 export default function Home() {
   return (
-    <div className='min-h-screen bg-slate-50 dark:bg-slate-950 transition-colors duration-200'>
+    <div className='min-h-screen bg-bg-secondary dark:bg-bg-primary transition-colors duration-200'>
       {/* Navigation */}
       <motion.nav
-        className='fixed top-0 w-full bg-white/80 dark:bg-slate-900/80 backdrop-blur-md border-b border-slate-200/60 dark:border-slate-800/60 z-50 transition-colors duration-200'
+        className='fixed top-0 w-full bg-bg-card/80 dark:bg-bg-card/80 backdrop-blur-md border-b border-border-primary/60 dark:border-border-primary/60 z-50 transition-colors duration-200'
         initial={{ opacity: 0, y: -20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.6 }}

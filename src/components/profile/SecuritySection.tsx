@@ -30,11 +30,9 @@ export default function SecuritySection({
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
   return (
-    <div className='bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-gray-200 dark:border-slate-600 p-6'>
+    <div className='bg-theme-card rounded-xl shadow-theme-sm border border-theme-primary p-6'>
       <div className='flex items-center justify-between mb-6'>
-        <h2 className='text-lg font-semibold text-gray-900 dark:text-slate-100'>
-          Security
-        </h2>
+        <h2 className='text-lg font-semibold text-theme-primary'>Security</h2>
         <button
           type='button'
           onClick={() => setChangePassword(!changePassword)}

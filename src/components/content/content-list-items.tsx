@@ -32,7 +32,7 @@ export const ContentListItem = ({ content }: ContentListItemProps) => (
             <div className='flex-1'>
               <div className='flex items-center gap-3 mb-2'>
                 {getStatusIcon(content.status as ContentStatus)}
-                <h3 className='font-semibold text-lg group-hover:text-blue-600 text-gray-400 transition-colors'>
+                <h3 className='font-semibold text-lg group-hover:text-accent-primary text-theme-primary transition-colors'>
                   {content.title}
                 </h3>
                 <span
@@ -50,10 +50,10 @@ export const ContentListItem = ({ content }: ContentListItemProps) => (
                   {content.type.replace('_', ' ')}
                 </span>
               </div>
-              <p className='text-gray-200 text-sm mb-3 line-clamp-2'>
+              <p className='text-theme-secondary text-sm mb-3 line-clamp-2'>
                 {content.description}
               </p>
-              <div className='flex items-center gap-4 text-xs text-gray-500'>
+              <div className='flex items-center gap-4 text-xs text-theme-secondary'>
                 <div className='flex items-center gap-1'>
                   <Calendar className='w-3 h-3' />
                   {content.metadata?.publishedDate
@@ -70,8 +70,8 @@ export const ContentListItem = ({ content }: ContentListItemProps) => (
                 </span>
               </div>
             </div>
-            <button className='opacity-0 group-hover:opacity-100 transition-opacity duration-200 p-2 hover:bg-gray-50 rounded'>
-              <Eye className='w-4 h-4 text-gray-500' />
+            <button className='opacity-0 group-hover:opacity-100 transition-opacity duration-200 p-2 hover:bg-theme-secondary/20 rounded'>
+              <Eye className='w-4 h-4 text-theme-secondary' />
             </button>
           </div>
         </CardContent>

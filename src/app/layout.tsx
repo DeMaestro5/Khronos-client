@@ -17,8 +17,10 @@ export default function RootLayout({
 }>) {
   return (
     <html lang='en' suppressHydrationWarning>
-      <body className={inter.className}>
-        <ThemeProvider attribute='class' defaultTheme='system' enableSystem>
+      <body
+        className={`${inter.className} bg-bg-primary text-text-primary theme-transition`}
+      >
+        <ThemeProvider>
           <AuthProvider>
             <UserDataProvider>
               <SettingsProvider>
