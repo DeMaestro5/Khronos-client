@@ -50,12 +50,12 @@ const ToggleSwitch: React.FC<ToggleSwitchProps> = ({
       type='button'
       onClick={() => !disabled && onChange(!checked)}
       disabled={disabled}
-      className={`relative inline-flex items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 ${
+      className={`relative inline-flex items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-accent-primary focus:ring-offset-2 ${
         disabled
-          ? 'opacity-50 cursor-not-allowed bg-gray-200 dark:bg-gray-700'
+          ? 'opacity-50 cursor-not-allowed bg-gray-300 dark:bg-gray-600'
           : checked
-          ? 'bg-blue-600'
-          : 'bg-gray-200 dark:bg-gray-700'
+          ? 'bg-accent-primary'
+          : 'bg-gray-300 dark:bg-gray-600'
       } ${sizeClasses}`}
     >
       <span
@@ -87,24 +87,20 @@ const NotificationRow: React.FC<NotificationRowProps> = ({
       <div className='flex items-start space-x-3 flex-1'>
         {Icon && (
           <div className='flex-shrink-0 mt-1'>
-            <Icon className='h-5 w-5 text-gray-400' />
+            <Icon className='h-5 w-5 text-theme-secondary' />
           </div>
         )}
         <div className='flex-1'>
           <h4
             className={`text-sm font-medium ${
-              disabled
-                ? 'text-gray-400 dark:text-gray-500'
-                : 'text-gray-900 dark:text-gray-100'
+              disabled ? 'text-theme-secondary' : 'text-theme-primary'
             }`}
           >
             {title}
           </h4>
           <p
             className={`text-sm mt-1 ${
-              disabled
-                ? 'text-gray-400 dark:text-gray-500'
-                : 'text-gray-500 dark:text-gray-400'
+              disabled ? 'text-theme-secondary' : 'text-theme-secondary'
             }`}
           >
             {description}
@@ -142,17 +138,15 @@ const NotificationSection: React.FC<NotificationSectionProps> = ({
   icon: Icon,
 }) => {
   return (
-    <div className='bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-6'>
+    <div className='bg-theme-card rounded-lg border border-theme-primary p-6'>
       <div className='flex items-center justify-between mb-4'>
         <div className='flex items-center space-x-3'>
-          {Icon && <Icon className='h-6 w-6 text-gray-400' />}
+          {Icon && <Icon className='h-6 w-6 text-theme-secondary' />}
           <div>
-            <h3 className='text-lg font-semibold text-gray-900 dark:text-gray-100'>
+            <h3 className='text-lg font-semibold text-theme-primary'>
               {title}
             </h3>
-            <p className='text-sm text-gray-500 dark:text-gray-400'>
-              {description}
-            </p>
+            <p className='text-sm text-theme-secondary'>{description}</p>
           </div>
         </div>
 
@@ -160,14 +154,14 @@ const NotificationSection: React.FC<NotificationSectionProps> = ({
       </div>
 
       {enabled && (
-        <div className='border-t border-gray-200 dark:border-gray-700 -mx-6 px-6'>
+        <div className='border-t border-theme-primary -mx-6 px-6'>
           {children}
         </div>
       )}
 
       {!enabled && (
-        <div className='border-t border-gray-200 dark:border-gray-700 -mx-6 px-6 py-4'>
-          <p className='text-sm text-gray-400 dark:text-gray-500 text-center'>
+        <div className='border-t border-theme-primary -mx-6 px-6 py-4'>
+          <p className='text-sm text-theme-secondary text-center'>
             Enable {title.toLowerCase()} to configure specific notification
             types
           </p>
@@ -197,13 +191,13 @@ const QuietHours: React.FC<QuietHoursProps> = ({
   error,
 }) => {
   return (
-    <div className='bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-6'>
+    <div className='bg-theme-card rounded-lg border border-theme-primary p-6'>
       <div className='flex items-center justify-between mb-4'>
         <div>
-          <h3 className='text-lg font-semibold text-gray-900 dark:text-gray-100'>
+          <h3 className='text-lg font-semibold text-theme-primary'>
             Quiet Hours
           </h3>
-          <p className='text-sm text-gray-500 dark:text-gray-400'>
+          <p className='text-sm text-theme-secondary'>
             Disable notifications during specific hours
           </p>
         </div>
@@ -215,7 +209,7 @@ const QuietHours: React.FC<QuietHoursProps> = ({
         <div className='border-t border-theme-primary -mx-6 px-6 pt-4'>
           <div className='grid grid-cols-2 gap-4'>
             <div>
-              <label className='text-sm font-medium text-gray-900 dark:text-gray-100 mb-2 block'>
+              <label className='text-sm font-medium text-theme-primary mb-2 block'>
                 Start Time
               </label>
               <input
@@ -231,29 +225,25 @@ const QuietHours: React.FC<QuietHoursProps> = ({
             </div>
 
             <div>
-              <label className='text-sm font-medium text-gray-900 dark:text-gray-100 mb-2 block'>
+              <label className='text-sm font-medium text-theme-primary mb-2 block'>
                 End Time
               </label>
               <input
                 type='time'
                 value={endTime}
                 onChange={(e) => onEndTimeChange(e.target.value)}
-                className={`w-full px-3 py-2 border rounded-lg text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 ${
+                className={`w-full px-3 py-2 border rounded-lg text-theme-primary focus:outline-none focus:ring-2 focus:ring-accent-primary focus:border-accent-primary ${
                   error
-                    ? 'border-red-300 dark:border-red-600 bg-red-50 dark:bg-red-900/20'
-                    : 'border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800'
+                    ? 'border-red-300 bg-red-50'
+                    : 'border-theme-primary bg-theme-card'
                 }`}
               />
             </div>
           </div>
 
-          {error && (
-            <p className='text-xs text-red-600 dark:text-red-400 mt-2'>
-              {error}
-            </p>
-          )}
+          {error && <p className='text-xs text-red-600 mt-2'>{error}</p>}
 
-          <p className='text-xs text-gray-500 dark:text-gray-400 mt-2'>
+          <p className='text-xs text-theme-secondary mt-2'>
             {enabled && startTime && endTime && !error && (
               <>
                 Notifications will be silenced from {formatTime(startTime)} to{' '}
@@ -538,11 +528,11 @@ const NotificationSettingsSection: React.FC = () => {
     <div className='space-y-6'>
       {/* Unsaved Changes Banner */}
       {hasChanges && (
-        <div className='bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 rounded-lg p-4'>
+        <div className='bg-accent-warning/10 dark:bg-accent-warning/20 border border-accent-warning/30 dark:border-accent-warning/40 rounded-lg p-4'>
           <div className='flex items-center justify-between'>
             <div className='flex items-center'>
-              <div className='h-2 w-2 bg-yellow-400 rounded-full mr-3' />
-              <p className='text-sm font-medium text-yellow-800 dark:text-yellow-200'>
+              <div className='h-2 w-2 bg-accent-warning rounded-full mr-3' />
+              <p className='text-sm font-medium text-theme-primary dark:text-theme-primary'>
                 You have unsaved changes
               </p>
             </div>
@@ -550,14 +540,14 @@ const NotificationSettingsSection: React.FC = () => {
               <button
                 onClick={handleDiscard}
                 disabled={isSaving}
-                className='text-sm text-yellow-700 dark:text-yellow-300 hover:text-yellow-900 dark:hover:text-yellow-100 disabled:opacity-50'
+                className='text-sm text-theme-secondary hover:text-theme-primary disabled:opacity-50'
               >
                 Discard
               </button>
               <button
                 onClick={handleSave}
                 disabled={isSaving}
-                className='bg-yellow-600 hover:bg-yellow-700 text-white px-3 py-1 rounded-md text-sm font-medium disabled:opacity-50 disabled:cursor-not-allowed'
+                className='bg-accent-warning hover:bg-accent-warning/90 text-white px-3 py-1 rounded-md text-sm font-medium disabled:opacity-50 disabled:cursor-not-allowed'
               >
                 {isSaving ? 'Saving...' : 'Save Changes'}
               </button>
@@ -574,7 +564,7 @@ const NotificationSettingsSection: React.FC = () => {
         onToggle={(enabled) => handleSectionToggle('email', enabled)}
         icon={EnvelopeIcon}
       >
-        <div className='space-y-0 divide-y divide-gray-200 dark:divide-gray-700'>
+        <div className='space-y-0 divide-y divide-theme-primary'>
           {(
             Object.entries(notificationTypes) as [
               NotificationTypeKey,
@@ -603,7 +593,7 @@ const NotificationSettingsSection: React.FC = () => {
         onToggle={(enabled) => handleSectionToggle('push', enabled)}
         icon={DevicePhoneMobileIcon}
       >
-        <div className='space-y-0 divide-y divide-gray-200 dark:divide-gray-700'>
+        <div className='space-y-0 divide-y divide-theme-primary'>
           {(
             Object.entries(notificationTypes) as [
               NotificationTypeKey,
@@ -632,7 +622,7 @@ const NotificationSettingsSection: React.FC = () => {
         onToggle={(enabled) => handleSectionToggle('inApp', enabled)}
         icon={ComputerDesktopIcon}
       >
-        <div className='space-y-0 divide-y divide-gray-200 dark:divide-gray-700'>
+        <div className='space-y-0 divide-y divide-theme-primary'>
           {(
             Object.entries(notificationTypes) as [
               NotificationTypeKey,
@@ -671,8 +661,8 @@ const NotificationSettingsSection: React.FC = () => {
       />
 
       {/* Notification Summary */}
-      <div className='bg-gray-50 dark:bg-gray-900 rounded-lg border border-gray-200 dark:border-gray-700 p-6'>
-        <h3 className='text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4'>
+      <div className='bg-theme-secondary/10 rounded-lg border border-theme-primary p-6'>
+        <h3 className='text-lg font-semibold text-theme-primary mb-4'>
           Notification Summary
         </h3>
 
@@ -682,19 +672,17 @@ const NotificationSettingsSection: React.FC = () => {
               className={`inline-flex items-center justify-center w-12 h-12 rounded-full mb-2 ${
                 localSettings.emailEnabled
                   ? 'bg-green-100 dark:bg-green-900/20'
-                  : 'bg-gray-100 dark:bg-gray-800'
+                  : 'bg-theme-secondary/20'
               }`}
             >
               {localSettings.emailEnabled ? (
                 <CheckCircleIcon className='h-6 w-6 text-green-600 dark:text-green-400' />
               ) : (
-                <XCircleIcon className='h-6 w-6 text-gray-400' />
+                <XCircleIcon className='h-6 w-6 text-theme-secondary' />
               )}
             </div>
-            <p className='text-sm font-medium text-gray-900 dark:text-gray-100'>
-              Email
-            </p>
-            <p className='text-xs text-gray-500 dark:text-gray-400'>
+            <p className='text-sm font-medium text-theme-primary'>Email</p>
+            <p className='text-xs text-theme-secondary'>
               {localSettings.emailEnabled
                 ? `${
                     Object.values(localSettings.emailTypes || {}).filter(
@@ -710,19 +698,17 @@ const NotificationSettingsSection: React.FC = () => {
               className={`inline-flex items-center justify-center w-12 h-12 rounded-full mb-2 ${
                 localSettings.pushEnabled
                   ? 'bg-green-100 dark:bg-green-900/20'
-                  : 'bg-gray-100 dark:bg-gray-800'
+                  : 'bg-theme-secondary/20'
               }`}
             >
               {localSettings.pushEnabled ? (
                 <CheckCircleIcon className='h-6 w-6 text-green-600 dark:text-green-400' />
               ) : (
-                <XCircleIcon className='h-6 w-6 text-gray-400' />
+                <XCircleIcon className='h-6 w-6 text-theme-secondary' />
               )}
             </div>
-            <p className='text-sm font-medium text-gray-900 dark:text-gray-100'>
-              Push
-            </p>
-            <p className='text-xs text-gray-500 dark:text-gray-400'>
+            <p className='text-sm font-medium text-theme-primary'>Push</p>
+            <p className='text-xs text-theme-secondary'>
               {localSettings.pushEnabled
                 ? `${
                     Object.values(localSettings.pushTypes || {}).filter(Boolean)
@@ -737,19 +723,17 @@ const NotificationSettingsSection: React.FC = () => {
               className={`inline-flex items-center justify-center w-12 h-12 rounded-full mb-2 ${
                 localSettings.inAppEnabled
                   ? 'bg-green-100 dark:bg-green-900/20'
-                  : 'bg-gray-100 dark:bg-gray-800'
+                  : 'bg-theme-secondary/20'
               }`}
             >
               {localSettings.inAppEnabled ? (
                 <CheckCircleIcon className='h-6 w-6 text-green-600 dark:text-green-400' />
               ) : (
-                <XCircleIcon className='h-6 w-6 text-gray-400' />
+                <XCircleIcon className='h-6 w-6 text-theme-secondary' />
               )}
             </div>
-            <p className='text-sm font-medium text-gray-900 dark:text-gray-100'>
-              In-App
-            </p>
-            <p className='text-xs text-gray-500 dark:text-gray-400'>
+            <p className='text-sm font-medium text-theme-primary'>In-App</p>
+            <p className='text-xs text-theme-secondary'>
               {localSettings.inAppEnabled
                 ? `${
                     Object.values(localSettings.inAppTypes || {}).filter(
@@ -762,8 +746,8 @@ const NotificationSettingsSection: React.FC = () => {
         </div>
 
         {localSettings.quietHoursEnabled && (
-          <div className='mt-4 p-3 bg-blue-50 dark:bg-blue-900/20 rounded-lg'>
-            <p className='text-sm text-blue-800 dark:text-blue-200'>
+          <div className='mt-4 p-3 bg-accent-primary/10 rounded-lg'>
+            <p className='text-sm text-accent-primary'>
               <span className='font-medium'>Quiet Hours:</span>{' '}
               {formatTime(localSettings.quietHoursStart || '22:00')} -{' '}
               {formatTime(localSettings.quietHoursEnd || '08:00')}

@@ -66,9 +66,7 @@ const PasswordInput: React.FC<PasswordInputProps> = ({
 
   return (
     <div className='space-y-2'>
-      <label className='text-sm font-medium text-gray-900 dark:text-gray-100'>
-        {label}
-      </label>
+      <label className='text-sm font-medium text-theme-primary'>{label}</label>
 
       <div className='relative'>
         <input
@@ -77,13 +75,13 @@ const PasswordInput: React.FC<PasswordInputProps> = ({
           onChange={(e) => onChange(e.target.value)}
           placeholder={placeholder}
           disabled={disabled}
-          className={`w-full px-3 py-2 border rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 pr-10 ${
+          className={`w-full px-3 py-2 border rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-accent-primary focus:border-accent-primary pr-10 ${
             disabled
-              ? 'opacity-50 cursor-not-allowed bg-gray-100 dark:bg-gray-700'
+              ? 'opacity-50 cursor-not-allowed bg-theme-secondary/20'
               : error
               ? 'border-red-300 dark:border-red-600 bg-red-50 dark:bg-red-900/20'
-              : 'border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800'
-          } text-gray-900 dark:text-gray-100 placeholder-gray-500 dark:placeholder-gray-400`}
+              : 'border-theme-primary bg-theme-card'
+          } text-theme-primary placeholder-theme-muted`}
         />
 
         <button
@@ -92,8 +90,8 @@ const PasswordInput: React.FC<PasswordInputProps> = ({
           disabled={disabled}
           className={`absolute right-3 top-1/2 transform -translate-y-1/2 ${
             disabled
-              ? 'text-gray-300 cursor-not-allowed'
-              : 'text-gray-400 hover:text-gray-600 dark:hover:text-gray-300'
+              ? 'text-theme-muted cursor-not-allowed'
+              : 'text-theme-muted hover:text-theme-primary'
           }`}
         >
           {showPassword ? (
@@ -108,7 +106,7 @@ const PasswordInput: React.FC<PasswordInputProps> = ({
       {strength && !disabled && (
         <div className='space-y-2'>
           <div className='flex items-center space-x-2'>
-            <div className='flex-1 bg-gray-200 dark:bg-gray-700 rounded-full h-2'>
+            <div className='flex-1 bg-theme-secondary/30 rounded-full h-2'>
               <div
                 className={`h-2 rounded-full transition-all duration-300 ${
                   strength.level === 'weak'
@@ -139,7 +137,7 @@ const PasswordInput: React.FC<PasswordInputProps> = ({
                 className={`flex items-center space-x-1 ${
                   passed
                     ? 'text-green-600 dark:text-green-400'
-                    : 'text-gray-400 dark:text-gray-500'
+                    : 'text-theme-muted'
                 }`}
               >
                 {passed ? (
@@ -243,25 +241,25 @@ const TwoFactorSetup: React.FC<TwoFactorSetupProps> = ({
 
   if (showSetup && !enabled) {
     return (
-      <div className='bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-6'>
-        <h3 className='text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4'>
+      <div className='bg-theme-card rounded-lg border border-theme-primary p-6'>
+        <h3 className='text-lg font-semibold text-theme-primary mb-4'>
           Set up Two-Factor Authentication
         </h3>
 
         {backupCodes.length === 0 ? (
           <div className='space-y-6'>
             <div className='text-center'>
-              <div className='w-48 h-48 bg-gray-100 dark:bg-gray-700 rounded-lg mx-auto mb-4 flex items-center justify-center'>
+              <div className='w-48 h-48 bg-theme-secondary/20 rounded-lg mx-auto mb-4 flex items-center justify-center'>
                 <img src={qrCode} alt='QR Code' className='w-40 h-40' />
               </div>
-              <p className='text-sm text-gray-600 dark:text-gray-400'>
+              <p className='text-sm text-theme-secondary'>
                 Scan this QR code with your authenticator app
               </p>
             </div>
 
             <div className='space-y-4'>
               <div>
-                <label className='text-sm font-medium text-gray-900 dark:text-gray-100'>
+                <label className='text-sm font-medium text-theme-primary'>
                   Verification Code
                 </label>
                 <input
@@ -273,7 +271,7 @@ const TwoFactorSetup: React.FC<TwoFactorSetupProps> = ({
                     )
                   }
                   placeholder='Enter 6-digit code'
-                  className='mt-1 w-full px-3 py-2 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 rounded-lg text-center text-2xl tracking-widest text-gray-900 dark:text-gray-100'
+                  className='mt-1 w-full px-3 py-2 border border-theme-primary bg-theme-card rounded-lg text-center text-2xl tracking-widest text-theme-primary'
                   maxLength={6}
                   disabled={isVerifying}
                 />
@@ -283,14 +281,14 @@ const TwoFactorSetup: React.FC<TwoFactorSetupProps> = ({
                 <button
                   onClick={() => setShowSetup(false)}
                   disabled={isVerifying}
-                  className='flex-1 px-4 py-2 border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 disabled:opacity-50 disabled:cursor-not-allowed'
+                  className='flex-1 px-4 py-2 border border-theme-primary text-theme-primary rounded-lg hover:bg-theme-hover disabled:opacity-50 disabled:cursor-not-allowed'
                 >
                   Cancel
                 </button>
                 <button
                   onClick={handleVerify2FA}
                   disabled={verificationCode.length !== 6 || isVerifying}
-                  className='flex-1 px-4 py-2 bg-blue-600 hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed text-white rounded-lg'
+                  className='flex-1 px-4 py-2 bg-accent-primary hover:bg-accent-primary/90 disabled:opacity-50 disabled:cursor-not-allowed text-white rounded-lg'
                 >
                   {isVerifying ? 'Verifying...' : 'Verify & Enable'}
                 </button>
@@ -301,24 +299,24 @@ const TwoFactorSetup: React.FC<TwoFactorSetupProps> = ({
           <div className='space-y-6'>
             <div className='text-center'>
               <CheckCircleIcon className='h-16 w-16 text-green-500 mx-auto mb-4' />
-              <h4 className='text-lg font-semibold text-gray-900 dark:text-gray-100'>
+              <h4 className='text-lg font-semibold text-theme-primary'>
                 Two-Factor Authentication Enabled!
               </h4>
-              <p className='text-gray-600 dark:text-gray-400 mt-2'>
+              <p className='text-theme-secondary mt-2'>
                 Save these backup codes in a safe place. You can use them to
                 access your account if you lose your authenticator device.
               </p>
             </div>
 
-            <div className='bg-gray-50 dark:bg-gray-900 rounded-lg p-4'>
-              <h5 className='font-medium text-gray-900 dark:text-gray-100 mb-3'>
+            <div className='bg-theme-secondary/10 rounded-lg p-4'>
+              <h5 className='font-medium text-theme-primary mb-3'>
                 Backup Codes
               </h5>
               <div className='grid grid-cols-2 gap-2 text-sm font-mono'>
                 {backupCodes.map((code, index) => (
                   <div
                     key={index}
-                    className='bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded px-3 py-2 text-center'
+                    className='bg-theme-card border border-theme-primary rounded px-3 py-2 text-center'
                   >
                     {code}
                   </div>
@@ -342,7 +340,7 @@ const TwoFactorSetup: React.FC<TwoFactorSetupProps> = ({
   }
 
   return (
-    <div className='flex items-center justify-between p-4 bg-gray-50 dark:bg-gray-900 rounded-lg'>
+    <div className='flex items-center justify-between p-4 bg-theme-secondary/10 rounded-lg'>
       <div className='flex items-center space-x-3'>
         <ShieldCheckIcon
           className={`h-6 w-6 ${
@@ -356,18 +354,14 @@ const TwoFactorSetup: React.FC<TwoFactorSetupProps> = ({
         <div>
           <h4
             className={`font-medium ${
-              disabled
-                ? 'text-gray-400 dark:text-gray-500'
-                : 'text-gray-900 dark:text-gray-100'
+              disabled ? 'text-theme-muted' : 'text-theme-primary'
             }`}
           >
             Two-Factor Authentication
           </h4>
           <p
             className={`text-sm ${
-              disabled
-                ? 'text-gray-400 dark:text-gray-500'
-                : 'text-gray-500 dark:text-gray-400'
+              disabled ? 'text-theme-muted' : 'text-theme-secondary'
             }`}
           >
             {enabled
@@ -382,10 +376,10 @@ const TwoFactorSetup: React.FC<TwoFactorSetupProps> = ({
         disabled={disabled}
         className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
           disabled
-            ? 'opacity-50 cursor-not-allowed bg-gray-100 dark:bg-gray-700 text-gray-400'
+            ? 'opacity-50 cursor-not-allowed bg-theme-secondary/20 text-theme-muted'
             : enabled
             ? 'bg-red-100 dark:bg-red-900/20 text-red-700 dark:text-red-300 hover:bg-red-200 dark:hover:bg-red-900/30'
-            : 'bg-blue-100 dark:bg-blue-900/20 text-blue-700 dark:text-blue-300 hover:bg-blue-200 dark:hover:bg-blue-900/30'
+            : 'bg-accent-primary/10 text-accent-primary hover:bg-accent-primary/20'
         }`}
       >
         {enabled ? 'Disable' : 'Enable'}
@@ -458,9 +452,7 @@ const ActiveSessions: React.FC<{ disabled?: boolean }> = ({
       <div className='flex items-center justify-between'>
         <h4
           className={`font-medium ${
-            disabled
-              ? 'text-gray-400 dark:text-gray-500'
-              : 'text-gray-900 dark:text-gray-100'
+            disabled ? 'text-theme-muted' : 'text-theme-primary'
           }`}
         >
           Active Sessions
@@ -468,10 +460,10 @@ const ActiveSessions: React.FC<{ disabled?: boolean }> = ({
         <button
           onClick={handleTerminateAllSessions}
           disabled={disabled}
-          className={`text-sm transition-colors ${
+          className={`text-sm font-medium transition-colors ${
             disabled
-              ? 'text-gray-400 cursor-not-allowed'
-              : 'text-red-600 dark:text-red-400 hover:text-red-800 dark:hover:text-red-300'
+              ? 'text-theme-muted cursor-not-allowed'
+              : 'text-red-700 dark:text-red-400 hover:text-red-900 dark:hover:text-red-300'
           }`}
         >
           Terminate All Others
@@ -484,8 +476,8 @@ const ActiveSessions: React.FC<{ disabled?: boolean }> = ({
             key={session.id}
             className={`flex items-center justify-between p-4 border rounded-lg ${
               disabled
-                ? 'border-gray-200 dark:border-gray-700 opacity-50'
-                : 'border-gray-200 dark:border-gray-700'
+                ? 'border-theme-primary opacity-50'
+                : 'border-theme-primary'
             }`}
           >
             <div className='flex items-center space-x-3'>
@@ -493,13 +485,13 @@ const ActiveSessions: React.FC<{ disabled?: boolean }> = ({
               session.device.toLowerCase().includes('mobile') ? (
                 <DevicePhoneMobileIcon
                   className={`h-6 w-6 ${
-                    disabled ? 'text-gray-300' : 'text-gray-400'
+                    disabled ? 'text-theme-muted' : 'text-theme-secondary'
                   }`}
                 />
               ) : (
                 <ComputerDesktopIcon
                   className={`h-6 w-6 ${
-                    disabled ? 'text-gray-300' : 'text-gray-400'
+                    disabled ? 'text-theme-muted' : 'text-theme-secondary'
                   }`}
                 />
               )}
@@ -508,33 +500,27 @@ const ActiveSessions: React.FC<{ disabled?: boolean }> = ({
                 <div className='flex items-center space-x-2'>
                   <span
                     className={`font-medium ${
-                      disabled
-                        ? 'text-gray-400 dark:text-gray-500'
-                        : 'text-gray-900 dark:text-gray-100'
+                      disabled ? 'text-theme-muted' : 'text-theme-primary'
                     }`}
                   >
                     {session.device}
                   </span>
                   {session.current && (
-                    <span className='px-2 py-1 bg-green-100 dark:bg-green-900/20 text-green-700 dark:text-green-300 text-xs font-medium rounded-full'>
+                    <span className='px-2 py-1 bg-green-600 text-white text-xs font-medium rounded-full'>
                       Current
                     </span>
                   )}
                 </div>
                 <div
                   className={`text-sm ${
-                    disabled
-                      ? 'text-gray-400 dark:text-gray-500'
-                      : 'text-gray-500 dark:text-gray-400'
+                    disabled ? 'text-theme-muted' : 'text-theme-secondary'
                   }`}
                 >
                   {session.browser} • {session.location} • {session.ip}
                 </div>
                 <div
                   className={`flex items-center text-xs mt-1 ${
-                    disabled
-                      ? 'text-gray-400 dark:text-gray-500'
-                      : 'text-gray-400 dark:text-gray-500'
+                    disabled ? 'text-theme-muted' : 'text-theme-secondary'
                   }`}
                 >
                   <ClockIcon className='h-3 w-3 mr-1' />
@@ -547,10 +533,10 @@ const ActiveSessions: React.FC<{ disabled?: boolean }> = ({
               <button
                 onClick={() => handleTerminateSession(session.id)}
                 disabled={disabled}
-                className={`text-sm transition-colors ${
+                className={`text-sm font-medium transition-colors ${
                   disabled
-                    ? 'text-gray-400 cursor-not-allowed'
-                    : 'text-red-600 dark:text-red-400 hover:text-red-800 dark:hover:text-red-300'
+                    ? 'text-theme-muted cursor-not-allowed'
+                    : 'text-red-700 dark:text-red-400 hover:text-red-900 dark:hover:text-red-300'
                 }`}
               >
                 Terminate
@@ -779,14 +765,14 @@ const SecuritySettingsSection: React.FC = () => {
   return (
     <div className='space-y-6'>
       {/* Security Notice */}
-      <div className='bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-4'>
+      <div className='bg-accent-primary/10 dark:bg-accent-primary/20 border border-accent-primary/30 dark:border-accent-primary/40 rounded-lg p-4'>
         <div className='flex items-center'>
-          <ExclamationTriangleIcon className='h-5 w-5 text-blue-600 dark:text-blue-400 mr-3' />
+          <ExclamationTriangleIcon className='h-5 w-5 text-accent-primary mr-3' />
           <div>
-            <p className='text-sm font-medium text-blue-800 dark:text-blue-200'>
+            <p className='text-sm font-medium text-theme-primary'>
               Security Settings Preview
             </p>
-            <p className='text-xs text-blue-700 dark:text-blue-300 mt-1'>
+            <p className='text-xs text-theme-secondary mt-1'>
               Security features are in preview mode and require server-side
               implementation to be fully functional.
             </p>
@@ -796,11 +782,11 @@ const SecuritySettingsSection: React.FC = () => {
 
       {/* Unsaved Changes Banner */}
       {hasChanges && (
-        <div className='bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 rounded-lg p-4'>
+        <div className='bg-accent-warning/10 dark:bg-accent-warning/20 border border-accent-warning/30 dark:border-accent-warning/40 rounded-lg p-4'>
           <div className='flex items-center justify-between'>
             <div className='flex items-center'>
-              <div className='h-2 w-2 bg-yellow-400 rounded-full mr-3' />
-              <p className='text-sm font-medium text-yellow-800 dark:text-yellow-200'>
+              <div className='h-2 w-2 bg-accent-warning rounded-full mr-3' />
+              <p className='text-sm font-medium text-theme-primary'>
                 You have unsaved changes
               </p>
             </div>
@@ -808,14 +794,14 @@ const SecuritySettingsSection: React.FC = () => {
               <button
                 onClick={handleDiscard}
                 disabled={isSaving}
-                className='text-sm text-yellow-700 dark:text-yellow-300 hover:text-yellow-900 dark:hover:text-yellow-100 disabled:opacity-50'
+                className='text-sm text-theme-secondary hover:text-theme-primary disabled:opacity-50'
               >
                 Discard
               </button>
               <button
                 onClick={handleSave}
                 disabled={isSaving}
-                className='bg-yellow-600 hover:bg-yellow-700 text-white px-3 py-1 rounded-md text-sm font-medium disabled:opacity-50 disabled:cursor-not-allowed'
+                className='bg-accent-warning hover:bg-accent-warning/90 text-white px-3 py-1 rounded-md text-sm font-medium disabled:opacity-50 disabled:cursor-not-allowed'
               >
                 {isSaving ? 'Saving...' : 'Save Changes'}
               </button>
@@ -825,8 +811,8 @@ const SecuritySettingsSection: React.FC = () => {
       )}
 
       {/* Change Password */}
-      <div className='bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-6'>
-        <h3 className='text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4'>
+      <div className='bg-theme-card rounded-lg border border-theme-primary p-6'>
+        <h3 className='text-lg font-semibold text-theme-primary mb-4'>
           Change Password
         </h3>
 
@@ -883,8 +869,8 @@ const SecuritySettingsSection: React.FC = () => {
       />
 
       {/* Security Preferences */}
-      <div className='bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-6'>
-        <h3 className='text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4'>
+      <div className='bg-theme-card rounded-lg border border-theme-primary p-6'>
+        <h3 className='text-lg font-semibold text-theme-primary mb-4'>
           Security Preferences
         </h3>
 
@@ -893,18 +879,14 @@ const SecuritySettingsSection: React.FC = () => {
             <div>
               <h4
                 className={`font-medium ${
-                  isSaving
-                    ? 'text-gray-400 dark:text-gray-500'
-                    : 'text-gray-900 dark:text-gray-100'
+                  isSaving ? 'text-theme-muted' : 'text-theme-primary'
                 }`}
               >
                 Login Alerts
               </h4>
               <p
                 className={`text-sm ${
-                  isSaving
-                    ? 'text-gray-400 dark:text-gray-500'
-                    : 'text-gray-500 dark:text-gray-400'
+                  isSaving ? 'text-theme-muted' : 'text-theme-secondary'
                 }`}
               >
                 Get notified when someone logs into your account
@@ -915,12 +897,12 @@ const SecuritySettingsSection: React.FC = () => {
                 handleChange('loginAlerts', !localSettings.loginAlerts)
               }
               disabled={isSaving}
-              className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 ${
+              className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-accent-primary focus:ring-offset-2 ${
                 isSaving
-                  ? 'opacity-50 cursor-not-allowed bg-gray-200 dark:bg-gray-700'
+                  ? 'opacity-50 cursor-not-allowed bg-theme-secondary/30'
                   : localSettings.loginAlerts
-                  ? 'bg-blue-600'
-                  : 'bg-gray-200 dark:bg-gray-700'
+                  ? 'bg-accent-primary'
+                  : 'bg-theme-secondary/30'
               }`}
             >
               <span
@@ -934,9 +916,7 @@ const SecuritySettingsSection: React.FC = () => {
           <div className='space-y-2'>
             <label
               className={`text-sm font-medium ${
-                isSaving
-                  ? 'text-gray-400 dark:text-gray-500'
-                  : 'text-gray-900 dark:text-gray-100'
+                isSaving ? 'text-theme-muted' : 'text-theme-primary'
               }`}
             >
               Session Timeout
@@ -945,12 +925,12 @@ const SecuritySettingsSection: React.FC = () => {
               value={localSettings.sessionTimeout || '24h'}
               onChange={(e) => handleChange('sessionTimeout', e.target.value)}
               disabled={isSaving}
-              className={`w-full px-3 py-2 border rounded-lg text-gray-900 dark:text-gray-100 ${
+              className={`w-full px-3 py-2 border rounded-lg text-theme-primary ${
                 isSaving
-                  ? 'opacity-50 cursor-not-allowed bg-gray-100 dark:bg-gray-700 border-gray-300 dark:border-gray-600'
+                  ? 'opacity-50 cursor-not-allowed bg-theme-secondary/20 border-theme-primary'
                   : errors.sessionTimeout
                   ? 'border-red-300 dark:border-red-600 bg-red-50 dark:bg-red-900/20'
-                  : 'border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800'
+                  : 'border-theme-primary bg-theme-card'
               }`}
             >
               <option value='1h'>1 hour</option>
@@ -964,8 +944,8 @@ const SecuritySettingsSection: React.FC = () => {
                 errors.sessionTimeout
                   ? 'text-red-600 dark:text-red-400'
                   : isSaving
-                  ? 'text-gray-400 dark:text-gray-500'
-                  : 'text-gray-500 dark:text-gray-400'
+                  ? 'text-theme-muted'
+                  : 'text-theme-secondary'
               }`}
             >
               {errors.sessionTimeout ||
@@ -976,8 +956,8 @@ const SecuritySettingsSection: React.FC = () => {
       </div>
 
       {/* Active Sessions */}
-      <div className='bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-6'>
-        <h3 className='text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4'>
+      <div className='bg-theme-card rounded-lg border border-theme-primary p-6'>
+        <h3 className='text-lg font-semibold text-theme-primary mb-4'>
           Account Security
         </h3>
         <ActiveSessions disabled={isPreviewMode} />

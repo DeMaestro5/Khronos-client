@@ -155,11 +155,11 @@ const ThemeSelector: React.FC<ThemeSelectorProps> = ({
               disabled
                 ? 'opacity-50 cursor-not-allowed'
                 : value === themeValue
-                ? 'border-blue-500 bg-blue-50 dark:bg-blue-900/20'
-                : 'border-gray-200 dark:border-gray-700 hover:border-gray-300 dark:hover:border-gray-600'
+                ? 'border-accent-primary bg-accent-primary/10'
+                : 'border-theme-primary hover:border-accent-primary'
             }`}
           >
-            <Icon className='h-5 w-5 text-gray-600 dark:text-gray-400' />
+            <Icon className='h-5 w-5 text-theme-secondary' />
             <span className='text-sm font-medium text-theme-primary'>
               {label}
             </span>
@@ -190,9 +190,7 @@ const ToggleSwitch: React.FC<ToggleSwitchProps> = ({
       <div className='flex-1'>
         <h4
           className={`text-sm font-medium ${
-            disabled
-              ? 'text-gray-400 dark:text-gray-500'
-              : 'text-gray-900 dark:text-gray-100'
+            disabled ? 'text-theme-muted' : 'text-theme-primary'
           }`}
         >
           {label}
@@ -200,9 +198,7 @@ const ToggleSwitch: React.FC<ToggleSwitchProps> = ({
         {description && (
           <p
             className={`text-xs mt-1 ${
-              disabled
-                ? 'text-gray-400 dark:text-gray-500'
-                : 'text-gray-500 dark:text-gray-400'
+              disabled ? 'text-theme-muted' : 'text-theme-secondary'
             }`}
           >
             {description}
@@ -214,12 +210,12 @@ const ToggleSwitch: React.FC<ToggleSwitchProps> = ({
         type='button'
         onClick={() => !disabled && onChange(!checked)}
         disabled={disabled}
-        className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 ${
+        className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-accent-primary focus:ring-offset-2 ${
           disabled
-            ? 'opacity-50 cursor-not-allowed bg-gray-200 dark:bg-gray-700'
+            ? 'opacity-50 cursor-not-allowed bg-theme-secondary/30'
             : checked
-            ? 'bg-blue-600'
-            : 'bg-gray-200 dark:bg-gray-700'
+            ? 'bg-accent-primary'
+            : 'bg-theme-secondary/30'
         }`}
       >
         <span
@@ -397,11 +393,11 @@ const InterfaceSettingsSection: React.FC = () => {
     <div className='space-y-6'>
       {/* Unsaved Changes Banner */}
       {hasChanges && (
-        <div className='bg-yellow-50 border border-yellow-200 rounded-lg p-4'>
+        <div className='bg-accent-warning/10 dark:bg-accent-warning/20 border border-accent-warning/30 dark:border-accent-warning/40 rounded-lg p-4'>
           <div className='flex items-center justify-between'>
             <div className='flex items-center'>
-              <div className='h-2 w-2 bg-yellow-400 rounded-full mr-3' />
-              <p className='text-sm font-medium text-yellow-800'>
+              <div className='h-2 w-2 bg-accent-warning rounded-full mr-3' />
+              <p className='text-sm font-medium text-theme-primary'>
                 You have unsaved changes
               </p>
             </div>
@@ -409,14 +405,14 @@ const InterfaceSettingsSection: React.FC = () => {
               <button
                 onClick={handleDiscard}
                 disabled={isSaving}
-                className='text-sm text-yellow-700 hover:text-yellow-900 disabled:opacity-50'
+                className='text-sm text-theme-secondary hover:text-theme-primary disabled:opacity-50'
               >
                 Discard
               </button>
               <button
                 onClick={handleSave}
                 disabled={isSaving}
-                className='bg-yellow-600 hover:bg-yellow-700 text-white px-3 py-1 rounded-md text-sm font-medium disabled:opacity-50 disabled:cursor-not-allowed'
+                className='bg-accent-warning hover:bg-accent-warning/90 text-white px-3 py-1 rounded-md text-sm font-medium disabled:opacity-50 disabled:cursor-not-allowed'
               >
                 {isSaving ? 'Saving...' : 'Save Changes'}
               </button>
@@ -511,65 +507,61 @@ const InterfaceSettingsSection: React.FC = () => {
       </div>
 
       {/* Settings Summary */}
-      <div className='bg-gray-50 dark:bg-gray-900 rounded-lg border border-gray-200 dark:border-gray-700 p-6'>
-        <h3 className='text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4'>
+      <div className='bg-theme-secondary/10 rounded-lg border border-theme-primary p-6'>
+        <h3 className='text-lg font-semibold text-theme-primary mb-4'>
           Current Settings Summary
         </h3>
 
         <div className='grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 text-sm'>
           <div>
-            <span className='font-medium text-gray-600 dark:text-gray-400'>
-              Theme:
-            </span>
-            <span className='ml-2 text-gray-900 dark:text-gray-100 capitalize'>
+            <span className='font-medium text-theme-secondary'>Theme:</span>
+            <span className='ml-2 text-theme-primary capitalize'>
               {localSettings.theme}
             </span>
           </div>
           <div>
-            <span className='font-medium text-gray-600 dark:text-gray-400'>
+            <span className='font-medium text-theme-secondary'>
               Default View:
             </span>
-            <span className='ml-2 text-gray-900 dark:text-gray-100 capitalize'>
+            <span className='ml-2 text-theme-primary capitalize'>
               {localSettings.defaultView}
             </span>
           </div>
           <div>
-            <span className='font-medium text-gray-600 dark:text-gray-400'>
+            <span className='font-medium text-theme-secondary'>
               Items Per Page:
             </span>
-            <span className='ml-2 text-gray-900 dark:text-gray-100'>
+            <span className='ml-2 text-theme-primary'>
               {localSettings.itemsPerPage}
             </span>
           </div>
           <div>
-            <span className='font-medium text-gray-600 dark:text-gray-400'>
+            <span className='font-medium text-theme-secondary'>
               Compact Mode:
             </span>
-            <span className='ml-2 text-gray-900 dark:text-gray-100'>
+            <span className='ml-2 text-theme-primary'>
               {localSettings.compactMode ? 'Enabled' : 'Disabled'}
             </span>
           </div>
           <div>
-            <span className='font-medium text-gray-600 dark:text-gray-400'>
-              Sidebar:
-            </span>
-            <span className='ml-2 text-gray-900 dark:text-gray-100'>
+            <span className='font-medium text-theme-secondary'>Sidebar:</span>
+            <span className='ml-2 text-theme-primary'>
               {localSettings.sidebarCollapsed ? 'Collapsed' : 'Expanded'}
             </span>
           </div>
           <div>
-            <span className='font-medium text-gray-600 dark:text-gray-400'>
+            <span className='font-medium text-theme-secondary'>
               Animations:
             </span>
-            <span className='ml-2 text-gray-900 dark:text-gray-100'>
+            <span className='ml-2 text-theme-primary'>
               {localSettings.enableAnimations ? 'Enabled' : 'Disabled'}
             </span>
           </div>
         </div>
 
         {/* Preview of current settings */}
-        <div className='mt-4 p-3 bg-blue-50 dark:bg-blue-900/20 rounded-lg'>
-          <p className='text-sm text-blue-800 dark:text-blue-200'>
+        <div className='mt-4 p-3 bg-accent-primary/10 dark:bg-accent-primary/20 rounded-lg'>
+          <p className='text-sm text-theme-primary'>
             <span className='font-medium'>Active Configuration:</span>{' '}
             {localSettings.theme} theme • {localSettings.defaultView} view •{' '}
             {localSettings.itemsPerPage} items per page
