@@ -217,14 +217,14 @@ export default function Navbar() {
             {/* Simplified Profile Dropdown */}
             <div className='relative'>
               <button
-                className='profile-button flex items-center space-x-3 p-2 text-sm rounded-xl hover:bg-gray-50 dark:hover:bg-slate-800 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 dark:focus:ring-blue-500/20 transition-all duration-200 shadow-sm hover:shadow-md group'
+                className='profile-button flex items-center space-x-3 p-2 text-sm rounded-xl hover:bg-theme-hover focus:outline-none focus:ring-2 focus:ring-accent-primary/20 transition-all duration-200 shadow-theme-sm hover:shadow-theme-md group'
                 onClick={() => setProfileOpen(!profileOpen)}
                 disabled={userDataLoading}
               >
                 <div className='relative'>
                   {user?.profilePicUrl || user?.avatar ? (
                     <Image
-                      className='h-9 w-9 rounded-xl object-cover ring-2 ring-white dark:ring-slate-700 shadow-lg group-hover:ring-indigo-200 dark:group-hover:ring-indigo-400 transition-all duration-200'
+                      className='h-9 w-9 rounded-xl object-cover ring-2 ring-white dark:ring-slate-700 shadow-lg group-hover:ring-accent-primary/30 transition-all duration-200'
                       src={user.profilePicUrl || user.avatar || ''}
                       width={36}
                       height={36}
@@ -236,7 +236,7 @@ export default function Navbar() {
                   ) : null}
                   {(!user?.profilePicUrl && !user?.avatar) ||
                   userDataLoading ? (
-                    <div className='h-9 w-9 rounded-xl bg-gradient-to-br from-indigo-500 to-purple-600 dark:from-blue-600 dark:to-indigo-700 flex items-center justify-center ring-2 ring-white dark:ring-slate-700 shadow-lg group-hover:ring-indigo-200 dark:group-hover:ring-indigo-400 transition-all duration-200'>
+                    <div className='h-9 w-9 rounded-xl bg-gradient-to-br from-indigo-500 to-purple-600 dark:from-blue-600 dark:to-indigo-700 flex items-center justify-center ring-2 ring-white dark:ring-slate-700 shadow-lg group-hover:ring-accent-primary/30 transition-all duration-200'>
                       <span className='text-white font-semibold text-sm'>
                         {user?.name ? getInitials(user.name) : 'U'}
                       </span>
@@ -245,46 +245,46 @@ export default function Navbar() {
                   <div className='absolute -bottom-1 -right-1 w-3 h-3 bg-green-500 rounded-full border-2 border-white dark:border-slate-900 shadow-sm'></div>
                 </div>
                 <div className='hidden lg:block text-left'>
-                  <p className='text-sm font-semibold text-gray-800 dark:text-slate-100 group-hover:text-indigo-700 dark:group-hover:text-indigo-400 transition-colors duration-200'>
+                  <p className='text-sm font-semibold text-theme-primary group-hover:text-accent-primary transition-colors duration-200'>
                     {userDataLoading ? 'Loading...' : user?.name || 'User'}
                   </p>
                   <div className='flex items-center space-x-1'>
                     <span className='text-xs'>
                       {getRoleIcon(getDisplayRole(user?.role))}
                     </span>
-                    <span className='text-xs text-gray-500 dark:text-slate-400 capitalize'>
+                    <span className='text-xs text-theme-secondary capitalize'>
                       {getDisplayRole(user?.role)}
                     </span>
                   </div>
                 </div>
-                <FiChevronDown className='h-4 w-4 text-gray-400 dark:text-slate-400 group-hover:text-indigo-600 dark:group-hover:text-indigo-400 transition-all duration-200 group-hover:rotate-180' />
+                <FiChevronDown className='h-4 w-4 text-theme-secondary group-hover:text-accent-primary transition-all duration-200 group-hover:rotate-180' />
               </button>
 
               {/* Simplified Profile Dropdown Menu */}
               {profileOpen && user && (
-                <div className='profile-dropdown origin-top-right absolute right-0 mt-3 w-56 rounded-xl shadow-xl bg-theme-card backdrop-blur-2xl ring-1 ring-black ring-opacity-5 dark:ring-slate-600 z-20 border border-theme-primary overflow-hidden'>
+                <div className='profile-dropdown origin-top-right absolute right-0 mt-3 w-56 rounded-xl shadow-theme-xl bg-theme-card backdrop-blur-2xl ring-1 ring-black ring-opacity-5 dark:ring-slate-600 z-20 border border-theme-primary overflow-hidden'>
                   {/* Simple Menu Items */}
                   <div className='py-2'>
                     <Link
                       href='/profile'
-                      className='flex items-center px-4 py-3 text-sm text-gray-700 dark:text-slate-300 hover:bg-gray-50 dark:hover:bg-slate-700 hover:text-indigo-600 dark:hover:text-indigo-400 transition-all duration-200 group'
+                      className='flex items-center px-4 py-3 text-sm text-theme-primary hover:bg-theme-hover hover:text-accent-primary transition-all duration-200 group'
                       onClick={() => setProfileOpen(false)}
                     >
-                      <FiUser className='mr-3 h-4 w-4 group-hover:text-indigo-600 dark:group-hover:text-indigo-400' />
+                      <FiUser className='mr-3 h-4 w-4 group-hover:text-accent-primary' />
                       Profile
                     </Link>
                     <Link
                       href='/settings'
-                      className='flex items-center px-4 py-3 text-sm text-gray-700 dark:text-slate-300 hover:bg-gray-50 dark:hover:bg-slate-700 hover:text-indigo-600 dark:hover:text-indigo-400 transition-all duration-200 group'
+                      className='flex items-center px-4 py-3 text-sm text-theme-primary hover:bg-theme-hover hover:text-accent-primary transition-all duration-200 group'
                       onClick={() => setProfileOpen(false)}
                     >
-                      <FiSettings className='mr-3 h-4 w-4 group-hover:text-indigo-600 dark:group-hover:text-indigo-400' />
+                      <FiSettings className='mr-3 h-4 w-4 group-hover:text-accent-primary' />
                       Settings
                     </Link>
                   </div>
 
                   {/* Logout */}
-                  <div className='border-t border-slate-200 dark:border-slate-600 py-2'>
+                  <div className='border-t border-theme-primary py-2'>
                     <button
                       className='flex items-center w-full px-4 py-3 text-sm text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 transition-all duration-200 group'
                       onClick={handleLogout}

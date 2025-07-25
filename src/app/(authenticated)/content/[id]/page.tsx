@@ -12,6 +12,7 @@ import {
   Sidebar,
 } from '@/src/components/content-detail';
 import ContentEditModal from '@/src/components/content/content-edit-modal';
+import PageLoading from '@/src/components/ui/page-loading';
 
 const ContentDetailPage = () => {
   const [content, setContent] = useState<ContentData | null>(null);
@@ -33,12 +34,6 @@ const ContentDetailPage = () => {
   useEffect(() => {
     const loadContent = async () => {
       if (!contentId) return;
-
-      console.log('Content detail: Checking cached data first', {
-        contentId,
-        cachedContent: !!cachedContent,
-        contextLoading,
-      });
 
       // If we have cached data, use it immediately
       if (cachedContent) {
@@ -145,27 +140,12 @@ const ContentDetailPage = () => {
 
   if (isLoading) {
     return (
-      <div className='min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50 dark:from-slate-950 dark:via-blue-950 dark:to-indigo-950'>
-        <div className='max-w-7xl mx-auto px-6 py-8'>
-          <div className='animate-pulse space-y-8'>
-            <div className='flex items-center gap-4'>
-              <div className='w-10 h-10 bg-gray-200 dark:bg-slate-700 rounded-lg'></div>
-              <div className='h-6 bg-gray-200 dark:bg-slate-700 rounded w-32'></div>
-            </div>
-            <div className='bg-white dark:bg-slate-800 rounded-2xl p-8 shadow-sm'>
-              <div className='space-y-6'>
-                <div className='h-8 bg-gray-200 dark:bg-slate-700 rounded w-3/4'></div>
-                <div className='h-20 bg-gray-200 dark:bg-slate-700 rounded-lg'></div>
-                <div className='grid grid-cols-3 gap-4'>
-                  <div className='h-16 bg-gray-200 dark:bg-slate-700 rounded-lg'></div>
-                  <div className='h-16 bg-gray-200 dark:bg-slate-700 rounded-lg'></div>
-                  <div className='h-16 bg-gray-200 dark:bg-slate-700 rounded-lg'></div>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
+      <PageLoading
+        title='Loading Content'
+        subtitle="We're fetching your content details..."
+        contentType='content'
+        showGrid={false}
+      />
     );
   }
 

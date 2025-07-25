@@ -25,9 +25,7 @@ export const useAuthCheck = () => {
         setIsLoading(false);
       }
     };
-
     checkAuth();
-
     // Listen for storage changes (e.g., logout in another tab)
     const handleStorageChange = (e: StorageEvent) => {
       if (e.key === 'accessToken' || e.key === 'refreshToken') {
