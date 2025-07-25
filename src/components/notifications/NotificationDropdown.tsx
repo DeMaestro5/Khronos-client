@@ -70,7 +70,7 @@ const getNotificationStyle = (
   priority: NotificationPriority
 ) => {
   const baseStyle =
-    'p-4 hover:bg-gradient-to-r transition-all duration-200 border-b border-slate-200/40 dark:border-slate-600/40 last:border-b-0 group cursor-pointer';
+    'p-4 hover:bg-gradient-to-r transition-all duration-200 border-b border-theme-primary/40 last:border-b-0 group cursor-pointer';
 
   if (priority === NotificationPriority.HIGH) {
     return `${baseStyle} bg-red-50/30 dark:bg-red-900/10 hover:from-red-50/50 hover:to-red-50/30 dark:hover:from-red-900/20 dark:hover:to-red-900/10`;
@@ -84,7 +84,7 @@ const getNotificationStyle = (
     case NotificationType.PERFORMANCE:
       return `${baseStyle} bg-green-50/30 dark:bg-green-900/10 hover:from-green-50/50 hover:to-green-50/30 dark:hover:from-green-900/20 dark:hover:to-green-900/10`;
     default:
-      return `${baseStyle} hover:from-slate-50 hover:to-indigo-50/50 dark:hover:from-slate-800 dark:hover:to-slate-700`;
+      return `${baseStyle} hover:from-theme-hover hover:to-theme-secondary/50`;
   }
 };
 
@@ -103,22 +103,8 @@ export default function NotificationDropdown({
   } = useNotifications();
 
   useEffect(() => {
-    const handleClickOutside = (event: MouseEvent) => {
-      if (
-        dropdownRef.current &&
-        !dropdownRef.current.contains(event.target as Node)
-      ) {
-        onClose();
-      }
-    };
-
-    if (isOpen) {
-      document.addEventListener('mousedown', handleClickOutside);
-    }
-
-    return () => {
-      document.removeEventListener('mousedown', handleClickOutside);
-    };
+    // Remove the click outside handler from here since NavBar handles it
+    // This prevents conflicts with the notification button toggle
   }, [isOpen, onClose]);
 
   const handleNotificationClick = async (notification: Notification) => {
@@ -153,23 +139,23 @@ export default function NotificationDropdown({
           animate={{ opacity: 1, scale: 1, y: 0 }}
           exit={{ opacity: 0, scale: 0.95, y: -10 }}
           transition={{ duration: 0.15 }}
-          className='absolute right-0 mt-3 w-96 rounded-2xl shadow-2xl bg-white/95 dark:bg-slate-800/95 backdrop-blur-2xl ring-1 ring-black ring-opacity-5 dark:ring-slate-600 z-50 border border-slate-200/60 dark:border-slate-600/60 overflow-hidden'
+          className='absolute right-0 mt-3 w-96 rounded-2xl shadow-theme-xl bg-theme-card backdrop-blur-2xl ring-1 ring-black ring-opacity-5 dark:ring-slate-600 z-50 border border-theme-primary/60 overflow-hidden'
         >
           {/* Header */}
-          <div className='p-6 bg-gradient-to-r from-indigo-50 to-purple-50 dark:from-slate-800 dark:to-slate-700 border-b border-slate-200/60 dark:border-slate-600/60'>
+          <div className='p-6 bg-gradient-to-r from-theme-secondary to-theme-tertiary border-b border-theme-primary/60'>
             <div className='flex items-center justify-between'>
-              <h3 className='text-lg font-bold text-gray-900 dark:text-slate-100'>
+              <h3 className='text-lg font-bold text-theme-primary'>
                 Notifications
               </h3>
               <div className='flex items-center space-x-2'>
                 {unreadCount > 0 && (
-                  <span className='px-2 py-1 bg-indigo-100 dark:bg-indigo-900/50 text-indigo-700 dark:text-indigo-300 text-xs font-medium rounded-full'>
+                  <span className='px-2 py-1 bg-accent-primary/10 text-accent-primary text-xs font-medium rounded-full'>
                     {unreadCount} new
                   </span>
                 )}
                 <button
                   onClick={handleRefresh}
-                  className='p-1.5 text-gray-400 dark:text-slate-400 hover:text-indigo-600 dark:hover:text-indigo-400 hover:bg-gray-50 dark:hover:bg-slate-700 rounded-lg transition-all duration-200'
+                  className='p-1.5 text-theme-secondary hover:text-accent-primary hover:bg-theme-hover rounded-lg transition-all duration-200'
                   title='Refresh notifications'
                 >
                   <FiRefreshCw
@@ -184,18 +170,18 @@ export default function NotificationDropdown({
           <div className='max-h-96 overflow-y-auto'>
             {loading && notifications.length === 0 ? (
               <div className='p-8 text-center'>
-                <div className='animate-spin rounded-full h-8 w-8 border-b-2 border-indigo-500 dark:border-blue-400 mx-auto mb-3'></div>
-                <p className='text-gray-500 dark:text-slate-400'>
+                <div className='animate-spin rounded-full h-8 w-8 border-b-2 border-accent-primary mx-auto mb-3'></div>
+                <p className='text-theme-secondary'>
                   Loading your notifications...
                 </p>
               </div>
             ) : notifications.length === 0 ? (
               <div className='p-8 text-center'>
-                <FiBell className='h-12 w-12 text-gray-300 dark:text-slate-600 mx-auto mb-4' />
-                <h4 className='text-sm font-semibold text-gray-900 dark:text-slate-100 mb-2'>
+                <FiBell className='h-12 w-12 text-theme-muted mx-auto mb-4' />
+                <h4 className='text-sm font-semibold text-theme-primary mb-2'>
                   You&apos;re all caught up!
                 </h4>
-                <p className='text-sm text-gray-500 dark:text-slate-400'>
+                <p className='text-sm text-theme-secondary'>
                   No new notifications at the moment. We&apos;ll let you know
                   when something important happens.
                 </p>
@@ -205,10 +191,10 @@ export default function NotificationDropdown({
                 ([type, typeNotifications]) => (
                   <div
                     key={type}
-                    className='border-b border-slate-200/40 dark:border-slate-600/40 last:border-b-0'
+                    className='border-b border-theme-primary/40 last:border-b-0'
                   >
-                    <div className='px-4 py-2 bg-slate-50/50 dark:bg-slate-700/30'>
-                      <h4 className='text-xs font-semibold text-gray-500 dark:text-slate-400 uppercase tracking-wider'>
+                    <div className='px-4 py-2 bg-theme-secondary/50'>
+                      <h4 className='text-xs font-semibold text-theme-secondary uppercase tracking-wider'>
                         {type.toLowerCase().replace('_', ' ')}
                       </h4>
                     </div>
@@ -229,7 +215,7 @@ export default function NotificationDropdown({
                           </div>
                           <div className='flex-1 min-w-0'>
                             <div className='flex items-center justify-between'>
-                              <p className='text-sm font-semibold text-gray-900 dark:text-slate-100 group-hover:text-indigo-700 dark:group-hover:text-indigo-400 transition-colors duration-200'>
+                              <p className='text-sm font-semibold text-theme-primary group-hover:text-accent-primary transition-colors duration-200'>
                                 {notification.title}
                               </p>
                               <span
@@ -240,13 +226,13 @@ export default function NotificationDropdown({
                                 {notification.priority.toLowerCase()}
                               </span>
                             </div>
-                            <p className='text-sm text-gray-600 dark:text-slate-300 mt-1'>
+                            <p className='text-sm text-theme-secondary mt-1'>
                               {notification.message}
                             </p>
                             <div className='flex items-center justify-between mt-2'>
                               <div className='flex items-center space-x-2'>
-                                <FiClock className='h-3 w-3 text-gray-400 dark:text-slate-500' />
-                                <p className='text-xs text-gray-500 dark:text-slate-400'>
+                                <FiClock className='h-3 w-3 text-theme-muted' />
+                                <p className='text-xs text-theme-secondary'>
                                   {formatDistanceToNow(
                                     new Date(notification.createdAt),
                                     { addSuffix: true }
@@ -254,7 +240,7 @@ export default function NotificationDropdown({
                                 </p>
                               </div>
                               {notification.status === 'UNREAD' && (
-                                <span className='w-2 h-2 bg-indigo-500 dark:bg-blue-400 rounded-full'></span>
+                                <span className='w-2 h-2 bg-accent-primary rounded-full'></span>
                               )}
                             </div>
                           </div>
@@ -269,24 +255,24 @@ export default function NotificationDropdown({
 
           {/* Footer */}
           {notifications.length > 0 && (
-            <div className='p-4 bg-gradient-to-r from-slate-50 to-indigo-50/50 dark:from-slate-800 dark:to-slate-700 border-t border-slate-200/60 dark:border-slate-600/60'>
+            <div className='p-4 bg-gradient-to-r from-theme-secondary to-theme-tertiary border-t border-theme-primary/60'>
               <div className='flex items-center justify-between'>
                 {unreadCount > 0 ? (
                   <button
                     onClick={markAllAsRead}
-                    className='flex items-center text-sm text-indigo-600 dark:text-indigo-400 hover:text-indigo-700 dark:hover:text-indigo-300 font-medium transition-colors duration-200'
+                    className='flex items-center text-sm text-accent-primary hover:text-accent-secondary font-medium transition-colors duration-200'
                   >
                     <FiCheck className='h-4 w-4 mr-1' />
                     Mark all as read
                   </button>
                 ) : (
-                  <span className='text-sm text-gray-500 dark:text-slate-400'>
+                  <span className='text-sm text-theme-secondary'>
                     All caught up!
                   </span>
                 )}
                 <Link
                   href='/notifications'
-                  className='flex items-center text-sm text-indigo-600 dark:text-indigo-400 hover:text-indigo-700 dark:hover:text-indigo-300 font-medium transition-colors duration-200'
+                  className='flex items-center text-sm text-accent-primary hover:text-accent-secondary font-medium transition-colors duration-200'
                   onClick={onClose}
                 >
                   View all
