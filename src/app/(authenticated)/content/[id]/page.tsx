@@ -139,13 +139,55 @@ const ContentDetailPage = () => {
   };
 
   if (isLoading) {
+    // Determine loading state based on available data
+    let loadingTitle = 'Loading Content';
+    let loadingSubtitle = "We're fetching your content details...";
+
+    if (cachedContent?.title) {
+      loadingTitle = cachedContent.title;
+      loadingSubtitle = `Loading details for "${cachedContent.title}"...`;
+    } else if (contentId) {
+      loadingTitle = 'Loading Content Details';
+      loadingSubtitle = `Fetching content information...`;
+    }
+
     return (
-      <PageLoading
-        title='Loading Content'
-        subtitle="We're fetching your content details..."
-        contentType='content'
-        showGrid={false}
-      />
+      <div className='min-h-screen bg-theme-primary'>
+        <div className='max-w-7xl mx-auto px-6 py-8'>
+          {/* Show back button even during loading */}
+          <div className='flex items-center justify-between mb-8'>
+            <button
+              onClick={() => router.back()}
+              className='inline-flex items-center cursor-pointer gap-2 px-4 py-2 text-theme-secondary hover:text-theme-primary hover:bg-theme-card/60 rounded-xl transition-all duration-200 backdrop-blur-sm'
+            >
+              <ArrowLeft className='w-4 h-4' />
+              <span className='font-medium'>Back to Content</span>
+            </button>
+
+            {/* Show skeleton edit button */}
+            <div className='h-12 w-32 shimmer-theme rounded-xl'></div>
+          </div>
+
+          {/* Enhanced PageLoading with content context */}
+          <PageLoading
+            title={loadingTitle}
+            subtitle={loadingSubtitle}
+            contentType='content'
+            showGrid={false}
+            isContentDetail={true}
+            contentPreview={
+              cachedContent
+                ? {
+                    title: cachedContent.title,
+                    type: cachedContent.type,
+                    status: cachedContent.status,
+                    tags: cachedContent.tags,
+                  }
+                : undefined
+            }
+          />
+        </div>
+      </div>
     );
   }
 

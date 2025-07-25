@@ -233,13 +233,21 @@ const ProfileSettingsSection: React.FC = () => {
 
   // Check for changes
   useEffect(() => {
-    if (!settings?.profile) return;
+    if (!settings?.profile || Object.keys(localSettings).length === 0) {
+      setHasChanges(false);
+      return;
+    }
 
     const profileChanged = Object.keys(localSettings).some((key) => {
       const localValue = localSettings[key as keyof ProfileSettingsUpdate];
       const serverValue =
         settings.profile[key as keyof typeof settings.profile];
-      return localValue !== serverValue;
+
+      // Handle null/undefined comparisons properly
+      const normalizedLocalValue = localValue || '';
+      const normalizedServerValue = serverValue || '';
+
+      return normalizedLocalValue !== normalizedServerValue;
     });
 
     setHasChanges(profileChanged);
@@ -359,6 +367,7 @@ const ProfileSettingsSection: React.FC = () => {
             color: 'white',
           },
         });
+        setHasChanges(false);
         return;
       }
 
