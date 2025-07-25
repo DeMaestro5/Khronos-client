@@ -107,7 +107,6 @@ const ThemeSelector: React.FC<ThemeSelectorProps> = ({
   onChange,
   disabled = false,
 }) => {
-  const { setTheme } = useTheme();
   const [mounted, setMounted] = useState(false);
 
   // Prevent hydration mismatch
@@ -129,8 +128,7 @@ const ThemeSelector: React.FC<ThemeSelectorProps> = ({
 
   const handleThemeChange = (themeValue: 'light' | 'dark' | 'system') => {
     if (disabled) return;
-    setTheme(themeValue); // Update next-themes
-    onChange(themeValue); // Update local settings
+    onChange(themeValue); // Update local settings only
   };
 
   return (
@@ -230,6 +228,7 @@ const ToggleSwitch: React.FC<ToggleSwitchProps> = ({
 
 const InterfaceSettingsSection: React.FC = () => {
   const { settings, updateSettings, isLoading } = useSettings();
+  const { theme: currentTheme, setTheme } = useTheme();
   const [localSettings, setLocalSettings] = useState<InterfaceSettingsUpdate>(
     {}
   );
@@ -245,7 +244,7 @@ const InterfaceSettingsSection: React.FC = () => {
         sidebarCollapsed: settings.interface.sidebarCollapsed || false,
         defaultView: settings.interface.defaultView || 'list',
         itemsPerPage: settings.interface.itemsPerPage || 25,
-        enableAnimations: settings.interface.enableAnimation ?? true,
+        // enableAnimation: settings.interface.enableAnimation ?? true, // Temporarily disabled
         compactMode: settings.interface.compactMode || false,
       });
     }
@@ -253,19 +252,28 @@ const InterfaceSettingsSection: React.FC = () => {
 
   // Check for changes
   useEffect(() => {
-    if (!settings?.interface) return;
+    if (!settings?.interface || Object.keys(localSettings).length === 0) {
+      setHasChanges(false);
+      return;
+    }
 
     const originalSettings = {
       theme: settings.interface.theme || 'system',
       sidebarCollapsed: settings.interface.sidebarCollapsed || false,
       defaultView: settings.interface.defaultView || 'list',
       itemsPerPage: settings.interface.itemsPerPage || 25,
-      enableAnimations: settings.interface.enableAnimation ?? true,
+      // enableAnimation: settings.interface.enableAnimation ?? true, // Temporarily disabled
       compactMode: settings.interface.compactMode || false,
     };
 
-    const hasChanges =
-      JSON.stringify(localSettings) !== JSON.stringify(originalSettings);
+    // Compare each field individually to avoid false positives
+    const hasChanges = Object.keys(localSettings).some((key) => {
+      const localValue = localSettings[key as keyof InterfaceSettingsUpdate];
+      const originalValue =
+        originalSettings[key as keyof typeof originalSettings];
+      return localValue !== originalValue;
+    });
+
     setHasChanges(hasChanges);
   }, [localSettings, settings?.interface]);
 
@@ -292,6 +300,8 @@ const InterfaceSettingsSection: React.FC = () => {
     field: keyof InterfaceSettingsUpdate,
     value: InterfaceSettingsUpdate[keyof InterfaceSettingsUpdate]
   ) => {
+    console.log('🎨 Theme Change:', { field, value, currentTheme });
+
     setLocalSettings((prev) => ({
       ...prev,
       [field]: value,
@@ -331,11 +341,12 @@ const InterfaceSettingsSection: React.FC = () => {
       if (localSettings.itemsPerPage !== settings?.interface?.itemsPerPage) {
         changedFields.itemsPerPage = localSettings.itemsPerPage;
       }
-      if (
-        localSettings.enableAnimations !== settings?.interface?.enableAnimation
-      ) {
-        changedFields.enableAnimations = localSettings.enableAnimations;
-      }
+      // Temporarily disabled due to backend field name issues
+      // if (
+      //   localSettings.enableAnimation !== settings?.interface?.enableAnimation
+      // ) {
+      //   changedFields.enableAnimation = localSettings.enableAnimation;
+      // }
       if (localSettings.compactMode !== settings?.interface?.compactMode) {
         changedFields.compactMode = localSettings.compactMode;
       }
@@ -348,10 +359,23 @@ const InterfaceSettingsSection: React.FC = () => {
             color: 'white',
           },
         });
+        setHasChanges(false);
         return;
       }
 
+      console.log('💾 Saving Interface Settings:', {
+        changedFields,
+        currentTheme,
+        settingsTheme: settings?.interface?.theme,
+      });
+
       await updateSettings('interface', changedFields);
+
+      // Update the actual theme if it was changed
+      if (changedFields.theme && changedFields.theme !== currentTheme) {
+        setTheme(changedFields.theme);
+      }
+
       setHasChanges(false);
     } catch (error) {
       console.error('Failed to update interface settings:', error);
@@ -363,16 +387,22 @@ const InterfaceSettingsSection: React.FC = () => {
 
   const handleDiscard = () => {
     if (settings?.interface) {
+      const originalTheme = settings.interface.theme || 'system';
       setLocalSettings({
-        theme: settings.interface.theme || 'system',
+        theme: originalTheme,
         sidebarCollapsed: settings.interface.sidebarCollapsed || false,
         defaultView: settings.interface.defaultView || 'list',
         itemsPerPage: settings.interface.itemsPerPage || 25,
-        enableAnimations: settings.interface.enableAnimation ?? true,
+        // enableAnimation: settings.interface.enableAnimation ?? true, // Temporarily disabled
         compactMode: settings.interface.compactMode || false,
       });
       setErrors({});
       setHasChanges(false);
+
+      // Reset theme to original if it was changed
+      if (currentTheme !== originalTheme) {
+        setTheme(originalTheme);
+      }
     }
   };
 
@@ -434,6 +464,11 @@ const InterfaceSettingsSection: React.FC = () => {
           onChange={(theme) => handleChange('theme', theme)}
           disabled={isSaving}
         />
+        {/* Debug info */}
+        <div className='text-xs text-theme-muted mt-2'>
+          Debug: localTheme={localSettings.theme}, currentTheme={currentTheme},
+          settingsTheme={settings?.interface?.theme}
+        </div>
       </div>
 
       {/* Layout Settings */}
@@ -496,13 +531,14 @@ const InterfaceSettingsSection: React.FC = () => {
             disabled={isSaving}
           />
 
-          <ToggleSwitch
+          {/* Temporarily disabled due to backend field name issues */}
+          {/* <ToggleSwitch
             label='Enable Animations'
             description='Show smooth transitions and micro-interactions'
-            checked={localSettings.enableAnimations ?? true}
-            onChange={(checked) => handleChange('enableAnimations', checked)}
+            checked={localSettings.enableAnimation ?? true}
+            onChange={(checked) => handleChange('enableAnimation', checked)}
             disabled={isSaving}
-          />
+          /> */}
         </div>
       </div>
 
@@ -549,14 +585,15 @@ const InterfaceSettingsSection: React.FC = () => {
               {localSettings.sidebarCollapsed ? 'Collapsed' : 'Expanded'}
             </span>
           </div>
-          <div>
+          {/* Temporarily disabled due to backend field name issues */}
+          {/* <div>
             <span className='font-medium text-theme-secondary'>
               Animations:
             </span>
             <span className='ml-2 text-theme-primary'>
-              {localSettings.enableAnimations ? 'Enabled' : 'Disabled'}
+              {localSettings.enableAnimation ? 'Enabled' : 'Disabled'}
             </span>
-          </div>
+          </div> */}
         </div>
 
         {/* Preview of current settings */}
@@ -567,7 +604,7 @@ const InterfaceSettingsSection: React.FC = () => {
             {localSettings.itemsPerPage} items per page
             {localSettings.compactMode && ' • Compact'}
             {localSettings.sidebarCollapsed && ' • Sidebar collapsed'}
-            {!localSettings.enableAnimations && ' • Animations disabled'}
+            {/* {!localSettings.enableAnimation && ' • Animations disabled'} */}
           </p>
         </div>
       </div>

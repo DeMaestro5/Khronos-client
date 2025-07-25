@@ -156,7 +156,7 @@ export interface InterfaceSettingsUpdate {
   sidebarCollapsed?: boolean;
   defaultView?: 'list' | 'grid';
   itemsPerPage?: number;
-  enableAnimations?: boolean;
+  enableAnimation?: boolean;
   compactMode?: boolean;
 }
 

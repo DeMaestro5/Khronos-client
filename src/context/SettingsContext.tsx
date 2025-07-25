@@ -468,9 +468,14 @@ export function SettingsProvider({ children }: { children: React.ReactNode }) {
       // Convert frontend property names to backend
       const backendData: Record<string, unknown> = {
         ...data,
-        enablesAnimation: data.enableAnimations, // Convert property name
+        // enablesAnimation: data.enableAnimation, // Temporarily disabled
       };
-      delete backendData.enableAnimations; // Remove the frontend property
+      // delete backendData.enableAnimation; // Remove the frontend property
+
+      console.log('🔧 Interface Settings Update:', {
+        original: data,
+        converted: backendData,
+      });
 
       await handleSettingsUpdate(
         () => settingsApi.updateInterface(backendData),
