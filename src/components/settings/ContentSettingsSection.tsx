@@ -23,7 +23,7 @@ const ToggleSwitch: React.FC<ToggleSwitchProps> = ({
 }) => {
   return (
     <div className='flex items-start justify-between'>
-      <div className='flex-1'>
+      <div className='flex-1 min-w-0'>
         <h4
           className={`text-sm font-medium ${
             disabled ? 'text-theme-muted' : 'text-theme-primary'
@@ -46,7 +46,7 @@ const ToggleSwitch: React.FC<ToggleSwitchProps> = ({
         type='button'
         onClick={() => !disabled && onChange(!checked)}
         disabled={disabled}
-        className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 ${
+        className={`relative inline-flex h-5 w-10 items-center rounded-full transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 flex-shrink-0 ${
           disabled
             ? 'opacity-50 cursor-not-allowed bg-gray-200 dark:bg-gray-700'
             : checked
@@ -55,8 +55,8 @@ const ToggleSwitch: React.FC<ToggleSwitchProps> = ({
         }`}
       >
         <span
-          className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
-            checked ? 'translate-x-6' : 'translate-x-1'
+          className={`inline-block h-3 w-3 transform rounded-full bg-white transition-all duration-200 ${
+            checked ? 'translate-x-5' : 'translate-x-0.5'
           }`}
         />
       </button>
@@ -116,9 +116,11 @@ const MultiSelectField: React.FC<MultiSelectFieldProps> = ({
               : 'border-theme-primary bg-theme-card'
           }`}
         >
-          <div className='flex flex-wrap gap-1'>
+          <div className='flex flex-wrap gap-1 min-w-0 flex-1'>
             {value.length === 0 ? (
-              <span className='text-theme-muted'>Select platforms...</span>
+              <span className='text-theme-muted text-sm'>
+                Select platforms...
+              </span>
             ) : (
               value.map((val) => {
                 const option = options.find((opt) => opt.value === val);
@@ -130,14 +132,14 @@ const MultiSelectField: React.FC<MultiSelectFieldProps> = ({
                     {option?.icon && (
                       <span className='mr-1'>{option.icon}</span>
                     )}
-                    {option?.label}
+                    <span className='truncate'>{option?.label}</span>
                   </span>
                 );
               })
             )}
           </div>
           <svg
-            className='h-4 w-4 text-theme-muted flex-shrink-0'
+            className='h-4 w-4 text-theme-muted flex-shrink-0 ml-2'
             fill='none'
             stroke='currentColor'
             viewBox='0 0 24 24'
@@ -169,10 +171,12 @@ const MultiSelectField: React.FC<MultiSelectFieldProps> = ({
                     type='checkbox'
                     checked={value.includes(option.value)}
                     onChange={() => {}}
-                    className='mr-3 h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded'
+                    className='mr-3 h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded flex-shrink-0'
                   />
-                  {option.icon && <span className='mr-2'>{option.icon}</span>}
-                  <span className='font-medium'>{option.label}</span>
+                  {option.icon && (
+                    <span className='mr-2 flex-shrink-0'>{option.icon}</span>
+                  )}
+                  <span className='font-medium truncate'>{option.label}</span>
                 </button>
               ))}
             </div>
@@ -226,14 +230,16 @@ const SelectField: React.FC<SelectFieldProps> = ({
           onClick={() => setIsOpen(!isOpen)}
           className='w-full bg-theme-card border border-theme-primary rounded-lg px-3 py-2 text-left shadow-sm focus:outline-none focus:ring-2 focus:ring-accent-primary focus:border-accent-primary flex items-center justify-between'
         >
-          <div className='flex items-center'>
+          <div className='flex items-center min-w-0 flex-1'>
             {(() => {
               const selectedOption = options.find((opt) => opt.value === value);
               const Icon = selectedOption?.icon;
               return (
                 <>
-                  {Icon && <Icon className='h-4 w-4 mr-2 text-theme-muted' />}
-                  <span className='text-theme-primary'>
+                  {Icon && (
+                    <Icon className='h-4 w-4 mr-2 text-theme-muted flex-shrink-0' />
+                  )}
+                  <span className='text-theme-primary truncate'>
                     {selectedOption?.label || 'Select...'}
                   </span>
                 </>
@@ -241,7 +247,7 @@ const SelectField: React.FC<SelectFieldProps> = ({
             })()}
           </div>
           <svg
-            className='h-4 w-4 text-theme-muted'
+            className='h-4 w-4 text-theme-muted flex-shrink-0 ml-2'
             fill='none'
             stroke='currentColor'
             viewBox='0 0 24 24'
@@ -276,10 +282,12 @@ const SelectField: React.FC<SelectFieldProps> = ({
                   >
                     <div className='flex items-start'>
                       {Icon && (
-                        <Icon className='h-4 w-4 mr-2 mt-0.5 text-theme-muted' />
+                        <Icon className='h-4 w-4 mr-2 mt-0.5 text-theme-muted flex-shrink-0' />
                       )}
-                      <div>
-                        <div className='font-medium'>{option.label}</div>
+                      <div className='min-w-0 flex-1'>
+                        <div className='font-medium truncate'>
+                          {option.label}
+                        </div>
                         {option.description && (
                           <div className='text-xs text-theme-secondary mt-1'>
                             {option.description}
@@ -453,11 +461,11 @@ const ContentSettingsSection: React.FC = () => {
 
   if (isLoading && !settings) {
     return (
-      <div className='space-y-6'>
+      <div className='space-y-4 md:space-y-6'>
         {[1, 2, 3].map((i) => (
           <div
             key={i}
-            className='animate-pulse bg-gray-200 dark:bg-gray-700 rounded-lg h-32'
+            className='animate-pulse bg-gray-200 dark:bg-gray-700 rounded-lg h-24 md:h-32'
           />
         ))}
       </div>
@@ -498,10 +506,10 @@ const ContentSettingsSection: React.FC = () => {
   ];
 
   return (
-    <div className='space-y-6'>
+    <div className='space-y-4 md:space-y-6'>
       {/* Unsaved Changes Banner */}
       {hasChanges && (
-        <div className='bg-accent-warning/10 dark:bg-accent-warning/20 border border-accent-warning/30 dark:border-accent-warning/40 rounded-lg p-4'>
+        <div className='bg-accent-warning/10 dark:bg-accent-warning/20 border border-accent-warning/30 dark:border-accent-warning/40 rounded-lg p-3 md:p-4'>
           <div className='flex items-center justify-between'>
             <div className='flex items-center'>
               <div className='h-2 w-2 bg-accent-warning rounded-full mr-3' />
@@ -509,7 +517,7 @@ const ContentSettingsSection: React.FC = () => {
                 You have unsaved changes
               </p>
             </div>
-            <div className='flex items-center space-x-3'>
+            <div className='flex items-center space-x-2 md:space-x-3'>
               <button
                 onClick={handleDiscard}
                 disabled={isSaving}
@@ -530,12 +538,12 @@ const ContentSettingsSection: React.FC = () => {
       )}
 
       {/* Default Settings */}
-      <div className='bg-theme-card rounded-lg border border-theme-primary p-6'>
-        <h3 className='text-lg font-semibold text-theme-primary mb-4'>
+      <div className='bg-theme-card rounded-lg border border-theme-primary p-4 md:p-6'>
+        <h3 className='text-base md:text-lg font-semibold text-theme-primary mb-4'>
           Default Content Settings
         </h3>
 
-        <div className='grid grid-cols-1 md:grid-cols-2 gap-6'>
+        <div className='grid grid-cols-1 gap-4 md:gap-6'>
           <MultiSelectField
             label='Default Platforms'
             value={localSettings.defaultPlatforms || []}
@@ -573,8 +581,8 @@ const ContentSettingsSection: React.FC = () => {
       </div>
 
       {/* Content Behavior */}
-      <div className='bg-theme-card rounded-lg border border-theme-primary p-6'>
-        <h3 className='text-lg font-semibold text-theme-primary mb-4'>
+      <div className='bg-theme-card rounded-lg border border-theme-primary p-4 md:p-6'>
+        <h3 className='text-base md:text-lg font-semibold text-theme-primary mb-4'>
           Content Behavior
         </h3>
 
@@ -598,8 +606,8 @@ const ContentSettingsSection: React.FC = () => {
       </div>
 
       {/* AI & Automation */}
-      <div className='bg-theme-card rounded-lg border border-theme-primary p-6'>
-        <h3 className='text-lg font-semibold text-theme-primary mb-4'>
+      <div className='bg-theme-card rounded-lg border border-theme-primary p-4 md:p-6'>
+        <h3 className='text-base md:text-lg font-semibold text-theme-primary mb-4'>
           AI & Automation
         </h3>
 
@@ -615,12 +623,12 @@ const ContentSettingsSection: React.FC = () => {
       </div>
 
       {/* Content Summary */}
-      <div className='bg-theme-secondary/10 rounded-lg border border-theme-primary p-6'>
-        <h3 className='text-lg font-semibold text-theme-primary mb-4'>
+      <div className='bg-theme-secondary/10 rounded-lg border border-theme-primary p-4 md:p-6'>
+        <h3 className='text-base md:text-lg font-semibold text-theme-primary mb-4'>
           Content Summary
         </h3>
 
-        <div className='grid grid-cols-1 md:grid-cols-2 gap-4 text-sm'>
+        <div className='grid grid-cols-1 gap-4 text-sm'>
           <div className='space-y-2'>
             <div className='flex items-center justify-between'>
               <span className='font-medium text-theme-secondary'>
@@ -695,7 +703,9 @@ const ContentSettingsSection: React.FC = () => {
                       {platformOption?.icon && (
                         <span className='mr-1'>{platformOption.icon}</span>
                       )}
-                      {platformOption?.label || platform}
+                      <span className='truncate'>
+                        {platformOption?.label || platform}
+                      </span>
                     </span>
                   );
                 })}

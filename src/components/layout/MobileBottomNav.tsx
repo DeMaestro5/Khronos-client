@@ -49,6 +49,11 @@ const MobileNavItem: React.FC<MobileNavItemProps> = ({
 export default function MobileBottomNav() {
   const pathname = usePathname();
 
+  // Don't render on settings page since it has its own bottom navigation
+  if (pathname?.startsWith('/settings')) {
+    return null;
+  }
+
   const navigation = [
     { name: 'Dashboard', href: '/dashboard', icon: <FiHome /> },
     { name: 'Calendar', href: '/calendar', icon: <FiCalendar /> },

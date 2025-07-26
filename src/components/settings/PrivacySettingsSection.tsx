@@ -33,7 +33,7 @@ const ToggleSwitch: React.FC<ToggleSwitchProps> = ({
 }) => {
   return (
     <div className='flex items-start justify-between'>
-      <div className='flex-1'>
+      <div className='flex-1 min-w-0'>
         <h4
           className={`text-sm font-medium ${
             disabled ? 'text-theme-muted' : 'text-theme-primary'
@@ -56,7 +56,7 @@ const ToggleSwitch: React.FC<ToggleSwitchProps> = ({
         type='button'
         onClick={() => !disabled && onChange(!checked)}
         disabled={disabled}
-        className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 ${
+        className={`relative inline-flex h-5 w-10 items-center rounded-full transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 flex-shrink-0 ${
           disabled
             ? 'opacity-50 cursor-not-allowed bg-gray-200 dark:bg-gray-700'
             : checked
@@ -65,8 +65,8 @@ const ToggleSwitch: React.FC<ToggleSwitchProps> = ({
         }`}
       >
         <span
-          className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
-            checked ? 'translate-x-6' : 'translate-x-1'
+          className={`inline-block h-3 w-3 transform rounded-full bg-white transition-all duration-200 ${
+            checked ? 'translate-x-5' : 'translate-x-0.5'
           }`}
         />
       </button>

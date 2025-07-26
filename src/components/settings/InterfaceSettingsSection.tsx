@@ -52,11 +52,11 @@ const SelectField: React.FC<SelectFieldProps> = ({
               : 'border-theme-primary bg-theme-card'
           }`}
         >
-          <span className='text-theme-primary'>
+          <span className='text-theme-primary truncate'>
             {options.find((opt) => opt.value === value)?.label || 'Select...'}
           </span>
           <ChevronDownIcon
-            className={`h-4 w-4 text-theme-muted transition-transform ${
+            className={`h-4 w-4 text-theme-muted transition-transform flex-shrink-0 ml-2 ${
               isOpen ? 'rotate-180' : ''
             }`}
           />
@@ -79,7 +79,7 @@ const SelectField: React.FC<SelectFieldProps> = ({
                       : 'text-theme-primary'
                   }`}
                 >
-                  {option.label}
+                  <span className='truncate'>{option.label}</span>
                 </button>
               ))}
             </div>
@@ -142,7 +142,7 @@ const ThemeSelector: React.FC<ThemeSelectorProps> = ({
         )}
       </div>
 
-      <div className='grid grid-cols-3 gap-3'>
+      <div className='grid grid-cols-3 gap-2 md:gap-3'>
         {themes.map(({ value: themeValue, label, icon: Icon }) => (
           <button
             key={themeValue}
@@ -157,8 +157,8 @@ const ThemeSelector: React.FC<ThemeSelectorProps> = ({
                 : 'border-theme-primary hover:border-accent-primary'
             }`}
           >
-            <Icon className='h-5 w-5 text-theme-secondary' />
-            <span className='text-sm font-medium text-theme-primary'>
+            <Icon className='h-4 w-4 md:h-5 md:w-5 text-theme-secondary' />
+            <span className='text-xs md:text-sm font-medium text-theme-primary'>
               {label}
             </span>
           </button>
@@ -185,7 +185,7 @@ const ToggleSwitch: React.FC<ToggleSwitchProps> = ({
 }) => {
   return (
     <div className='flex items-start justify-between'>
-      <div className='flex-1'>
+      <div className='flex-1 min-w-0'>
         <h4
           className={`text-sm font-medium ${
             disabled ? 'text-theme-muted' : 'text-theme-primary'
@@ -208,7 +208,7 @@ const ToggleSwitch: React.FC<ToggleSwitchProps> = ({
         type='button'
         onClick={() => !disabled && onChange(!checked)}
         disabled={disabled}
-        className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-accent-primary focus:ring-offset-2 ${
+        className={`relative inline-flex h-5 w-10 items-center rounded-full transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-accent-primary focus:ring-offset-2 flex-shrink-0 ${
           disabled
             ? 'opacity-50 cursor-not-allowed bg-theme-secondary/30'
             : checked
@@ -217,8 +217,8 @@ const ToggleSwitch: React.FC<ToggleSwitchProps> = ({
         }`}
       >
         <span
-          className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
-            checked ? 'translate-x-6' : 'translate-x-1'
+          className={`inline-block h-3 w-3 transform rounded-full bg-white transition-all duration-200 ${
+            checked ? 'translate-x-5' : 'translate-x-0.5'
           }`}
         />
       </button>
@@ -408,7 +408,7 @@ const InterfaceSettingsSection: React.FC = () => {
 
   if (isLoading && !settings) {
     return (
-      <div className='space-y-6'>
+      <div className='space-y-4 md:space-y-6'>
         {[1, 2, 3, 4].map((i) => (
           <div key={i} className='animate-pulse'>
             <div className='h-4 bg-gray-200 dark:bg-gray-700 rounded w-1/4 mb-2' />
@@ -420,10 +420,10 @@ const InterfaceSettingsSection: React.FC = () => {
   }
 
   return (
-    <div className='space-y-6'>
+    <div className='space-y-4 md:space-y-6'>
       {/* Unsaved Changes Banner */}
       {hasChanges && (
-        <div className='bg-accent-warning/10 dark:bg-accent-warning/20 border border-accent-warning/30 dark:border-accent-warning/40 rounded-lg p-4'>
+        <div className='bg-accent-warning/10 dark:bg-accent-warning/20 border border-accent-warning/30 dark:border-accent-warning/40 rounded-lg p-3 md:p-4'>
           <div className='flex items-center justify-between'>
             <div className='flex items-center'>
               <div className='h-2 w-2 bg-accent-warning rounded-full mr-3' />
@@ -431,7 +431,7 @@ const InterfaceSettingsSection: React.FC = () => {
                 You have unsaved changes
               </p>
             </div>
-            <div className='flex items-center space-x-3'>
+            <div className='flex items-center space-x-2 md:space-x-3'>
               <button
                 onClick={handleDiscard}
                 disabled={isSaving}
@@ -452,8 +452,8 @@ const InterfaceSettingsSection: React.FC = () => {
       )}
 
       {/* Theme Settings */}
-      <div className='bg-theme-card rounded-lg border border-theme-primary p-6'>
-        <h3 className='text-lg font-semibold text-theme-primary mb-4'>
+      <div className='bg-theme-card rounded-lg border border-theme-primary p-4 md:p-6'>
+        <h3 className='text-base md:text-lg font-semibold text-theme-primary mb-4'>
           Appearance
         </h3>
 
@@ -472,12 +472,12 @@ const InterfaceSettingsSection: React.FC = () => {
       </div>
 
       {/* Layout Settings */}
-      <div className='bg-theme-card rounded-lg border border-theme-primary p-6'>
-        <h3 className='text-lg font-semibold text-theme-primary mb-4'>
+      <div className='bg-theme-card rounded-lg border border-theme-primary p-4 md:p-6'>
+        <h3 className='text-base md:text-lg font-semibold text-theme-primary mb-4'>
           Layout & Navigation
         </h3>
 
-        <div className='space-y-6'>
+        <div className='space-y-4 md:space-y-6'>
           <SelectField
             label='Default View'
             value={localSettings.defaultView || 'list'}
@@ -509,8 +509,8 @@ const InterfaceSettingsSection: React.FC = () => {
       </div>
 
       {/* Display Preferences */}
-      <div className='bg-theme-card rounded-lg border border-theme-primary p-6'>
-        <h3 className='text-lg font-semibold text-theme-primary mb-4'>
+      <div className='bg-theme-card rounded-lg border border-theme-primary p-4 md:p-6'>
+        <h3 className='text-base md:text-lg font-semibold text-theme-primary mb-4'>
           Display Preferences
         </h3>
 
@@ -543,8 +543,8 @@ const InterfaceSettingsSection: React.FC = () => {
       </div>
 
       {/* Settings Summary */}
-      <div className='bg-theme-secondary/10 rounded-lg border border-theme-primary p-6'>
-        <h3 className='text-lg font-semibold text-theme-primary mb-4'>
+      <div className='bg-theme-secondary/10 rounded-lg border border-theme-primary p-4 md:p-6'>
+        <h3 className='text-base md:text-lg font-semibold text-theme-primary mb-4'>
           Current Settings Summary
         </h3>
 

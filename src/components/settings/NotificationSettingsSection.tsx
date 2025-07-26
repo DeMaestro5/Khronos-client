@@ -34,23 +34,23 @@ const ToggleSwitch: React.FC<ToggleSwitchProps> = ({
   disabled = false,
   size = 'md',
 }) => {
-  const sizeClasses = size === 'sm' ? 'h-5 w-9' : 'h-6 w-11';
-  const thumbClasses = size === 'sm' ? 'h-3 w-3' : 'h-4 w-4';
+  const sizeClasses = size === 'sm' ? 'h-4 w-8' : 'h-5 w-10';
+  const thumbClasses = size === 'sm' ? 'h-2.5 w-2.5' : 'h-3 w-3';
   const translateClasses =
     size === 'sm'
       ? checked
-        ? 'translate-x-5'
-        : 'translate-x-1'
+        ? 'translate-x-4'
+        : 'translate-x-0.5'
       : checked
-      ? 'translate-x-6'
-      : 'translate-x-1';
+      ? 'translate-x-5'
+      : 'translate-x-0.5';
 
   return (
     <button
       type='button'
       onClick={() => !disabled && onChange(!checked)}
       disabled={disabled}
-      className={`relative inline-flex items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-accent-primary focus:ring-offset-2 ${
+      className={`relative inline-flex items-center rounded-full transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-accent-primary focus:ring-offset-2 ${
         disabled
           ? 'opacity-50 cursor-not-allowed bg-gray-300 dark:bg-gray-600'
           : checked
@@ -59,7 +59,7 @@ const ToggleSwitch: React.FC<ToggleSwitchProps> = ({
       } ${sizeClasses}`}
     >
       <span
-        className={`inline-block transform rounded-full bg-white transition-transform ${thumbClasses} ${translateClasses}`}
+        className={`inline-block transform rounded-full bg-white transition-all duration-200 ${thumbClasses} ${translateClasses}`}
       />
     </button>
   );
@@ -83,14 +83,14 @@ const NotificationRow: React.FC<NotificationRowProps> = ({
   icon: Icon,
 }) => {
   return (
-    <div className='flex items-start justify-between py-4'>
-      <div className='flex items-start space-x-3 flex-1'>
+    <div className='flex items-start justify-between py-3 md:py-4'>
+      <div className='flex items-start space-x-3 flex-1 min-w-0'>
         {Icon && (
           <div className='flex-shrink-0 mt-1'>
-            <Icon className='h-5 w-5 text-theme-secondary' />
+            <Icon className='h-4 w-4 md:h-5 md:w-5 text-theme-secondary' />
           </div>
         )}
-        <div className='flex-1'>
+        <div className='flex-1 min-w-0'>
           <h4
             className={`text-sm font-medium ${
               disabled ? 'text-theme-secondary' : 'text-theme-primary'
@@ -99,7 +99,7 @@ const NotificationRow: React.FC<NotificationRowProps> = ({
             {title}
           </h4>
           <p
-            className={`text-sm mt-1 ${
+            className={`text-xs md:text-sm mt-1 ${
               disabled ? 'text-theme-secondary' : 'text-theme-secondary'
             }`}
           >
@@ -108,7 +108,7 @@ const NotificationRow: React.FC<NotificationRowProps> = ({
         </div>
       </div>
 
-      <div className='flex-shrink-0'>
+      <div className='flex-shrink-0 ml-3'>
         <ToggleSwitch
           checked={checked}
           onChange={onChange}
@@ -138,30 +138,36 @@ const NotificationSection: React.FC<NotificationSectionProps> = ({
   icon: Icon,
 }) => {
   return (
-    <div className='bg-theme-card rounded-lg border border-theme-primary p-6'>
+    <div className='bg-theme-card rounded-lg border border-theme-primary p-4 md:p-6'>
       <div className='flex items-center justify-between mb-4'>
-        <div className='flex items-center space-x-3'>
-          {Icon && <Icon className='h-6 w-6 text-theme-secondary' />}
-          <div>
-            <h3 className='text-lg font-semibold text-theme-primary'>
+        <div className='flex items-center space-x-3 flex-1 min-w-0'>
+          {Icon && (
+            <Icon className='h-5 w-5 md:h-6 md:w-6 text-theme-secondary flex-shrink-0' />
+          )}
+          <div className='min-w-0 flex-1'>
+            <h3 className='text-base md:text-lg font-semibold text-theme-primary'>
               {title}
             </h3>
-            <p className='text-sm text-theme-secondary'>{description}</p>
+            <p className='text-xs md:text-sm text-theme-secondary'>
+              {description}
+            </p>
           </div>
         </div>
 
-        <ToggleSwitch checked={enabled} onChange={onToggle} />
+        <div className='flex-shrink-0 ml-3'>
+          <ToggleSwitch checked={enabled} onChange={onToggle} />
+        </div>
       </div>
 
       {enabled && (
-        <div className='border-t border-theme-primary -mx-6 px-6'>
+        <div className='border-t border-theme-primary -mx-4 md:-mx-6 px-4 md:px-6'>
           {children}
         </div>
       )}
 
       {!enabled && (
-        <div className='border-t border-theme-primary -mx-6 px-6 py-4'>
-          <p className='text-sm text-theme-secondary text-center'>
+        <div className='border-t border-theme-primary -mx-4 md:-mx-6 px-4 md:px-6 py-4'>
+          <p className='text-xs md:text-sm text-theme-secondary text-center'>
             Enable {title.toLowerCase()} to configure specific notification
             types
           </p>

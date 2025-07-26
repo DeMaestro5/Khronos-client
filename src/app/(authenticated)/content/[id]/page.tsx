@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useEffect, useMemo } from 'react';
-import { ArrowLeft, Edit, Share2, FileText } from 'lucide-react';
+import { ArrowLeft, Edit, Share2, FileText, MoreVertical } from 'lucide-react';
 import { useRouter, useParams } from 'next/navigation';
 import { contentAPI } from '@/src/lib/api';
 import { ContentData } from '@/src/types/content';
@@ -152,20 +152,20 @@ const ContentDetailPage = () => {
     }
 
     return (
-      <div className='min-h-screen bg-theme-primary'>
-        <div className='max-w-7xl mx-auto px-6 py-8'>
+      <div className='min-h-screen bg-theme-primary pb-20'>
+        <div className='max-w-7xl mx-auto px-4 py-4'>
           {/* Show back button even during loading */}
-          <div className='flex items-center justify-between mb-8'>
+          <div className='flex items-center justify-between mb-6'>
             <button
               onClick={() => router.back()}
-              className='inline-flex items-center cursor-pointer gap-2 px-4 py-2 text-theme-secondary hover:text-theme-primary hover:bg-theme-card/60 rounded-xl transition-all duration-200 backdrop-blur-sm'
+              className='inline-flex items-center cursor-pointer gap-2 px-3 py-2 text-theme-secondary hover:text-theme-primary hover:bg-theme-card/60 rounded-xl transition-all duration-200 backdrop-blur-sm'
             >
               <ArrowLeft className='w-4 h-4' />
-              <span className='font-medium'>Back to Content</span>
+              <span className='font-medium text-sm'>Back</span>
             </button>
 
             {/* Show skeleton edit button */}
-            <div className='h-12 w-32 shimmer-theme rounded-xl'></div>
+            <div className='h-10 w-20 shimmer-theme rounded-xl'></div>
           </div>
 
           {/* Enhanced PageLoading with content context */}
@@ -193,8 +193,8 @@ const ContentDetailPage = () => {
 
   if (!content) {
     return (
-      <div className='min-h-screen bg-theme-primary flex items-center justify-center'>
-        <div className='text-center'>
+      <div className='min-h-screen bg-theme-primary flex items-center justify-center pb-20'>
+        <div className='text-center px-4'>
           <div className='w-16 h-16 bg-gray-100 dark:bg-slate-700 rounded-full flex items-center justify-center mx-auto mb-4'>
             <FileText className='w-8 h-8 text-gray-400 dark:text-slate-500' />
           </div>
@@ -218,47 +218,48 @@ const ContentDetailPage = () => {
   }
 
   return (
-    <div className='min-h-screen bg-theme-primary'>
-      <div className='max-w-7xl mx-auto px-6 py-8'>
-        {/* Header */}
-        <div className='flex items-center justify-between mb-8'>
+    <div className='min-h-screen bg-theme-primary pb-20'>
+      {/* Mobile Header - Fixed at top */}
+      <div className='sticky top-0 z-40 bg-theme-primary/95 backdrop-blur-md border-b border-theme-tertiary/50'>
+        <div className='flex items-center justify-between px-4 py-3'>
           <button
             onClick={() => router.back()}
-            className='inline-flex items-center cursor-pointer gap-2 px-4 py-2 text-theme-secondary hover:text-theme-primary hover:bg-theme-card/60 rounded-xl transition-all duration-200 backdrop-blur-sm'
+            className='inline-flex items-center cursor-pointer gap-2 px-3 py-2 text-theme-secondary hover:text-theme-primary hover:bg-theme-card/60 rounded-xl transition-all duration-200 backdrop-blur-sm'
           >
             <ArrowLeft className='w-4 h-4' />
-            <span className='font-medium'>Back to Content</span>
+            <span className='font-medium text-sm'>Back</span>
           </button>
-          <div className='flex items-center gap-3'>
-            <button className='p-3 text-theme-secondary hover:text-theme-primary hover:bg-theme-card/60 rounded-xl transition-all duration-200 backdrop-blur-sm'>
-              <Share2 className='w-5 h-5' />
+
+          <div className='flex items-center gap-2'>
+            <button className='p-2 text-theme-secondary hover:text-theme-primary hover:bg-theme-card/60 rounded-xl transition-all duration-200 backdrop-blur-sm'>
+              <Share2 className='w-4 h-4' />
             </button>
             <button
               onClick={handleEditClick}
-              className='inline-flex items-center gap-2 px-5 py-3 bg-accent-primary text-white hover:bg-accent-secondary rounded-xl transition-all duration-200 shadow-lg hover:shadow-xl'
+              className='inline-flex items-center gap-2 px-3 py-2 bg-accent-primary text-white hover:bg-accent-secondary rounded-xl transition-all duration-200 shadow-lg hover:shadow-xl text-sm'
             >
-              <Edit className='w-4 h-4' />
-              <span className='font-medium'>Edit Content</span>
+              <Edit className='w-3 h-3' />
+              <span className='font-medium'>Edit</span>
+            </button>
+            <button className='p-2 text-theme-secondary hover:text-theme-primary hover:bg-theme-card/60 rounded-xl transition-all duration-200 backdrop-blur-sm'>
+              <MoreVertical className='w-4 h-4' />
             </button>
           </div>
         </div>
+      </div>
 
+      {/* Main Content */}
+      <div className='max-w-7xl mx-auto px-4 py-4'>
         {/* Hero Section */}
         <HeroSection content={content} />
 
-        {/* Stats Bar */}
-        {/* <div className='bg-white rounded-2xl shadow-sm border border-white/20 backdrop-blur-sm mb-8 overflow-hidden'>
-          <StatsBar stats={content.stats} />
-        </div> */}
+        {/* Mobile Content Layout */}
+        <div className='space-y-6'>
+          {/* Content Tabs */}
+          <ContentTabs content={content} />
 
-        {/* Main Content Grid */}
-        <div className='grid lg:grid-cols-3 gap-8'>
-          <div className='lg:col-span-2'>
-            <ContentTabs content={content} />
-          </div>
-          <div className='lg:col-span-1'>
-            <Sidebar content={content} />
-          </div>
+          {/* Sidebar Content - Stacked on mobile */}
+          <Sidebar content={content} />
         </div>
       </div>
 

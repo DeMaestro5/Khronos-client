@@ -226,37 +226,59 @@ export default function ContentPage() {
               </button>
             </div>
           </motion.div>
-        ) : viewMode === 'grid' ? (
-          <motion.div
-            key='grid'
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            className='grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 sm:gap-6'
-          >
-            <AnimatePresence>
-              {filteredContents.map((content) => (
-                <ContentCard
-                  key={content._id}
-                  content={content}
-                  onContentDeleted={handleContentDeleted}
-                  onContentUpdated={handleContentUpdated}
-                />
-              ))}
-            </AnimatePresence>
-          </motion.div>
         ) : (
-          <motion.div
-            key='list'
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            className='space-y-3 sm:space-y-4'
-          >
-            <AnimatePresence>
-              {filteredContents.map((content) => (
-                <ContentListItem key={content._id} content={content} />
-              ))}
-            </AnimatePresence>
-          </motion.div>
+          <>
+            {/* Grid View - Desktop Only */}
+            {viewMode === 'grid' && (
+              <motion.div
+                key='grid'
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                className='hidden md:grid md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 sm:gap-6'
+              >
+                <AnimatePresence>
+                  {filteredContents.map((content) => (
+                    <ContentCard
+                      key={content._id}
+                      content={content}
+                      onContentDeleted={handleContentDeleted}
+                      onContentUpdated={handleContentUpdated}
+                    />
+                  ))}
+                </AnimatePresence>
+              </motion.div>
+            )}
+
+            {/* List View - Always visible on mobile, conditional on desktop */}
+            {viewMode === 'list' && (
+              <motion.div
+                key='list'
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                className='space-y-3 sm:space-y-4'
+              >
+                <AnimatePresence>
+                  {filteredContents.map((content) => (
+                    <ContentListItem key={content._id} content={content} />
+                  ))}
+                </AnimatePresence>
+              </motion.div>
+            )}
+
+            {/* Mobile List View - Always shown on mobile */}
+            <motion.div
+              key='mobile-list'
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              className='md:hidden space-y-3 sm:space-y-4'
+            >
+              <AnimatePresence>
+                {filteredContents.map((content) => (
+                  <ContentListItem key={content._id} content={content} />
+                ))}
+              </AnimatePresence>
+            </motion.div>
+          </>
         )}
       </AnimatePresence>
 
