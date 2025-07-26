@@ -139,12 +139,18 @@ export default function NotificationDropdown({
           animate={{ opacity: 1, scale: 1, y: 0 }}
           exit={{ opacity: 0, scale: 0.95, y: -10 }}
           transition={{ duration: 0.15 }}
-          className='absolute right-0 mt-3 w-96 rounded-2xl shadow-theme-xl bg-theme-card backdrop-blur-2xl ring-1 ring-black ring-opacity-5 dark:ring-slate-600 z-50 border border-theme-primary/60 overflow-hidden'
+          className='absolute right-0 mt-3 w-80 sm:w-96 rounded-2xl shadow-theme-xl bg-theme-card backdrop-blur-2xl ring-1 ring-black ring-opacity-5 dark:ring-slate-600 z-50 border border-theme-primary/60 overflow-hidden max-h-[80vh] sm:max-h-[70vh]'
+          style={{
+            maxWidth: 'calc(100vw - 2rem)',
+            right: '0.5rem',
+            left: '0.5rem',
+            width: 'auto',
+          }}
         >
           {/* Header */}
-          <div className='p-6 bg-gradient-to-r from-theme-secondary to-theme-tertiary border-b border-theme-primary/60'>
+          <div className='p-4 sm:p-6 bg-gradient-to-r from-theme-secondary to-theme-tertiary border-b border-theme-primary/60'>
             <div className='flex items-center justify-between'>
-              <h3 className='text-lg font-bold text-theme-primary'>
+              <h3 className='text-base sm:text-lg font-bold text-theme-primary'>
                 Notifications
               </h3>
               <div className='flex items-center space-x-2'>
@@ -167,21 +173,21 @@ export default function NotificationDropdown({
           </div>
 
           {/* Notifications List */}
-          <div className='max-h-96 overflow-y-auto'>
+          <div className='max-h-64 sm:max-h-96 overflow-y-auto'>
             {loading && notifications.length === 0 ? (
-              <div className='p-8 text-center'>
+              <div className='p-6 sm:p-8 text-center'>
                 <div className='animate-spin rounded-full h-8 w-8 border-b-2 border-accent-primary mx-auto mb-3'></div>
-                <p className='text-theme-secondary'>
+                <p className='text-sm text-theme-secondary'>
                   Loading your notifications...
                 </p>
               </div>
             ) : notifications.length === 0 ? (
-              <div className='p-8 text-center'>
-                <FiBell className='h-12 w-12 text-theme-muted mx-auto mb-4' />
+              <div className='p-6 sm:p-8 text-center'>
+                <FiBell className='h-10 w-10 sm:h-12 sm:w-12 text-theme-muted mx-auto mb-3 sm:mb-4' />
                 <h4 className='text-sm font-semibold text-theme-primary mb-2'>
                   You&apos;re all caught up!
                 </h4>
-                <p className='text-sm text-theme-secondary'>
+                <p className='text-xs sm:text-sm text-theme-secondary'>
                   No new notifications at the moment. We&apos;ll let you know
                   when something important happens.
                 </p>
@@ -193,7 +199,7 @@ export default function NotificationDropdown({
                     key={type}
                     className='border-b border-theme-primary/40 last:border-b-0'
                   >
-                    <div className='px-4 py-2 bg-theme-secondary/50'>
+                    <div className='px-3 sm:px-4 py-2 bg-theme-secondary/50'>
                       <h4 className='text-xs font-semibold text-theme-secondary uppercase tracking-wider'>
                         {type.toLowerCase().replace('_', ' ')}
                       </h4>
@@ -215,18 +221,18 @@ export default function NotificationDropdown({
                           </div>
                           <div className='flex-1 min-w-0'>
                             <div className='flex items-center justify-between'>
-                              <p className='text-sm font-semibold text-theme-primary group-hover:text-accent-primary transition-colors duration-200'>
+                              <p className='text-sm font-semibold text-theme-primary group-hover:text-accent-primary transition-colors duration-200 line-clamp-2'>
                                 {notification.title}
                               </p>
                               <span
-                                className={`px-2 py-0.5 rounded-full text-xs font-medium border ${getPriorityColor(
+                                className={`px-2 py-0.5 rounded-full text-xs font-medium border ml-2 flex-shrink-0 ${getPriorityColor(
                                   notification.priority
                                 )}`}
                               >
                                 {notification.priority.toLowerCase()}
                               </span>
                             </div>
-                            <p className='text-sm text-theme-secondary mt-1'>
+                            <p className='text-sm text-theme-secondary mt-1 line-clamp-2'>
                               {notification.message}
                             </p>
                             <div className='flex items-center justify-between mt-2'>
@@ -240,7 +246,7 @@ export default function NotificationDropdown({
                                 </p>
                               </div>
                               {notification.status === 'UNREAD' && (
-                                <span className='w-2 h-2 bg-accent-primary rounded-full'></span>
+                                <span className='w-2 h-2 bg-accent-primary rounded-full flex-shrink-0'></span>
                               )}
                             </div>
                           </div>
@@ -255,7 +261,7 @@ export default function NotificationDropdown({
 
           {/* Footer */}
           {notifications.length > 0 && (
-            <div className='p-4 bg-gradient-to-r from-theme-secondary to-theme-tertiary border-t border-theme-primary/60'>
+            <div className='p-3 sm:p-4 bg-gradient-to-r from-theme-secondary to-theme-tertiary border-t border-theme-primary/60'>
               <div className='flex items-center justify-between'>
                 {unreadCount > 0 ? (
                   <button
@@ -263,7 +269,8 @@ export default function NotificationDropdown({
                     className='flex items-center text-sm text-accent-primary hover:text-accent-secondary font-medium transition-colors duration-200'
                   >
                     <FiCheck className='h-4 w-4 mr-1' />
-                    Mark all as read
+                    <span className='hidden sm:inline'>Mark all as read</span>
+                    <span className='sm:hidden'>Mark all read</span>
                   </button>
                 ) : (
                   <span className='text-sm text-theme-secondary'>
@@ -275,7 +282,8 @@ export default function NotificationDropdown({
                   className='flex items-center text-sm text-accent-primary hover:text-accent-secondary font-medium transition-colors duration-200'
                   onClick={onClose}
                 >
-                  View all
+                  <span className='hidden sm:inline'>View all</span>
+                  <span className='sm:hidden'>View</span>
                   <FiSettings className='h-4 w-4 ml-1' />
                 </Link>
               </div>
