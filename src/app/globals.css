@@ -60,6 +60,24 @@ link[rel='icon'][href*='favicon'] {
   --accent-error: #ef4444;
   --accent-info: #06b6d4;
 
+  /* AI Suggestion Colors - Enhanced for Light Mode */
+  --ai-suggestion-bg: #f8f7ff;
+  --ai-suggestion-border: #e0e7ff;
+  --ai-suggestion-icon-bg: #6366f1;
+  --ai-suggestion-icon-color: #ffffff;
+  --ai-suggestion-title: #4338ca;
+  --ai-suggestion-text: #374151;
+  --ai-suggestion-hover: #f1f5ff;
+  --ai-suggestion-button-bg: #6366f1;
+  --ai-suggestion-button-text: #ffffff;
+  --ai-suggestion-button-hover: #4f46e5;
+
+  /* Calendar Icon Colors - Enhanced for Light Mode */
+  --calendar-icon-bg: #dbeafe;
+  --calendar-icon-color: #1d4ed8;
+  --calendar-empty-bg: #f0f9ff;
+  --calendar-empty-border: #bae6fd;
+
   /* Interactive Colors */
   --interactive-hover: #f8fafc;
   --interactive-active: #f1f5f9;
@@ -121,6 +139,24 @@ link[rel='icon'][href*='favicon'] {
   --accent-warning: #fbbf24;
   --accent-error: #f87171;
   --accent-info: #22d3ee;
+
+  /* AI Suggestion Colors - Enhanced for Dark Mode */
+  --ai-suggestion-bg: #1e1b4b;
+  --ai-suggestion-border: #312e81;
+  --ai-suggestion-icon-bg: #8b5cf6;
+  --ai-suggestion-icon-color: #ffffff;
+  --ai-suggestion-title: #c4b5fd;
+  --ai-suggestion-text: #e0e7ff;
+  --ai-suggestion-hover: #312e81;
+  --ai-suggestion-button-bg: #8b5cf6;
+  --ai-suggestion-button-text: #ffffff;
+  --ai-suggestion-button-hover: #7c3aed;
+
+  /* Calendar Icon Colors - Enhanced for Dark Mode */
+  --calendar-icon-bg: #1e3a8a;
+  --calendar-icon-color: #93c5fd;
+  --calendar-empty-bg: #0c4a6e;
+  --calendar-empty-border: #0ea5e9;
 
   /* Interactive Colors */
   --interactive-hover: #334155;
@@ -259,6 +295,64 @@ body {
 /* Theme-aware accent utilities */
 .text-accent-primary {
   color: var(--accent-primary);
+}
+
+/* AI Suggestion Utilities */
+.bg-ai-suggestion {
+  background-color: var(--ai-suggestion-bg);
+}
+
+.border-ai-suggestion {
+  border-color: var(--ai-suggestion-border);
+}
+
+.bg-ai-suggestion-icon {
+  background-color: var(--ai-suggestion-icon-bg);
+}
+
+.text-ai-suggestion-icon {
+  color: var(--ai-suggestion-icon-color);
+}
+
+.text-ai-suggestion-title {
+  color: var(--ai-suggestion-title);
+}
+
+.text-ai-suggestion-text {
+  color: var(--ai-suggestion-text);
+}
+
+.hover\:bg-ai-suggestion:hover {
+  background-color: var(--ai-suggestion-hover);
+}
+
+.bg-ai-suggestion-button {
+  background-color: var(--ai-suggestion-button-bg);
+}
+
+.text-ai-suggestion-button {
+  color: var(--ai-suggestion-button-text);
+}
+
+.hover\:bg-ai-suggestion-button:hover {
+  background-color: var(--ai-suggestion-button-hover);
+}
+
+/* Calendar Icon Utilities */
+.bg-calendar-icon {
+  background-color: var(--calendar-icon-bg);
+}
+
+.text-calendar-icon {
+  color: var(--calendar-icon-color);
+}
+
+.bg-calendar-empty {
+  background-color: var(--calendar-empty-bg);
+}
+
+.border-calendar-empty {
+  border-color: var(--calendar-empty-border);
 }
 
 /* Theme-aware hover utilities */

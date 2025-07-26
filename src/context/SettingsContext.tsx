@@ -470,12 +470,6 @@ export function SettingsProvider({ children }: { children: React.ReactNode }) {
         ...data,
         // enablesAnimation: data.enableAnimation, // Temporarily disabled
       };
-      // delete backendData.enableAnimation; // Remove the frontend property
-
-      console.log('🔧 Interface Settings Update:', {
-        original: data,
-        converted: backendData,
-      });
 
       await handleSettingsUpdate(
         () => settingsApi.updateInterface(backendData),
