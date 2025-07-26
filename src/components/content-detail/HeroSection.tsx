@@ -14,40 +14,53 @@ interface HeroSectionProps {
 
 export const HeroSection: React.FC<HeroSectionProps> = ({ content }) => {
   return (
-    <div className='bg-theme-card rounded-2xl shadow-sm border border-theme-primary/20 backdrop-blur-sm mb-8 overflow-hidden'>
+    <div className='bg-theme-card rounded-2xl shadow-sm border border-theme-primary/20 backdrop-blur-sm mb-6 overflow-hidden'>
       <div
-        className={`bg-gradient-to-r ${getContentTypeGradient(
+        className={`bg-gradient-to-br ${getContentTypeGradient(
           content.type
-        )} p-8 text-white`}
+        )} p-6 md:p-8 text-white`}
       >
-        <div className='flex items-start justify-between mb-6'>
-          <div className='flex items-center gap-3'>
+        {/* Status and Type Badges - Mobile Optimized */}
+        <div className='flex flex-wrap items-center gap-2 mb-4'>
+          <div className='flex items-center gap-2'>
             {getStatusIcon(content.status)}
             <span
-              className={`px-4 py-2 rounded-full text-sm font-semibold border ${getStatusStyle(
+              className={`px-3 py-1.5 rounded-full text-xs font-semibold border ${getStatusStyle(
                 content.status
               )}`}
             >
               {content.status.replace('_', ' ')}
             </span>
-            <span className='px-4 py-2 bg-white/20 text-white rounded-full text-sm font-semibold backdrop-blur-sm flex items-center gap-2'>
-              {getContentTypeIcon(content.type)}
+          </div>
+
+          <span className='px-3 py-1.5 bg-white/20 text-white rounded-full text-xs font-semibold backdrop-blur-sm flex items-center gap-1.5'>
+            {getContentTypeIcon(content.type)}
+            <span className='hidden sm:inline'>
               {content.type.replace('_', ' ')}
             </span>
-            {content.aiGenerated && (
-              <span className='px-4 py-2 bg-purple-500/30 text-white rounded-full text-sm font-semibold backdrop-blur-sm flex items-center gap-2'>
-                <Sparkles className='w-4 h-4' />
-                AI Generated
-              </span>
-            )}
-          </div>
+            <span className='sm:hidden'>{content.type.split('_')[0]}</span>
+          </span>
+
+          {content.aiGenerated && (
+            <span className='px-3 py-1.5 bg-purple-500/30 text-white rounded-full text-xs font-semibold backdrop-blur-sm flex items-center gap-1.5'>
+              <Sparkles className='w-3 h-3' />
+              <span className='hidden sm:inline'>AI Generated</span>
+              <span className='sm:hidden'>AI</span>
+            </span>
+          )}
         </div>
-        <h1 className='text-4xl font-bold mb-4 leading-tight'>
+
+        {/* Title - Mobile Optimized */}
+        <h1 className='text-2xl md:text-3xl lg:text-4xl font-bold mb-4 leading-tight break-words'>
           {content.title}
         </h1>
-        <p className='text-xl text-blue-100 leading-relaxed max-w-4xl'>
-          {content.excerpt}
-        </p>
+
+        {/* Excerpt - Mobile Optimized */}
+        {content.excerpt && (
+          <p className='text-base md:text-lg lg:text-xl text-blue-100 leading-relaxed break-words'>
+            {content.excerpt}
+          </p>
+        )}
       </div>
     </div>
   );

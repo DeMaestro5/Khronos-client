@@ -258,7 +258,7 @@ export default function Navbar() {
 
               {/* Simplified Profile Dropdown Menu */}
               {profileOpen && user && (
-                <div className='profile-dropdown origin-top-right absolute right-0 mt-3 w-56 rounded-xl shadow-theme-xl bg-theme-card backdrop-blur-2xl ring-1 ring-black ring-opacity-5 dark:ring-slate-600 z-20 border border-theme-primary overflow-hidden'>
+                <div className='profile-dropdown origin-top-right absolute right-0 mt-3 w-56 sm:w-64 rounded-xl shadow-theme-xl bg-theme-card backdrop-blur-2xl ring-1 ring-black ring-opacity-5 dark:ring-slate-600 z-20 border border-theme-primary overflow-hidden'>
                   {/* Simple Menu Items */}
                   <div className='py-2'>
                     <Link

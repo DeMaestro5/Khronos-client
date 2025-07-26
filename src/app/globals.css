@@ -24,6 +24,101 @@ svg[data-testid*='next'] {
   height: 0 !important;
 }
 
+/* Mobile-specific improvements */
+@media (max-width: 768px) {
+  /* Prevent horizontal scrolling */
+  body {
+    overflow-x: hidden;
+  }
+
+  /* Improve touch targets */
+  button,
+  a,
+  [role='button'] {
+    min-height: 44px;
+    min-width: 44px;
+  }
+
+  /* Better text wrapping */
+  h1,
+  h2,
+  h3,
+  h4,
+  h5,
+  h6,
+  p,
+  span,
+  div {
+    word-wrap: break-word;
+    overflow-wrap: break-word;
+  }
+
+  /* Improve tab scrolling */
+  .scrollbar-hide {
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+  }
+
+  /* Better mobile spacing */
+  .mobile-space-y > * + * {
+    margin-top: 1rem;
+  }
+
+  /* Mobile-optimized cards */
+  .mobile-card {
+    border-radius: 1rem;
+    padding: 1rem;
+    margin-bottom: 1rem;
+  }
+
+  /* Mobile bottom navigation improvements */
+  .fixed.bottom-0 {
+    bottom: 0 !important;
+    left: 0 !important;
+    right: 0 !important;
+    width: 100% !important;
+    z-index: 50 !important;
+  }
+
+  /* Ensure all tabs are visible in bottom navigation */
+  .flex.items-center.justify-between {
+    gap: 0 !important;
+  }
+
+  /* Make sure each tab button takes equal space */
+  .flex-1 {
+    flex: 1 1 0% !important;
+    min-width: 0 !important;
+  }
+
+  /* Ensure text doesn't overflow in tab labels */
+  .text-xs.leading-tight {
+    font-size: 0.75rem !important;
+    line-height: 1.25 !important;
+    white-space: nowrap !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+  }
+
+  /* Mobile toggle switch improvements */
+  button[type='button'] {
+    min-height: 44px;
+    min-width: 44px;
+  }
+
+  /* Ensure toggle switches are touch-friendly */
+  .relative.inline-flex.h-5.w-10 {
+    min-height: 44px !important;
+    min-width: 44px !important;
+  }
+
+  /* Better visual feedback for toggle switches */
+  .relative.inline-flex.h-5.w-10:active {
+    transform: scale(0.95);
+  }
+}
+
 /* Ensure favicon is properly overridden */
 link[rel='icon'][href*='favicon'] {
   display: none !important;

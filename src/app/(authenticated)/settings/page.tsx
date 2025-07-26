@@ -191,8 +191,8 @@ export default function SettingsPage() {
   // Error state
   if (error && !settings) {
     return (
-      <div className='min-h-screen bg-theme-primary flex items-center justify-center'>
-        <div className='text-center'>
+      <div className='min-h-screen bg-theme-primary flex items-center justify-center pb-20'>
+        <div className='text-center px-4'>
           <div className='w-16 h-16 bg-red-100 dark:bg-red-900/40 rounded-full flex items-center justify-center mx-auto mb-4'>
             <FiAlertCircle className='h-8 w-8 text-red-600 dark:text-red-400' />
           </div>
@@ -220,142 +220,284 @@ export default function SettingsPage() {
   }
 
   return (
-    <div className='min-h-screen bg-theme-primary'>
-      <div className='max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8'>
-        {/* Header */}
-        <div className='mb-8'>
-          <div className='flex items-center justify-between'>
-            <div className='flex items-center space-x-4'>
-              <Link
-                href='/dashboard'
-                className='p-2 text-theme-secondary hover:text-theme-primary hover:bg-theme-card rounded-lg transition-colors duration-200'
-              >
-                <FiArrowLeft className='h-5 w-5' />
-              </Link>
-              <div>
-                <h1 className='text-2xl font-bold text-theme-primary flex items-center'>
-                  <FiSettings className='h-6 w-6 mr-3' />
-                  Settings
-                </h1>
-                <p className='text-theme-secondary text-sm mt-1'>
-                  Manage your account preferences and application settings
-                </p>
-              </div>
+    <div className='min-h-screen bg-theme-primary pb-20'>
+      {/* Mobile Header - Fixed at top */}
+      <div className='sticky top-0 z-40 bg-theme-primary/95 backdrop-blur-md border-b border-theme-tertiary/50'>
+        <div className='flex items-center justify-between px-4 py-3'>
+          <div className='flex items-center gap-3'>
+            <Link
+              href='/dashboard'
+              className='p-2 text-theme-secondary hover:text-theme-primary hover:bg-theme-card/60 rounded-xl transition-colors duration-200'
+            >
+              <FiArrowLeft className='h-5 w-5' />
+            </Link>
+            <div>
+              <h1 className='text-lg font-bold text-theme-primary flex items-center gap-2'>
+                <FiSettings className='h-5 w-5' />
+                Settings
+              </h1>
+              <p className='text-xs text-theme-secondary'>
+                {SETTINGS_TABS.find((tab) => tab.id === activeTab)?.description}
+              </p>
             </div>
+          </div>
 
-            {/* Action buttons */}
-            <div className='flex items-center space-x-3'>
-              {hasUnsavedChanges && (
-                <div className='flex items-center text-amber-600 text-sm'>
-                  <FiAlertCircle className='h-4 w-4 mr-1' />
-                  Unsaved changes
-                </div>
-              )}
+          {/* Action buttons */}
+          <div className='flex items-center gap-2'>
+            {hasUnsavedChanges && (
+              <div className='flex items-center text-amber-600 text-xs'>
+                <FiAlertCircle className='h-3 w-3 mr-1' />
+                <span className='hidden sm:inline'>Unsaved</span>
+              </div>
+            )}
 
-              <button
-                onClick={handleExport}
-                disabled={loading}
-                className='inline-flex items-center px-3 py-2 text-sm font-medium text-theme-primary bg-theme-card border border-theme-primary rounded-lg hover:bg-theme-hover transition-colors duration-200 disabled:opacity-50'
-              >
-                <FiDownload className='h-4 w-4 mr-2' />
-                Export
-              </button>
+            <button
+              onClick={handleExport}
+              disabled={loading}
+              className='p-2 text-theme-secondary hover:text-theme-primary hover:bg-theme-card/60 rounded-xl transition-colors duration-200 disabled:opacity-50'
+              title='Export Settings'
+            >
+              <FiDownload className='h-4 w-4' />
+            </button>
 
-              <button
-                onClick={handleReset}
-                disabled={loading}
-                className='inline-flex items-center px-3 py-2 text-sm font-medium text-theme-primary bg-theme-card border border-theme-primary rounded-lg hover:bg-theme-hover transition-colors duration-200 disabled:opacity-50'
-              >
-                <FiRotateCcw className='h-4 w-4 mr-2' />
-                Reset
-              </button>
+            <button
+              onClick={handleReset}
+              disabled={loading}
+              className='p-2 text-theme-secondary hover:text-theme-primary hover:bg-theme-card/60 rounded-xl transition-colors duration-200 disabled:opacity-50'
+              title='Reset Settings'
+            >
+              <FiRotateCcw className='h-4 w-4' />
+            </button>
+          </div>
+        </div>
+      </div>
+
+      {/* Main Content */}
+      <div className='max-w-7xl mx-auto px-4 py-4'>
+        {/* User Info Card - Mobile Optimized */}
+        <div className='bg-theme-card rounded-2xl shadow-sm border border-theme-tertiary p-4 mb-6 backdrop-blur-sm'>
+          <div className='flex items-center gap-3'>
+            <div className='h-12 w-12 bg-accent-primary/10 rounded-full flex items-center justify-center flex-shrink-0'>
+              <FiUser className='h-6 w-6 text-accent-primary' />
+            </div>
+            <div className='min-w-0 flex-1'>
+              <div className='text-sm font-semibold text-theme-primary truncate'>
+                {user?.name || 'Anonymous User'}
+              </div>
+              <div className='text-xs text-theme-secondary truncate'>
+                {user?.email}
+              </div>
             </div>
           </div>
         </div>
 
-        <div className='flex flex-col lg:flex-row gap-8'>
-          {/* Sidebar Navigation */}
-          <div className='lg:w-64 flex-shrink-0'>
-            <div className='bg-theme-card rounded-xl shadow-sm border border-theme-primary overflow-hidden'>
-              <nav className='space-y-1 p-4'>
-                {SETTINGS_TABS.map((tab) => {
-                  const Icon = tab.icon;
-                  const isActive = activeTab === tab.id;
+        {/* Settings Content */}
+        <div className='bg-theme-card rounded-2xl shadow-sm border border-theme-tertiary backdrop-blur-sm'>
+          {/* Section Header */}
+          <div className='px-4 py-4 border-b border-theme-tertiary'>
+            <div className='flex items-center justify-between'>
+              <div>
+                <h2 className='text-lg font-semibold text-theme-primary'>
+                  {SETTINGS_TABS.find((tab) => tab.id === activeTab)?.label}
+                </h2>
+                <p className='text-sm text-theme-secondary mt-1'>
+                  {
+                    SETTINGS_TABS.find((tab) => tab.id === activeTab)
+                      ?.description
+                  }
+                </p>
+              </div>
 
-                  return (
-                    <button
-                      key={tab.id}
-                      onClick={() => handleTabChange(tab.id)}
-                      className={`w-full flex items-start p-3 rounded-lg text-left transition-colors duration-200 ${
-                        isActive
-                          ? 'bg-accent-primary/10 text-accent-primary border border-accent-primary/20'
-                          : 'text-theme-secondary hover:bg-theme-hover'
-                      }`}
-                    >
-                      <Icon
-                        className={`h-5 w-5 flex-shrink-0 mt-0.5 mr-3 ${
-                          isActive ? 'text-accent-primary' : 'text-theme-muted'
-                        }`}
-                      />
-                      <div>
-                        <div className='font-medium'>{tab.label}</div>
-                        <div className='text-xs text-theme-muted mt-1'>
-                          {tab.description}
-                        </div>
-                      </div>
-                    </button>
-                  );
-                })}
-              </nav>
+              {loading && (
+                <div className='flex items-center text-sm text-theme-muted'>
+                  <div className='w-4 h-4 border-2 border-theme-muted border-t-accent-primary rounded-full animate-spin mr-2'></div>
+                  <span className='hidden sm:inline'>Saving...</span>
+                </div>
+              )}
             </div>
+          </div>
 
-            {/* User info card */}
-            <div className='mt-6 bg-theme-card rounded-xl shadow-sm border border-theme-primary p-4'>
-              <div className='flex items-center'>
-                <div className='h-10 w-10 bg-accent-primary/10 rounded-full flex items-center justify-center'>
-                  <FiUser className='h-5 w-5 text-accent-primary' />
+          {/* Section Content */}
+          <div className='p-4'>{renderActiveSection()}</div>
+        </div>
+      </div>
+
+      {/* Mobile Bottom Tab Navigation */}
+      <div className='fixed bottom-0 left-0 right-0 z-50 bg-theme-card border-t border-theme-tertiary shadow-theme-lg'>
+        <div className='flex items-center justify-between px-0 py-2'>
+          {SETTINGS_TABS.map((tab) => {
+            const Icon = tab.icon;
+            const isActive = activeTab === tab.id;
+
+            return (
+              <button
+                key={tab.id}
+                onClick={() => handleTabChange(tab.id)}
+                className={`flex flex-col items-center justify-center py-2 px-0 text-xs font-medium rounded-xl transition-all duration-200 min-h-[60px] flex-1 ${
+                  isActive
+                    ? 'text-accent-primary bg-accent-primary/10'
+                    : 'text-theme-secondary hover:text-theme-primary hover:bg-theme-hover'
+                }`}
+              >
+                <Icon
+                  className={`h-4 w-4 mb-1 transition-colors duration-200 ${
+                    isActive
+                      ? 'text-accent-primary'
+                      : 'text-theme-muted group-hover:text-theme-primary'
+                  }`}
+                />
+                <span className='text-[10px] leading-tight px-1'>
+                  {tab.label}
+                </span>
+              </button>
+            );
+          })}
+        </div>
+      </div>
+
+      {/* Desktop Layout - Hidden on mobile */}
+      <div className='hidden lg:block'>
+        <div className='max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8'>
+          {/* Header */}
+          <div className='mb-8'>
+            <div className='flex items-center justify-between'>
+              <div className='flex items-center space-x-4'>
+                <Link
+                  href='/dashboard'
+                  className='p-2 text-theme-secondary hover:text-theme-primary hover:bg-theme-card rounded-lg transition-colors duration-200'
+                >
+                  <FiArrowLeft className='h-5 w-5' />
+                </Link>
+                <div>
+                  <h1 className='text-2xl font-bold text-theme-primary flex items-center'>
+                    <FiSettings className='h-6 w-6 mr-3' />
+                    Settings
+                  </h1>
+                  <p className='text-theme-secondary text-sm mt-1'>
+                    Manage your account preferences and application settings
+                  </p>
                 </div>
-                <div className='ml-3'>
-                  <div className='text-sm font-medium text-theme-primary'>
-                    {user?.name || 'Anonymous User'}
+              </div>
+
+              {/* Action buttons */}
+              <div className='flex items-center space-x-3'>
+                {hasUnsavedChanges && (
+                  <div className='flex items-center text-amber-600 text-sm'>
+                    <FiAlertCircle className='h-4 w-4 mr-1' />
+                    Unsaved changes
                   </div>
-                  <div className='text-xs text-theme-secondary'>
-                    {user?.email}
-                  </div>
-                </div>
+                )}
+
+                <button
+                  onClick={handleExport}
+                  disabled={loading}
+                  className='inline-flex items-center px-3 py-2 text-sm font-medium text-theme-primary bg-theme-card border border-theme-primary rounded-lg hover:bg-theme-hover transition-colors duration-200 disabled:opacity-50'
+                >
+                  <FiDownload className='h-4 w-4 mr-2' />
+                  Export
+                </button>
+
+                <button
+                  onClick={handleReset}
+                  disabled={loading}
+                  className='inline-flex items-center px-3 py-2 text-sm font-medium text-theme-primary bg-theme-card border border-theme-primary rounded-lg hover:bg-theme-hover transition-colors duration-200 disabled:opacity-50'
+                >
+                  <FiRotateCcw className='h-4 w-4 mr-2' />
+                  Reset
+                </button>
               </div>
             </div>
           </div>
 
-          {/* Main Content */}
-          <div className='flex-1'>
-            <div className='bg-theme-card rounded-xl shadow-sm border border-theme-primary'>
-              {/* Section Header */}
-              <div className='px-6 py-4 border-b border-theme-primary'>
-                <div className='flex items-center justify-between'>
-                  <div>
-                    <h2 className='text-lg font-semibold text-theme-primary'>
-                      {SETTINGS_TABS.find((tab) => tab.id === activeTab)?.label}
-                    </h2>
-                    <p className='text-sm text-theme-secondary mt-1'>
-                      {
-                        SETTINGS_TABS.find((tab) => tab.id === activeTab)
-                          ?.description
-                      }
-                    </p>
-                  </div>
+          <div className='flex flex-col lg:flex-row gap-8'>
+            {/* Sidebar Navigation */}
+            <div className='lg:w-64 flex-shrink-0'>
+              <div className='bg-theme-card rounded-xl shadow-sm border border-theme-primary overflow-hidden'>
+                <nav className='space-y-1 p-4'>
+                  {SETTINGS_TABS.map((tab) => {
+                    const Icon = tab.icon;
+                    const isActive = activeTab === tab.id;
 
-                  {loading && (
-                    <div className='flex items-center text-sm text-theme-muted'>
-                      <div className='w-4 h-4 border-2 border-theme-muted border-t-accent-primary rounded-full animate-spin mr-2'></div>
-                      Saving...
-                    </div>
-                  )}
-                </div>
+                    return (
+                      <button
+                        key={tab.id}
+                        onClick={() => handleTabChange(tab.id)}
+                        className={`w-full flex items-start p-3 rounded-lg text-left transition-colors duration-200 ${
+                          isActive
+                            ? 'bg-accent-primary/10 text-accent-primary border border-accent-primary/20'
+                            : 'text-theme-secondary hover:bg-theme-hover'
+                        }`}
+                      >
+                        <Icon
+                          className={`h-5 w-5 flex-shrink-0 mt-0.5 mr-3 ${
+                            isActive
+                              ? 'text-accent-primary'
+                              : 'text-theme-muted'
+                          }`}
+                        />
+                        <div>
+                          <div className='font-medium'>{tab.label}</div>
+                          <div className='text-xs text-theme-muted mt-1'>
+                            {tab.description}
+                          </div>
+                        </div>
+                      </button>
+                    );
+                  })}
+                </nav>
               </div>
 
-              {/* Section Content */}
-              <div className='p-6'>{renderActiveSection()}</div>
+              {/* User info card */}
+              <div className='mt-6 bg-theme-card rounded-xl shadow-sm border border-theme-primary p-4'>
+                <div className='flex items-center'>
+                  <div className='h-10 w-10 bg-accent-primary/10 rounded-full flex items-center justify-center'>
+                    <FiUser className='h-5 w-5 text-accent-primary' />
+                  </div>
+                  <div className='ml-3'>
+                    <div className='text-sm font-medium text-theme-primary'>
+                      {user?.name || 'Anonymous User'}
+                    </div>
+                    <div className='text-xs text-theme-secondary'>
+                      {user?.email}
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Main Content */}
+            <div className='flex-1'>
+              <div className='bg-theme-card rounded-xl shadow-sm border border-theme-primary'>
+                {/* Section Header */}
+                <div className='px-6 py-4 border-b border-theme-primary'>
+                  <div className='flex items-center justify-between'>
+                    <div>
+                      <h2 className='text-lg font-semibold text-theme-primary'>
+                        {
+                          SETTINGS_TABS.find((tab) => tab.id === activeTab)
+                            ?.label
+                        }
+                      </h2>
+                      <p className='text-sm text-theme-secondary mt-1'>
+                        {
+                          SETTINGS_TABS.find((tab) => tab.id === activeTab)
+                            ?.description
+                        }
+                      </p>
+                    </div>
+
+                    {loading && (
+                      <div className='flex items-center text-sm text-theme-muted'>
+                        <div className='w-4 h-4 border-2 border-theme-muted border-t-accent-primary rounded-full animate-spin mr-2'></div>
+                        Saving...
+                      </div>
+                    )}
+                  </div>
+                </div>
+
+                {/* Section Content */}
+                <div className='p-6'>{renderActiveSection()}</div>
+              </div>
             </div>
           </div>
         </div>
