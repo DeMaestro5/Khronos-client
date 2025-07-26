@@ -82,7 +82,7 @@ export default function StatsCard({
       {stats.map((stat, index) => (
         <div
           key={index}
-          className={`group relative overflow-hidden bg-white/10 backdrop-blur-lg border border-white/20 rounded-3xl p-6 hover:bg-white/15 transition-all duration-500 hover:scale-105 hover:shadow-xl hover:shadow-purple-500/25 ${
+          className={`group relative overflow-hidden bg-theme-card backdrop-blur-lg border border-theme-primary rounded-3xl p-6 hover:bg-theme-hover transition-all duration-500 hover:scale-105 hover:shadow-xl hover:shadow-theme-lg ${
             animateStats ? 'animate-fade-in' : ''
           }`}
           style={{ animationDelay: `${index * 0.1}s` }}
@@ -96,8 +96,8 @@ export default function StatsCard({
             <div
               className={`text-sm font-medium px-3 py-1 rounded-full ${
                 stat.positive
-                  ? 'text-green-400 bg-green-400/20'
-                  : 'text-red-400 bg-red-400/20'
+                  ? 'text-accent-success bg-accent-success/20'
+                  : 'text-accent-error bg-accent-error/20'
               }`}
             >
               {stat.change}
@@ -105,11 +105,15 @@ export default function StatsCard({
           </div>
 
           <div className='space-y-2'>
-            <h3 className='text-slate-300 text-sm font-medium'>{stat.title}</h3>
-            <p className='text-3xl font-bold text-white'>{stat.value}</p>
+            <h3 className='text-theme-secondary text-sm font-medium'>
+              {stat.title}
+            </h3>
+            <p className='text-3xl font-bold text-theme-primary'>
+              {stat.value}
+            </p>
           </div>
 
-          <div className='absolute inset-0 bg-gradient-to-r from-transparent via-white/5 to-transparent -skew-x-12 transform translate-x-full group-hover:translate-x-[-200%] transition-transform duration-1000'></div>
+          <div className='absolute inset-0 bg-gradient-to-r from-transparent via-theme-hover to-transparent -skew-x-12 transform translate-x-full group-hover:translate-x-[-200%] transition-transform duration-1000'></div>
         </div>
       ))}
     </div>
