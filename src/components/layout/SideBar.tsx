@@ -101,13 +101,13 @@ export default function Sidebar() {
         <div className='flex items-center justify-between p-6 border-b border-theme-primary'>
           {!collapsed && (
             <div className='flex items-center space-x-3'>
-              <div className='w-8 h-8 bg-purple-600 rounded-lg flex items-center justify-center'>
+              <div className='w-10 h-10 bg-gradient-to-br from-indigo-600 via-purple-600 to-pink-600 dark:from-blue-600 dark:via-indigo-600 dark:to-violet-700 rounded-xl flex items-center justify-center shadow-xl group-hover:shadow-2xl transition-all duration-300 transform group-hover:scale-105'>
                 <span className='text-white font-bold text-sm'>KH</span>
               </div>
               <div>
-                <div className='text-xl font-bold text-theme-primary'>
+                {/* <div className='text-xl font-bold text-theme-primary'>
                   KHRONOS
-                </div>
+                </div> */}
                 <div className='text-xs text-theme-secondary'>
                   Content Calendar
                 </div>

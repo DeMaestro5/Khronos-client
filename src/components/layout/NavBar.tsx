@@ -17,7 +17,6 @@ import {
   FiMonitor,
 } from 'react-icons/fi';
 import { useTheme } from '@/src/hooks/useTheme';
-// Removed profileAPI and contentAPI imports - now using cached data from UserDataContext
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/src/context/AuthContext';
 import { useNotifications } from '@/src/context/NotificationContext';
@@ -128,7 +127,7 @@ export default function Navbar() {
 
   return (
     <nav className='bg-theme-card border-b border-theme-primary shadow-theme-lg sticky top-0 z-50 transition-colors duration-200'>
-      <div className='max-w-7xl mx-auto px-4 sm:px-6 lg:px-8'>
+      <div className='px-3 sm:px-4 lg:px-6'>
         <div className='flex justify-between items-center h-16'>
           {/* Enhanced Logo/Branding */}
           <div className='flex items-center space-x-4'>

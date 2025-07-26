@@ -78,6 +78,22 @@ link[rel='icon'][href*='favicon'] {
   --calendar-empty-bg: #f0f9ff;
   --calendar-empty-border: #bae6fd;
 
+  /* Stats Card Icon Colors - Enhanced for Light Mode */
+  --stats-content-bg: #dbeafe;
+  --stats-content-color: #1d4ed8;
+  --stats-scheduled-bg: #fed7aa;
+  --stats-scheduled-color: #ea580c;
+  --stats-published-bg: #bbf7d0;
+  --stats-published-color: #16a34a;
+  --stats-engagement-bg: #e9d5ff;
+  --stats-engagement-color: #7c3aed;
+  --stats-views-bg: #c7d2fe;
+  --stats-views-color: #4338ca;
+  --stats-shares-bg: #fce7f3;
+  --stats-shares-color: #ec4899;
+  --stats-streak-bg: #fef3c7;
+  --stats-streak-color: #d97706;
+
   /* Interactive Colors */
   --interactive-hover: #f8fafc;
   --interactive-active: #f1f5f9;
@@ -157,6 +173,22 @@ link[rel='icon'][href*='favicon'] {
   --calendar-icon-color: #93c5fd;
   --calendar-empty-bg: #0c4a6e;
   --calendar-empty-border: #0ea5e9;
+
+  /* Stats Card Icon Colors - Enhanced for Dark Mode */
+  --stats-content-bg: #1e3a8a;
+  --stats-content-color: #93c5fd;
+  --stats-scheduled-bg: #92400e;
+  --stats-scheduled-color: #fbbf24;
+  --stats-published-bg: #166534;
+  --stats-published-color: #4ade80;
+  --stats-engagement-bg: #581c87;
+  --stats-engagement-color: #a78bfa;
+  --stats-views-bg: #3730a3;
+  --stats-views-color: #818cf8;
+  --stats-shares-bg: #831843;
+  --stats-shares-color: #f472b6;
+  --stats-streak-bg: #92400e;
+  --stats-streak-color: #fbbf24;
 
   /* Interactive Colors */
   --interactive-hover: #334155;
@@ -353,6 +385,63 @@ body {
 
 .border-calendar-empty {
   border-color: var(--calendar-empty-border);
+}
+
+/* Stats Card Icon Utilities */
+.bg-stats-content {
+  background-color: var(--stats-content-bg);
+}
+
+.text-stats-content {
+  color: var(--stats-content-color);
+}
+
+.bg-stats-scheduled {
+  background-color: var(--stats-scheduled-bg);
+}
+
+.text-stats-scheduled {
+  color: var(--stats-scheduled-color);
+}
+
+.bg-stats-published {
+  background-color: var(--stats-published-bg);
+}
+
+.text-stats-published {
+  color: var(--stats-published-color);
+}
+
+.bg-stats-engagement {
+  background-color: var(--stats-engagement-bg);
+}
+
+.text-stats-engagement {
+  color: var(--stats-engagement-color);
+}
+
+.bg-stats-views {
+  background-color: var(--stats-views-bg);
+}
+
+.text-stats-views {
+  color: var(--stats-views-color);
+}
+
+.bg-stats-shares {
+  background-color: var(--stats-shares-bg);
+}
+
+.text-stats-shares {
+  color: var(--stats-shares-color);
+}
+
+.bg-stats-streak {
+  background-color: var(--stats-streak-bg);
+}
+
+.text-stats-streak {
+  color: var(--stats-streak-color);
 }
 
 /* Theme-aware hover utilities */
