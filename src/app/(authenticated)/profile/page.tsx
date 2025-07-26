@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
 import {
-  FiEdit3,
+  // FiEdit3,
   FiMail,
   FiCalendar,
   FiUser,
@@ -166,13 +166,13 @@ export default function ProfilePage() {
   const getActivityIcon = (type: string) => {
     switch (type) {
       case 'published':
-        return <FiActivity className='w-4 h-4 text-green-500' />;
+        return <FiActivity className='w-4 h-4 text-accent-success' />;
       case 'created':
-        return <FiFileText className='w-4 h-4 text-blue-500' />;
+        return <FiFileText className='w-4 h-4 text-accent-primary' />;
       case 'scheduled':
-        return <FiClock className='w-4 h-4 text-orange-500' />;
+        return <FiClock className='w-4 h-4 text-accent-warning' />;
       default:
-        return <FiActivity className='w-4 h-4 text-gray-500' />;
+        return <FiActivity className='w-4 h-4 text-theme-muted' />;
     }
   };
 
@@ -220,7 +220,7 @@ export default function ProfilePage() {
           <p className='text-theme-secondary mb-4'>{error}</p>
           <button
             onClick={() => window.location.reload()}
-            className='px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg transition-colors duration-200'
+            className='px-4 py-2 bg-accent-error hover:bg-accent-error/90 text-white rounded-lg transition-colors duration-200'
           >
             Try Again
           </button>
@@ -265,29 +265,29 @@ export default function ProfilePage() {
                     className='w-24 h-24 sm:w-30 sm:h-30 rounded-2xl shadow-lg object-cover ring-4 ring-white dark:ring-slate-800'
                   />
                 ) : (
-                  <div className='w-24 h-24 sm:w-30 sm:h-30 rounded-2xl shadow-lg bg-gradient-to-br from-indigo-500 to-purple-600 dark:from-blue-500 dark:to-indigo-600 flex items-center justify-center ring-4 ring-white dark:ring-slate-800'>
+                  <div className='w-24 h-24 sm:w-30 sm:h-30 rounded-2xl shadow-lg bg-gradient-to-br from-accent-primary to-accent-secondary flex items-center justify-center ring-4 ring-white dark:ring-slate-800'>
                     <span className='text-2xl font-bold text-white'>
                       {getInitials(user.name || '')}
                     </span>
                   </div>
                 )}
-                <div className='absolute -bottom-2 -right-2 w-6 h-6 bg-green-500 rounded-full border-4 border-white dark:border-slate-800 shadow-lg'></div>
+                <div className='absolute -bottom-2 -right-2 w-6 h-6 bg-accent-success rounded-full border-4 border-white dark:border-slate-800 shadow-lg'></div>
               </div>
 
               {/* Profile Info */}
               <div className='flex-1 min-w-0'>
                 <div className='flex flex-col sm:flex-row sm:items-start sm:justify-between'>
                   <div className='flex-1 min-w-0'>
-                    <h1 className='text-3xl font-bold text-gray-900 dark:text-slate-100 truncate mb-2'>
+                    <h1 className='text-3xl font-bold text-theme-primary truncate mb-2'>
                       {user.name || 'Anonymous User'}
                     </h1>
 
                     <div className='flex flex-wrap items-center gap-4 mb-3'>
-                      <div className='flex items-center text-gray-600 dark:text-slate-400'>
+                      <div className='flex items-center text-theme-secondary'>
                         <FiMail className='w-4 h-4 mr-2 flex-shrink-0' />
                         <span className='text-sm truncate'>{user.email}</span>
                       </div>
-                      <div className='flex items-center text-gray-600 dark:text-slate-400'>
+                      <div className='flex items-center text-theme-secondary'>
                         <span className='text-lg mr-2'>
                           {getRoleIcon(getDisplayRole(user.role))}
                         </span>
@@ -297,7 +297,7 @@ export default function ProfilePage() {
                       </div>
                     </div>
 
-                    <div className='flex items-center text-gray-500 dark:text-slate-500'>
+                    <div className='flex items-center text-theme-muted'>
                       <FiCalendar className='w-4 h-4 mr-2' />
                       <span className='text-sm'>
                         Joined{' '}
@@ -308,16 +308,16 @@ export default function ProfilePage() {
 
                   {/* Action Buttons */}
                   <div className='flex space-x-3 mt-6 sm:mt-0 sm:ml-6'>
-                    <Link
+                    {/* <Link
                       href='/profile/edit'
-                      className='inline-flex items-center px-4 py-2.5 bg-indigo-600 hover:bg-indigo-700 dark:bg-indigo-600 dark:hover:bg-indigo-700 text-white rounded-xl text-sm font-medium transition-colors duration-200 shadow-sm'
+                      className='inline-flex items-center px-4 py-2.5 bg-accent-primary hover:bg-accent-secondary text-white rounded-xl text-sm font-medium transition-colors duration-200 shadow-theme-sm hover:shadow-theme-md'
                     >
                       <FiEdit3 className='w-4 h-4 mr-2' />
                       Edit Profile
-                    </Link>
+                    </Link> */}
                     <Link
                       href='/settings'
-                      className='inline-flex items-center px-4 py-2.5 border border-gray-300 dark:border-slate-600 rounded-xl text-sm font-medium text-gray-700 dark:text-slate-300 bg-white dark:bg-slate-700 hover:bg-gray-50 dark:hover:bg-slate-600 transition-colors duration-200 shadow-sm'
+                      className='inline-flex items-center px-4 py-2.5 border border-theme-primary rounded-xl text-sm font-medium text-theme-primary bg-theme-card hover:bg-theme-hover transition-colors duration-200 shadow-theme-sm'
                     >
                       <FiSettings className='w-4 h-4 mr-2' />
                       Settings
@@ -332,129 +332,129 @@ export default function ProfilePage() {
         {/* Stats Cards */}
         <div className='grid grid-cols-2 md:grid-cols-4 lg:grid-cols-7 gap-4 mb-8'>
           {/* Total Content */}
-          <div className='bg-white dark:bg-slate-800 rounded-2xl p-5 border border-gray-200 dark:border-slate-700 shadow-sm hover:shadow-md transition-shadow duration-200'>
+          <div className='bg-theme-card rounded-2xl p-5 border border-theme-primary shadow-theme-sm hover:shadow-theme-md transition-shadow duration-200'>
             <div className='flex items-center justify-between'>
               <div>
-                <p className='text-xs font-medium text-gray-500 dark:text-slate-400 uppercase tracking-wider'>
+                <p className='text-xs font-medium text-theme-muted uppercase tracking-wider'>
                   Total Content
                 </p>
-                <p className='text-2xl font-bold text-gray-900 dark:text-slate-100 mt-1'>
+                <p className='text-2xl font-bold text-theme-primary mt-1'>
                   {userStats.totalContent}
                 </p>
               </div>
-              <div className='w-10 h-10 bg-blue-100 dark:bg-blue-900/50 rounded-xl flex items-center justify-center'>
-                <FiFileText className='w-5 h-5 text-blue-600 dark:text-blue-400' />
+              <div className='w-10 h-10 bg-stats-content rounded-xl flex items-center justify-center'>
+                <FiFileText className='w-5 h-5 text-stats-content' />
               </div>
             </div>
           </div>
 
           {/* Scheduled */}
-          <div className='bg-white dark:bg-slate-800 rounded-2xl p-5 border border-gray-200 dark:border-slate-700 shadow-sm hover:shadow-md transition-shadow duration-200'>
+          <div className='bg-theme-card rounded-2xl p-5 border border-theme-primary shadow-theme-sm hover:shadow-theme-md transition-shadow duration-200'>
             <div className='flex items-center justify-between'>
               <div>
-                <p className='text-xs font-medium text-gray-500 dark:text-slate-400 uppercase tracking-wider'>
+                <p className='text-xs font-medium text-theme-muted uppercase tracking-wider'>
                   Scheduled
                 </p>
-                <p className='text-2xl font-bold text-gray-900 dark:text-slate-100 mt-1'>
+                <p className='text-2xl font-bold text-theme-primary mt-1'>
                   {userStats.scheduledContent}
                 </p>
               </div>
-              <div className='w-10 h-10 bg-orange-100 dark:bg-orange-900/50 rounded-xl flex items-center justify-center'>
-                <FiClock className='w-5 h-5 text-orange-600 dark:text-orange-400' />
+              <div className='w-10 h-10 bg-stats-scheduled rounded-xl flex items-center justify-center'>
+                <FiClock className='w-5 h-5 text-stats-scheduled' />
               </div>
             </div>
           </div>
 
           {/* Published */}
-          <div className='bg-white dark:bg-slate-800 rounded-2xl p-5 border border-gray-200 dark:border-slate-700 shadow-sm hover:shadow-md transition-shadow duration-200'>
+          <div className='bg-theme-card rounded-2xl p-5 border border-theme-primary shadow-theme-sm hover:shadow-theme-md transition-shadow duration-200'>
             <div className='flex items-center justify-between'>
               <div>
-                <p className='text-xs font-medium text-gray-500 dark:text-slate-400 uppercase tracking-wider'>
+                <p className='text-xs font-medium text-theme-muted uppercase tracking-wider'>
                   Published
                 </p>
-                <p className='text-2xl font-bold text-gray-900 dark:text-slate-100 mt-1'>
+                <p className='text-2xl font-bold text-theme-primary mt-1'>
                   {userStats.publishedContent}
                 </p>
               </div>
-              <div className='w-10 h-10 bg-green-100 dark:bg-green-900/50 rounded-xl flex items-center justify-center'>
-                <FiActivity className='w-5 h-5 text-green-600 dark:text-green-400' />
+              <div className='w-10 h-10 bg-stats-published rounded-xl flex items-center justify-center'>
+                <FiActivity className='w-5 h-5 text-stats-published' />
               </div>
             </div>
           </div>
 
           {/* Engagement Rate */}
-          <div className='bg-white dark:bg-slate-800 rounded-2xl p-5 border border-gray-200 dark:border-slate-700 shadow-sm hover:shadow-md transition-shadow duration-200'>
+          <div className='bg-theme-card rounded-2xl p-5 border border-theme-primary shadow-theme-sm hover:shadow-theme-md transition-shadow duration-200'>
             <div className='flex items-center justify-between'>
               <div>
-                <p className='text-xs font-medium text-gray-500 dark:text-slate-400 uppercase tracking-wider'>
+                <p className='text-xs font-medium text-theme-muted uppercase tracking-wider'>
                   Engagement
                 </p>
-                <p className='text-2xl font-bold text-gray-900 dark:text-slate-100 mt-1'>
+                <p className='text-2xl font-bold text-theme-primary mt-1'>
                   {userStats.engagementRate}%
                 </p>
               </div>
-              <div className='w-10 h-10 bg-purple-100 dark:bg-purple-900/50 rounded-xl flex items-center justify-center'>
-                <FiTrendingUp className='w-5 h-5 text-purple-600 dark:text-purple-400' />
+              <div className='w-10 h-10 bg-stats-engagement rounded-xl flex items-center justify-center'>
+                <FiTrendingUp className='w-5 h-5 text-stats-engagement' />
               </div>
             </div>
           </div>
 
           {/* Total Views */}
-          <div className='bg-white dark:bg-slate-800 rounded-2xl p-5 border border-gray-200 dark:border-slate-700 shadow-sm hover:shadow-md transition-shadow duration-200'>
+          <div className='bg-theme-card rounded-2xl p-5 border border-theme-primary shadow-theme-sm hover:shadow-theme-md transition-shadow duration-200'>
             <div className='flex items-center justify-between'>
               <div>
-                <p className='text-xs font-medium text-gray-500 dark:text-slate-400 uppercase tracking-wider'>
+                <p className='text-xs font-medium text-theme-muted uppercase tracking-wider'>
                   Total Views
                 </p>
-                <p className='text-2xl font-bold text-gray-900 dark:text-slate-100 mt-1'>
+                <p className='text-2xl font-bold text-theme-primary mt-1'>
                   {userStats.totalViews.toLocaleString()}
                 </p>
               </div>
-              <div className='w-10 h-10 bg-indigo-100 dark:bg-indigo-900/50 rounded-xl flex items-center justify-center'>
-                <FiEye className='w-5 h-5 text-indigo-600 dark:text-indigo-400' />
+              <div className='w-10 h-10 bg-stats-views rounded-xl flex items-center justify-center'>
+                <FiEye className='w-5 h-5 text-stats-views' />
               </div>
             </div>
           </div>
 
           {/* Total Shares */}
-          <div className='bg-white dark:bg-slate-800 rounded-2xl p-5 border border-gray-200 dark:border-slate-700 shadow-sm hover:shadow-md transition-shadow duration-200'>
+          <div className='bg-theme-card rounded-2xl p-5 border border-theme-primary shadow-theme-sm hover:shadow-theme-md transition-shadow duration-200'>
             <div className='flex items-center justify-between'>
               <div>
-                <p className='text-xs font-medium text-gray-500 dark:text-slate-400 uppercase tracking-wider'>
+                <p className='text-xs font-medium text-theme-muted uppercase tracking-wider'>
                   Total Shares
                 </p>
-                <p className='text-2xl font-bold text-gray-900 dark:text-slate-100 mt-1'>
+                <p className='text-2xl font-bold text-theme-primary mt-1'>
                   {userStats.totalShares.toLocaleString()}
                 </p>
               </div>
-              <div className='w-10 h-10 bg-pink-100 dark:bg-pink-900/50 rounded-xl flex items-center justify-center'>
-                <FiShare2 className='w-5 h-5 text-pink-600 dark:text-pink-400' />
+              <div className='w-10 h-10 bg-stats-shares rounded-xl flex items-center justify-center'>
+                <FiShare2 className='w-5 h-5 text-stats-shares' />
               </div>
             </div>
           </div>
 
           {/* Streak */}
-          <div className='bg-white dark:bg-slate-800 rounded-2xl p-5 border border-gray-200 dark:border-slate-700 shadow-sm hover:shadow-md transition-shadow duration-200'>
+          <div className='bg-theme-card rounded-2xl p-5 border border-theme-primary shadow-theme-sm hover:shadow-theme-md transition-shadow duration-200'>
             <div className='flex items-center justify-between'>
               <div>
-                <p className='text-xs font-medium text-gray-500 dark:text-slate-400 uppercase tracking-wider'>
+                <p className='text-xs font-medium text-theme-muted uppercase tracking-wider'>
                   Streak
                 </p>
-                <p className='text-2xl font-bold text-gray-900 dark:text-slate-100 mt-1'>
+                <p className='text-2xl font-bold text-theme-primary mt-1'>
                   {userStats.streak}
                 </p>
               </div>
-              <div className='w-10 h-10 bg-yellow-100 dark:bg-yellow-900/50 rounded-xl flex items-center justify-center'>
-                <FiZap className='w-5 h-5 text-yellow-600 dark:text-yellow-400' />
+              <div className='w-10 h-10 bg-stats-streak rounded-xl flex items-center justify-center'>
+                <FiZap className='w-5 h-5 text-stats-streak' />
               </div>
             </div>
           </div>
         </div>
 
         {/* Recent Activity - Full Width */}
-        <div className='bg-white dark:bg-slate-800 rounded-3xl shadow-sm dark:shadow-slate-700/20 border border-gray-200 dark:border-slate-700'>
-          <div className='px-8 py-6 border-b border-gray-200 dark:border-slate-700'>
-            <h3 className='text-xl font-semibold text-gray-900 dark:text-slate-100'>
+        <div className='bg-theme-card rounded-3xl shadow-theme-sm border border-theme-primary'>
+          <div className='px-8 py-6 border-b border-theme-primary'>
+            <h3 className='text-xl font-semibold text-theme-primary'>
               Recent Activity
             </h3>
           </div>
@@ -464,16 +464,16 @@ export default function ProfilePage() {
                 {recentActivity.map((activity) => (
                   <div
                     key={activity.id}
-                    className='flex items-center space-x-4 p-4 rounded-2xl hover:bg-gray-50 dark:hover:bg-slate-700/50 transition-colors duration-200'
+                    className='flex items-center space-x-4 p-4 rounded-2xl hover:bg-theme-hover transition-colors duration-200'
                   >
                     <div className='flex-shrink-0'>
                       {getActivityIcon(activity.type)}
                     </div>
                     <div className='flex-1 min-w-0'>
-                      <p className='text-sm font-medium text-gray-900 dark:text-slate-100 truncate'>
+                      <p className='text-sm font-medium text-theme-primary truncate'>
                         {activity.title}
                       </p>
-                      <p className='text-sm text-gray-500 dark:text-slate-400'>
+                      <p className='text-sm text-theme-secondary'>
                         {activity.type === 'published'
                           ? 'Published on'
                           : activity.type === 'scheduled'
@@ -482,7 +482,7 @@ export default function ProfilePage() {
                         {activity.platform}
                       </p>
                     </div>
-                    <div className='flex-shrink-0 text-sm text-gray-500 dark:text-slate-400'>
+                    <div className='flex-shrink-0 text-sm text-theme-muted'>
                       {getRelativeTime(activity.timestamp)}
                     </div>
                   </div>
@@ -490,13 +490,13 @@ export default function ProfilePage() {
               </div>
             ) : (
               <div className='text-center py-12'>
-                <div className='w-16 h-16 bg-gray-100 dark:bg-slate-700 rounded-2xl flex items-center justify-center mx-auto mb-4'>
-                  <FiActivity className='w-8 h-8 text-gray-400 dark:text-slate-500' />
+                <div className='w-16 h-16 bg-theme-secondary rounded-2xl flex items-center justify-center mx-auto mb-4'>
+                  <FiActivity className='w-8 h-8 text-theme-muted' />
                 </div>
-                <h3 className='text-lg font-medium text-gray-900 dark:text-slate-100 mb-2'>
+                <h3 className='text-lg font-medium text-theme-primary mb-2'>
                   No recent activity
                 </h3>
-                <p className='text-gray-500 dark:text-slate-400'>
+                <p className='text-theme-secondary'>
                   Your recent content activity will appear here.
                 </p>
               </div>
