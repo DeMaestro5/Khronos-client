@@ -267,12 +267,17 @@ export default function Dashboard() {
 
   return (
     <div className='p-6 min-h-screen bg-theme-primary transition-colors duration-200'>
-      <h1 className='text-2xl font-semibold text-accent-primary font-bold'>
-        Khronos Dashboard
-      </h1>
+      <div className='mb-6'>
+        <h1 className='text-3xl font-bold text-theme-primary mb-2'>
+          Dashboard
+        </h1>
+        <p className='text-theme-secondary'>
+          Welcome back! Here&apos;s what&apos;s happening with your content.
+        </p>
+      </div>
 
       {/* Quick stats */}
-      <div className='mt-4 grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-4'>
+      <div className='grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-4'>
         <div className='bg-theme-card overflow-hidden shadow-theme-md rounded-lg border border-theme-primary hover:shadow-theme-lg transition-shadow duration-200'>
           <div className='px-4 py-5 sm:p-6'>
             <div className='flex items-center'>
@@ -382,13 +387,18 @@ export default function Dashboard() {
       </div>
 
       {/* Main content sections */}
-      <div className='mt-6 grid grid-cols-1 gap-5 lg:grid-cols-2'>
+      <div className='mt-8 grid grid-cols-1 gap-6 lg:grid-cols-2'>
         {/* Upcoming content */}
         <div className='bg-theme-card shadow-theme-md rounded-lg border border-theme-primary overflow-hidden'>
-          <div className='px-4 py-5 border-b border-theme-primary sm:px-6'>
-            <h3 className='text-lg font-medium leading-6 text-theme-primary'>
-              Upcoming Content
-            </h3>
+          <div className='px-4 py-5 border-b border-theme-primary sm:px-6 bg-gradient-to-r from-calendar-empty to-transparent'>
+            <div className='flex items-center gap-3'>
+              <div className='h-8 w-8 rounded-full bg-calendar-icon flex items-center justify-center'>
+                <FiCalendar className='h-4 w-4 text-calendar-icon' />
+              </div>
+              <h3 className='text-lg font-medium leading-6 text-theme-primary'>
+                Upcoming Content
+              </h3>
+            </div>
           </div>
 
           {contextLoading ? (
@@ -400,8 +410,8 @@ export default function Dashboard() {
             </div>
           ) : upcomingContent.length === 0 ? (
             <div className='px-4 py-6 text-center'>
-              <div className='mx-auto h-10 w-10 rounded-full bg-gray-100 dark:bg-slate-700 flex items-center justify-center mb-3'>
-                <FiCalendar className='h-5 w-5 text-gray-400 dark:text-slate-400' />
+              <div className='mx-auto h-12 w-12 rounded-full bg-calendar-icon flex items-center justify-center mb-3 shadow-theme-md'>
+                <FiCalendar className='h-6 w-6 text-calendar-icon' />
               </div>
               <h3 className='text-sm font-medium text-theme-primary mb-1'>
                 No scheduled content
@@ -411,7 +421,7 @@ export default function Dashboard() {
               </p>
               <button
                 onClick={handleOpenEmptyModal}
-                className='inline-flex items-center px-3 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-accent-primary hover:bg-accent-secondary transition-colors duration-150'
+                className='inline-flex items-center px-3 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-accent-primary hover:bg-accent-secondary transition-colors duration-150 shadow-theme-sm hover:shadow-theme-md'
               >
                 <FiFileText className='h-4 w-4 mr-2' />
                 Create Content
@@ -463,11 +473,12 @@ export default function Dashboard() {
             </div>
           )}
 
-          <div className='px-4 py-3 border-t border-theme-primary bg-theme-secondary'>
+          <div className='px-4 py-3 border-t border-theme-primary bg-gradient-to-r from-calendar-empty to-transparent'>
             <Link
               href='/calendar'
-              className='text-sm font-medium text-accent-primary hover:text-accent-secondary transition-colors duration-150'
+              className='text-sm font-medium text-accent-primary hover:text-accent-secondary transition-colors duration-150 flex items-center gap-2'
             >
+              <FiCalendar className='h-4 w-4' />
               View full calendar →
             </Link>
           </div>
@@ -475,15 +486,20 @@ export default function Dashboard() {
 
         {/* AI Content Suggestions */}
         <div className='bg-theme-card shadow-theme-md rounded-lg border border-theme-primary overflow-hidden hover:shadow-theme-lg transition-shadow duration-200'>
-          <div className='px-4 py-5 border-b border-theme-primary sm:px-6 flex items-center justify-between'>
-            <h3 className='text-lg font-medium leading-6 text-theme-primary'>
-              AI Content Suggestions
-            </h3>
+          <div className='px-4 py-5 border-b border-theme-primary sm:px-6 flex items-center justify-between bg-gradient-to-r from-ai-suggestion-bg to-transparent'>
+            <div className='flex items-center gap-3'>
+              <div className='h-8 w-8 rounded-full bg-ai-suggestion-icon flex items-center justify-center'>
+                <FiMessageSquare className='h-4 w-4 text-ai-suggestion-icon' />
+              </div>
+              <h3 className='text-lg font-medium leading-6 text-ai-suggestion-title'>
+                AI Content Suggestions
+              </h3>
+            </div>
             {!contextLoading && (
               <button
                 onClick={handleRefreshSuggestions}
                 disabled={isRefreshingSuggestions}
-                className='inline-flex items-center gap-2 text-sm text-accent-primary hover:text-accent-secondary transition-colors duration-150 disabled:opacity-50 disabled:cursor-not-allowed'
+                className='inline-flex items-center gap-2 text-sm text-ai-suggestion-title hover:text-ai-suggestion-button-hover transition-colors duration-150 disabled:opacity-50 disabled:cursor-not-allowed'
               >
                 {isRefreshingSuggestions ? (
                   <>
@@ -502,8 +518,8 @@ export default function Dashboard() {
 
           {contextLoading || isRefreshingSuggestions ? (
             <div className='px-4 py-6 text-center'>
-              <FiLoader className='h-6 w-6 animate-spin mx-auto text-purple-600 dark:text-violet-400' />
-              <p className='mt-2 text-sm text-gray-500 dark:text-slate-400'>
+              <FiLoader className='h-6 w-6 animate-spin mx-auto text-ai-suggestion-icon' />
+              <p className='mt-2 text-sm text-theme-secondary'>
                 {isRefreshingSuggestions
                   ? 'Refreshing AI suggestions...'
                   : 'Loading AI suggestions...'}
@@ -511,20 +527,20 @@ export default function Dashboard() {
             </div>
           ) : displaySuggestions.length === 0 ? (
             <div className='px-4 py-6 text-center'>
-              <div className='mx-auto h-10 w-10 rounded-full bg-purple-100 dark:bg-violet-900/50 flex items-center justify-center mb-3'>
-                <FiMessageSquare className='h-5 w-5 text-purple-600 dark:text-violet-400' />
+              <div className='mx-auto h-10 w-10 rounded-full bg-ai-suggestion-icon flex items-center justify-center mb-3'>
+                <FiMessageSquare className='h-5 w-5 text-ai-suggestion-icon' />
               </div>
-              <h3 className='text-sm font-medium text-gray-900 dark:text-slate-100 mb-1'>
+              <h3 className='text-sm font-medium text-theme-primary mb-1'>
                 No suggestions available
               </h3>
-              <p className='text-xs text-gray-500 dark:text-slate-400 mb-4'>
+              <p className='text-xs text-theme-secondary mb-4'>
                 AI content suggestions will appear here. Create some content
                 first to get personalized recommendations.
               </p>
               <button
                 onClick={handleRefreshSuggestions}
                 disabled={isRefreshingSuggestions}
-                className='inline-flex items-center gap-2 text-sm text-purple-600 dark:text-violet-400 hover:text-purple-500 dark:hover:text-violet-300 transition-colors duration-150 disabled:opacity-50'
+                className='inline-flex items-center gap-2 text-sm text-ai-suggestion-title hover:text-ai-suggestion-button-hover transition-colors duration-150 disabled:opacity-50'
               >
                 {isRefreshingSuggestions ? (
                   <>
@@ -541,26 +557,26 @@ export default function Dashboard() {
             </div>
           ) : (
             <div className='max-h-80 overflow-y-auto'>
-              <ul className='divide-y divide-gray-200 dark:divide-slate-700'>
+              <ul className='divide-y divide-ai-suggestion-border'>
                 {displaySuggestions.map((suggestion) => (
                   <li
                     key={suggestion.id}
-                    className='px-4 py-4 hover:bg-gray-50 dark:hover:bg-slate-700/50 transition-colors duration-150'
+                    className='px-4 py-4 hover:bg-ai-suggestion transition-colors duration-150'
                   >
                     <div className='flex items-start space-x-3'>
-                      <div className='flex-shrink-0 h-8 w-8 rounded-full bg-purple-100 dark:bg-violet-900/50 flex items-center justify-center'>
-                        <FiMessageSquare className='h-4 w-4 text-purple-600 dark:text-violet-400' />
+                      <div className='flex-shrink-0 h-8 w-8 rounded-full bg-ai-suggestion-icon flex items-center justify-center'>
+                        <FiMessageSquare className='h-4 w-4 text-ai-suggestion-icon' />
                       </div>
                       <div className='min-w-0 flex-1'>
-                        <div className='text-sm font-medium text-purple-600 dark:text-violet-400 mb-2 leading-tight'>
+                        <div className='text-sm font-medium text-ai-suggestion-title mb-2 leading-tight'>
                           {suggestion.title}
                         </div>
                         {/* Display full description */}
-                        <div className='text-xs text-gray-600 dark:text-slate-400 mb-3 leading-relaxed'>
+                        <div className='text-xs text-ai-suggestion-text mb-3 leading-relaxed'>
                           {suggestion.description || 'No description available'}
                         </div>
                         <div className='flex items-center justify-between'>
-                          <div className='flex items-center gap-2 text-xs text-gray-500 dark:text-slate-400'>
+                          <div className='flex items-center gap-2 text-xs text-theme-secondary'>
                             {suggestion.trendingScore &&
                               suggestion.trendingScore > 70 && (
                                 <span className='inline-flex items-center px-2 py-1 text-xs rounded-full bg-orange-100 dark:bg-orange-900/50 text-orange-800 dark:text-orange-300'>
@@ -568,7 +584,7 @@ export default function Dashboard() {
                                 </span>
                               )}
                             {suggestion.estimatedTime && (
-                              <span className='text-xs text-gray-500 dark:text-slate-400'>
+                              <span className='text-xs text-theme-secondary'>
                                 ⏱️ {suggestion.estimatedTime}
                               </span>
                             )}
@@ -590,7 +606,7 @@ export default function Dashboard() {
                             onClick={() =>
                               handleCreateFromSuggestion(suggestion)
                             }
-                            className='inline-flex items-center px-3 py-1.5 text-xs font-medium rounded-md bg-purple-100 dark:bg-violet-900/50 text-purple-700 dark:text-violet-300 hover:bg-purple-200 dark:hover:bg-violet-800/50 transition-colors duration-150 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:ring-offset-1'
+                            className='inline-flex items-center px-3 py-1.5 text-xs font-medium rounded-md bg-ai-suggestion-button text-ai-suggestion-button hover:bg-ai-suggestion-button-hover transition-colors duration-150 focus:outline-none focus:ring-2 focus:ring-ai-suggestion-icon focus:ring-offset-1'
                           >
                             <FiFileText className='h-3 w-3 mr-1' />
                             Use Suggestion
@@ -604,8 +620,9 @@ export default function Dashboard() {
             </div>
           )}
 
-          <div className='px-4 py-3 border-t border-theme-primary bg-theme-secondary'>
-            <span className='text-sm font-medium text-accent-primary'>
+          <div className='px-4 py-3 border-t border-theme-primary bg-gradient-to-r from-ai-suggestion-bg to-transparent'>
+            <span className='text-sm font-medium text-ai-suggestion-title flex items-center gap-2'>
+              <FiMessageSquare className='h-4 w-4' />
               Chat with AI using the floating button! ✨
             </span>
           </div>
@@ -613,12 +630,14 @@ export default function Dashboard() {
       </div>
 
       {/* Quick access */}
-      <div className='mt-6'>
-        <h2 className='text-lg font-medium text-theme-primary'>Quick Access</h2>
-        <div className='mt-3 grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-4'>
+      <div className='mt-8'>
+        <h2 className='text-xl font-semibold text-theme-primary mb-4'>
+          Quick Access
+        </h2>
+        <div className='grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-4'>
           <button
             onClick={handleOpenEmptyModal}
-            className='bg-theme-card overflow-hidden shadow-theme-md rounded-lg p-6 hover:bg-theme-hover border border-theme-primary transition-colors duration-150 text-left w-full'
+            className='bg-theme-card overflow-hidden shadow-theme-md rounded-lg p-6 hover:bg-theme-hover border border-theme-primary transition-colors duration-150 text-left w-full hover:shadow-theme-lg'
           >
             <div className='flex items-center'>
               <div className='flex-shrink-0 bg-accent-primary rounded-md p-3'>
@@ -637,11 +656,11 @@ export default function Dashboard() {
 
           <Link
             href='/calendar'
-            className='bg-theme-card overflow-hidden shadow-theme-md rounded-lg p-6 hover:bg-theme-hover border border-theme-primary transition-colors duration-150'
+            className='bg-theme-card overflow-hidden shadow-theme-md rounded-lg p-6 hover:bg-theme-hover border border-theme-primary transition-colors duration-150 hover:shadow-theme-lg'
           >
             <div className='flex items-center'>
-              <div className='flex-shrink-0 bg-green-500 dark:bg-emerald-600 rounded-md p-3'>
-                <FiCalendar className='h-6 w-6 text-white' />
+              <div className='flex-shrink-0 bg-calendar-icon rounded-md p-3'>
+                <FiCalendar className='h-6 w-6 text-calendar-icon' />
               </div>
               <div className='ml-4'>
                 <h3 className='text-lg font-medium text-theme-primary'>
@@ -654,16 +673,16 @@ export default function Dashboard() {
             </div>
           </Link>
 
-          <div className='bg-theme-card overflow-hidden shadow-theme-md rounded-lg p-6 border-2 border-accent-primary/30 transition-colors duration-150'>
+          <div className='bg-theme-card overflow-hidden shadow-theme-md rounded-lg p-6 border-2 border-ai-suggestion-border transition-colors duration-150 hover:shadow-theme-lg'>
             <div className='flex items-center'>
-              <div className='flex-shrink-0 bg-purple-500 dark:bg-violet-600 rounded-md p-3'>
-                <FiMessageSquare className='h-6 w-6 text-white' />
+              <div className='flex-shrink-0 bg-ai-suggestion-icon rounded-md p-3'>
+                <FiMessageSquare className='h-6 w-6 text-ai-suggestion-icon' />
               </div>
               <div className='ml-4'>
-                <h3 className='text-lg font-medium text-theme-primary'>
+                <h3 className='text-lg font-medium text-ai-suggestion-title'>
                   AI Chat
                 </h3>
-                <p className='text-sm text-theme-secondary'>
+                <p className='text-sm text-ai-suggestion-text'>
                   Use the floating button for AI assistance ✨
                 </p>
               </div>
@@ -672,10 +691,10 @@ export default function Dashboard() {
 
           <Link
             href='/analytics'
-            className='bg-theme-card overflow-hidden shadow-theme-md rounded-lg p-6 hover:bg-theme-hover border border-theme-primary transition-colors duration-150'
+            className='bg-theme-card overflow-hidden shadow-theme-md rounded-lg p-6 hover:bg-theme-hover border border-theme-primary transition-colors duration-150 hover:shadow-theme-lg'
           >
             <div className='flex items-center'>
-              <div className='flex-shrink-0 bg-blue-500 dark:bg-sky-600 rounded-md p-3'>
+              <div className='flex-shrink-0 bg-accent-info rounded-md p-3'>
                 <FiBarChart2 className='h-6 w-6 text-white' />
               </div>
               <div className='ml-4'>
