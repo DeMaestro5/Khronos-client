@@ -5,8 +5,6 @@ import { useState, useEffect } from 'react';
 import Image from 'next/image';
 import {
   FiBell,
-  FiMenu,
-  FiX,
   FiChevronDown,
   FiActivity,
   FiUser,
@@ -26,7 +24,6 @@ import NotificationDropdown from '@/src/components/notifications/NotificationDro
 export default function Navbar() {
   const [notificationsOpen, setNotificationsOpen] = useState(false);
   const [profileOpen, setProfileOpen] = useState(false);
-  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [mounted, setMounted] = useState(false);
 
   const router = useRouter();
@@ -295,105 +292,9 @@ export default function Navbar() {
                 </div>
               )}
             </div>
-
-            {/* Enhanced Mobile menu button */}
-            <button
-              className='md:hidden p-3 rounded-xl text-gray-600 dark:text-slate-400 hover:text-indigo-600 dark:hover:text-indigo-400 hover:bg-gray-50 dark:hover:bg-slate-800 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 dark:focus:ring-blue-500/20 transition-all duration-200 shadow-sm hover:shadow-md'
-              onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-            >
-              {mobileMenuOpen ? (
-                <FiX className='h-6 w-6' />
-              ) : (
-                <FiMenu className='h-6 w-6' />
-              )}
-            </button>
           </div>
         </div>
       </div>
-
-      {/* Enhanced Mobile menu */}
-      {mobileMenuOpen && (
-        <div className='md:hidden border-t border-theme-primary bg-theme-card shadow-theme-lg'>
-          {/* Mobile Profile Section */}
-          {user && (
-            <div className='px-6 py-4 border-b border-theme-primary bg-theme-secondary'>
-              <div className='flex items-center space-x-3'>
-                <div className='relative'>
-                  {user.profilePicUrl || user.avatar ? (
-                    <Image
-                      className='h-12 w-12 rounded-xl object-cover ring-2 ring-white dark:ring-slate-700 shadow-lg'
-                      src={user.profilePicUrl || user.avatar || ''}
-                      width={48}
-                      height={48}
-                      alt={user.name}
-                      onError={(e) => {
-                        (e.target as HTMLImageElement).style.display = 'none';
-                      }}
-                    />
-                  ) : null}
-                  {!user.profilePicUrl && !user.avatar ? (
-                    <div className='h-12 w-12 rounded-xl bg-gradient-to-br from-indigo-500 to-purple-600 dark:from-blue-600 dark:to-indigo-700 flex items-center justify-center ring-2 ring-white dark:ring-slate-700 shadow-lg'>
-                      <span className='text-white font-bold text-lg'>
-                        {getInitials(user.name)}
-                      </span>
-                    </div>
-                  ) : null}
-                  <div className='absolute -bottom-1 -right-1 w-4 h-4 bg-green-500 rounded-full border-2 border-white dark:border-slate-900 shadow-sm'></div>
-                </div>
-                <div>
-                  <p className='text-base font-semibold text-gray-900 dark:text-slate-100'>
-                    {user.name}
-                  </p>
-                  <div className='flex items-center space-x-1'>
-                    <span className='text-sm'>
-                      {getRoleIcon(getDisplayRole(user.role))}
-                    </span>
-                    <span className='text-sm text-gray-500 dark:text-slate-400 capitalize'>
-                      {getDisplayRole(user.role)}
-                    </span>
-                  </div>
-                </div>
-              </div>
-            </div>
-          )}
-
-          {/* Mobile Navigation */}
-          <div className='py-3 space-y-1'>
-            <Link
-              href='/dashboard'
-              className='flex items-center px-6 py-4 text-base font-semibold text-accent-primary bg-accent-primary/10 border-l-4 border-accent-primary transition-all duration-200'
-              onClick={() => setMobileMenuOpen(false)}
-            >
-              <span className='mr-3'>🏠</span>
-              Dashboard
-            </Link>
-            <Link
-              href='/calendar'
-              className='flex items-center px-6 py-4 text-base font-medium text-gray-600 dark:text-slate-400 hover:bg-gray-50 dark:hover:bg-slate-700 hover:text-gray-900 dark:hover:text-slate-100 transition-all duration-200'
-              onClick={() => setMobileMenuOpen(false)}
-            >
-              <span className='mr-3'>📅</span>
-              Calendar
-            </Link>
-            <Link
-              href='/content'
-              className='flex items-center px-6 py-4 text-base font-medium text-gray-600 dark:text-slate-400 hover:bg-gray-50 dark:hover:bg-slate-700 hover:text-gray-900 dark:hover:text-slate-100 transition-all duration-200'
-              onClick={() => setMobileMenuOpen(false)}
-            >
-              <span className='mr-3'>📝</span>
-              Content
-            </Link>
-            <Link
-              href='/ai-chat'
-              className='flex items-center px-6 py-4 text-base font-medium text-gray-600 dark:text-slate-400 hover:bg-gray-50 dark:hover:bg-slate-700 hover:text-gray-900 dark:hover:text-slate-100 transition-all duration-200'
-              onClick={() => setMobileMenuOpen(false)}
-            >
-              <span className='mr-3'>🤖</span>
-              AI Chat
-            </Link>
-          </div>
-        </div>
-      )}
     </nav>
   );
 }
