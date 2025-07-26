@@ -225,38 +225,38 @@ export default function CalendarComponent({
 
   return (
     <>
-      <div className='relative bg-white/10 backdrop-blur-lg border border-white/20 rounded-2xl sm:rounded-3xl overflow-hidden shadow-2xl'>
+      <div className='relative bg-theme-card backdrop-blur-lg border border-theme-primary rounded-2xl sm:rounded-3xl overflow-hidden shadow-2xl'>
         {/* Header */}
-        <div className='p-4 sm:p-6 bg-gradient-to-r from-purple-600/20 to-pink-600/20 border-b border-white/10'>
+        <div className='p-4 sm:p-6 bg-gradient-to-r from-accent-primary/10 to-accent-secondary/10 border-b border-theme-primary'>
           <div className='flex flex-col sm:flex-row items-start sm:items-center justify-between mb-4 sm:mb-6'>
-            <h2 className='text-2xl sm:text-3xl font-bold text-white flex items-center space-x-2 sm:space-x-3 mb-4 sm:mb-0'>
+            <h2 className='text-2xl sm:text-3xl font-bold text-theme-primary flex items-center space-x-2 sm:space-x-3 mb-4 sm:mb-0'>
               <div className='p-2 sm:p-3 bg-gradient-to-r from-purple-500 to-pink-500 rounded-lg sm:rounded-xl shadow-lg'>
-                <Calendar className='w-5 h-5 sm:w-7 sm:h-7' />
+                <Calendar className='w-5 h-5 sm:w-7 sm:h-7 text-white' />
               </div>
               <div>
                 <span>Content Calendar</span>
-                <p className='text-xs sm:text-sm font-normal text-slate-300 mt-1'>
+                <p className='text-xs sm:text-sm font-normal text-theme-secondary mt-1'>
                   Manage your social media schedule
                 </p>
               </div>
             </h2>
 
             <div className='flex items-center space-x-2 sm:space-x-4 w-full sm:w-auto'>
-              <div className='flex items-center space-x-1 sm:space-x-2 bg-white/10 rounded-xl sm:rounded-2xl px-3 sm:px-6 py-2 sm:py-3 backdrop-blur-sm border border-white/20'>
+              <div className='flex items-center space-x-1 sm:space-x-2 bg-theme-tertiary rounded-xl sm:rounded-2xl px-3 sm:px-6 py-2 sm:py-3 backdrop-blur-sm border border-theme-primary'>
                 <button
                   onClick={() => navigateMonth(-1)}
-                  className='p-1 sm:p-2 hover:bg-white/20 rounded-lg sm:rounded-xl transition-all text-white hover:scale-110 active:scale-95'
+                  className='p-1 sm:p-2 hover:bg-theme-hover rounded-lg sm:rounded-xl transition-all text-theme-secondary hover:text-theme-primary hover:scale-110 active:scale-95'
                 >
                   <ChevronLeft className='w-4 h-4 sm:w-5 sm:h-5' />
                 </button>
 
-                <h3 className='text-base sm:text-xl font-semibold text-white min-w-[120px] sm:min-w-[180px] text-center'>
+                <h3 className='text-base sm:text-xl font-semibold text-theme-primary min-w-[120px] sm:min-w-[180px] text-center'>
                   {monthYear}
                 </h3>
 
                 <button
                   onClick={() => navigateMonth(1)}
-                  className='p-1 sm:p-2 hover:bg-white/20 rounded-lg sm:rounded-xl transition-all text-white hover:scale-110 active:scale-95'
+                  className='p-1 sm:p-2 hover:bg-theme-hover rounded-lg sm:rounded-xl transition-all text-theme-secondary hover:text-theme-primary hover:scale-110 active:scale-95'
                 >
                   <ChevronRight className='w-4 h-4 sm:w-5 sm:h-5' />
                 </button>
@@ -269,24 +269,24 @@ export default function CalendarComponent({
             <div className='flex flex-wrap items-center gap-4 sm:gap-8 text-xs sm:text-sm'>
               <div className='flex items-center space-x-2 group cursor-pointer'>
                 <div className='w-2 h-2 sm:w-3 sm:h-3 rounded-full bg-emerald-500 group-hover:animate-pulse shadow-lg'></div>
-                <span className='text-slate-300 group-hover:text-white transition-colors'>
+                <span className='text-theme-secondary group-hover:text-theme-primary transition-colors'>
                   Scheduled
                 </span>
               </div>
               <div className='flex items-center space-x-2 group cursor-pointer'>
                 <div className='w-2 h-2 sm:w-3 sm:h-3 rounded-full bg-amber-500 group-hover:animate-pulse shadow-lg'></div>
-                <span className='text-slate-300 group-hover:text-white transition-colors'>
+                <span className='text-theme-secondary group-hover:text-theme-primary transition-colors'>
                   Draft
                 </span>
               </div>
               <div className='flex items-center space-x-2 group cursor-pointer'>
                 <div className='w-2 h-2 sm:w-3 sm:h-3 rounded-full bg-blue-500 group-hover:animate-pulse shadow-lg'></div>
-                <span className='text-slate-300 group-hover:text-white transition-colors'>
+                <span className='text-theme-secondary group-hover:text-theme-primary transition-colors'>
                   Published
                 </span>
               </div>
             </div>
-            <div className='text-[10px] sm:text-xs text-slate-400 bg-white/5 px-2 sm:px-3 py-1 rounded-lg'>
+            <div className='text-[10px] sm:text-xs text-theme-muted bg-theme-tertiary px-2 sm:px-3 py-1 rounded-lg'>
               Click on any date to view or add content
             </div>
           </div>
@@ -307,7 +307,7 @@ export default function CalendarComponent({
             ].map((day) => (
               <div
                 key={day}
-                className='text-center text-slate-300 font-semibold py-2 sm:py-4 text-xs sm:text-sm uppercase tracking-wider bg-white/5 rounded-lg sm:rounded-xl'
+                className='text-center text-theme-secondary font-semibold py-2 sm:py-4 text-xs sm:text-sm uppercase tracking-wider bg-theme-tertiary rounded-lg sm:rounded-xl'
               >
                 {day.slice(0, 3)}
               </div>
@@ -333,14 +333,14 @@ export default function CalendarComponent({
                     !day
                       ? 'border-transparent opacity-40'
                       : isToday(day)
-                      ? 'border-purple-500 bg-gradient-to-br from-purple-600/40 to-pink-600/40 shadow-lg shadow-purple-500/25 ring-2 ring-purple-400/30'
+                      ? 'border-purple-600 bg-gradient-to-br from-purple-700 to-pink-700 shadow-xl shadow-purple-500/40 ring-4 ring-purple-400/50'
                       : isPastDate(day)
                       ? content.length > 0
-                        ? 'border-white/20 bg-white/5 opacity-70 hover:opacity-90 hover:border-white/30 cursor-pointer'
-                        : 'border-white/10 bg-white/5 opacity-50 cursor-not-allowed'
+                        ? 'border-theme-primary bg-theme-tertiary opacity-70 hover:opacity-90 hover:border-theme-primary cursor-pointer'
+                        : 'border-theme-secondary bg-theme-tertiary opacity-50 cursor-not-allowed'
                       : content.length > 0
-                      ? 'border-white/30 bg-white/10 hover:bg-white/20 hover:border-white/50 hover:scale-105 hover:shadow-xl hover:shadow-white/10 cursor-pointer'
-                      : 'border-white/10 hover:border-white/20 hover:bg-white/5 hover:scale-102'
+                      ? 'border-theme-primary bg-theme-tertiary hover:bg-theme-hover hover:border-theme-primary hover:scale-105 hover:shadow-xl hover:shadow-theme-lg cursor-pointer'
+                      : 'border-theme-secondary hover:border-theme-primary hover:bg-theme-tertiary hover:scale-102'
                   }`}
                   onMouseEnter={() => day && setHoveredDate(dateKey)}
                   onMouseLeave={() => setHoveredDate(null)}
@@ -353,14 +353,14 @@ export default function CalendarComponent({
                         <span
                           className={`text-base sm:text-xl font-bold transition-all duration-200 ${
                             isToday(day)
-                              ? 'text-white text-lg sm:text-2xl drop-shadow-lg'
+                              ? 'text-white text-lg sm:text-2xl drop-shadow-lg font-black'
                               : isPastDate(day)
                               ? content.length > 0
-                                ? 'text-slate-300 group-hover:text-white'
-                                : 'text-slate-500'
+                                ? 'text-theme-secondary group-hover:text-theme-primary'
+                                : 'text-theme-muted'
                               : content.length > 0
-                              ? 'text-white group-hover:text-lg sm:group-hover:text-2xl group-hover:drop-shadow-lg'
-                              : 'text-slate-400 group-hover:text-white group-hover:text-base sm:group-hover:text-xl'
+                              ? 'text-theme-primary group-hover:text-lg sm:group-hover:text-2xl group-hover:drop-shadow-lg'
+                              : 'text-theme-secondary group-hover:text-theme-primary group-hover:text-base sm:group-hover:text-xl'
                           }`}
                         >
                           {day}
@@ -382,15 +382,15 @@ export default function CalendarComponent({
                                     platformColors[
                                       item.platform as Platform['id']
                                     ] || 'from-gray-500 to-gray-600'
-                                  } flex items-center justify-center shadow-lg border border-white/30 transition-all duration-200 hover:scale-125 group-hover:shadow-xl`}
+                                  } flex items-center justify-center shadow-lg border border-theme-inverse/30 transition-all duration-200 hover:scale-125 group-hover:shadow-xl`}
                                 >
                                   {IconComponent && <IconComponent />}
                                 </div>
                               );
                             })}
                             {content.length > 4 && (
-                              <div className='w-4 h-4 sm:w-6 sm:h-6 rounded-md sm:rounded-lg bg-white/30 backdrop-blur-sm flex items-center justify-center border border-white/30 shadow-lg'>
-                                <span className='text-[8px] sm:text-xs text-white font-bold'>
+                              <div className='w-4 h-4 sm:w-6 sm:h-6 rounded-md sm:rounded-lg bg-theme-tertiary backdrop-blur-sm flex items-center justify-center border border-theme-primary shadow-lg'>
+                                <span className='text-[8px] sm:text-xs text-theme-primary font-bold'>
                                   +{content.length - 4}
                                 </span>
                               </div>
@@ -404,7 +404,7 @@ export default function CalendarComponent({
                                 key={idx}
                                 className={`w-1.5 h-1.5 sm:w-2 sm:h-2 rounded-full ${getStatusColor(
                                   item.status
-                                )} shadow-sm border border-white/30 group-hover:animate-pulse`}
+                                )} shadow-sm border border-theme-inverse/30 group-hover:animate-pulse`}
                               ></div>
                             ))}
                           </div>
@@ -413,7 +413,7 @@ export default function CalendarComponent({
 
                       {/* Hover Effect Overlay */}
                       {hoveredDate === dateKey && (
-                        <div className='absolute inset-0 bg-gradient-to-br from-purple-500/20 to-pink-500/20 rounded-lg sm:rounded-2xl border-2 border-purple-400/50 animate-pulse' />
+                        <div className='absolute inset-0 bg-gradient-to-br from-accent-primary/20 to-accent-secondary/20 rounded-lg sm:rounded-2xl border-2 border-accent-primary/50 animate-pulse' />
                       )}
                     </>
                   )}
@@ -424,37 +424,37 @@ export default function CalendarComponent({
         </div>
 
         {/* Enhanced Stats Footer */}
-        <div className='p-4 sm:p-6 md:p-8 bg-gradient-to-r from-white/5 to-white/10 border-t border-white/10'>
+        <div className='p-4 sm:p-6 md:p-8 bg-gradient-to-r from-theme-tertiary to-theme-secondary border-t border-theme-primary'>
           <div className='grid grid-cols-2 md:grid-cols-4 gap-3 sm:gap-4 md:gap-6'>
-            <div className='text-center group cursor-pointer transition-all duration-300 hover:scale-110 bg-white/5 rounded-xl sm:rounded-2xl p-3 sm:p-4 hover:bg-white/10'>
-              <div className='text-2xl sm:text-3xl md:text-4xl font-bold text-white group-hover:text-purple-400 transition-colors mb-1 sm:mb-2 drop-shadow-lg'>
+            <div className='text-center group cursor-pointer transition-all duration-300 hover:scale-110 bg-theme-card rounded-xl sm:rounded-2xl p-3 sm:p-4 hover:bg-theme-hover'>
+              <div className='text-2xl sm:text-3xl md:text-4xl font-bold text-theme-primary group-hover:text-accent-primary transition-colors mb-1 sm:mb-2 drop-shadow-lg'>
                 {totalPosts}
               </div>
-              <div className='text-xs sm:text-sm text-slate-400 group-hover:text-slate-300 font-medium'>
+              <div className='text-xs sm:text-sm text-theme-secondary group-hover:text-theme-primary font-medium'>
                 Total Posts
               </div>
             </div>
-            <div className='text-center group cursor-pointer transition-all duration-300 hover:scale-110 bg-white/5 rounded-xl sm:rounded-2xl p-3 sm:p-4 hover:bg-white/10'>
-              <div className='text-2xl sm:text-3xl md:text-4xl font-bold text-emerald-400 group-hover:text-emerald-300 transition-colors mb-1 sm:mb-2 drop-shadow-lg'>
+            <div className='text-center group cursor-pointer transition-all duration-300 hover:scale-110 bg-theme-card rounded-xl sm:rounded-2xl p-3 sm:p-4 hover:bg-theme-hover'>
+              <div className='text-2xl sm:text-3xl md:text-4xl font-bold text-accent-success group-hover:text-accent-success transition-colors mb-1 sm:mb-2 drop-shadow-lg'>
                 {scheduledPosts}
               </div>
-              <div className='text-xs sm:text-sm text-slate-400 group-hover:text-slate-300 font-medium'>
+              <div className='text-xs sm:text-sm text-theme-secondary group-hover:text-theme-primary font-medium'>
                 Scheduled
               </div>
             </div>
-            <div className='text-center group cursor-pointer transition-all duration-300 hover:scale-110 bg-white/5 rounded-xl sm:rounded-2xl p-3 sm:p-4 hover:bg-white/10'>
-              <div className='text-2xl sm:text-3xl md:text-4xl font-bold text-amber-400 group-hover:text-amber-300 transition-colors mb-1 sm:mb-2 drop-shadow-lg'>
+            <div className='text-center group cursor-pointer transition-all duration-300 hover:scale-110 bg-theme-card rounded-xl sm:rounded-2xl p-3 sm:p-4 hover:bg-theme-hover'>
+              <div className='text-2xl sm:text-3xl md:text-4xl font-bold text-accent-warning group-hover:text-accent-warning transition-colors mb-1 sm:mb-2 drop-shadow-lg'>
                 {draftPosts}
               </div>
-              <div className='text-xs sm:text-sm text-slate-400 group-hover:text-slate-300 font-medium'>
+              <div className='text-xs sm:text-sm text-theme-secondary group-hover:text-theme-primary font-medium'>
                 Drafts
               </div>
             </div>
-            <div className='text-center group cursor-pointer transition-all duration-300 hover:scale-110 bg-white/5 rounded-xl sm:rounded-2xl p-3 sm:p-4 hover:bg-white/10'>
-              <div className='text-2xl sm:text-3xl md:text-4xl font-bold text-purple-400 group-hover:text-purple-300 transition-colors mb-1 sm:mb-2 drop-shadow-lg'>
+            <div className='text-center group cursor-pointer transition-all duration-300 hover:scale-110 bg-theme-card rounded-xl sm:rounded-2xl p-3 sm:p-4 hover:bg-theme-hover'>
+              <div className='text-2xl sm:text-3xl md:text-4xl font-bold text-accent-primary group-hover:text-accent-primary transition-colors mb-1 sm:mb-2 drop-shadow-lg'>
                 {activeDays}
               </div>
-              <div className='text-xs sm:text-sm text-slate-400 group-hover:text-slate-300 font-medium'>
+              <div className='text-xs sm:text-sm text-theme-secondary group-hover:text-theme-primary font-medium'>
                 Active Days
               </div>
             </div>

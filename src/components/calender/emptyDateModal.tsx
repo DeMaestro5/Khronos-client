@@ -54,39 +54,41 @@ const EmptyDateModal: React.FC<EmptyDateModalProps> = ({
   const todayDate = isToday();
 
   return (
-    <div className='fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4'>
+    <div className='fixed inset-0 bg-theme-backdrop backdrop-blur-sm flex items-center justify-center z-50 p-4'>
       <div
-        className={`bg-white rounded-2xl sm:rounded-3xl shadow-2xl max-w-md w-full mx-4 transform transition-all duration-300 ${
+        className={`bg-theme-card rounded-2xl sm:rounded-3xl shadow-2xl max-w-md w-full mx-4 transform transition-all duration-300 ${
           animatingOut
             ? 'scale-95 opacity-0 translate-y-4'
             : 'scale-100 opacity-100 translate-y-0'
         }`}
       >
         {/* Header */}
-        <div className='flex items-center justify-between p-4 sm:p-6 border-b border-gray-100'>
+        <div className='flex items-center justify-between p-4 sm:p-6 border-b border-theme-primary'>
           <div className='flex items-center space-x-3'>
             <div
               className={`p-2 sm:p-3 rounded-xl shadow-lg ${
                 pastDate
-                  ? 'bg-gray-100'
+                  ? 'bg-theme-tertiary'
                   : 'bg-gradient-to-r from-purple-500 to-pink-500'
               }`}
             >
               {pastDate ? (
-                <Clock className={`w-5 h-5 sm:w-6 sm:h-6 text-gray-500`} />
+                <Clock
+                  className={`w-5 h-5 sm:w-6 sm:h-6 text-theme-secondary`}
+                />
               ) : (
                 <Calendar className={`w-5 h-5 sm:w-6 sm:h-6 text-white`} />
               )}
             </div>
             <div>
-              <h3 className='text-lg sm:text-xl font-bold text-gray-900'>
+              <h3 className='text-lg sm:text-xl font-bold text-theme-primary'>
                 {pastDate
                   ? 'Past Date'
                   : todayDate
                   ? 'Today'
                   : 'Schedule Content'}
               </h3>
-              <p className='text-xs sm:text-sm text-gray-500'>
+              <p className='text-xs sm:text-sm text-theme-secondary'>
                 {formatDisplayDate(selectedDate)}
               </p>
             </div>
@@ -94,9 +96,9 @@ const EmptyDateModal: React.FC<EmptyDateModalProps> = ({
 
           <button
             onClick={onClose}
-            className='p-1 sm:p-2 hover:bg-gray-100 rounded-lg transition-colors'
+            className='p-1 sm:p-2 hover:bg-theme-hover rounded-lg transition-colors'
           >
-            <X className='w-5 h-5 sm:w-6 sm:h-6 text-gray-500' />
+            <X className='w-5 h-5 sm:w-6 sm:h-6 text-theme-secondary' />
           </button>
         </div>
 
@@ -104,21 +106,21 @@ const EmptyDateModal: React.FC<EmptyDateModalProps> = ({
         <div className='p-4 sm:p-6'>
           {pastDate ? (
             <div className='text-center space-y-4'>
-              <div className='w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto'>
-                <Clock className='w-8 h-8 text-gray-400' />
+              <div className='w-16 h-16 bg-theme-tertiary rounded-full flex items-center justify-center mx-auto'>
+                <Clock className='w-8 h-8 text-theme-muted' />
               </div>
               <div>
-                <h4 className='font-semibold text-gray-900 mb-2'>
+                <h4 className='font-semibold text-theme-primary mb-2'>
                   Cannot Schedule Past Content
                 </h4>
-                <p className='text-sm text-gray-600 leading-relaxed'>
+                <p className='text-sm text-theme-secondary leading-relaxed'>
                   You cannot create new content for past dates. Content can only
                   be scheduled for today or future dates.
                 </p>
               </div>
 
-              <div className='bg-gray-50 rounded-xl p-4'>
-                <p className='text-xs text-gray-500 text-center'>
+              <div className='bg-theme-tertiary rounded-xl p-4'>
+                <p className='text-xs text-theme-muted text-center'>
                   💡 You can still view any existing content that was scheduled
                   for this date
                 </p>
@@ -130,10 +132,10 @@ const EmptyDateModal: React.FC<EmptyDateModalProps> = ({
                 <Plus className='w-8 h-8 text-white' />
               </div>
               <div>
-                <h4 className='font-semibold text-gray-900 mb-2'>
+                <h4 className='font-semibold text-theme-primary mb-2'>
                   No Content Scheduled
                 </h4>
-                <p className='text-sm text-gray-600 leading-relaxed'>
+                <p className='text-sm text-theme-secondary leading-relaxed'>
                   {todayDate
                     ? "You don't have any content scheduled for today. Ready to create something amazing?"
                     : "You don't have any content scheduled for this date. Ready to plan ahead?"}
@@ -150,8 +152,8 @@ const EmptyDateModal: React.FC<EmptyDateModalProps> = ({
                 Create Content
               </button>
 
-              <div className='bg-blue-50 rounded-xl p-4'>
-                <p className='text-xs text-blue-600 text-center'>
+              <div className='bg-accent-info/10 rounded-xl p-4'>
+                <p className='text-xs text-accent-info text-center'>
                   💡 Schedule your content in advance to maintain consistency
                 </p>
               </div>

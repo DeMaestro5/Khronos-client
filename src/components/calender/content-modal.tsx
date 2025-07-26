@@ -56,13 +56,13 @@ const platformNames: Record<Platform['id'], string> = {
 const getStatusBadgeColor = (status: string) => {
   switch (status) {
     case 'scheduled':
-      return 'bg-emerald-500/20 text-emerald-300 border-emerald-500/30';
+      return 'bg-accent-success/20 text-accent-success border-accent-success/30';
     case 'draft':
-      return 'bg-gray-500 text-amber-300 border-gray-600';
+      return 'bg-accent-warning/20 text-accent-warning border-accent-warning/30';
     case 'published':
-      return 'bg-blue-500/20 text-blue-300 border-blue-500/30';
+      return 'bg-accent-info/20 text-accent-info border-accent-info/30';
     default:
-      return 'bg-gray-500/20 text-gray-300 border-gray-500/30';
+      return 'bg-theme-muted/20 text-theme-muted border-theme-muted/30';
   }
 };
 
@@ -78,9 +78,6 @@ export default function ContentModal({
   const { loadScheduledContent } = useCalendar();
   const [deleteModalOpen, setDeleteModalOpen] = useState(false);
   const [editModalOpen, setEditModalOpen] = useState(false);
-  const [deletingContentId, setDeletingContentId] = useState<string | null>(
-    null
-  );
   const [editingContent, setEditingContent] =
     useState<ScheduledContentItem | null>(null);
   const [contentToDelete, setContentToDelete] =
@@ -98,56 +95,41 @@ export default function ContentModal({
   });
 
   // Check if the selected date is in the past
-  const isPastDate = () => {
+  const isDateInPast = () => {
     const today = new Date();
-    const selectedDateObj = new Date(selectedDate);
-
-    // Set time to beginning of day for accurate comparison
     today.setHours(0, 0, 0, 0);
+    const selectedDateObj = new Date(selectedDate);
     selectedDateObj.setHours(0, 0, 0, 0);
-
     return selectedDateObj < today;
   };
 
-  const isDateInPast = isPastDate();
-
-  // Handle view content (eye icon click)
   const handleViewContent = (contentId: string) => {
     router.push(`/content/${contentId}`);
   };
 
-  // Handle edit content
   const handleEditClick = (item: ScheduledContentItem) => {
     setEditingContent(item);
     setEditModalOpen(true);
   };
 
-  // Handle delete content
   const handleDeleteClick = (item: ScheduledContentItem) => {
     setContentToDelete(item);
-    setDeletingContentId(item.id);
     setDeleteModalOpen(true);
   };
 
   const handleDeleteConfirm = async () => {
-    if (!deletingContentId || !contentToDelete) return;
+    if (!contentToDelete) return;
 
     setIsDeleting(true);
     try {
-      await contentAPI.delete(deletingContentId);
-      toast.success('Content deleted successfully!');
+      await contentAPI.delete(contentToDelete.id);
+      toast.success('Content deleted successfully');
+      await loadScheduledContent();
       setDeleteModalOpen(false);
       setContentToDelete(null);
-      setDeletingContentId(null);
-
-      // Refresh the calendar to remove the deleted content
-      await loadScheduledContent();
-
-      // Close the content modal since the content is now deleted
-      onClose();
     } catch (error) {
-      console.error('Error deleting content:', error);
-      toast.error('Failed to delete content. Please try again.');
+      console.error('Failed to delete content:', error);
+      toast.error('Failed to delete content');
     } finally {
       setIsDeleting(false);
     }
@@ -156,14 +138,13 @@ export default function ContentModal({
   const handleDeleteCancel = () => {
     setDeleteModalOpen(false);
     setContentToDelete(null);
-    setDeletingContentId(null);
   };
 
   const handleEditSuccess = async () => {
-    // Refresh the calendar content after successful edit
     await loadScheduledContent();
     setEditModalOpen(false);
     setEditingContent(null);
+    toast.success('Content updated successfully');
   };
 
   const handleEditCancel = () => {
@@ -173,24 +154,26 @@ export default function ContentModal({
 
   return (
     <div
-      className={`fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm transition-all duration-200 ${
+      className={`fixed inset-0 z-50 flex items-center justify-center p-4 bg-theme-backdrop backdrop-blur-sm transition-all duration-200 ${
         animatingOut ? 'opacity-0' : 'opacity-100'
       }`}
     >
       <div
-        className={`bg-gray-900/95 backdrop-blur-xl border border-white/20 rounded-3xl shadow-2xl max-w-2xl w-full max-h-[80vh] overflow-hidden transform transition-all duration-200 ${
+        className={`bg-theme-card backdrop-blur-xl border border-theme-primary rounded-3xl shadow-2xl max-w-2xl w-full max-h-[80vh] overflow-hidden transform transition-all duration-200 ${
           animatingOut ? 'scale-95 opacity-0' : 'scale-100 opacity-100'
         }`}
       >
         {/* Modal Header */}
-        <div className='flex items-center justify-between p-6 bg-gradient-to-r from-purple-600/20 to-pink-600/20 border-b border-white/10'>
+        <div className='flex items-center justify-between p-6 bg-gradient-to-r from-accent-primary/10 to-accent-secondary/10 border-b border-theme-primary'>
           <div className='flex items-center space-x-3'>
             <div className='p-2 bg-gradient-to-r from-purple-500 to-pink-500 rounded-xl'>
               <Calendar className='w-5 h-5 text-white' />
             </div>
             <div>
-              <h2 className='text-xl font-bold text-white'>{formattedDate}</h2>
-              <p className='text-sm text-slate-300'>
+              <h2 className='text-xl font-bold text-theme-primary'>
+                {formattedDate}
+              </h2>
+              <p className='text-sm text-theme-secondary'>
                 {content.length} scheduled{' '}
                 {content.length === 1 ? 'post' : 'posts'}
               </p>
@@ -198,7 +181,7 @@ export default function ContentModal({
           </div>
           <button
             onClick={onClose}
-            className='p-2 hover:bg-white/10 rounded-xl transition-all duration-200 text-slate-400 hover:text-white hover:scale-110'
+            className='p-2 hover:bg-theme-hover rounded-xl transition-all duration-200 text-theme-secondary hover:text-theme-primary hover:scale-110'
           >
             <X className='w-5 h-5' />
           </button>
@@ -212,7 +195,7 @@ export default function ContentModal({
               return (
                 <div
                   key={`${item.title}-${idx}`}
-                  className='group bg-white/5 hover:bg-white/10 rounded-2xl p-4 transition-all duration-300 hover:scale-[1.02] border border-white/10 hover:border-white/20'
+                  className='group bg-theme-tertiary hover:bg-theme-hover rounded-2xl p-4 transition-all duration-300 hover:scale-[1.02] border border-theme-primary hover:border-theme-primary'
                 >
                   <div className='flex items-start justify-between space-x-4'>
                     <div className='flex items-start space-x-4 flex-1 min-w-0'>
@@ -228,7 +211,7 @@ export default function ContentModal({
                       {/* Content Details */}
                       <div className='flex-1 min-w-0'>
                         <div className='flex items-center space-x-3 mb-2'>
-                          <h3 className='text-white font-semibold text-lg truncate'>
+                          <h3 className='text-theme-primary font-semibold text-lg truncate'>
                             {item.title}
                           </h3>
                           <span
@@ -241,15 +224,15 @@ export default function ContentModal({
                           </span>
                         </div>
 
-                        <div className='flex items-center space-x-4 text-sm text-slate-400 mb-3'>
+                        <div className='flex items-center space-x-4 text-sm text-theme-secondary mb-3'>
                           <span className='flex items-center space-x-1'>
                             <Clock className='w-4 h-4' />
                             <span className='font-medium'>{item.time}</span>
                           </span>
-                          <span className='px-2 py-1 bg-white/10 rounded-lg'>
+                          <span className='px-2 py-1 bg-theme-tertiary rounded-lg'>
                             {platformNames[item.platform]}
                           </span>
-                          <span className='px-2 py-1 bg-white/10 rounded-lg'>
+                          <span className='px-2 py-1 bg-theme-tertiary rounded-lg'>
                             {item.type}
                           </span>
                         </div>
@@ -257,12 +240,12 @@ export default function ContentModal({
                         {/* Progress Bar for Scheduled Items */}
                         {item.status === 'scheduled' && (
                           <div className='mb-3'>
-                            <div className='flex items-center justify-between text-xs text-slate-400 mb-1'>
+                            <div className='flex items-center justify-between text-xs text-theme-secondary mb-1'>
                               <span>Scheduled to publish</span>
-                              <span className='text-emerald-400'>Ready</span>
+                              <span className='text-accent-success'>Ready</span>
                             </div>
-                            <div className='w-full bg-white/10 rounded-full h-1.5'>
-                              <div className='bg-gradient-to-r from-emerald-500 to-emerald-400 h-1.5 rounded-full w-full'></div>
+                            <div className='w-full bg-theme-tertiary rounded-full h-1.5'>
+                              <div className='bg-gradient-to-r from-accent-success to-accent-success h-1.5 rounded-full w-full'></div>
                             </div>
                           </div>
                         )}
@@ -273,17 +256,17 @@ export default function ContentModal({
                     <div className='flex items-center space-x-2 opacity-0 group-hover:opacity-100 transition-opacity duration-200'>
                       <button
                         onClick={() => handleViewContent(item.id)}
-                        className='p-2 hover:bg-white/10 rounded-lg transition-all duration-200 text-slate-400 hover:text-white hover:scale-110'
+                        className='p-2 hover:bg-theme-hover rounded-lg transition-all duration-200 text-theme-secondary hover:text-theme-primary hover:scale-110'
                         title='View Content'
                       >
                         <Eye className='w-4 h-4' />
                       </button>
 
                       {/* Only show edit button for present/future dates */}
-                      {!isDateInPast && (
+                      {!isDateInPast() && (
                         <button
                           onClick={() => handleEditClick(item)}
-                          className='p-2 hover:bg-white/10 rounded-lg transition-all duration-200 text-slate-400 hover:text-white hover:scale-110'
+                          className='p-2 hover:bg-theme-hover rounded-lg transition-all duration-200 text-theme-secondary hover:text-theme-primary hover:scale-110'
                           title='Edit Content'
                         >
                           <Edit3 className='w-4 h-4' />
@@ -292,7 +275,7 @@ export default function ContentModal({
 
                       <button
                         onClick={() => handleDeleteClick(item)}
-                        className='p-2 hover:bg-white/10 rounded-lg transition-all duration-200 text-slate-400 hover:text-red-400 hover:scale-110'
+                        className='p-2 hover:bg-theme-hover rounded-lg transition-all duration-200 text-theme-secondary hover:text-accent-error hover:scale-110'
                         title='Delete Content'
                       >
                         <Trash2 className='w-4 h-4' />
@@ -306,24 +289,24 @@ export default function ContentModal({
         </div>
 
         {/* Modal Footer */}
-        <div className='p-2 bg-white/5 border-t border-white/10 flex items-center justify-between'>
-          <div className='text-sm text-slate-400'>
+        <div className='p-2 bg-theme-tertiary border-t border-theme-primary flex items-center justify-between'>
+          <div className='text-sm text-theme-secondary'>
             {content.filter((item) => item.status === 'scheduled').length}{' '}
             scheduled •{' '}
             {content.filter((item) => item.status === 'draft').length} drafts
           </div>
           <div className='flex items-center space-x-3'>
             <button
-              onClick={isDateInPast ? undefined : onCreateContent}
-              disabled={isDateInPast}
+              onClick={isDateInPast() ? undefined : onCreateContent}
+              disabled={isDateInPast()}
               className={`flex items-center space-x-2 px-4 py-2 rounded-xl font-medium transition-all duration-300 ${
-                isDateInPast
-                  ? 'bg-gray-600 text-gray-400 cursor-not-allowed opacity-50'
+                isDateInPast()
+                  ? 'bg-theme-disabled text-theme-muted cursor-not-allowed opacity-50'
                   : 'bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-500 hover:to-pink-500 text-white hover:scale-105'
               }`}
             >
               <Plus className='w-4 h-4' />
-              <span>{isDateInPast ? 'Past Date' : 'Add More'}</span>
+              <span>{isDateInPast() ? 'Past Date' : 'Add More'}</span>
             </button>
           </div>
         </div>
