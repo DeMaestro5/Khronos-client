@@ -127,37 +127,65 @@ const CalendarPage = () => {
 
       <div className='relative z-10 min-h-full w-full'>
         <div className='w-full'>
-          <div className='w-full bg-theme-card shadow-2xl p-4 sm:p-6 md:p-8 border-0 backdrop-blur-lg'>
-            {/* Beautifully Designed KHRONOS Header */}
-            <div className='mb-6 md:mb-8'>
-              {/* Top Row - Stunning KHRONOS Design */}
-              <div className='flex flex-col sm:flex-row items-center justify-between mb-4 sm:mb-6 space-y-4 sm:space-y-0'>
-                <div className='flex items-center space-x-3 sm:space-x-4'>
-                  {/* Custom KHRONOS Logo Design */}
+          <div className='w-full bg-theme-card shadow-2xl p-3 sm:p-6 lg:p-8 border-0 backdrop-blur-lg'>
+            {/* Mobile-Optimized KHRONOS Header */}
+            <div className='mb-4 sm:mb-6 lg:mb-8'>
+              {/* Mobile Layout */}
+              <div className='block sm:hidden mb-4'>
+                <div className='flex items-center justify-between mb-3'>
+                  {/* Compact KHRONOS Logo for Mobile */}
                   <div className='relative'>
-                    <div className='relative bg-gradient-to-br from-purple-900 via-purple-800 to-pink-800 rounded-xl sm:rounded-2xl p-3 sm:p-4 shadow-lg sm:shadow-xl border border-purple-400/30'>
-                      {/* Animated background glow */}
-                      <div className='absolute inset-0 bg-gradient-to-r from-purple-600/20 to-pink-600/20 rounded-xl sm:rounded-2xl animate-pulse'></div>
-
-                      {/* KHRONOS Text with multiple effects */}
+                    <div className='relative bg-gradient-to-br from-purple-900 via-purple-800 to-pink-800 rounded-lg p-2 shadow-lg border border-purple-400/30'>
+                      <div className='absolute inset-0 bg-gradient-to-r from-purple-600/20 to-pink-600/20 rounded-lg animate-pulse'></div>
                       <div className='relative'>
-                        <h1 className='text-2xl sm:text-3xl md:text-4xl font-black bg-gradient-to-r from-white via-purple-100 to-pink-100 bg-clip-text text-transparent tracking-tight leading-none drop-shadow-md sm:drop-shadow-lg'>
+                        <h1 className='text-lg font-black bg-gradient-to-r from-white via-purple-100 to-pink-100 bg-clip-text text-transparent tracking-tight leading-none drop-shadow-md'>
                           KHRONOS
                         </h1>
-
-                        {/* Subtle text shadow for depth */}
-                        <div className='absolute inset-0 text-2xl sm:text-3xl md:text-4xl font-black text-purple-900/20 tracking-tight leading-none -translate-x-0.5 -translate-y-0.5'>
+                        <div className='absolute inset-0 text-lg font-black text-purple-900/20 tracking-tight leading-none -translate-x-0.5 -translate-y-0.5'>
                           KHRONOS
                         </div>
                       </div>
-
-                      {/* Decorative elements */}
-                      <div className='absolute -top-1 -right-1 w-1.5 h-1.5 sm:w-2 sm:h-2 bg-gradient-to-r from-purple-400 to-pink-400 rounded-full animate-ping'></div>
-                      <div className='absolute -bottom-1 -left-1 w-1 h-1 sm:w-1.5 sm:h-1.5 bg-gradient-to-r from-pink-400 to-purple-400 rounded-full animate-ping delay-1000'></div>
+                      <div className='absolute -top-0.5 -right-0.5 w-1 h-1 bg-gradient-to-r from-purple-400 to-pink-400 rounded-full animate-ping'></div>
                     </div>
+                    <div className='absolute -bottom-1 left-1/2 transform -translate-x-1/2 bg-gradient-to-r from-purple-600 to-pink-600 text-white px-1.5 py-0.5 rounded-full text-[10px] font-bold shadow-md'>
+                      CALENDAR
+                    </div>
+                  </div>
 
-                    {/* Floating subtitle */}
-                    <div className='absolute -bottom-1.5 sm:-bottom-2 left-1/2 transform -translate-x-1/2 bg-gradient-to-r from-purple-600 to-pink-600 text-white px-2 sm:px-3 py-0.5 rounded-full text-xs font-bold shadow-md'>
+                  {/* Mobile Create Button */}
+                  <button
+                    onClick={() => setShowModal(true)}
+                    className='group flex items-center justify-center space-x-1.5 px-3 py-2 bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-500 hover:to-pink-500 rounded-lg text-white font-semibold transition-all duration-300 hover:scale-105 hover:shadow-lg hover:shadow-purple-500/50'
+                  >
+                    <Plus className='h-3 w-3 group-hover:rotate-90 transition-transform duration-300' />
+                    <span className='text-xs'>Create</span>
+                  </button>
+                </div>
+
+                <p className='text-theme-secondary text-xs font-medium text-center bg-gradient-to-r from-purple-600/80 to-pink-600/80 bg-clip-text text-transparent'>
+                  Orchestrate your content strategy
+                </p>
+              </div>
+
+              {/* Desktop Layout */}
+              <div className='hidden sm:flex flex-col lg:flex-row items-center justify-between mb-4 lg:mb-6 space-y-4 lg:space-y-0'>
+                <div className='flex items-center space-x-4'>
+                  {/* Desktop KHRONOS Logo Design */}
+                  <div className='relative'>
+                    <div className='relative bg-gradient-to-br from-purple-900 via-purple-800 to-pink-800 rounded-xl lg:rounded-2xl p-3 lg:p-4 shadow-lg lg:shadow-xl border border-purple-400/30'>
+                      <div className='absolute inset-0 bg-gradient-to-r from-purple-600/20 to-pink-600/20 rounded-xl lg:rounded-2xl animate-pulse'></div>
+                      <div className='relative'>
+                        <h1 className='text-2xl lg:text-3xl xl:text-4xl font-black bg-gradient-to-r from-white via-purple-100 to-pink-100 bg-clip-text text-transparent tracking-tight leading-none drop-shadow-md lg:drop-shadow-lg'>
+                          KHRONOS
+                        </h1>
+                        <div className='absolute inset-0 text-2xl lg:text-3xl xl:text-4xl font-black text-purple-900/20 tracking-tight leading-none -translate-x-0.5 -translate-y-0.5'>
+                          KHRONOS
+                        </div>
+                      </div>
+                      <div className='absolute -top-1 -right-1 w-1.5 h-1.5 lg:w-2 lg:h-2 bg-gradient-to-r from-purple-400 to-pink-400 rounded-full animate-ping'></div>
+                      <div className='absolute -bottom-1 -left-1 w-1 h-1 lg:w-1.5 lg:h-1.5 bg-gradient-to-r from-pink-400 to-purple-400 rounded-full animate-ping delay-1000'></div>
+                    </div>
+                    <div className='absolute -bottom-1.5 lg:-bottom-2 left-1/2 transform -translate-x-1/2 bg-gradient-to-r from-purple-600 to-pink-600 text-white px-2 lg:px-3 py-0.5 rounded-full text-xs font-bold shadow-md'>
                       CALENDAR
                     </div>
                   </div>
@@ -165,16 +193,16 @@ const CalendarPage = () => {
 
                 <button
                   onClick={() => setShowModal(true)}
-                  className='group flex items-center justify-center space-x-2 px-4 sm:px-5 py-2 sm:py-2.5 bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-500 hover:to-pink-500 rounded-lg sm:rounded-xl text-white font-semibold transition-all duration-300 hover:scale-105 hover:shadow-lg hover:shadow-purple-500/50 w-full sm:w-auto'
+                  className='group flex items-center justify-center space-x-2 px-4 lg:px-5 py-2 lg:py-2.5 bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-500 hover:to-pink-500 rounded-lg lg:rounded-xl text-white font-semibold transition-all duration-300 hover:scale-105 hover:shadow-lg hover:shadow-purple-500/50'
                 >
                   <Plus className='h-4 w-4 group-hover:rotate-90 transition-transform duration-300' />
                   <span className='text-sm'>Create Content</span>
                 </button>
               </div>
 
-              {/* Elegant Subtitle */}
-              <div className='text-center px-2'>
-                <p className='text-theme-secondary text-sm sm:text-base md:text-lg font-medium bg-gradient-to-r from-purple-600/80 to-pink-600/80 bg-clip-text text-transparent'>
+              {/* Desktop Subtitle */}
+              <div className='hidden sm:block text-center px-2'>
+                <p className='text-theme-secondary text-sm lg:text-base xl:text-lg font-medium bg-gradient-to-r from-purple-600/80 to-pink-600/80 bg-clip-text text-transparent'>
                   Orchestrate your content strategy across all platforms
                 </p>
               </div>
