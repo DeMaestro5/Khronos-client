@@ -11,34 +11,52 @@ import { ThemeToggle } from '../components/ui/theme-toggle';
 
 export default function Home() {
   return (
-    <div className='min-h-screen bg-theme-secondary theme-transition'>
+    <div className='min-h-screen bg-theme-secondary theme-transition overflow-x-hidden'>
       {/* Navigation */}
       <motion.nav
-        className='fixed top-0 w-full bg-theme-card/90 backdrop-blur-md border-b border-theme-primary z-50 theme-transition'
+        className='fixed top-0 w-full bg-theme-card/95 backdrop-blur-md border-b border-theme-primary z-50 theme-transition'
         initial={{ opacity: 0, y: -20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.6 }}
       >
-        <div className='max-w-7xl mx-auto px-4 sm:px-6 lg:px-8'>
-          <div className='flex justify-between items-center py-4'>
+        <div className='w-full px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto'>
+          <div className='flex justify-between items-center py-3 sm:py-4'>
             <div className='flex items-center space-x-2'>
-              <div className='w-8 h-8 bg-accent-primary rounded-lg flex items-center justify-center'>
-                <span className='text-white font-bold text-sm'>K</span>
+              <div className='w-7 h-7 sm:w-8 sm:h-8 bg-accent-primary rounded-lg flex items-center justify-center flex-shrink-0'>
+                <span className='text-white font-bold text-xs sm:text-sm'>
+                  K
+                </span>
               </div>
-              <span className='text-xl font-bold text-theme-primary'>
+              <span className='text-base sm:text-xl font-bold text-theme-primary truncate'>
                 KHRONOS
               </span>
             </div>
-            <div className='flex items-center space-x-4'>
+            <div className='flex items-center space-x-2 sm:space-x-3 flex-shrink-0'>
+              {/* Show theme toggle on all screen sizes */}
               <ThemeToggle variant='compact' showLabels={false} size='sm' />
               <Button
                 variant='ghost'
-                className='text-theme-secondary hover:text-theme-primary hover:bg-theme-hover'
+                size='sm'
+                className='text-theme-secondary hover:text-theme-primary hover:bg-theme-hover px-3 sm:px-4 py-2 text-sm font-medium rounded-lg transition-all duration-200 flex items-center justify-center'
               >
-                <Link href='/auth/login'>Login</Link>
+                <Link
+                  href='/auth/login'
+                  className='flex items-center justify-center w-full'
+                >
+                  Login
+                </Link>
               </Button>
-              <Button className='bg-accent-primary hover:bg-accent-secondary text-white'>
-                <Link href='/auth/signup'>Get Started</Link>
+              <Button
+                size='sm'
+                className='bg-accent-primary hover:bg-accent-secondary text-white px-3 sm:px-6 py-2 text-sm font-semibold rounded-lg shadow-sm hover:shadow-md transition-all duration-200 flex items-center justify-center'
+              >
+                <Link
+                  href='/auth/signup'
+                  className='flex items-center justify-center w-full'
+                >
+                  <span className='hidden sm:inline'>Get Started</span>
+                  <span className='sm:hidden'>Start</span>
+                </Link>
               </Button>
             </div>
           </div>
@@ -46,97 +64,120 @@ export default function Home() {
       </motion.nav>
 
       {/* Hero Section */}
-      <section className='pt-32 pb-20 px-4 sm:px-6 lg:px-8'>
-        <div className='max-w-7xl mx-auto'>
-          <div className='grid lg:grid-cols-2 gap-12 items-center'>
-            {/* Left Content */}
+      <section className='pt-20 sm:pt-24 lg:pt-28 pb-4 sm:pb-6 lg:pb-8 px-4 sm:px-6 lg:px-8 overflow-hidden'>
+        <div className='w-full max-w-7xl mx-auto'>
+          <div className='flex flex-col lg:grid lg:grid-cols-2 gap-8 lg:gap-12 items-center'>
+            {/* Mobile: Calendar First */}
             <motion.div
-              className='space-y-8'
+              className='w-full flex justify-center lg:hidden order-1'
+              initial={{ opacity: 0, y: 30 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.8, delay: 0.2 }}
+            >
+              <div className='w-full max-w-xs'>
+                <ContentCalendar />
+              </div>
+            </motion.div>
+
+            {/* Content */}
+            <motion.div
+              className='w-full space-y-6 sm:space-y-8 text-center lg:text-left order-2 lg:order-1'
               initial={{ opacity: 0, x: -30 }}
               animate={{ opacity: 1, x: 0 }}
               transition={{ duration: 0.8 }}
             >
-              <div className='space-y-6'>
+              <div className='space-y-4 sm:space-y-6'>
                 <motion.div
-                  className='inline-flex items-center px-4 py-2 rounded-full bg-theme-tertiary border border-theme-primary'
+                  className='inline-flex items-center px-3 sm:px-4 py-2 rounded-full bg-theme-tertiary border border-theme-primary'
                   initial={{ opacity: 0, scale: 0.8 }}
                   animate={{ opacity: 1, scale: 1 }}
                   transition={{ duration: 0.6, delay: 0.2 }}
                 >
-                  <span className='text-accent-primary text-sm font-medium'>
+                  <span className='text-accent-primary text-xs sm:text-sm font-medium'>
                     ✨ AI-Powered Content Strategy
                   </span>
                 </motion.div>
 
-                <h1 className='text-5xl lg:text-6xl font-bold text-theme-primary leading-tight'>
+                <h1 className='text-2xl sm:text-3xl md:text-4xl lg:text-5xl xl:text-6xl font-bold text-theme-primary leading-tight px-2 sm:px-0'>
                   Create content that
                   <span className='block bg-gradient-to-r from-indigo-600 to-purple-600 dark:from-blue-400 dark:to-indigo-500 bg-clip-text text-transparent'>
                     actually converts
                   </span>
                 </h1>
 
-                <p className='text-xl text-theme-secondary leading-relaxed max-w-xl'>
+                <p className='text-sm sm:text-base lg:text-xl text-theme-secondary leading-relaxed max-w-xl mx-auto lg:mx-0 px-2 sm:px-0'>
                   Stop guessing what content works. Let our AI analyze your
                   audience, optimize your strategy, and automate your publishing
                   workflow.
                 </p>
               </div>
 
-              <div className='flex flex-col sm:flex-row gap-4'>
+              <div className='flex flex-col gap-3 sm:gap-4 px-4 sm:px-0'>
                 <Button
                   size='lg'
-                  className='bg-accent-primary hover:bg-accent-secondary text-white px-8 py-4 text-lg font-semibold shadow-theme-lg hover:shadow-theme-xl'
+                  className='bg-accent-primary hover:bg-accent-secondary text-white px-6 sm:px-8 py-3 sm:py-4 text-sm sm:text-lg font-semibold shadow-theme-lg hover:shadow-theme-xl w-full sm:w-auto'
                 >
                   <Link
                     href='/auth/signup'
-                    className='flex items-center space-x-2'
+                    className='flex items-center justify-center space-x-2'
                   >
-                    <span>Get Started</span>
+                    <span>Get Started Free</span>
                     <span>→</span>
                   </Link>
                 </Button>
                 <Button
                   size='lg'
                   variant='outline'
-                  className='border-2 border-accent-primary text-accent-primary hover:bg-accent-primary hover:text-white px-8 py-4 text-lg font-medium'
+                  className='border-2 border-accent-primary text-accent-primary hover:bg-accent-primary hover:text-white px-6 sm:px-8 py-3 sm:py-4 text-sm sm:text-lg font-medium w-full sm:w-auto flex items-center justify-center'
                 >
-                  <Link href='#demo'>Watch Demo</Link>
+                  <Link
+                    href='#demo'
+                    className='flex items-center justify-center w-full'
+                  >
+                    Watch Demo
+                  </Link>
                 </Button>
               </div>
 
-              <div className='flex items-center space-x-8 pt-4'>
-                <div className='text-center'>
-                  <div className='text-2xl font-bold text-theme-primary'>
-                    50K+
+              {/* Stats - Mobile Optimized and Properly Centered */}
+              <div className='pt-4'>
+                <div className='grid grid-cols-3 gap-4 max-w-sm mx-auto lg:max-w-none lg:flex lg:justify-start lg:space-x-8 lg:grid-cols-none'>
+                  <div className='text-center lg:text-left'>
+                    <div className='text-lg sm:text-2xl font-bold text-theme-primary'>
+                      50K+
+                    </div>
+                    <div className='text-xs sm:text-sm text-theme-secondary'>
+                      Users
+                    </div>
                   </div>
-                  <div className='text-sm text-theme-secondary'>
-                    Active Users
+                  <div className='text-center lg:text-left'>
+                    <div className='text-lg sm:text-2xl font-bold text-theme-primary'>
+                      99.9%
+                    </div>
+                    <div className='text-xs sm:text-sm text-theme-secondary'>
+                      Uptime
+                    </div>
                   </div>
-                </div>
-                <div className='text-center'>
-                  <div className='text-2xl font-bold text-theme-primary'>
-                    99.9%
+                  <div className='text-center lg:text-left'>
+                    <div className='text-lg sm:text-2xl font-bold text-theme-primary'>
+                      4.9/5
+                    </div>
+                    <div className='text-xs sm:text-sm text-theme-secondary'>
+                      Rating
+                    </div>
                   </div>
-                  <div className='text-sm text-theme-secondary'>Uptime</div>
-                </div>
-                <div className='text-center'>
-                  <div className='text-2xl font-bold text-theme-primary'>
-                    4.9/5
-                  </div>
-                  <div className='text-sm text-theme-secondary'>Rating</div>
                 </div>
               </div>
             </motion.div>
 
-            {/* Right Visual */}
+            {/* Desktop Calendar */}
             <motion.div
-              className='relative'
+              className='hidden lg:block relative order-3 lg:order-2'
               initial={{ opacity: 0, x: 30 }}
               animate={{ opacity: 1, x: 0 }}
               transition={{ duration: 0.8, delay: 0.2 }}
             >
               <div className='relative'>
-                {/* Main Dashboard Preview */}
                 <ContentCalendar />
 
                 {/* Floating Elements */}
@@ -165,66 +206,84 @@ export default function Home() {
       </section>
 
       {/* Features Section */}
-      <FeaturesSection />
+      <div className='w-full overflow-hidden'>
+        <FeaturesSection />
+      </div>
 
       {/* Stats Section */}
-      <StatsSection />
+      <div className='w-full overflow-hidden'>
+        <StatsSection />
+      </div>
 
       {/* Testimonials Section */}
-      <Testimonial />
+      <div className='w-full overflow-hidden'>
+        <Testimonial />
+      </div>
 
       {/* CTA Section */}
-      <section className='py-20 bg-gradient-to-r from-indigo-600 to-purple-600'>
-        <div className='max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center'>
+      <section className='py-6 sm:py-8 lg:py-12 bg-gradient-to-r from-indigo-600 to-purple-600 overflow-hidden'>
+        <div className='w-full max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center'>
           <motion.div
-            className='space-y-8'
+            className='space-y-6 sm:space-y-8'
             initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
             transition={{ duration: 0.6 }}
           >
-            <h2 className='text-4xl font-bold text-white'>
+            <h2 className='text-xl sm:text-2xl md:text-3xl lg:text-4xl font-bold text-white leading-tight'>
               Ready to transform your content strategy?
             </h2>
-            <p className='text-xl text-white/90 max-w-2xl mx-auto'>
+            <p className='text-sm sm:text-base lg:text-xl text-white/90 max-w-2xl mx-auto leading-relaxed'>
               Join thousands of creators who&apos;ve already boosted their
               engagement by 300% with KHRONOS
             </p>
-            <div className='flex flex-col sm:flex-row gap-4 justify-center'>
+            <div className='flex flex-col gap-3 sm:gap-4 max-w-sm mx-auto sm:max-w-none sm:flex-row sm:justify-center'>
               <Button
                 size='lg'
-                className='bg-white text-indigo-600 hover:bg-white/90 px-8 py-4 text-lg font-semibold'
+                className='bg-white text-indigo-600 hover:bg-white/90 px-6 sm:px-8 py-3 sm:py-4 text-sm sm:text-lg font-semibold w-full sm:w-auto flex items-center justify-center'
               >
-                <Link href='/auth/signup'>Start Now</Link>
+                <Link
+                  href='/auth/signup'
+                  className='flex items-center justify-center w-full'
+                >
+                  Start Now
+                </Link>
               </Button>
               <Button
                 size='lg'
                 variant='outline'
-                className='border-2 border-slate-800 bg-slate-800 text-white hover:bg-slate-700 dark:border-white dark:bg-white dark:text-slate-800 dark:hover:bg-gray-100 px-8 py-4 text-lg font-medium transition-all duration-300'
+                className='border-2 border-white bg-transparent text-white hover:bg-white hover:text-indigo-600 px-6 sm:px-8 py-3 sm:py-4 text-sm sm:text-lg font-medium transition-all duration-300 w-full sm:w-auto flex items-center justify-center'
               >
-                <Link href='/contact'>Contact Us</Link>
+                <Link
+                  href='/contact'
+                  className='flex items-center justify-center w-full'
+                >
+                  Contact Us
+                </Link>
               </Button>
             </div>
-            <p className='text-white/80 text-sm'>
-              No Payments required • All Free •
+            <p className='text-white/80 text-xs sm:text-sm text-center'>
+              No payments required • All Free
             </p>
           </motion.div>
         </div>
       </section>
 
       {/* Footer */}
-      <footer className='bg-theme-card border-t border-theme-primary py-12'>
-        <div className='max-w-7xl mx-auto px-4 sm:px-6 lg:px-8'>
-          <div className='flex flex-col md:flex-row justify-between items-center'>
-            <div className='flex items-center space-x-2 mb-4 md:mb-0'>
-              <div className='w-8 h-8 bg-accent-primary rounded-lg flex items-center justify-center'>
-                <span className='text-white font-bold text-sm'>K</span>
+      <footer className='bg-theme-card border-t border-theme-primary py-4 sm:py-6 overflow-hidden'>
+        <div className='w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8'>
+          <div className='flex flex-col sm:flex-row justify-between items-center space-y-4 sm:space-y-0'>
+            <div className='flex items-center space-x-2'>
+              <div className='w-7 h-7 sm:w-8 sm:h-8 bg-accent-primary rounded-lg flex items-center justify-center'>
+                <span className='text-white font-bold text-xs sm:text-sm'>
+                  K
+                </span>
               </div>
-              <span className='text-xl font-bold text-theme-primary'>
+              <span className='text-lg sm:text-xl font-bold text-theme-primary'>
                 KHRONOS
               </span>
             </div>
-            <div className='text-theme-secondary text-sm'>
+            <div className='text-theme-secondary text-xs sm:text-sm text-center'>
               © 2025 KHRONOS. All rights reserved.
             </div>
           </div>
