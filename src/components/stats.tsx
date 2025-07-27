@@ -57,9 +57,9 @@ const StatsSection = () => {
       label: 'Posts Created',
       description: 'Content pieces generated',
       icon: '📝',
-      color: 'from-blue-400 to-blue-600 dark:from-blue-500 dark:to-blue-700',
-      bgColor:
-        'from-blue-500/20 to-blue-600/20 dark:from-blue-600/30 dark:to-blue-700/30',
+      color: 'from-blue-500 to-blue-600',
+      bgColor: 'from-blue-500/10 to-blue-600/10',
+      delay: 0.1,
     },
     {
       id: 2,
@@ -68,10 +68,9 @@ const StatsSection = () => {
       label: 'Active Users',
       description: 'Creators using KHRONOS',
       icon: '👥',
-      color:
-        'from-emerald-400 to-emerald-600 dark:from-emerald-500 dark:to-emerald-700',
-      bgColor:
-        'from-emerald-500/20 to-emerald-600/20 dark:from-emerald-600/30 dark:to-emerald-700/30',
+      color: 'from-emerald-500 to-emerald-600',
+      bgColor: 'from-emerald-500/10 to-emerald-600/10',
+      delay: 0.2,
     },
     {
       id: 3,
@@ -80,10 +79,9 @@ const StatsSection = () => {
       label: 'Success Rate',
       description: 'Content optimization',
       icon: '🎯',
-      color:
-        'from-purple-400 to-purple-600 dark:from-purple-500 dark:to-purple-700',
-      bgColor:
-        'from-purple-500/20 to-purple-600/20 dark:from-purple-600/30 dark:to-purple-700/30',
+      color: 'from-purple-500 to-purple-600',
+      bgColor: 'from-purple-500/10 to-purple-600/10',
+      delay: 0.3,
     },
     {
       id: 4,
@@ -92,10 +90,9 @@ const StatsSection = () => {
       label: 'Days Uptime',
       description: 'Reliable service',
       icon: '⚡',
-      color:
-        'from-orange-400 to-orange-600 dark:from-orange-500 dark:to-orange-700',
-      bgColor:
-        'from-orange-500/20 to-orange-600/20 dark:from-orange-600/30 dark:to-orange-700/30',
+      color: 'from-orange-500 to-orange-600',
+      bgColor: 'from-orange-500/10 to-orange-600/10',
+      delay: 0.4,
     },
   ];
 
@@ -131,43 +128,43 @@ const StatsSection = () => {
         />
 
         {/* Main card */}
-        <div className='relative bg-white/90 dark:bg-slate-800/90 backdrop-blur-lg border border-white/40 dark:border-slate-600/40 rounded-2xl p-8 h-full transition-all duration-300 group-hover:bg-white/95 dark:group-hover:bg-slate-800/95 group-hover:border-white/60 dark:group-hover:border-slate-600/60 shadow-lg dark:shadow-slate-900/20 hover:shadow-2xl dark:hover:shadow-slate-900/40'>
+        <div className='relative bg-theme-card/90 backdrop-blur-lg border border-theme-primary rounded-2xl p-8 h-full transition-all duration-300 group-hover:bg-theme-card group-hover:border-theme-secondary shadow-theme-lg hover:shadow-theme-xl'>
           {/* Icon */}
           <motion.div
-            className={`w-16 h-16 bg-gradient-to-br ${stat.color} rounded-xl flex items-center justify-center text-2xl mb-6 shadow-lg`}
+            className={`w-16 h-16 bg-gradient-to-br ${stat.color} rounded-2xl flex items-center justify-center text-2xl mb-6 shadow-theme-lg`}
             whileHover={{ scale: 1.1, rotate: 5 }}
-            transition={{ duration: 0.2 }}
+            transition={{ duration: 0.3 }}
           >
             {stat.icon}
           </motion.div>
 
-          {/* Animated number */}
-          <div className='space-y-2 mb-4'>
-            <div
-              className={`text-4xl lg:text-5xl font-bold bg-gradient-to-r ${stat.color} bg-clip-text text-transparent`}
+          {/* Content */}
+          <div className='space-y-3 mb-6'>
+            <motion.div
+              className={`text-3xl font-bold bg-gradient-to-r ${stat.color} bg-clip-text text-transparent`}
+              initial={{ opacity: 0, scale: 0.8 }}
+              animate={{ opacity: 1, scale: 1 }}
+              transition={{ duration: 0.5, delay: stat.delay + 0.5 }}
             >
               {formatNumber(count, stat.suffix)}
-            </div>
+            </motion.div>
 
-            <h3 className='text-xl font-semibold text-slate-900 dark:text-slate-100 mb-2'>
+            <h3 className='text-xl font-semibold text-theme-primary mb-2'>
               {stat.label}
             </h3>
           </div>
 
-          {/* Description */}
-          <p className='text-slate-600 dark:text-slate-400 text-sm'>
-            {stat.description}
-          </p>
+          <p className='text-theme-secondary text-sm'>{stat.description}</p>
 
-          {/* Progress indicator */}
-          <div className='mt-6 h-1 bg-slate-200 dark:bg-slate-700 rounded-full overflow-hidden'>
+          {/* Progress bar */}
+          <div className='mt-6 h-1 bg-theme-tertiary rounded-full overflow-hidden'>
             <motion.div
               className={`h-full bg-gradient-to-r ${stat.color} rounded-full`}
               initial={{ width: '0%' }}
               animate={{ width: '100%' }}
               transition={{
                 duration: 2,
-                delay: index * 0.2 + 1,
+                delay: stat.delay + 1,
                 ease: 'easeOut',
               }}
             />
@@ -194,25 +191,25 @@ const StatsSection = () => {
   return (
     <section
       ref={ref}
-      className='relative py-20 overflow-hidden bg-gradient-to-br from-slate-50 via-white to-slate-100 dark:from-slate-950 dark:via-slate-900 dark:to-slate-950 transition-colors duration-300'
+      className='relative py-20 overflow-hidden bg-theme-secondary theme-transition'
     >
       {/* Background decorations */}
       <div className='absolute inset-0'>
         {/* Gradient orbs */}
-        <div className='absolute top-20 left-20 w-72 h-72 bg-blue-500/30 dark:bg-blue-600/20 rounded-full mix-blend-multiply dark:mix-blend-normal filter blur-xl animate-pulse' />
+        <div className='absolute top-20 left-20 w-72 h-72 bg-accent-primary/10 rounded-full mix-blend-multiply filter blur-xl animate-pulse' />
         <div
-          className='absolute bottom-20 right-20 w-72 h-72 bg-purple-500/30 dark:bg-purple-600/20 rounded-full mix-blend-multiply dark:mix-blend-normal filter blur-xl animate-pulse'
+          className='absolute bottom-20 right-20 w-72 h-72 bg-accent-secondary/10 rounded-full mix-blend-multiply filter blur-xl animate-pulse'
           style={{ animationDelay: '1s' }}
         />
 
         {/* Grid pattern */}
-        <div className="absolute inset-0 bg-[url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNDAiIGhlaWdodD0iNDAiIHZpZXdCb3g9IjAgMCA0MCA0MCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48ZGVmcz48cGF0dGVybiBpZD0iZ3JpZCIgd2lkdGg9IjQwIiBoZWlnaHQ9IjQwIiBwYXR0ZXJuVW5pdHM9InVzZXJTcGFjZU9uVXNlIj48cGF0aCBkPSJtIDQwIDAgbCAwIDQwIiBzdHJva2U9IiMzMzM3NDQiIHN0cm9rZS13aWR0aD0iMSIgZmlsbD0ibm9uZSIvPjxwYXRoIGQ9Im0gMCA0MCBsIDQwIDAiIHN0cm9rZT0iIzMzMzc0NCIgc3Ryb2tlLXdpZHRoPSIxIiBmaWxsPSJub25lIi8+PC9wYXR0ZXJuPjwvZGVmcz48cmVjdCB3aWR0aD0iMTAwJSIgaGVpZ2h0PSIxMDAlIiBmaWxsPSJ1cmwoI2dyaWQpIiBvcGFjaXR5PSIwLjEiLz48L3N2Zz4=')] opacity-20 dark:opacity-10" />
+        <div className="absolute inset-0 bg-[url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNDAiIGhlaWdodD0iNDAiIHZpZXdCb3g9IjAgMCA0MCA0MCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48ZGVmcz48cGF0dGVybiBpZD0iZ3JpZCIgd2lkdGg9IjQwIiBoZWlnaHQ9IjQwIiBwYXR0ZXJuVW5pdHM9InVzZXJTcGFjZU9uVXNlIj48cGF0aCBkPSJtIDQwIDAgbCAwIDQwIiBzdHJva2U9IiMzMzM3NDQiIHN0cm9rZS13aWR0aD0iMSIgZmlsbD0ibm9uZSIvPjxwYXRoIGQ9Im0gMCA0MCBsIDQwIDAiIHN0cm9rZT0iIzMzMzc0NCIgc3Ryb2tlLXdpZHRoPSIxIiBmaWxsPSJub25lIi8+PC9wYXR0ZXJuPjwvZGVmcz48cmVjdCB3aWR0aD0iMTAwJSIgaGVpZ2h0PSIxMDAlIiBmaWxsPSJ1cmwoI2dyaWQpIiBvcGFjaXR5PSIwLjEiLz48L3N2Zz4=')] opacity-20" />
 
         {/* Floating particles */}
         {[...Array(10)].map((_, i) => (
           <motion.div
             key={i}
-            className='absolute w-2 h-2 bg-indigo-400 dark:bg-blue-400 rounded-full opacity-30 dark:opacity-20'
+            className='absolute w-2 h-2 bg-accent-primary/30 rounded-full opacity-30'
             style={{
               left: `${Math.random() * 100}%`,
               top: `${Math.random() * 100}%`,
@@ -246,25 +243,23 @@ const StatsSection = () => {
           }}
         >
           <motion.div
-            className='inline-flex items-center px-6 py-3 rounded-full bg-gradient-to-r from-indigo-50 to-purple-50 dark:from-indigo-950/50 dark:to-purple-950/50 border border-indigo-200 dark:border-indigo-800 backdrop-blur-sm mb-6'
+            className='inline-flex items-center px-6 py-3 rounded-full bg-theme-tertiary border border-theme-primary backdrop-blur-sm mb-6'
             whileHover={{ scale: 1.05 }}
           >
-            <span className='text-indigo-600 dark:text-indigo-400 text-sm font-medium'>
+            <span className='text-accent-primary text-sm font-medium'>
               📊 Our Impact
             </span>
           </motion.div>
 
           <h2 className='text-5xl lg:text-6xl font-bold mb-6'>
-            <span className='bg-gradient-to-r from-slate-900 to-slate-700 dark:from-slate-100 dark:to-slate-300 bg-clip-text text-transparent'>
-              Trusted by thousands
-            </span>
+            <span className='text-theme-primary'>Trusted by thousands</span>
             <br />
-            <span className='bg-gradient-to-r from-indigo-600 to-purple-600 dark:from-indigo-400 dark:to-purple-500 bg-clip-text text-transparent'>
+            <span className='bg-gradient-to-r from-indigo-600 to-purple-600 dark:from-blue-400 dark:to-indigo-500 bg-clip-text text-transparent'>
               worldwide
             </span>
           </h2>
 
-          <p className='text-xl text-slate-600 dark:text-slate-400 max-w-3xl mx-auto leading-relaxed'>
+          <p className='text-xl text-theme-secondary max-w-3xl mx-auto leading-relaxed'>
             See the real impact KHRONOS has made for content creators and
             businesses around the globe.
           </p>
@@ -290,11 +285,11 @@ const StatsSection = () => {
             },
           }}
         >
-          <p className='text-lg text-slate-600 dark:text-slate-400 mb-8'>
+          <p className='text-lg text-theme-secondary mb-8'>
             Ready to join our growing community?
           </p>
           <motion.button
-            className='px-8 py-4 bg-gradient-to-r from-indigo-600 to-purple-600 dark:from-indigo-500 dark:to-purple-600 text-white font-semibold rounded-2xl shadow-lg hover:shadow-xl dark:shadow-indigo-900/20 dark:hover:shadow-indigo-900/40 transition-all duration-300'
+            className='px-8 py-4 bg-accent-primary hover:bg-accent-secondary text-white font-semibold rounded-2xl shadow-theme-lg hover:shadow-theme-xl transition-all duration-300'
             whileHover={{ scale: 1.05 }}
             whileTap={{ scale: 0.95 }}
           >

@@ -13,9 +13,9 @@ interface ThemeToggleProps {
 }
 
 export function ThemeToggle({
-  variant = 'tabs',
-  showLabels = true,
-  size = 'md',
+  variant = 'compact',
+  showLabels = false,
+  size = 'sm',
   className = '',
 }: ThemeToggleProps) {
   const { theme, setTheme, mounted } = useTheme();
@@ -33,7 +33,7 @@ export function ThemeToggle({
               ? 'w-10 h-10'
               : 'w-32 h-10'
           } 
-          bg-gray-200 dark:bg-slate-700 rounded-lg animate-pulse ${className}
+          bg-theme-tertiary rounded-lg animate-pulse ${className}
         `}
       />
     );
@@ -60,23 +60,32 @@ export function ThemeToggle({
     lg: 'h-5 w-5',
   };
 
-  // Compact variant - just an icon button
+  // Compact variant - cycles through all 3 themes
   if (variant === 'compact') {
+    const cycleTheme = () => {
+      if (theme === 'light') {
+        setTheme('dark');
+      } else if (theme === 'dark') {
+        setTheme('system');
+      } else {
+        setTheme('light');
+      }
+    };
+
     return (
       <button
-        onClick={() => setTheme(theme === 'light' ? 'dark' : 'light')}
+        onClick={cycleTheme}
         disabled={false}
         className={`
           flex items-center justify-center ${sizeClasses[size]}
-          text-gray-600 dark:text-slate-400 
-          hover:text-accent-primary dark:hover:text-accent-primary
-          hover:bg-interactive-hover dark:hover:bg-interactive-hover
+          text-theme-secondary
+          hover:text-theme-primary hover:bg-theme-hover
           rounded-lg transition-all duration-200 
           focus:outline-none focus:ring-2 focus:ring-accent-primary/20
           disabled:opacity-50 disabled:cursor-not-allowed
           ${className}
         `}
-        title={`Current: ${currentTheme?.label}. Click to change theme.`}
+        title={`Current: ${currentTheme?.label}. Click to cycle themes.`}
       >
         <Icon className={iconSizes[size]} />
       </button>
@@ -92,9 +101,8 @@ export function ThemeToggle({
           disabled={false}
           className={`
             flex items-center justify-center ${sizeClasses[size]}
-            text-gray-600 dark:text-slate-400 
-            hover:text-accent-primary dark:hover:text-accent-primary
-            hover:bg-interactive-hover dark:hover:bg-interactive-hover
+            text-theme-secondary
+            hover:text-theme-primary hover:bg-theme-hover
             rounded-lg transition-all duration-200 
             focus:outline-none focus:ring-2 focus:ring-accent-primary/20
             disabled:opacity-50 disabled:cursor-not-allowed
@@ -111,7 +119,7 @@ export function ThemeToggle({
               animate={{ opacity: 1, scale: 1, y: 0 }}
               exit={{ opacity: 0, scale: 0.95, y: -10 }}
               transition={{ duration: 0.15 }}
-              className='absolute right-0 top-full mt-2 w-48 bg-white dark:bg-slate-800 rounded-lg shadow-lg border border-gray-200 dark:border-slate-700 py-1 z-50'
+              className='absolute right-0 top-full mt-2 w-48 bg-theme-card border border-theme-primary rounded-lg shadow-theme-lg py-1 z-50'
             >
               {themes.map(({ key, icon: ThemeIcon, label }) => (
                 <button
@@ -122,12 +130,12 @@ export function ThemeToggle({
                   }}
                   className={`
                     flex items-center gap-2 w-full px-3 py-2 text-sm
-                    hover:bg-interactive-hover dark:hover:bg-interactive-hover
+                    hover:bg-theme-hover
                     transition-colors duration-150
                     ${
                       theme === key
-                        ? 'text-accent-primary dark:text-accent-primary'
-                        : 'text-gray-700 dark:text-slate-300'
+                        ? 'text-accent-primary'
+                        : 'text-theme-secondary'
                     }
                   `}
                 >
@@ -178,7 +186,7 @@ export function ThemeToggle({
               animate={{ opacity: 1, scale: 1, y: 0 }}
               exit={{ opacity: 0, scale: 0.95, y: -10 }}
               transition={{ duration: 0.15 }}
-              className='absolute right-0 top-full mt-2 w-48 bg-white dark:bg-slate-800 rounded-lg shadow-lg border border-gray-200 dark:border-slate-700 py-1 z-50'
+              className='absolute right-0 top-full mt-2 w-48 bg-theme-card border border-theme-primary rounded-lg shadow-theme-lg py-1 z-50'
             >
               {themes.map(({ key, icon: ThemeIcon, label }) => (
                 <button
@@ -189,12 +197,12 @@ export function ThemeToggle({
                   }}
                   className={`
                     flex items-center gap-2 w-full px-3 py-2 text-sm
-                    hover:bg-interactive-hover dark:hover:bg-interactive-hover
+                    hover:bg-theme-hover
                     transition-colors duration-150
                     ${
                       theme === key
-                        ? 'text-accent-primary dark:text-accent-primary'
-                        : 'text-gray-700 dark:text-slate-300'
+                        ? 'text-accent-primary'
+                        : 'text-theme-secondary'
                     }
                   `}
                 >

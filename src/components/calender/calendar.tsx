@@ -31,22 +31,22 @@ export default function CalendarComponent({
 
   const PlatformIcons: Record<Platform['id'], () => ReactElement> = {
     instagram: () => (
-      <div className='w-4 h-4 bg-gradient-to-r from-pink-500 to-orange-500 rounded-full shadow-sm' />
+      <div className='w-3 h-3 sm:w-4 sm:h-4 bg-gradient-to-r from-pink-500 to-orange-500 rounded-full shadow-sm' />
     ),
     youtube: () => (
-      <div className='w-4 h-4 bg-red-500 rounded-full shadow-sm' />
+      <div className='w-3 h-3 sm:w-4 sm:h-4 bg-red-500 rounded-full shadow-sm' />
     ),
     twitter: () => (
-      <div className='w-4 h-4 bg-blue-400 rounded-full shadow-sm' />
+      <div className='w-3 h-3 sm:w-4 sm:h-4 bg-blue-400 rounded-full shadow-sm' />
     ),
     linkedin: () => (
-      <div className='w-4 h-4 bg-blue-600 rounded-full shadow-sm' />
+      <div className='w-3 h-3 sm:w-4 sm:h-4 bg-blue-600 rounded-full shadow-sm' />
     ),
     tiktok: () => (
-      <div className='w-4 h-4 bg-gradient-to-r from-black to-pink-500 rounded-full shadow-sm' />
+      <div className='w-3 h-3 sm:w-4 sm:h-4 bg-gradient-to-r from-black to-pink-500 rounded-full shadow-sm' />
     ),
     facebook: () => (
-      <div className='w-4 h-4 bg-blue-600 rounded-full shadow-sm' />
+      <div className='w-3 h-3 sm:w-4 sm:h-4 bg-blue-600 rounded-full shadow-sm' />
     ),
   };
 
@@ -116,29 +116,22 @@ export default function CalendarComponent({
   const isPastDate = (day: number) => {
     if (!day) return false;
     const today = new Date();
-    const dateToCheck = new Date(
-      currentDate.getFullYear(),
-      currentDate.getMonth(),
-      day
-    );
+    const currentMonth = currentDate.getMonth();
+    const currentYear = currentDate.getFullYear();
 
-    // Set time to beginning of day for accurate comparison
-    today.setHours(0, 0, 0, 0);
-    dateToCheck.setHours(0, 0, 0, 0);
+    if (currentYear < today.getFullYear()) return true;
+    if (currentYear > today.getFullYear()) return false;
 
-    return dateToCheck < today;
-  };
+    if (currentMonth < today.getMonth()) return true;
+    if (currentMonth > today.getMonth()) return false;
 
-  const canCreateContent = (day: number) => {
-    return !isPastDate(day);
+    return day < today.getDate();
   };
 
   const navigateMonth = (direction: number) => {
-    setCurrentDate((prev) => {
-      const newDate = new Date(prev);
-      newDate.setMonth(prev.getMonth() + direction);
-      return newDate;
-    });
+    setCurrentDate(
+      new Date(currentDate.getFullYear(), currentDate.getMonth() + direction, 1)
+    );
   };
 
   const getStatusColor = (status: string) => {
@@ -146,7 +139,7 @@ export default function CalendarComponent({
       case 'scheduled':
         return 'bg-emerald-500';
       case 'draft':
-        return 'bg-gray-500';
+        return 'bg-amber-500';
       case 'published':
         return 'bg-blue-500';
       default:
@@ -163,27 +156,21 @@ export default function CalendarComponent({
       day
     );
 
-    const content = getContentForDate(day);
-    const isContentCreationAllowed = canCreateContent(day);
+    console.log('📅 Date clicked:', dateKey);
     setSelectedDate(dateKey);
 
-    console.log(
-      `📅 Date clicked: ${dateKey}, Content count: ${content.length}`
-    );
+    const content = getContentForDate(day);
 
     if (content.length > 0) {
-      // Always show existing content, regardless of date
+      console.log('📅 Opening content modal for:', dateKey);
       setIsContentModalOpen(true);
-    } else if (isContentCreationAllowed) {
-      // Only allow content creation for present/future dates
-      setIsEmptyModalOpen(true);
+      if (onDateSelect) {
+        onDateSelect(dateKey);
+      }
     } else {
-      // Show a message for past dates with no content
+      console.log('📅 Opening empty date modal for:', dateKey);
       setIsEmptyModalOpen(true);
     }
-
-    setAnimatingOut(false);
-    onDateSelect?.(dateKey);
   };
 
   const closeModals = () => {
@@ -197,6 +184,7 @@ export default function CalendarComponent({
   };
 
   const days = getDaysInMonth(currentDate);
+
   const monthYear = currentDate.toLocaleDateString('en-US', {
     month: 'long',
     year: 'numeric',
@@ -225,77 +213,114 @@ export default function CalendarComponent({
 
   return (
     <>
-      <div className='relative bg-theme-card backdrop-blur-lg border border-theme-primary rounded-2xl sm:rounded-3xl overflow-hidden shadow-2xl'>
+      <div className='relative bg-theme-card backdrop-blur-lg border border-theme-primary rounded-xl sm:rounded-2xl lg:rounded-3xl overflow-hidden shadow-xl sm:shadow-2xl'>
         {/* Header */}
-        <div className='p-4 sm:p-6 bg-gradient-to-r from-accent-primary/10 to-accent-secondary/10 border-b border-theme-primary'>
-          <div className='flex flex-col sm:flex-row items-start sm:items-center justify-between mb-4 sm:mb-6'>
-            <h2 className='text-2xl sm:text-3xl font-bold text-theme-primary flex items-center space-x-2 sm:space-x-3 mb-4 sm:mb-0'>
-              <div className='p-2 sm:p-3 bg-gradient-to-r from-purple-500 to-pink-500 rounded-lg sm:rounded-xl shadow-lg'>
-                <Calendar className='w-5 h-5 sm:w-7 sm:h-7 text-white' />
-              </div>
-              <div>
-                <span>Content Calendar</span>
-                <p className='text-xs sm:text-sm font-normal text-theme-secondary mt-1'>
-                  Manage your social media schedule
-                </p>
-              </div>
-            </h2>
+        <div className='p-4 sm:p-6 lg:p-8 bg-gradient-to-r from-accent-primary/10 to-accent-secondary/10 border-b border-theme-primary'>
+          {/* Mobile Header Layout */}
+          <div className='block sm:hidden mb-4'>
+            <div className='flex items-center justify-between mb-4'>
+              <h2 className='text-xl font-bold text-theme-primary flex items-center space-x-2'>
+                <div className='p-2 bg-gradient-to-r from-purple-500 to-pink-500 rounded-lg shadow-lg'>
+                  <Calendar className='w-5 h-5 text-white' />
+                </div>
+                <span>Calendar</span>
+              </h2>
 
-            <div className='flex items-center space-x-2 sm:space-x-4 w-full sm:w-auto'>
-              <div className='flex items-center space-x-1 sm:space-x-2 bg-theme-tertiary rounded-xl sm:rounded-2xl px-3 sm:px-6 py-2 sm:py-3 backdrop-blur-sm border border-theme-primary'>
+              <div className='flex items-center space-x-2 bg-theme-tertiary rounded-xl px-3 py-2 backdrop-blur-sm border border-theme-primary'>
                 <button
                   onClick={() => navigateMonth(-1)}
-                  className='p-1 sm:p-2 hover:bg-theme-hover rounded-lg sm:rounded-xl transition-all text-theme-secondary hover:text-theme-primary hover:scale-110 active:scale-95'
+                  className='p-1 hover:bg-theme-hover rounded-lg transition-all text-theme-secondary hover:text-theme-primary hover:scale-110 active:scale-95'
                 >
-                  <ChevronLeft className='w-4 h-4 sm:w-5 sm:h-5' />
+                  <ChevronLeft className='w-4 h-4' />
                 </button>
 
-                <h3 className='text-base sm:text-xl font-semibold text-theme-primary min-w-[120px] sm:min-w-[180px] text-center'>
+                <h3 className='text-sm font-semibold text-theme-primary min-w-[100px] text-center'>
                   {monthYear}
                 </h3>
 
                 <button
                   onClick={() => navigateMonth(1)}
-                  className='p-1 sm:p-2 hover:bg-theme-hover rounded-lg sm:rounded-xl transition-all text-theme-secondary hover:text-theme-primary hover:scale-110 active:scale-95'
+                  className='p-1 hover:bg-theme-hover rounded-lg transition-all text-theme-secondary hover:text-theme-primary hover:scale-110 active:scale-95'
                 >
-                  <ChevronRight className='w-4 h-4 sm:w-5 sm:h-5' />
+                  <ChevronRight className='w-4 h-4' />
+                </button>
+              </div>
+            </div>
+
+            <p className='text-xs text-theme-secondary'>
+              Manage your social media schedule
+            </p>
+          </div>
+
+          {/* Desktop Header Layout */}
+          <div className='hidden sm:flex flex-col lg:flex-row items-start lg:items-center justify-between mb-4 lg:mb-6'>
+            <h2 className='text-2xl lg:text-3xl font-bold text-theme-primary flex items-center space-x-3 mb-4 lg:mb-0'>
+              <div className='p-3 bg-gradient-to-r from-purple-500 to-pink-500 rounded-xl shadow-lg'>
+                <Calendar className='w-7 h-7 text-white' />
+              </div>
+              <div>
+                <span>Content Calendar</span>
+                <p className='text-sm font-normal text-theme-secondary mt-1'>
+                  Manage your social media schedule
+                </p>
+              </div>
+            </h2>
+
+            <div className='flex items-center space-x-4'>
+              <div className='flex items-center space-x-2 bg-theme-tertiary rounded-2xl px-6 py-3 backdrop-blur-sm border border-theme-primary'>
+                <button
+                  onClick={() => navigateMonth(-1)}
+                  className='p-2 hover:bg-theme-hover rounded-xl transition-all text-theme-secondary hover:text-theme-primary hover:scale-110 active:scale-95'
+                >
+                  <ChevronLeft className='w-5 h-5' />
+                </button>
+
+                <h3 className='text-xl font-semibold text-theme-primary min-w-[180px] text-center'>
+                  {monthYear}
+                </h3>
+
+                <button
+                  onClick={() => navigateMonth(1)}
+                  className='p-2 hover:bg-theme-hover rounded-xl transition-all text-theme-secondary hover:text-theme-primary hover:scale-110 active:scale-95'
+                >
+                  <ChevronRight className='w-5 h-5' />
                 </button>
               </div>
             </div>
           </div>
 
           {/* Enhanced Legend */}
-          <div className='flex flex-col sm:flex-row items-start sm:items-center justify-between space-y-2 sm:space-y-0'>
-            <div className='flex flex-wrap items-center gap-4 sm:gap-8 text-xs sm:text-sm'>
+          <div className='flex flex-col sm:flex-row items-start sm:items-center justify-between space-y-3 sm:space-y-0'>
+            <div className='flex flex-wrap items-center gap-3 sm:gap-6 text-xs sm:text-sm'>
               <div className='flex items-center space-x-2 group cursor-pointer'>
-                <div className='w-2 h-2 sm:w-3 sm:h-3 rounded-full bg-emerald-500 group-hover:animate-pulse shadow-lg'></div>
+                <div className='w-3 h-3 rounded-full bg-emerald-500 group-hover:animate-pulse shadow-lg'></div>
                 <span className='text-theme-secondary group-hover:text-theme-primary transition-colors'>
                   Scheduled
                 </span>
               </div>
               <div className='flex items-center space-x-2 group cursor-pointer'>
-                <div className='w-2 h-2 sm:w-3 sm:h-3 rounded-full bg-amber-500 group-hover:animate-pulse shadow-lg'></div>
+                <div className='w-3 h-3 rounded-full bg-amber-500 group-hover:animate-pulse shadow-lg'></div>
                 <span className='text-theme-secondary group-hover:text-theme-primary transition-colors'>
                   Draft
                 </span>
               </div>
               <div className='flex items-center space-x-2 group cursor-pointer'>
-                <div className='w-2 h-2 sm:w-3 sm:h-3 rounded-full bg-blue-500 group-hover:animate-pulse shadow-lg'></div>
+                <div className='w-3 h-3 rounded-full bg-blue-500 group-hover:animate-pulse shadow-lg'></div>
                 <span className='text-theme-secondary group-hover:text-theme-primary transition-colors'>
                   Published
                 </span>
               </div>
             </div>
-            <div className='text-[10px] sm:text-xs text-theme-muted bg-theme-tertiary px-2 sm:px-3 py-1 rounded-lg'>
+            <div className='text-xs text-theme-muted bg-theme-tertiary px-3 py-1 rounded-lg'>
               Click on any date to view or add content
             </div>
           </div>
         </div>
 
         {/* Calendar Grid */}
-        <div className='p-4 sm:p-6 md:p-8'>
+        <div className='p-3 sm:p-6 lg:p-8'>
           {/* Day Headers */}
-          <div className='grid grid-cols-7 gap-1 sm:gap-2 md:gap-3 mb-4 sm:mb-6'>
+          <div className='grid grid-cols-7 gap-2 sm:gap-3 lg:gap-4 mb-4 sm:mb-6'>
             {[
               'Sunday',
               'Monday',
@@ -307,7 +332,7 @@ export default function CalendarComponent({
             ].map((day) => (
               <div
                 key={day}
-                className='text-center text-theme-secondary font-semibold py-2 sm:py-4 text-xs sm:text-sm uppercase tracking-wider bg-theme-tertiary rounded-lg sm:rounded-xl'
+                className='text-center text-theme-secondary font-semibold py-2 sm:py-3 lg:py-4 text-xs sm:text-sm lg:text-base uppercase tracking-wider bg-theme-tertiary rounded-lg sm:rounded-xl'
               >
                 {day.slice(0, 3)}
               </div>
@@ -315,7 +340,7 @@ export default function CalendarComponent({
           </div>
 
           {/* Calendar Days */}
-          <div className='grid grid-cols-7 gap-1 sm:gap-2 md:gap-3'>
+          <div className='grid grid-cols-7 gap-2 sm:gap-3 lg:gap-4'>
             {days.map((day, index) => {
               const content = getContentForDate(day as number);
               const dateKey = day
@@ -329,7 +354,7 @@ export default function CalendarComponent({
               return (
                 <div
                   key={index}
-                  className={`relative group aspect-square flex flex-col rounded-lg sm:rounded-2xl cursor-pointer transition-all duration-300 border-2 ${
+                  className={`relative group min-h-[60px] sm:min-h-[80px] lg:min-h-[100px] flex flex-col rounded-lg sm:rounded-xl lg:rounded-2xl cursor-pointer transition-all duration-300 border-2 ${
                     !day
                       ? 'border-transparent opacity-40'
                       : isToday(day)
@@ -349,18 +374,18 @@ export default function CalendarComponent({
                   {day && (
                     <>
                       {/* Day Number */}
-                      <div className='flex-1 flex items-center justify-center p-1 sm:p-2'>
+                      <div className='flex-1 flex items-center justify-center p-2 sm:p-3'>
                         <span
-                          className={`text-base sm:text-xl font-bold transition-all duration-200 ${
+                          className={`text-lg sm:text-xl lg:text-2xl font-bold transition-all duration-200 ${
                             isToday(day)
-                              ? 'text-white text-lg sm:text-2xl drop-shadow-lg font-black'
+                              ? 'text-white text-xl sm:text-2xl lg:text-3xl drop-shadow-lg font-black'
                               : isPastDate(day)
                               ? content.length > 0
                                 ? 'text-theme-secondary group-hover:text-theme-primary'
                                 : 'text-theme-muted'
                               : content.length > 0
-                              ? 'text-theme-primary group-hover:text-lg sm:group-hover:text-2xl group-hover:drop-shadow-lg'
-                              : 'text-theme-secondary group-hover:text-theme-primary group-hover:text-base sm:group-hover:text-xl'
+                              ? 'text-theme-primary group-hover:text-lg sm:group-hover:text-2xl lg:group-hover:text-3xl group-hover:drop-shadow-lg'
+                              : 'text-theme-secondary group-hover:text-theme-primary group-hover:text-lg sm:group-hover:text-xl lg:group-hover:text-2xl'
                           }`}
                         >
                           {day}
@@ -369,16 +394,16 @@ export default function CalendarComponent({
 
                       {/* Content Indicators */}
                       {content.length > 0 && (
-                        <div className='absolute bottom-1 sm:bottom-3 left-1/2 transform -translate-x-1/2 space-y-1 sm:space-y-2'>
+                        <div className='absolute bottom-2 sm:bottom-3 lg:bottom-4 left-1/2 transform -translate-x-1/2 space-y-1 sm:space-y-2'>
                           {/* Platform Icons Row */}
-                          <div className='flex items-center justify-center space-x-0.5 sm:space-x-1'>
-                            {content.slice(0, 4).map((item, idx) => {
+                          <div className='flex items-center justify-center space-x-1 sm:space-x-1.5'>
+                            {content.slice(0, 3).map((item, idx) => {
                               const IconComponent =
                                 PlatformIcons[item.platform as Platform['id']];
                               return (
                                 <div
                                   key={idx}
-                                  className={`w-4 h-4 sm:w-6 sm:h-6 rounded-md sm:rounded-lg bg-gradient-to-r ${
+                                  className={`w-5 h-5 sm:w-6 sm:h-6 lg:w-7 lg:h-7 rounded-md sm:rounded-lg bg-gradient-to-r ${
                                     platformColors[
                                       item.platform as Platform['id']
                                     ] || 'from-gray-500 to-gray-600'
@@ -388,21 +413,21 @@ export default function CalendarComponent({
                                 </div>
                               );
                             })}
-                            {content.length > 4 && (
-                              <div className='w-4 h-4 sm:w-6 sm:h-6 rounded-md sm:rounded-lg bg-theme-tertiary backdrop-blur-sm flex items-center justify-center border border-theme-primary shadow-lg'>
-                                <span className='text-[8px] sm:text-xs text-theme-primary font-bold'>
-                                  +{content.length - 4}
+                            {content.length > 3 && (
+                              <div className='w-5 h-5 sm:w-6 sm:h-6 lg:w-7 lg:h-7 rounded-md sm:rounded-lg bg-theme-tertiary backdrop-blur-sm flex items-center justify-center border border-theme-primary shadow-lg'>
+                                <span className='text-[10px] sm:text-xs lg:text-sm text-theme-primary font-bold'>
+                                  +{content.length - 3}
                                 </span>
                               </div>
                             )}
                           </div>
 
                           {/* Status indicators */}
-                          <div className='flex justify-center space-x-0.5 sm:space-x-1'>
-                            {content.slice(0, 6).map((item, idx) => (
+                          <div className='flex justify-center space-x-1 sm:space-x-1.5'>
+                            {content.slice(0, 4).map((item, idx) => (
                               <div
                                 key={idx}
-                                className={`w-1.5 h-1.5 sm:w-2 sm:h-2 rounded-full ${getStatusColor(
+                                className={`w-2 h-2 sm:w-2.5 sm:h-2.5 lg:w-3 lg:h-3 rounded-full ${getStatusColor(
                                   item.status
                                 )} shadow-sm border border-theme-inverse/30 group-hover:animate-pulse`}
                               ></div>
@@ -413,7 +438,7 @@ export default function CalendarComponent({
 
                       {/* Hover Effect Overlay */}
                       {hoveredDate === dateKey && (
-                        <div className='absolute inset-0 bg-gradient-to-br from-accent-primary/20 to-accent-secondary/20 rounded-lg sm:rounded-2xl border-2 border-accent-primary/50 animate-pulse' />
+                        <div className='absolute inset-0 bg-gradient-to-br from-accent-primary/20 to-accent-secondary/20 rounded-lg sm:rounded-xl lg:rounded-2xl border-2 border-accent-primary/50 animate-pulse' />
                       )}
                     </>
                   )}
@@ -424,37 +449,37 @@ export default function CalendarComponent({
         </div>
 
         {/* Enhanced Stats Footer */}
-        <div className='p-4 sm:p-6 md:p-8 bg-gradient-to-r from-theme-tertiary to-theme-secondary border-t border-theme-primary'>
-          <div className='grid grid-cols-2 md:grid-cols-4 gap-3 sm:gap-4 md:gap-6'>
+        <div className='p-4 sm:p-6 lg:p-8 bg-gradient-to-r from-theme-tertiary to-theme-secondary border-t border-theme-primary'>
+          <div className='grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 lg:gap-6'>
             <div className='text-center group cursor-pointer transition-all duration-300 hover:scale-110 bg-theme-card rounded-xl sm:rounded-2xl p-3 sm:p-4 hover:bg-theme-hover'>
-              <div className='text-2xl sm:text-3xl md:text-4xl font-bold text-theme-primary group-hover:text-accent-primary transition-colors mb-1 sm:mb-2 drop-shadow-lg'>
+              <div className='text-xl sm:text-2xl lg:text-3xl xl:text-4xl font-bold text-theme-primary group-hover:text-accent-primary transition-colors mb-1 sm:mb-2 drop-shadow-lg'>
                 {totalPosts}
               </div>
-              <div className='text-xs sm:text-sm text-theme-secondary group-hover:text-theme-primary font-medium'>
+              <div className='text-xs sm:text-sm lg:text-base text-theme-secondary group-hover:text-theme-primary font-medium'>
                 Total Posts
               </div>
             </div>
             <div className='text-center group cursor-pointer transition-all duration-300 hover:scale-110 bg-theme-card rounded-xl sm:rounded-2xl p-3 sm:p-4 hover:bg-theme-hover'>
-              <div className='text-2xl sm:text-3xl md:text-4xl font-bold text-accent-success group-hover:text-accent-success transition-colors mb-1 sm:mb-2 drop-shadow-lg'>
+              <div className='text-xl sm:text-2xl lg:text-3xl xl:text-4xl font-bold text-accent-success group-hover:text-accent-success transition-colors mb-1 sm:mb-2 drop-shadow-lg'>
                 {scheduledPosts}
               </div>
-              <div className='text-xs sm:text-sm text-theme-secondary group-hover:text-theme-primary font-medium'>
+              <div className='text-xs sm:text-sm lg:text-base text-theme-secondary group-hover:text-theme-primary font-medium'>
                 Scheduled
               </div>
             </div>
             <div className='text-center group cursor-pointer transition-all duration-300 hover:scale-110 bg-theme-card rounded-xl sm:rounded-2xl p-3 sm:p-4 hover:bg-theme-hover'>
-              <div className='text-2xl sm:text-3xl md:text-4xl font-bold text-accent-warning group-hover:text-accent-warning transition-colors mb-1 sm:mb-2 drop-shadow-lg'>
+              <div className='text-xl sm:text-2xl lg:text-3xl xl:text-4xl font-bold text-accent-warning group-hover:text-accent-warning transition-colors mb-1 sm:mb-2 drop-shadow-lg'>
                 {draftPosts}
               </div>
-              <div className='text-xs sm:text-sm text-theme-secondary group-hover:text-theme-primary font-medium'>
+              <div className='text-xs sm:text-sm lg:text-base text-theme-secondary group-hover:text-theme-primary font-medium'>
                 Drafts
               </div>
             </div>
             <div className='text-center group cursor-pointer transition-all duration-300 hover:scale-110 bg-theme-card rounded-xl sm:rounded-2xl p-3 sm:p-4 hover:bg-theme-hover'>
-              <div className='text-2xl sm:text-3xl md:text-4xl font-bold text-accent-primary group-hover:text-accent-primary transition-colors mb-1 sm:mb-2 drop-shadow-lg'>
+              <div className='text-xl sm:text-2xl lg:text-3xl xl:text-4xl font-bold text-accent-primary group-hover:text-accent-primary transition-colors mb-1 sm:mb-2 drop-shadow-lg'>
                 {activeDays}
               </div>
-              <div className='text-xs sm:text-sm text-theme-secondary group-hover:text-theme-primary font-medium'>
+              <div className='text-xs sm:text-sm lg:text-base text-theme-secondary group-hover:text-theme-primary font-medium'>
                 Active Days
               </div>
             </div>
