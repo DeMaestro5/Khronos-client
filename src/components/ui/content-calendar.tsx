@@ -114,7 +114,15 @@ const ContentCalendar = () => {
     if (typeof icon === 'string') {
       return icon;
     }
-    return <Image src={icon} alt={type} width={20} height={20} />;
+    return (
+      <Image
+        src={icon}
+        alt={type}
+        width={16}
+        height={16}
+        className='sm:w-5 sm:h-5'
+      />
+    );
   };
 
   // Get days in current month
@@ -176,27 +184,27 @@ const ContentCalendar = () => {
   const weekDays = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
 
   return (
-    <div className='bg-white rounded-2xl shadow-2xl border border-slate-200 p-6 max-w-md mx-auto'>
+    <div className='bg-white rounded-xl sm:rounded-2xl shadow-2xl border border-slate-200 p-3 sm:p-4 lg:p-6 w-full max-w-xs sm:max-w-sm lg:max-w-md mx-auto'>
       {/* Calendar Header */}
-      <div className='flex items-center justify-between mb-4'>
+      <div className='flex items-center justify-between mb-3 sm:mb-4'>
         <div>
-          <h3 className='text-lg font-semibold text-slate-800'>
+          <h3 className='text-base sm:text-lg font-semibold text-slate-800'>
             {monthNames[currentDate.getMonth()]} {currentDate.getFullYear()}
           </h3>
-          <p className='text-sm text-slate-500'>Khronos Calendar</p>
+          <p className='text-xs sm:text-sm text-slate-500'>Khronos Calendar</p>
         </div>
         <div className='flex items-center space-x-2'>
-          <div className='w-2 h-2 bg-green-400 rounded-full animate-pulse'></div>
+          <div className='w-1.5 h-1.5 sm:w-2 sm:h-2 bg-green-400 rounded-full animate-pulse'></div>
           <span className='text-xs text-slate-500'>Live</span>
         </div>
       </div>
 
       {/* Week Days Header */}
-      <div className='grid grid-cols-7 gap-1 mb-2'>
+      <div className='grid grid-cols-7 gap-0.5 sm:gap-1 mb-2'>
         {weekDays.map((day) => (
           <div
             key={day}
-            className='text-center text-xs font-medium text-slate-500 py-2'
+            className='text-center text-xs font-medium text-slate-500 py-1 sm:py-2'
           >
             {day}
           </div>
@@ -204,7 +212,7 @@ const ContentCalendar = () => {
       </div>
 
       {/* Calendar Grid */}
-      <div className='grid grid-cols-7 gap-1'>
+      <div className='grid grid-cols-7 gap-0.5 sm:gap-1'>
         {getDaysInMonth().map((day, index) => {
           const dateKey = day ? formatDateKey(day) : null;
           const dayContent = dateKey ? contentData[dateKey] : null;
@@ -214,9 +222,13 @@ const ContentCalendar = () => {
             <motion.div
               key={index}
               className={`
-                relative aspect-square p-1 rounded-lg text-center text-sm
+                relative aspect-square p-0.5 sm:p-1 rounded-md sm:rounded-lg text-center text-xs sm:text-sm
                 ${day ? 'hover:bg-slate-50' : ''}
-                ${isToday(day) ? 'bg-indigo-50 border-2 border-indigo-200' : ''}
+                ${
+                  isToday(day)
+                    ? 'bg-indigo-50 border border-indigo-200 sm:border-2'
+                    : ''
+                }
                 ${hasContent ? 'cursor-pointer' : ''}
               `}
               whileHover={hasContent ? { scale: 1.05 } : {}}
@@ -226,7 +238,7 @@ const ContentCalendar = () => {
                 <>
                   <div
                     className={`
-                    text-xs font-medium mb-1
+                    text-xs font-medium mb-0.5 sm:mb-1
                     ${
                       isToday(day)
                         ? 'text-indigo-600 font-bold'
@@ -244,7 +256,7 @@ const ContentCalendar = () => {
                         <motion.div
                           key={post.id}
                           className={`
-                            h-1.5 rounded-full mx-0.5 ${post.color}
+                            h-1 sm:h-1.5 rounded-full mx-0.5 ${post.color}
                             ${post.color.includes('gradient') ? '' : ''}
                           `}
                           initial={{ width: 0 }}
@@ -270,7 +282,7 @@ const ContentCalendar = () => {
 
       {/* Stats Footer */}
       <motion.div
-        className='mt-4 pt-4 border-t border-slate-100 flex justify-between text-xs'
+        className='mt-3 sm:mt-4 pt-3 sm:pt-4 border-t border-slate-100 flex justify-between text-xs'
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         transition={{ delay: 0.5 }}
@@ -289,10 +301,10 @@ const ContentCalendar = () => {
         </div>
       </motion.div>
 
-      {/* Hover Tooltip */}
+      {/* Hover Tooltip - Hidden on mobile due to space constraints */}
       {hoveredPost && (
         <motion.div
-          className='absolute top-full left-1/2 transform -translate-x-1/2 mt-2 bg-slate-800 text-white p-3 rounded-lg shadow-xl z-10 min-w-48'
+          className='hidden sm:block absolute top-full left-1/2 transform -translate-x-1/2 mt-2 bg-slate-800 text-white p-3 rounded-lg shadow-xl z-10 min-w-48'
           initial={{ opacity: 0, y: -10 }}
           animate={{ opacity: 1, y: 0 }}
           exit={{ opacity: 0, y: -10 }}
@@ -311,7 +323,7 @@ const ContentCalendar = () => {
 
       {/* Platform Legend */}
       <motion.div
-        className='mt-4 flex justify-center space-x-3'
+        className='mt-3 sm:mt-4 flex justify-center space-x-2 sm:space-x-3 flex-wrap gap-1'
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         transition={{ delay: 0.7 }}
@@ -325,7 +337,7 @@ const ContentCalendar = () => {
               whileHover={{ scale: 1.1 }}
             >
               <span>{renderPlatformIcon(platform as Post['type'])}</span>
-              <span className='capitalize'>{platform}</span>
+              <span className='capitalize hidden sm:inline'>{platform}</span>
             </motion.div>
           ))}
       </motion.div>
