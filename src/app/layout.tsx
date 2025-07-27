@@ -36,15 +36,30 @@ export default function RootLayout({
                           color: 'var(--toast-text)',
                           border: '1px solid var(--toast-border)',
                           borderRadius: '12px',
-                          padding: '16px',
+                          padding: '12px 16px',
                           fontSize: '14px',
-                          maxWidth: '500px',
+                          maxWidth: '400px',
+                          minWidth: '280px',
+                          boxShadow:
+                            '0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05)',
                         },
                         success: {
                           duration: 5000,
                           iconTheme: {
                             primary: '#10b981',
                             secondary: 'var(--toast-text)',
+                          },
+                          style: {
+                            background: 'var(--toast-bg)',
+                            color: 'var(--toast-text)',
+                            border: '1px solid var(--toast-border)',
+                            borderRadius: '12px',
+                            padding: '12px 16px',
+                            fontSize: '14px',
+                            maxWidth: '400px',
+                            minWidth: '280px',
+                            boxShadow:
+                              '0 10px 25px -5px rgba(16, 185, 129, 0.1), 0 4px 6px -2px rgba(16, 185, 129, 0.05)',
                           },
                         },
                         loading: {
@@ -53,6 +68,18 @@ export default function RootLayout({
                             primary: '#8b5cf6',
                             secondary: 'var(--toast-text)',
                           },
+                          style: {
+                            background: 'var(--toast-bg)',
+                            color: 'var(--toast-text)',
+                            border: '1px solid var(--toast-border)',
+                            borderRadius: '12px',
+                            padding: '12px 16px',
+                            fontSize: '14px',
+                            maxWidth: '400px',
+                            minWidth: '280px',
+                            boxShadow:
+                              '0 10px 25px -5px rgba(139, 92, 246, 0.1), 0 4px 6px -2px rgba(139, 92, 246, 0.05)',
+                          },
                         },
                         error: {
                           duration: 6000,
@@ -60,8 +87,26 @@ export default function RootLayout({
                             primary: '#ef4444',
                             secondary: 'var(--toast-text)',
                           },
+                          style: {
+                            background: 'var(--toast-bg)',
+                            color: 'var(--toast-text)',
+                            border: '1px solid var(--toast-border)',
+                            borderRadius: '12px',
+                            padding: '12px 16px',
+                            fontSize: '14px',
+                            maxWidth: '400px',
+                            minWidth: '280px',
+                            boxShadow:
+                              '0 10px 25px -5px rgba(239, 68, 68, 0.1), 0 4px 6px -2px rgba(239, 68, 68, 0.05)',
+                          },
                         },
                       }}
+                      containerStyle={{
+                        top: '1rem',
+                        left: '50%',
+                        transform: 'translateX(-50%)',
+                      }}
+                      containerClassName='!z-[9999]'
                     />
                   </ConfettiProvider>{' '}
                 </NotificationProvider>

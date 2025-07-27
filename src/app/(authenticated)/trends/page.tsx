@@ -63,6 +63,26 @@ const TrendsPage: React.FC = () => {
   // Add ref to track previous filters to detect actual changes
   const previousFiltersRef = useRef<TrendsFilters | null>(null);
 
+  // Add refs to track ongoing operations and prevent duplicate toasts
+  const ongoingFilterOperationRef = useRef<string | null>(null);
+  const ongoingRefreshOperationRef = useRef<string | null>(null);
+  const activeToastIdsRef = useRef<Set<string>>(new Set());
+
+  // Cleanup function to dismiss all active toasts when component unmounts
+  const cleanupToasts = () => {
+    activeToastIdsRef.current.forEach((toastId) => {
+      toast.dismiss(toastId);
+    });
+    activeToastIdsRef.current.clear();
+  };
+
+  // Cleanup on unmount
+  useEffect(() => {
+    return () => {
+      cleanupToasts();
+    };
+  }, []);
+
   // Use cached trends data instead of fetching directly
   useEffect(() => {
     console.log('Trends page: Using cached data', {
@@ -127,10 +147,22 @@ const TrendsPage: React.FC = () => {
         current: filters,
       });
 
+      // Check if there's already an ongoing filter operation
+      if (ongoingFilterOperationRef.current) {
+        console.log(
+          'Trends page: Filter operation already in progress, skipping'
+        );
+        return;
+      }
+
       // Update the ref with current filters
       previousFiltersRef.current = { ...filters };
 
       setIsRefreshing(true);
+
+      // Create unique operation ID
+      const operationId = `filter-${Date.now()}`;
+      ongoingFilterOperationRef.current = operationId;
 
       const toastId = toast.loading(
         <div className='flex items-center space-x-3'>
@@ -142,6 +174,7 @@ const TrendsPage: React.FC = () => {
           </div>
         </div>,
         {
+          id: `filter-toast-${operationId}`,
           style: {
             background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
             color: 'white',
@@ -152,10 +185,14 @@ const TrendsPage: React.FC = () => {
               '0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04)',
             backdropFilter: 'blur(10px)',
             minWidth: '320px',
+            maxWidth: '400px',
           },
           duration: Infinity,
         }
       );
+
+      // Track the toast ID for cleanup
+      activeToastIdsRef.current.add(toastId);
 
       refreshTrendsData()
         .then(() => {
@@ -197,6 +234,7 @@ const TrendsPage: React.FC = () => {
                 boxShadow:
                   '0 20px 25px -5px rgba(16, 185, 129, 0.1), 0 10px 10px -5px rgba(16, 185, 129, 0.04)',
                 minWidth: '320px',
+                maxWidth: '400px',
               },
             }
           );
@@ -241,11 +279,16 @@ const TrendsPage: React.FC = () => {
                 boxShadow:
                   '0 20px 25px -5px rgba(239, 68, 68, 0.1), 0 10px 10px -5px rgba(239, 68, 68, 0.04)',
                 minWidth: '320px',
+                maxWidth: '400px',
               },
             }
           );
         })
-        .finally(() => setIsRefreshing(false));
+        .finally(() => {
+          setIsRefreshing(false);
+          ongoingFilterOperationRef.current = null;
+          activeToastIdsRef.current.delete(toastId);
+        });
     } else {
       console.log('Trends page: No filter changes detected, skipping refresh');
     }
@@ -355,7 +398,20 @@ const TrendsPage: React.FC = () => {
         setShowFilters={setShowFilters}
         isRefreshing={isRefreshing}
         onRefresh={async () => {
+          // Check if there's already an ongoing refresh operation
+          if (ongoingRefreshOperationRef.current) {
+            console.log(
+              'Trends page: Refresh operation already in progress, skipping'
+            );
+            return;
+          }
+
           setIsRefreshing(true);
+
+          // Create unique operation ID
+          const operationId = `refresh-${Date.now()}`;
+          ongoingRefreshOperationRef.current = operationId;
+
           const toastId = toast.loading(
             <div className='flex items-center space-x-3'>
               <div>
@@ -368,6 +424,7 @@ const TrendsPage: React.FC = () => {
               </div>
             </div>,
             {
+              id: `refresh-toast-${operationId}`,
               style: {
                 background: 'linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%)',
                 color: 'white',
@@ -378,10 +435,14 @@ const TrendsPage: React.FC = () => {
                   '0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04)',
                 backdropFilter: 'blur(10px)',
                 minWidth: '320px',
+                maxWidth: '400px',
               },
               duration: Infinity,
             }
           );
+
+          // Track the toast ID for cleanup
+          activeToastIdsRef.current.add(toastId);
 
           try {
             await refreshTrendsData();
@@ -424,6 +485,7 @@ const TrendsPage: React.FC = () => {
                   boxShadow:
                     '0 20px 25px -5px rgba(16, 185, 129, 0.1), 0 10px 10px -5px rgba(16, 185, 129, 0.04)',
                   minWidth: '320px',
+                  maxWidth: '400px',
                 },
               }
             );
@@ -468,11 +530,14 @@ const TrendsPage: React.FC = () => {
                   boxShadow:
                     '0 20px 25px -5px rgba(239, 68, 68, 0.1), 0 10px 10px -5px rgba(239, 68, 68, 0.04)',
                   minWidth: '320px',
+                  maxWidth: '400px',
                 },
               }
             );
           } finally {
             setIsRefreshing(false);
+            ongoingRefreshOperationRef.current = null;
+            activeToastIdsRef.current.delete(toastId);
           }
         }}
       />

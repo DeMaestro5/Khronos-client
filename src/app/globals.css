@@ -93,29 +93,50 @@ svg[data-testid*='next'] {
   }
 
   /* Ensure text doesn't overflow in tab labels */
-  .text-xs.leading-tight {
+  .text-xs {
     font-size: 0.75rem !important;
-    line-height: 1.25 !important;
-    white-space: nowrap !important;
-    overflow: hidden !important;
-    text-overflow: ellipsis !important;
+    line-height: 1rem !important;
   }
 
-  /* Mobile toggle switch improvements */
-  button[type='button'] {
-    min-height: 44px;
-    min-width: 44px;
+  /* Mobile-optimized toaster notifications */
+  [data-react-hot-toast] {
+    position: fixed !important;
+    top: 1rem !important;
+    left: 50% !important;
+    transform: translateX(-50%) !important;
+    z-index: 9999 !important;
+    max-width: 350px !important;
+    min-width: 280px !important;
   }
 
-  /* Ensure toggle switches are touch-friendly */
-  .relative.inline-flex.h-5.w-10 {
-    min-height: 44px !important;
-    min-width: 44px !important;
+  [data-react-hot-toast] > div {
+    border-radius: 0.75rem !important;
+    padding: 0.75rem 1rem !important;
+    font-size: 0.875rem !important;
+    line-height: 1.25rem !important;
+    box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1),
+      0 4px 6px -2px rgba(0, 0, 0, 0.05) !important;
+    backdrop-filter: blur(8px) !important;
   }
 
-  /* Better visual feedback for toggle switches */
-  .relative.inline-flex.h-5.w-10:active {
-    transform: scale(0.95);
+  /* Mobile-specific toast positioning */
+  [data-react-hot-toast] [role='status'] {
+    margin: 0.5rem !important;
+    max-width: 350px !important;
+  }
+
+  /* Ensure toasts don't overlap with mobile navigation */
+  @media (max-width: 640px) {
+    [data-react-hot-toast] {
+      top: 0.5rem !important;
+      max-width: calc(100vw - 2rem) !important;
+      min-width: 280px !important;
+    }
+
+    [data-react-hot-toast] > div {
+      padding: 0.625rem 0.875rem !important;
+      font-size: 0.8125rem !important;
+    }
   }
 }
 
