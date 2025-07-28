@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useRef, useEffect } from 'react';
+import React, { useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useNotifications } from '@/src/context/NotificationContext';
 import {
@@ -26,6 +26,7 @@ import { formatDistanceToNow } from 'date-fns';
 interface NotificationDropdownProps {
   isOpen: boolean;
   onClose: () => void;
+  dropdownRef: React.RefObject<HTMLDivElement | null>;
 }
 
 const getNotificationIcon = (type: NotificationType) => {
@@ -157,8 +158,8 @@ const MobileNotificationItem = ({
 export default function NotificationDropdown({
   isOpen,
   onClose,
+  dropdownRef,
 }: NotificationDropdownProps) {
-  const dropdownRef = useRef<HTMLDivElement>(null);
   const {
     notifications,
     unreadCount,

@@ -1,7 +1,7 @@
 'use client';
 
 import Link from 'next/link';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import Image from 'next/image';
 import {
   FiBell,
@@ -32,6 +32,13 @@ export default function Navbar() {
   const { profileData, loading: userDataLoading } = useUserData();
   const { theme, cycleTheme, mounted: themeMounted } = useTheme();
 
+  // Refs for outside click detection
+  const notificationButtonRef = useRef<HTMLButtonElement>(null);
+  const notificationDropdownRef = useRef<HTMLDivElement>(null);
+
+  const profileButton = useRef<HTMLButtonElement>(null);
+  const profileDropdown = useRef<HTMLDivElement>(null);
+
   // Handle theme mounting
   useEffect(() => {
     setMounted(true);
@@ -44,16 +51,22 @@ export default function Navbar() {
 
       // Close notifications dropdown
       if (
-        !target.closest('.notification-dropdown') &&
-        !target.closest('.notification-button')
+        notificationsOpen &&
+        notificationDropdownRef.current &&
+        notificationButtonRef.current &&
+        !notificationDropdownRef.current.contains(target) &&
+        !notificationButtonRef.current.contains(target)
       ) {
         setNotificationsOpen(false);
       }
 
       // Close profile dropdown
       if (
-        !target.closest('.profile-dropdown') &&
-        !target.closest('.profile-button')
+        profileOpen &&
+        profileDropdown.current &&
+        profileButton.current &&
+        !profileDropdown.current.contains(target) &&
+        !profileButton.current.contains(target)
       ) {
         setProfileOpen(false);
       }
@@ -61,7 +74,7 @@ export default function Navbar() {
 
     document.addEventListener('mousedown', handleClickOutside);
     return () => document.removeEventListener('mousedown', handleClickOutside);
-  }, []);
+  }, [notificationsOpen, profileOpen]);
 
   // Use profile data or fallback to context user
   const user = profileData || contextUser;
@@ -188,6 +201,7 @@ export default function Navbar() {
             {/* Enhanced Notifications */}
             <div className='relative'>
               <button
+                ref={notificationButtonRef}
                 className='notification-button relative p-3 text-theme-secondary hover:text-accent-primary hover:bg-theme-hover rounded-xl focus:outline-none focus:ring-2 focus:ring-accent-primary/20 transition-all duration-200 shadow-theme-sm hover:shadow-theme-md group'
                 onClick={() => setNotificationsOpen(!notificationsOpen)}
               >
@@ -206,6 +220,7 @@ export default function Navbar() {
                 <NotificationDropdown
                   isOpen={notificationsOpen}
                   onClose={() => setNotificationsOpen(false)}
+                  dropdownRef={notificationDropdownRef}
                 />
               </div>
             </div>
@@ -213,6 +228,7 @@ export default function Navbar() {
             {/* Simplified Profile Dropdown */}
             <div className='relative'>
               <button
+                ref={profileButton}
                 className='profile-button flex items-center space-x-3 p-2 text-sm rounded-xl hover:bg-theme-hover focus:outline-none focus:ring-2 focus:ring-accent-primary/20 transition-all duration-200 shadow-theme-sm hover:shadow-theme-md group'
                 onClick={() => setProfileOpen(!profileOpen)}
                 disabled={userDataLoading}
@@ -258,7 +274,10 @@ export default function Navbar() {
 
               {/* Simplified Profile Dropdown Menu */}
               {profileOpen && user && (
-                <div className='profile-dropdown origin-top-right absolute right-0 mt-3 w-56 sm:w-64 rounded-xl shadow-theme-xl bg-theme-card backdrop-blur-2xl ring-1 ring-black ring-opacity-5 dark:ring-slate-600 z-20 border border-theme-primary overflow-hidden'>
+                <div
+                  ref={profileDropdown}
+                  className='profile-dropdown origin-top-right absolute right-0 mt-3 w-56 sm:w-64 rounded-xl shadow-theme-xl bg-theme-card backdrop-blur-2xl ring-1 ring-black ring-opacity-5 dark:ring-slate-600 z-20 border border-theme-primary overflow-hidden'
+                >
                   {/* Simple Menu Items */}
                   <div className='py-2'>
                     <Link
