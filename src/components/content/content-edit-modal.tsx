@@ -87,22 +87,25 @@ const ContentEditModal: React.FC<ContentEditModalProps> = ({
       value: 'draft',
       label: 'Draft',
       icon: '📝',
-      color: 'border-gray-600 bg-gray-500 text-amber-300',
-      activeColor: 'border-gray-700 bg-gray-600 text-amber-200',
+      color: 'border-theme-tertiary bg-theme-tertiary text-theme-secondary',
+      activeColor:
+        'border-accent-warning bg-accent-warning/20 text-accent-warning',
     },
     {
       value: 'scheduled',
       label: 'Scheduled',
       icon: '📅',
-      color: 'border-blue-200 bg-blue-50 text-blue-700',
-      activeColor: 'border-blue-500 bg-blue-100 text-blue-800',
+      color: 'border-theme-tertiary bg-theme-tertiary text-theme-secondary',
+      activeColor:
+        'border-accent-primary bg-accent-primary/20 text-accent-primary',
     },
     {
       value: 'published',
       label: 'Published',
       icon: '✅',
-      color: 'border-green-200 bg-green-50 text-green-700',
-      activeColor: 'border-green-500 bg-green-100 text-green-800',
+      color: 'border-theme-tertiary bg-theme-tertiary text-theme-secondary',
+      activeColor:
+        'border-accent-success bg-accent-success/20 text-accent-success',
     },
   ];
 
@@ -111,22 +114,23 @@ const ContentEditModal: React.FC<ContentEditModalProps> = ({
       value: 'low',
       label: 'Low',
       icon: '🔵',
-      color: 'border-gray-200 bg-gray-50 text-gray-700',
-      activeColor: 'border-gray-500 bg-gray-100 text-gray-800',
+      color: 'border-theme-tertiary bg-theme-tertiary text-theme-secondary',
+      activeColor: 'border-accent-info bg-accent-info/20 text-accent-info',
     },
     {
       value: 'medium',
       label: 'Medium',
       icon: '🟡',
-      color: 'border-yellow-200 bg-yellow-50 text-yellow-700',
-      activeColor: 'border-yellow-500 bg-yellow-100 text-yellow-800',
+      color: 'border-theme-tertiary bg-theme-tertiary text-theme-secondary',
+      activeColor:
+        'border-accent-warning bg-accent-warning/20 text-accent-warning',
     },
     {
       value: 'high',
       label: 'High',
       icon: '🔴',
-      color: 'border-red-200 bg-red-50 text-red-700',
-      activeColor: 'border-red-500 bg-red-100 text-red-800',
+      color: 'border-theme-tertiary bg-theme-tertiary text-theme-secondary',
+      activeColor: 'border-accent-error bg-accent-error/20 text-accent-error',
     },
   ];
 
@@ -322,7 +326,7 @@ const ContentEditModal: React.FC<ContentEditModalProps> = ({
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
-          className='absolute inset-0 bg-black/50'
+          className='absolute inset-0 bg-theme-backdrop backdrop-blur-sm'
           onClick={onClose}
         />
 
@@ -332,25 +336,25 @@ const ContentEditModal: React.FC<ContentEditModalProps> = ({
           animate={{ opacity: 1, scale: 1 }}
           exit={{ opacity: 0, scale: 0.95 }}
           transition={{ duration: 0.2 }}
-          className='relative bg-white rounded-xl shadow-xl w-full max-w-md overflow-hidden'
+          className='relative bg-theme-card border border-theme-tertiary rounded-xl shadow-xl w-full max-w-md overflow-hidden'
         >
           {/* Header */}
-          <div className='flex items-center justify-between p-6 border-b border-gray-200'>
+          <div className='flex items-center justify-between p-6 border-b border-theme-tertiary'>
             <div>
-              <h2 className='text-lg font-semibold text-gray-900'>
+              <h2 className='text-lg font-semibold text-theme-primary'>
                 Edit Content
               </h2>
               <div className='mt-2'>
-                <p className='text-sm font-bold bg-gradient-to-r from-purple-600 to-indigo-600 bg-clip-text text-transparent uppercase tracking-wide truncate max-w-xs'>
+                <p className='text-sm font-bold bg-gradient-to-r from-accent-primary to-accent-secondary bg-clip-text text-transparent uppercase tracking-wide truncate max-w-xs'>
                   {contentTitle}
                 </p>
               </div>
             </div>
             <button
               onClick={onClose}
-              className='p-2 hover:bg-gray-100 rounded-lg transition-colors'
+              className='p-2 hover:bg-theme-hover rounded-lg transition-colors'
             >
-              <X className='h-5 w-5 text-gray-500' />
+              <X className='h-5 w-5 text-theme-secondary' />
             </button>
           </div>
 
@@ -358,7 +362,7 @@ const ContentEditModal: React.FC<ContentEditModalProps> = ({
           <div className='p-6 space-y-6'>
             {/* Status Section */}
             <div>
-              <label className='block text-sm font-medium text-gray-700 mb-3'>
+              <label className='block text-sm font-medium text-theme-primary mb-3'>
                 Status
               </label>
               <div className='grid grid-cols-3 gap-2'>
@@ -395,15 +399,15 @@ const ContentEditModal: React.FC<ContentEditModalProps> = ({
                   transition={{ duration: 0.2 }}
                   className='space-y-4 overflow-hidden'
                 >
-                  <div className='bg-blue-50 rounded-lg p-4 border border-blue-200'>
-                    <h4 className='text-sm font-medium text-blue-900 mb-3 flex items-center'>
-                      <Calendar className='h-4 w-4 mr-2' />
+                  <div className='bg-accent-primary/10 rounded-lg p-4 border border-accent-primary/20'>
+                    <h4 className='text-sm font-medium text-theme-primary mb-3 flex items-center'>
+                      <Calendar className='h-4 w-4 mr-2 text-accent-primary' />
                       Schedule Details
                     </h4>
 
                     <div className='grid grid-cols-2 gap-3'>
                       <div>
-                        <label className='block text-xs font-medium text-gray-700 mb-1'>
+                        <label className='block text-xs font-medium text-theme-primary mb-1'>
                           Date
                         </label>
                         <input
@@ -413,14 +417,14 @@ const ContentEditModal: React.FC<ContentEditModalProps> = ({
                           onChange={(e) =>
                             handleInputChange('scheduledDate', e.target.value)
                           }
-                          className={`w-full px-3 py-2 border rounded-lg text-sm text-black focus:outline-none focus:ring-2 focus:ring-blue-500 ${
+                          className={`w-full px-3 py-2 border rounded-lg text-sm text-theme-primary bg-theme-card focus:outline-none focus:ring-2 focus:ring-accent-primary ${
                             errors.scheduledDate
-                              ? 'border-red-300 bg-red-50'
-                              : 'border-gray-300'
+                              ? 'border-accent-error bg-accent-error/10'
+                              : 'border-theme-tertiary'
                           }`}
                         />
                         {errors.scheduledDate && (
-                          <p className='text-red-500 text-xs mt-1 flex items-center'>
+                          <p className='text-accent-error text-xs mt-1 flex items-center'>
                             <AlertCircle className='h-3 w-3 mr-1' />
                             {errors.scheduledDate}
                           </p>
@@ -428,7 +432,7 @@ const ContentEditModal: React.FC<ContentEditModalProps> = ({
                       </div>
 
                       <div>
-                        <label className='block text-xs font-medium text-gray-700 mb-1'>
+                        <label className='block text-xs font-medium text-theme-primary mb-1'>
                           Time
                         </label>
                         <input
@@ -437,14 +441,14 @@ const ContentEditModal: React.FC<ContentEditModalProps> = ({
                           onChange={(e) =>
                             handleInputChange('scheduledTime', e.target.value)
                           }
-                          className={`w-full px-3 py-2 border rounded-lg text-sm text-black focus:outline-none focus:ring-2 focus:ring-blue-500 ${
+                          className={`w-full px-3 py-2 border rounded-lg text-sm text-theme-primary bg-theme-card focus:outline-none focus:ring-2 focus:ring-accent-primary ${
                             errors.scheduledTime
-                              ? 'border-red-300 bg-red-50'
-                              : 'border-gray-300'
+                              ? 'border-accent-error bg-accent-error/10'
+                              : 'border-theme-tertiary'
                           }`}
                         />
                         {errors.scheduledTime && (
-                          <p className='text-red-500 text-xs mt-1 flex items-center'>
+                          <p className='text-accent-error text-xs mt-1 flex items-center'>
                             <AlertCircle className='h-3 w-3 mr-1' />
                             {errors.scheduledTime}
                           </p>
@@ -458,7 +462,7 @@ const ContentEditModal: React.FC<ContentEditModalProps> = ({
 
             {/* Priority Section */}
             <div>
-              <label className='block text-sm font-medium text-gray-700 mb-3'>
+              <label className='block text-sm font-medium text-theme-primary mb-3'>
                 Priority
               </label>
               <div className='grid grid-cols-3 gap-2'>
@@ -487,12 +491,12 @@ const ContentEditModal: React.FC<ContentEditModalProps> = ({
           </div>
 
           {/* Footer */}
-          <div className='flex justify-end space-x-3 p-6 border-t border-gray-200 bg-gray-50'>
+          <div className='flex justify-end space-x-3 p-6 border-t border-theme-tertiary bg-theme-tertiary'>
             <button
               type='button'
               onClick={onClose}
               disabled={isLoading}
-              className='px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors disabled:opacity-50'
+              className='px-4 py-2 text-sm font-medium text-theme-primary bg-theme-card border border-theme-tertiary rounded-lg hover:bg-theme-hover transition-colors disabled:opacity-50'
             >
               Cancel
             </button>
@@ -500,7 +504,7 @@ const ContentEditModal: React.FC<ContentEditModalProps> = ({
               type='button'
               onClick={handleSubmit}
               disabled={isLoading}
-              className='px-4 py-2 text-sm font-medium text-white bg-purple-600 hover:bg-purple-700 rounded-lg transition-colors disabled:opacity-50 flex items-center space-x-2'
+              className='px-4 py-2 text-sm font-medium text-white bg-accent-primary hover:bg-accent-secondary rounded-lg transition-colors disabled:opacity-50 flex items-center space-x-2'
             >
               {isLoading ? (
                 <>
