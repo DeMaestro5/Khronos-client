@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useEffect, useMemo } from 'react';
-import { ArrowLeft, Edit, Share2, FileText, MoreVertical } from 'lucide-react';
+import { ArrowLeft, Edit, Share2, FileText } from 'lucide-react';
 import { useRouter, useParams } from 'next/navigation';
 import { contentAPI } from '@/src/lib/api';
 import { ContentData } from '@/src/types/content';
@@ -241,9 +241,9 @@ const ContentDetailPage = () => {
               <Edit className='w-3 h-3' />
               <span className='font-medium'>Edit</span>
             </button>
-            <button className='p-2 text-theme-secondary hover:text-theme-primary hover:bg-theme-card/60 rounded-xl transition-all duration-200 backdrop-blur-sm'>
+            {/* <button className='p-2 text-theme-secondary hover:text-theme-primary hover:bg-theme-card/60 rounded-xl transition-all duration-200 backdrop-blur-sm'>
               <MoreVertical className='w-4 h-4' />
-            </button>
+            </button> */}
           </div>
         </div>
       </div>
@@ -253,13 +253,17 @@ const ContentDetailPage = () => {
         {/* Hero Section */}
         <HeroSection content={content} />
 
-        {/* Mobile Content Layout */}
-        <div className='space-y-6'>
-          {/* Content Tabs */}
-          <ContentTabs content={content} />
+        {/* Content Layout - Two columns on desktop, stacked on mobile */}
+        <div className='grid grid-cols-1 lg:grid-cols-4 gap-6'>
+          {/* Main Content Area - Takes 3 columns on desktop */}
+          <div className='lg:col-span-3'>
+            <ContentTabs content={content} />
+          </div>
 
-          {/* Sidebar Content - Stacked on mobile */}
-          <Sidebar content={content} />
+          {/* Sidebar - Takes 1 column on desktop, full width on mobile */}
+          <div className='lg:col-span-1'>
+            <Sidebar content={content} />
+          </div>
         </div>
       </div>
 
