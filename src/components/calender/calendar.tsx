@@ -19,7 +19,6 @@ export default function CalendarComponent({
   const [hoveredDate, setHoveredDate] = useState<string | null>(null);
   const [isContentModalOpen, setIsContentModalOpen] = useState(false);
   const [isEmptyModalOpen, setIsEmptyModalOpen] = useState(false);
-  const [animatingOut, setAnimatingOut] = useState(false);
 
   // Log the received scheduled content for debugging
   console.log('📅 Calendar Component: Received scheduled content:', {
@@ -174,13 +173,9 @@ export default function CalendarComponent({
   };
 
   const closeModals = () => {
-    setAnimatingOut(true);
-    setTimeout(() => {
-      setIsContentModalOpen(false);
-      setIsEmptyModalOpen(false);
-      setSelectedDate(null);
-      setAnimatingOut(false);
-    }, 200);
+    setIsContentModalOpen(false);
+    setIsEmptyModalOpen(false);
+    setSelectedDate(null);
   };
 
   const days = getDaysInMonth(currentDate);
@@ -494,7 +489,6 @@ export default function CalendarComponent({
         selectedDate={selectedDate}
         content={selectedDate ? scheduledContent[selectedDate] || [] : []}
         onCreateContent={onCreateContent}
-        animatingOut={animatingOut}
       />
 
       {/* Empty Date Modal */}
@@ -503,7 +497,6 @@ export default function CalendarComponent({
         onClose={closeModals}
         selectedDate={selectedDate}
         onCreateContent={onCreateContent}
-        animatingOut={animatingOut}
       />
     </>
   );

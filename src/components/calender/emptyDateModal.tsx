@@ -1,12 +1,12 @@
 import React from 'react';
-import { X, Calendar, Plus, Clock } from 'lucide-react';
+import { createPortal } from 'react-dom';
+import { Calendar, Clock, X, Plus } from 'lucide-react';
 
 interface EmptyDateModalProps {
   isOpen: boolean;
   onClose: () => void;
   selectedDate: string | null;
   onCreateContent?: () => void;
-  animatingOut: boolean;
 }
 
 const EmptyDateModal: React.FC<EmptyDateModalProps> = ({
@@ -14,8 +14,9 @@ const EmptyDateModal: React.FC<EmptyDateModalProps> = ({
   onClose,
   selectedDate,
   onCreateContent,
-  animatingOut,
 }) => {
+  // No scroll prevention needed - allow page scrolling when modal is open
+
   if (!isOpen || !selectedDate) return null;
 
   // Check if the selected date is in the past
@@ -53,15 +54,18 @@ const EmptyDateModal: React.FC<EmptyDateModalProps> = ({
   const pastDate = isPastDate();
   const todayDate = isToday();
 
-  return (
-    <div className='fixed inset-0 bg-theme-backdrop backdrop-blur-sm flex items-center justify-center z-50 p-4'>
-      <div
-        className={`bg-theme-card rounded-2xl sm:rounded-3xl shadow-2xl max-w-md w-full mx-4 transform transition-all duration-300 ${
-          animatingOut
-            ? 'scale-95 opacity-0 translate-y-4'
-            : 'scale-100 opacity-100 translate-y-0'
-        }`}
-      >
+  const handleBackdropClick = (e: React.MouseEvent<HTMLDivElement>) => {
+    if (e.target === e.currentTarget) {
+      onClose();
+    }
+  };
+
+  const modalContent = (
+    <div
+      className='fixed inset-0 bg-theme-backdrop backdrop-blur-sm flex items-center justify-center z-[9999] p-4'
+      onClick={handleBackdropClick}
+    >
+      <div className='bg-theme-card rounded-2xl sm:rounded-3xl shadow-2xl max-w-md w-full mx-4 transform transition-all duration-300'>
         {/* Header */}
         <div className='flex items-center justify-between p-4 sm:p-6 border-b border-theme-primary'>
           <div className='flex items-center space-x-3'>
@@ -163,6 +167,13 @@ const EmptyDateModal: React.FC<EmptyDateModalProps> = ({
       </div>
     </div>
   );
+
+  // Use portal to render modal at document body level
+  if (typeof window !== 'undefined') {
+    return createPortal(modalContent, document.body);
+  }
+
+  return modalContent;
 };
 
 export default EmptyDateModal;

@@ -17,7 +17,7 @@ interface SidebarProps {
 
 export const Sidebar: React.FC<SidebarProps> = ({ content }) => {
   return (
-    <div className='space-y-4 md:space-y-6'>
+    <div className='space-y-4 md:space-y-6 lg:sticky lg:top-6 lg:max-h-[calc(100vh-2rem)] lg:overflow-y-auto'>
       {/* AI Assistant Card */}
       <AIAssistantCard contentId={content._id} contentTitle={content.title} />
 

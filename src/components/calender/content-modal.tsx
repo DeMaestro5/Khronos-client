@@ -1,13 +1,27 @@
 import React, { useState } from 'react';
-import { Plus, Calendar, Clock, X, Edit3, Trash2, Eye } from 'lucide-react';
+import { createPortal } from 'react-dom';
 import { useRouter } from 'next/navigation';
-import toast from 'react-hot-toast';
-import { Platform } from '@/src/types/modal';
-import { ScheduledContentItem } from '@/src/context/CalendarContext';
-import { contentAPI } from '@/src/lib/api';
-import { useCalendar } from '@/src/context/CalendarContext';
-import DeleteConfirmationModal from '../content/delete-confirmation-modal';
+import {
+  Calendar,
+  Clock,
+  X,
+  Plus,
+  Edit,
+  Trash2,
+  Eye,
+  Instagram,
+  Twitter,
+  Facebook,
+  Linkedin,
+  Youtube,
+  Hash,
+} from 'lucide-react';
 import ContentEditModal from '../content/content-edit-modal';
+import DeleteConfirmationModal from '../content/delete-confirmation-modal';
+import { useCalendar } from '../../context/CalendarContext';
+import { contentAPI } from '../../lib/api';
+import toast from 'react-hot-toast';
+import { ScheduledContentItem } from '../../context/CalendarContext';
 
 interface ContentModalProps {
   isOpen: boolean;
@@ -15,54 +29,51 @@ interface ContentModalProps {
   selectedDate: string | null;
   content: ScheduledContentItem[];
   onCreateContent?: () => void;
-  animatingOut: boolean;
 }
 
-const PlatformIcons: Record<Platform['id'], () => React.ReactElement> = {
-  instagram: () => (
-    <div className='w-4 h-4 bg-gradient-to-r from-pink-500 to-orange-500 rounded-full shadow-sm' />
-  ),
-  youtube: () => <div className='w-4 h-4 bg-red-500 rounded-full shadow-sm' />,
-  twitter: () => <div className='w-4 h-4 bg-blue-400 rounded-full shadow-sm' />,
-  linkedin: () => (
-    <div className='w-4 h-4 bg-blue-600 rounded-full shadow-sm' />
-  ),
-  tiktok: () => (
-    <div className='w-4 h-4 bg-gradient-to-r from-black to-pink-500 rounded-full shadow-sm' />
-  ),
-  facebook: () => (
-    <div className='w-4 h-4 bg-blue-600 rounded-full shadow-sm' />
-  ),
+// Platform icons mapping
+const PlatformIcons: Record<
+  string,
+  React.ComponentType<{ className?: string }>
+> = {
+  instagram: Instagram,
+  twitter: Twitter,
+  facebook: Facebook,
+  linkedin: Linkedin,
+  youtube: Youtube,
+  tiktok: Hash,
 };
 
-const platformColors: Record<Platform['id'], string> = {
-  instagram: 'from-pink-500 to-orange-500',
-  linkedin: 'from-blue-600 to-blue-700',
-  tiktok: 'from-black to-pink-600',
+// Platform colors mapping
+const platformColors: Record<string, string> = {
+  instagram: 'from-pink-500 to-purple-500',
   twitter: 'from-blue-400 to-blue-600',
-  youtube: 'from-red-500 to-red-600',
-  facebook: 'from-blue-600 to-blue-700',
+  facebook: 'from-blue-600 to-blue-800',
+  linkedin: 'from-blue-700 to-blue-900',
+  youtube: 'from-red-500 to-red-700',
+  tiktok: 'from-gray-800 to-black',
 };
 
-const platformNames: Record<Platform['id'], string> = {
+// Platform names mapping
+const platformNames: Record<string, string> = {
   instagram: 'Instagram',
-  youtube: 'YouTube',
   twitter: 'Twitter',
-  linkedin: 'LinkedIn',
-  tiktok: 'TikTok',
   facebook: 'Facebook',
+  linkedin: 'LinkedIn',
+  youtube: 'YouTube',
+  tiktok: 'TikTok',
 };
 
 const getStatusBadgeColor = (status: string) => {
   switch (status) {
     case 'scheduled':
-      return 'bg-accent-success/20 text-accent-success border-accent-success/30';
+      return 'bg-emerald-500 text-white border-emerald-500';
     case 'draft':
-      return 'bg-accent-warning/20 text-accent-warning border-accent-warning/30';
+      return 'bg-amber-500 text-white border-amber-500';
     case 'published':
-      return 'bg-accent-info/20 text-accent-info border-accent-info/30';
+      return 'bg-blue-500 text-white border-blue-500';
     default:
-      return 'bg-theme-muted/20 text-theme-muted border-theme-muted/30';
+      return 'bg-gray-500 text-white border-gray-500';
   }
 };
 
@@ -72,7 +83,6 @@ export default function ContentModal({
   selectedDate,
   content,
   onCreateContent,
-  animatingOut,
 }: ContentModalProps) {
   const router = useRouter();
   const { loadScheduledContent } = useCalendar();
@@ -83,6 +93,8 @@ export default function ContentModal({
   const [contentToDelete, setContentToDelete] =
     useState<ScheduledContentItem | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
+
+  // No scroll prevention needed - allow page scrolling when modal is open
 
   if (!isOpen || !selectedDate) return null;
 
@@ -152,162 +164,157 @@ export default function ContentModal({
     setEditingContent(null);
   };
 
-  return (
-    <div
-      className={`fixed inset-0 z-50 flex items-center justify-center p-4 bg-theme-backdrop backdrop-blur-sm transition-all duration-200 ${
-        animatingOut ? 'opacity-0' : 'opacity-100'
-      }`}
-    >
+  const handleBackdropClick = (e: React.MouseEvent<HTMLDivElement>) => {
+    if (e.target === e.currentTarget) {
+      onClose();
+    }
+  };
+
+  const modalContent = (
+    <>
       <div
-        className={`bg-theme-card backdrop-blur-xl border border-theme-primary rounded-3xl shadow-2xl max-w-2xl w-full max-h-[80vh] overflow-hidden transform transition-all duration-200 ${
-          animatingOut ? 'scale-95 opacity-0' : 'scale-100 opacity-100'
-        }`}
+        className='fixed inset-0 z-[9999] flex items-center justify-center p-4 bg-theme-backdrop backdrop-blur-sm'
+        onClick={handleBackdropClick}
       >
-        {/* Modal Header */}
-        <div className='flex items-center justify-between p-6 bg-gradient-to-r from-accent-primary/10 to-accent-secondary/10 border-b border-theme-primary'>
-          <div className='flex items-center space-x-3'>
-            <div className='p-2 bg-gradient-to-r from-purple-500 to-pink-500 rounded-xl'>
-              <Calendar className='w-5 h-5 text-white' />
+        <div className='bg-theme-card backdrop-blur-xl border border-theme-primary rounded-3xl shadow-2xl max-w-2xl w-full max-h-[80vh] overflow-hidden'>
+          {/* Modal Header */}
+          <div className='flex items-center justify-between p-6 bg-gradient-to-r from-accent-primary/10 to-accent-secondary/10 border-b border-theme-primary'>
+            <div className='flex items-center space-x-3'>
+              <div className='p-2 bg-gradient-to-r from-purple-500 to-pink-500 rounded-xl'>
+                <Calendar className='w-5 h-5 text-white' />
+              </div>
+              <div>
+                <h2 className='text-xl font-bold text-theme-primary'>
+                  {formattedDate}
+                </h2>
+                <p className='text-sm text-theme-secondary'>
+                  {content.length} scheduled{' '}
+                  {content.length === 1 ? 'post' : 'posts'}
+                </p>
+              </div>
             </div>
-            <div>
-              <h2 className='text-xl font-bold text-theme-primary'>
-                {formattedDate}
-              </h2>
-              <p className='text-sm text-theme-secondary'>
-                {content.length} scheduled{' '}
-                {content.length === 1 ? 'post' : 'posts'}
-              </p>
-            </div>
+            <button
+              onClick={onClose}
+              className='p-2 hover:bg-theme-hover rounded-xl transition-all duration-200 text-theme-secondary hover:text-theme-primary hover:scale-110'
+            >
+              <X className='w-5 h-5' />
+            </button>
           </div>
-          <button
-            onClick={onClose}
-            className='p-2 hover:bg-theme-hover rounded-xl transition-all duration-200 text-theme-secondary hover:text-theme-primary hover:scale-110'
-          >
-            <X className='w-5 h-5' />
-          </button>
-        </div>
 
-        {/* Modal Content */}
-        <div className='p-6 overflow-y-auto max-h-[60vh]'>
-          <div className='space-y-4'>
-            {content.map((item, idx) => {
-              const IconComponent = PlatformIcons[item.platform];
-              return (
-                <div
-                  key={`${item.title}-${idx}`}
-                  className='group bg-theme-tertiary hover:bg-theme-hover rounded-2xl p-4 transition-all duration-300 hover:scale-[1.02] border border-theme-primary hover:border-theme-primary'
-                >
-                  <div className='flex items-start justify-between space-x-4'>
-                    <div className='flex items-start space-x-4 flex-1 min-w-0'>
-                      {/* Platform Icon */}
-                      <div
-                        className={`flex items-center justify-center w-12 h-12 rounded-xl bg-gradient-to-r ${
-                          platformColors[item.platform]
-                        } shadow-lg flex-shrink-0`}
-                      >
-                        {IconComponent && <IconComponent />}
-                      </div>
-
-                      {/* Content Details */}
-                      <div className='flex-1 min-w-0'>
-                        <div className='flex items-center space-x-3 mb-2'>
-                          <h3 className='text-theme-primary font-semibold text-lg truncate'>
-                            {item.title}
-                          </h3>
-                          <span
-                            className={`px-3 py-1 text-xs font-medium rounded-full border ${getStatusBadgeColor(
-                              item.status
-                            )}`}
-                          >
-                            {item.status.charAt(0).toUpperCase() +
-                              item.status.slice(1)}
-                          </span>
-                        </div>
-
-                        <div className='flex items-center space-x-4 text-sm text-theme-secondary mb-3'>
-                          <span className='flex items-center space-x-1'>
-                            <Clock className='w-4 h-4' />
-                            <span className='font-medium'>{item.time}</span>
-                          </span>
-                          <span className='px-2 py-1 bg-theme-tertiary rounded-lg'>
-                            {platformNames[item.platform]}
-                          </span>
-                          <span className='px-2 py-1 bg-theme-tertiary rounded-lg'>
-                            {item.type}
-                          </span>
-                        </div>
-
-                        {/* Progress Bar for Scheduled Items */}
-                        {item.status === 'scheduled' && (
-                          <div className='mb-3'>
-                            <div className='flex items-center justify-between text-xs text-theme-secondary mb-1'>
-                              <span>Scheduled to publish</span>
-                              <span className='text-accent-success'>Ready</span>
-                            </div>
-                            <div className='w-full bg-theme-tertiary rounded-full h-1.5'>
-                              <div className='bg-gradient-to-r from-accent-success to-accent-success h-1.5 rounded-full w-full'></div>
-                            </div>
-                          </div>
-                        )}
-                      </div>
-                    </div>
-
-                    {/* Action Buttons */}
-                    <div className='flex items-center space-x-2 opacity-0 group-hover:opacity-100 transition-opacity duration-200'>
-                      <button
-                        onClick={() => handleViewContent(item.id)}
-                        className='p-2 hover:bg-theme-hover rounded-lg transition-all duration-200 text-theme-secondary hover:text-theme-primary hover:scale-110'
-                        title='View Content'
-                      >
-                        <Eye className='w-4 h-4' />
-                      </button>
-
-                      {/* Only show edit button for present/future dates */}
-                      {!isDateInPast() && (
-                        <button
-                          onClick={() => handleEditClick(item)}
-                          className='p-2 hover:bg-theme-hover rounded-lg transition-all duration-200 text-theme-secondary hover:text-theme-primary hover:scale-110'
-                          title='Edit Content'
+          {/* Modal Content */}
+          <div className='p-6 overflow-y-auto max-h-[60vh]'>
+            <div className='space-y-4'>
+              {content.map((item, idx) => {
+                const IconComponent = PlatformIcons[item.platform];
+                return (
+                  <div
+                    key={`${item.title}-${idx}`}
+                    className='group bg-theme-tertiary hover:bg-theme-hover rounded-2xl p-4 transition-all duration-300 hover:scale-[1.02] border border-theme-primary hover:border-theme-primary'
+                  >
+                    <div className='flex items-start justify-between space-x-4'>
+                      <div className='flex items-start space-x-4 flex-1 min-w-0'>
+                        {/* Platform Icon */}
+                        <div
+                          className={`flex items-center justify-center w-12 h-12 rounded-xl bg-gradient-to-r ${
+                            platformColors[item.platform]
+                          } shadow-lg flex-shrink-0`}
                         >
-                          <Edit3 className='w-4 h-4' />
-                        </button>
-                      )}
+                          {IconComponent && <IconComponent />}
+                        </div>
 
-                      <button
-                        onClick={() => handleDeleteClick(item)}
-                        className='p-2 hover:bg-theme-hover rounded-lg transition-all duration-200 text-theme-secondary hover:text-accent-error hover:scale-110'
-                        title='Delete Content'
-                      >
-                        <Trash2 className='w-4 h-4' />
-                      </button>
+                        {/* Content Details */}
+                        <div className='flex-1 min-w-0'>
+                          <div className='flex items-center space-x-3 mb-2'>
+                            <h3 className='text-theme-primary font-semibold text-lg truncate'>
+                              {item.title}
+                            </h3>
+                            <span
+                              className={`px-3 py-1 text-xs font-medium rounded-full border ${getStatusBadgeColor(
+                                item.status
+                              )}`}
+                            >
+                              {item.status.charAt(0).toUpperCase() +
+                                item.status.slice(1)}
+                            </span>
+                          </div>
+
+                          <div className='flex items-center space-x-4 text-sm text-theme-secondary mb-3'>
+                            <span className='flex items-center space-x-1'>
+                              <Clock className='w-4 h-4' />
+                              <span className='font-medium'>{item.time}</span>
+                            </span>
+                            <span className='px-2 py-1 bg-theme-tertiary rounded-lg'>
+                              {platformNames[item.platform]}
+                            </span>
+                            <span className='px-2 py-1 bg-theme-tertiary rounded-lg'>
+                              {item.type}
+                            </span>
+                          </div>
+
+                          {/* Action Buttons */}
+                          <div className='flex items-center space-x-2'>
+                            <button
+                              onClick={() => handleViewContent(item.id)}
+                              className='flex items-center space-x-1 px-3 py-1.5 bg-theme-card hover:bg-theme-hover rounded-lg text-xs text-theme-secondary hover:text-theme-primary transition-all duration-200'
+                            >
+                              <Eye className='w-3 h-3' />
+                              <span>View</span>
+                            </button>
+                            <button
+                              onClick={() => handleEditClick(item)}
+                              className='flex items-center space-x-1 px-3 py-1.5 bg-theme-card hover:bg-theme-hover rounded-lg text-xs text-theme-secondary hover:text-theme-primary transition-all duration-200'
+                            >
+                              <Edit className='w-3 h-3' />
+                              <span>Edit</span>
+                            </button>
+                            <button
+                              onClick={() => handleDeleteClick(item)}
+                              className='flex items-center space-x-1 px-3 py-1.5 bg-red-50 hover:bg-red-100 rounded-lg text-xs text-red-600 hover:text-red-700 transition-all duration-200'
+                            >
+                              <Trash2 className='w-3 h-3' />
+                              <span>Delete</span>
+                            </button>
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Status Indicator */}
+                      <div className='flex flex-col items-end space-y-2'>
+                        <div className='flex items-center space-x-1'>
+                          <div className='w-2 h-2 bg-green-500 rounded-full animate-pulse'></div>
+                          <span className='text-xs text-green-600 font-medium'>
+                            Ready
+                          </span>
+                        </div>
+                      </div>
                     </div>
                   </div>
-                </div>
-              );
-            })}
+                );
+              })}
+            </div>
           </div>
-        </div>
 
-        {/* Modal Footer */}
-        <div className='p-2 bg-theme-tertiary border-t border-theme-primary flex items-center justify-between'>
-          <div className='text-sm text-theme-secondary'>
-            {content.filter((item) => item.status === 'scheduled').length}{' '}
-            scheduled •{' '}
-            {content.filter((item) => item.status === 'draft').length} drafts
-          </div>
-          <div className='flex items-center space-x-3'>
-            <button
-              onClick={isDateInPast() ? undefined : onCreateContent}
-              disabled={isDateInPast()}
-              className={`flex items-center space-x-2 px-4 py-2 rounded-xl font-medium transition-all duration-300 ${
-                isDateInPast()
-                  ? 'bg-theme-disabled text-theme-muted cursor-not-allowed opacity-50'
-                  : 'bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-500 hover:to-pink-500 text-white hover:scale-105'
-              }`}
-            >
-              <Plus className='w-4 h-4' />
-              <span>{isDateInPast() ? 'Past Date' : 'Add More'}</span>
-            </button>
+          {/* Footer */}
+          <div className='p-2 bg-theme-tertiary border-t border-theme-primary flex items-center justify-between'>
+            <div className='text-sm text-theme-secondary'>
+              {content.filter((item) => item.status === 'scheduled').length}{' '}
+              scheduled •{' '}
+              {content.filter((item) => item.status === 'draft').length} drafts
+            </div>
+            <div className='flex items-center space-x-3'>
+              <button
+                onClick={isDateInPast() ? undefined : onCreateContent}
+                disabled={isDateInPast()}
+                className={`flex items-center space-x-2 px-4 py-2 rounded-xl font-medium transition-all duration-300 ${
+                  isDateInPast()
+                    ? 'bg-theme-disabled text-theme-muted cursor-not-allowed opacity-50'
+                    : 'bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-500 hover:to-pink-500 text-white hover:scale-105'
+                }`}
+              >
+                <Plus className='w-4 h-4' />
+                <span>{isDateInPast() ? 'Past Date' : 'Add More'}</span>
+              </button>
+            </div>
           </div>
         </div>
       </div>
@@ -336,6 +343,13 @@ export default function ContentModal({
         contentTitle={contentToDelete?.title || ''}
         isDeleting={isDeleting}
       />
-    </div>
+    </>
   );
+
+  // Use portal to render modal at document body level
+  if (typeof window !== 'undefined') {
+    return createPortal(modalContent, document.body);
+  }
+
+  return modalContent;
 }
