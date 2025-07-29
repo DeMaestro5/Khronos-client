@@ -220,9 +220,9 @@ export default function SettingsPage() {
   }
 
   return (
-    <div className='min-h-screen bg-theme-primary pb-20'>
-      {/* Mobile Header - Fixed at top */}
-      <div className='sticky top-0 z-40 bg-theme-primary/95 backdrop-blur-md border-b border-theme-tertiary/50'>
+    <div className='min-h-screen bg-theme-primary pb-20 lg:pb-0'>
+      {/* Mobile Header - Fixed at top - Hidden on desktop */}
+      <div className='sticky top-0 z-40 bg-theme-primary/95 backdrop-blur-md border-b border-theme-tertiary/50 lg:hidden'>
         <div className='flex items-center justify-between px-4 py-3'>
           <div className='flex items-center gap-3'>
             <Link
@@ -272,8 +272,8 @@ export default function SettingsPage() {
         </div>
       </div>
 
-      {/* Main Content */}
-      <div className='max-w-7xl mx-auto px-4 py-4'>
+      {/* Main Content - Mobile Only */}
+      <div className='max-w-7xl mx-auto px-4 py-4 lg:hidden'>
         {/* User Info Card - Mobile Optimized */}
         <div className='bg-theme-card rounded-2xl shadow-sm border border-theme-tertiary p-4 mb-6 backdrop-blur-sm'>
           <div className='flex items-center gap-3'>
@@ -322,8 +322,8 @@ export default function SettingsPage() {
         </div>
       </div>
 
-      {/* Mobile Bottom Tab Navigation */}
-      <div className='fixed bottom-0 left-0 right-0 z-50 bg-theme-card border-t border-theme-tertiary shadow-theme-lg'>
+      {/* Mobile Bottom Tab Navigation - Hidden on desktop */}
+      <div className='fixed bottom-0 left-0 right-0 z-50 bg-theme-card border-t border-theme-tertiary shadow-theme-lg lg:hidden'>
         <div className='flex items-center justify-between px-0 py-2'>
           {SETTINGS_TABS.map((tab) => {
             const Icon = tab.icon;

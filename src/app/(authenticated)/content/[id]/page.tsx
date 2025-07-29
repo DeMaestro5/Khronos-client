@@ -254,14 +254,14 @@ const ContentDetailPage = () => {
         <HeroSection content={content} />
 
         {/* Content Layout - Two columns on desktop, stacked on mobile */}
-        <div className='grid grid-cols-1 lg:grid-cols-4 gap-6'>
+        <div className='grid grid-cols-1 lg:grid-cols-5 gap-6'>
           {/* Main Content Area - Takes 3 columns on desktop */}
           <div className='lg:col-span-3'>
             <ContentTabs content={content} />
           </div>
 
-          {/* Sidebar - Takes 1 column on desktop, full width on mobile */}
-          <div className='lg:col-span-1'>
+          {/* Sidebar - Takes 2 columns on desktop, full width on mobile */}
+          <div className='lg:col-span-2'>
             <Sidebar content={content} />
           </div>
         </div>
