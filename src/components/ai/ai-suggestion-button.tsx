@@ -174,7 +174,7 @@ export default function AISuggestionButton({
       onClick={handleClick}
       disabled={disabled || isLoading}
       className={`
-          fixed bottom-6 right-6 z-50
+          fixed bottom-6 right-6 z-[99999]
           flex items-center space-x-2 px-4 py-3
           bg-gradient-to-r from-purple-600 to-pink-600
           hover:from-purple-500 hover:to-pink-500
