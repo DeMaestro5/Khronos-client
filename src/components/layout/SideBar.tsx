@@ -93,7 +93,7 @@ export default function Sidebar() {
   return (
     <div
       className={`${
-        collapsed ? 'w-20' : 'w-72'
+        collapsed ? 'w-20' : 'w-50 '
       } md:flex flex-col bg-theme-card border-r border-theme-primary transition-all duration-200 hidden`}
     >
       <div className='relative h-full flex flex-col'>
