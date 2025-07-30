@@ -45,14 +45,14 @@ export const AIAssistantCard: React.FC<AIAssistantCardProps> = ({
   if (variant === 'compact') {
     return (
       <div
-        className={`bg-accent-primary/5 rounded-xl shadow-sm border border-theme-tertiary p-4 backdrop-blur-sm ${className}`}
+        className={`bg-accent-primary/5 rounded-xl shadow-sm border border-theme-tertiary p-3 backdrop-blur-sm ${className}`}
       >
-        <div className='flex items-center gap-3 mb-3'>
-          <div className='w-8 h-8 bg-accent-primary rounded-full flex items-center justify-center shadow-lg'>
-            <Bot className='w-4 h-4 text-white' />
+        <div className='flex items-center gap-2 mb-2'>
+          <div className='w-6 h-6 bg-accent-primary rounded-full flex items-center justify-center shadow-lg'>
+            <Bot className='w-3 h-3 text-white' />
           </div>
           <div>
-            <h3 className='font-semibold text-theme-primary text-sm'>
+            <h3 className='font-semibold text-theme-primary text-xs'>
               AI Assistant
             </h3>
             <p className='text-xs text-theme-secondary'>
@@ -63,10 +63,10 @@ export const AIAssistantCard: React.FC<AIAssistantCardProps> = ({
 
         <button
           onClick={() => handleAIAction()}
-          className='w-full flex items-center justify-center gap-2 px-4 py-2 bg-accent-primary text-white rounded-lg hover:bg-accent-secondary transition-all duration-200 shadow-md hover:shadow-lg'
+          className='w-full flex items-center justify-center gap-1.5 px-3 py-1.5 bg-accent-primary text-white rounded-lg hover:bg-accent-secondary transition-all duration-200 shadow-md hover:shadow-lg text-xs font-medium'
         >
-          <MessageCircle className='w-4 h-4' />
-          <span className='text-sm font-medium'>Open AI Chat</span>
+          <MessageCircle className='w-3 h-3' />
+          <span>Open AI Chat</span>
         </button>
       </div>
     );

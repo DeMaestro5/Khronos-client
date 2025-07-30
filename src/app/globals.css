@@ -831,6 +831,116 @@ body {
   display: none;
 }
 
+/* Enhanced scroll behavior for sidebar */
+.scroll-smooth {
+  scroll-behavior: smooth;
+  -webkit-overflow-scrolling: touch;
+}
+
+/* Custom scrollbar for sidebar */
+.sidebar-scroll::-webkit-scrollbar {
+  width: 4px;
+}
+
+.sidebar-scroll::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.sidebar-scroll::-webkit-scrollbar-thumb {
+  background: var(--bg-tertiary);
+  border-radius: 2px;
+  opacity: 0.6;
+}
+
+.sidebar-scroll::-webkit-scrollbar-thumb:hover {
+  background: var(--bg-primary);
+  opacity: 1;
+}
+
+/* Smooth scroll momentum */
+.sidebar-scroll {
+  scroll-behavior: smooth;
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior: contain;
+  scrollbar-width: thin;
+  scrollbar-color: var(--bg-tertiary) transparent;
+}
+
+/* Independent sidebar scroll behavior */
+.sidebar-scroll {
+  isolation: isolate;
+  contain: layout style paint;
+}
+
+/* Prevent scroll chaining */
+.sidebar-scroll {
+  overscroll-behavior-y: contain;
+  overscroll-behavior-x: none;
+}
+
+/* Sidebar scroll smooth behavior */
+.sidebar-scroll-smooth {
+  scroll-behavior: smooth;
+  -webkit-overflow-scrolling: touch;
+}
+
+/* Hide scrollbar by default, show on hover */
+.sidebar-scroll::-webkit-scrollbar {
+  width: 4px;
+  opacity: 0;
+  transition: opacity 0.2s ease;
+}
+
+.sidebar-scroll:hover::-webkit-scrollbar {
+  opacity: 1;
+}
+
+/* Ensure sidebar doesn't scroll with main content */
+.sidebar-scroll {
+  pointer-events: auto;
+  scroll-snap-type: y proximity;
+}
+
+/* Prevent scroll propagation to parent */
+.sidebar-scroll {
+  overscroll-behavior: contain;
+  scroll-behavior: smooth;
+}
+
+/* Main content scroll isolation */
+.content-detail-layout {
+  overflow-x: hidden;
+}
+
+/* Ensure sidebar container doesn't interfere with main scroll */
+.sidebar-container {
+  position: relative;
+  z-index: 10;
+}
+
+/* Prevent scroll chaining between main content and sidebar */
+.main-content-scroll {
+  overscroll-behavior: contain;
+}
+
+/* Sidebar scroll wheel behavior */
+.sidebar-scroll {
+  scrollbar-width: thin;
+  scrollbar-color: var(--bg-tertiary) transparent;
+}
+
+/* Firefox scrollbar styling */
+.sidebar-scroll {
+  scrollbar-width: thin;
+  scrollbar-color: var(--bg-tertiary) transparent;
+}
+
+/* Ensure smooth scrolling on all browsers */
+.sidebar-scroll {
+  -webkit-overflow-scrolling: touch;
+  scroll-behavior: smooth;
+}
+
 /* Legacy theme-aware utility classes (for backward compatibility) */
 .theme-bg-primary {
   background-color: var(--bg-primary);
