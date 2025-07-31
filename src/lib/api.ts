@@ -39,7 +39,8 @@ const processQueue = (error: AxiosError | null) => {
 
 // Create axios instance with base configuration
 const api = axios.create({
-  baseURL: process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000',
+  baseURL:
+    process.env.NEXT_PUBLIC_API_URL || 'https://khronos-api-bp71.onrender.com',
   headers: {
     'Content-Type': 'application/json',
     'x-api-key': process.env.NEXT_PUBLIC_API_KEY,
@@ -48,7 +49,8 @@ const api = axios.create({
 
 // Create separate axios instance for OAuth routes (no API key required)
 const oauthApi = axios.create({
-  baseURL: process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000',
+  baseURL:
+    process.env.NEXT_PUBLIC_API_URL || 'https://khronos-api-bp71.onrender.com',
   headers: {
     'Content-Type': 'application/json',
   },
@@ -213,7 +215,8 @@ export const authAPI = {
     // Initiate Google OAuth flow - redirects to backend login route
     initiate: () => {
       const baseUrl =
-        process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000';
+        process.env.NEXT_PUBLIC_API_URL ||
+        'https://khronos-api-bp71.onrender.com';
       return `${baseUrl}/api/v1/auth/google/login`;
     },
 
@@ -227,7 +230,8 @@ export const authAPI = {
     // Get direct Google OAuth URL with state
     getDirectAuthUrl: (state: string) => {
       const baseUrl =
-        process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000';
+        process.env.NEXT_PUBLIC_API_URL ||
+        'https://khronos-api-bp71.onrender.com';
       return `${baseUrl}/api/v1/auth/google/login?state=${state}`;
     },
   },
