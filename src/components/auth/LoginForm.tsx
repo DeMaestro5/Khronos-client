@@ -99,7 +99,7 @@ export default function LoginForm() {
   };
 
   return (
-    <div className='max-w-md mx-auto p-8 bg-white/95 backdrop-blur-sm rounded-2xl shadow-2xl border border-slate-200/50'>
+    <div className='max-w-md mx-auto p-4 sm:p-8 bg-white/95 backdrop-blur-sm rounded-2xl shadow-2xl border border-slate-200/50'>
       <div className='space-y-6'>
         <div className='space-y-5'>
           {/* Email Field */}
@@ -115,7 +115,7 @@ export default function LoginForm() {
               Email Address
             </label>
             <div className='relative'>
-              <div className='absolute left-4 sm:left-3 top-1/2 transform -translate-y-1/2 z-10'>
+              <div className='absolute left-3 top-1/2 transform -translate-y-1/2 z-10'>
                 <Mail
                   className={`w-5 h-5 transition-colors duration-200 ${
                     focusedField === 'email' || formData.email
@@ -133,7 +133,7 @@ export default function LoginForm() {
                 onChange={handleChange}
                 onFocus={() => setFocusedField('email')}
                 onBlur={() => setFocusedField('')}
-                className={`w-full pl-14 sm:pl-12 pr-4 py-4 border-2 rounded-xl transition-all duration-300 text-purple-900 placeholder:text-purple-500 placeholder:font-medium ${
+                className={`w-full pl-12 pr-4 py-3 sm:py-4 border-2 rounded-xl transition-all duration-300 text-purple-900 placeholder:text-purple-500 placeholder:font-medium ${
                   errors.email
                     ? 'border-red-400 focus:border-red-500 focus:ring-red-100 !bg-red-50/20 dark:!bg-red-50/20'
                     : focusedField === 'email'
@@ -177,7 +177,7 @@ export default function LoginForm() {
               Password
             </label>
             <div className='relative'>
-              <div className='absolute left-4 sm:left-3 top-1/2 transform -translate-y-1/2 z-10'>
+              <div className='absolute left-3 top-1/2 transform -translate-y-1/2 z-10'>
                 <Lock
                   className={`w-5 h-5 transition-colors duration-200 ${
                     focusedField === 'password' || formData.password
@@ -195,7 +195,7 @@ export default function LoginForm() {
                 onChange={handleChange}
                 onFocus={() => setFocusedField('password')}
                 onBlur={() => setFocusedField('')}
-                className={`w-full pl-14 sm:pl-12 pr-12 py-4 border-2 rounded-xl transition-all duration-300 text-purple-900 placeholder:text-purple-500 placeholder:font-medium ${
+                className={`w-full pl-12 pr-12 py-3 sm:py-4 border-2 rounded-xl transition-all duration-300 text-purple-900 placeholder:text-purple-500 placeholder:font-medium ${
                   errors.password
                     ? 'border-red-400 focus:border-red-500 focus:ring-red-100 !bg-red-50/20 dark:!bg-red-50/20'
                     : focusedField === 'password'
@@ -214,7 +214,7 @@ export default function LoginForm() {
               <button
                 type='button'
                 onClick={() => setShowPassword(!showPassword)}
-                className='absolute right-5 sm:right-4 top-1/2 transform -translate-y-1/2 text-purple-500 hover:text-purple-700 transition-colors p-1 rounded-lg hover:bg-purple-50'
+                className='absolute right-4 top-1/2 transform -translate-y-1/2 text-purple-500 hover:text-purple-700 transition-colors p-1 rounded-lg hover:bg-purple-50'
               >
                 {showPassword ? (
                   <EyeOff className='w-5 h-5' />
@@ -239,7 +239,7 @@ export default function LoginForm() {
         </div>
 
         {/* Remember me and Forgot password */}
-        <div className='flex items-center justify-between pt-2'>
+        <div className='flex flex-col sm:flex-row sm:items-center sm:justify-between pt-2 space-y-3 sm:space-y-0'>
           <div className='flex items-center space-x-3'>
             <div className='relative'>
               <input
@@ -273,7 +273,7 @@ export default function LoginForm() {
           </div>
           <Link
             href='/auth/forgot-password'
-            className='text-sm font-bold text-purple-600 hover:text-purple-800 transition-colors hover:underline bg-purple-50 hover:bg-purple-100 px-3 py-1 rounded-lg'
+            className='text-sm font-bold text-purple-600 hover:text-purple-800 transition-colors hover:underline bg-purple-50 hover:bg-purple-100 px-4 py-2 rounded-lg text-center sm:text-left w-full sm:w-auto'
           >
             Forgot password?
           </Link>
@@ -283,7 +283,7 @@ export default function LoginForm() {
         <button
           type='submit'
           disabled={isLoading}
-          className='w-full group relative overflow-hidden bg-gradient-to-r from-purple-600 via-purple-700 to-indigo-600 hover:from-purple-700 hover:via-purple-800 hover:to-indigo-700 text-white py-4 rounded-xl font-bold text-base shadow-2xl hover:shadow-purple-500/25 transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed transform hover:scale-[1.02] active:scale-[0.98]'
+          className='w-full group relative overflow-hidden bg-gradient-to-r from-purple-600 via-purple-700 to-indigo-600 hover:from-purple-700 hover:via-purple-800 hover:to-indigo-700 text-white py-3 sm:py-4 rounded-xl font-bold text-base shadow-2xl hover:shadow-purple-500/25 transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed transform hover:scale-[1.02] active:scale-[0.98]'
           onClick={handleSubmit}
         >
           {/* Animated background gradient */}
