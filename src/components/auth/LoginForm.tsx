@@ -115,7 +115,7 @@ export default function LoginForm() {
               Email Address
             </label>
             <div className='relative'>
-              <div className='absolute left-3 top-1/2 transform -translate-y-1/2 z-10'>
+              <div className='absolute left-4 sm:left-3 top-1/2 transform -translate-y-1/2 z-10'>
                 <Mail
                   className={`w-5 h-5 transition-colors duration-200 ${
                     focusedField === 'email' || formData.email
@@ -128,12 +128,12 @@ export default function LoginForm() {
                 id='email'
                 name='email'
                 type='email'
-                placeholder='Enter your email'
+                placeholder='Email'
                 value={formData.email}
                 onChange={handleChange}
                 onFocus={() => setFocusedField('email')}
                 onBlur={() => setFocusedField('')}
-                className={`w-full pl-12 pr-4 py-4 border-2 rounded-xl transition-all duration-300 text-purple-900 placeholder:text-purple-500 placeholder:font-medium ${
+                className={`w-full pl-14 sm:pl-12 pr-4 py-4 border-2 rounded-xl transition-all duration-300 text-purple-900 placeholder:text-purple-500 placeholder:font-medium ${
                   errors.email
                     ? 'border-red-400 focus:border-red-500 focus:ring-red-100 !bg-red-50/20 dark:!bg-red-50/20'
                     : focusedField === 'email'
@@ -149,11 +149,6 @@ export default function LoginForm() {
                   color: '#581c87', // purple-900
                 }}
               />
-              {formData.email && !errors.email && (
-                <div className='absolute right-3 top-1/2 transform -translate-y-1/2'>
-                  <CheckCircle className='w-5 h-5 text-green-500' />
-                </div>
-              )}
             </div>
             {errors.email && (
               <p className='mt-2 text-sm text-red-600 flex items-center gap-1 font-medium'>
@@ -182,7 +177,7 @@ export default function LoginForm() {
               Password
             </label>
             <div className='relative'>
-              <div className='absolute left-3 top-1/2 transform -translate-y-1/2 z-10'>
+              <div className='absolute left-4 sm:left-3 top-1/2 transform -translate-y-1/2 z-10'>
                 <Lock
                   className={`w-5 h-5 transition-colors duration-200 ${
                     focusedField === 'password' || formData.password
@@ -195,12 +190,12 @@ export default function LoginForm() {
                 id='password'
                 name='password'
                 type={showPassword ? 'text' : 'password'}
-                placeholder='Enter your password'
+                placeholder='Password'
                 value={formData.password}
                 onChange={handleChange}
                 onFocus={() => setFocusedField('password')}
                 onBlur={() => setFocusedField('')}
-                className={`w-full pl-12 pr-12 py-4 border-2 rounded-xl transition-all duration-300 text-purple-900 placeholder:text-purple-500 placeholder:font-medium ${
+                className={`w-full pl-14 sm:pl-12 pr-12 py-4 border-2 rounded-xl transition-all duration-300 text-purple-900 placeholder:text-purple-500 placeholder:font-medium ${
                   errors.password
                     ? 'border-red-400 focus:border-red-500 focus:ring-red-100 !bg-red-50/20 dark:!bg-red-50/20'
                     : focusedField === 'password'
@@ -219,7 +214,7 @@ export default function LoginForm() {
               <button
                 type='button'
                 onClick={() => setShowPassword(!showPassword)}
-                className='absolute right-3 top-1/2 transform -translate-y-1/2 text-purple-500 hover:text-purple-700 transition-colors p-1 rounded-lg hover:bg-purple-50'
+                className='absolute right-5 sm:right-4 top-1/2 transform -translate-y-1/2 text-purple-500 hover:text-purple-700 transition-colors p-1 rounded-lg hover:bg-purple-50'
               >
                 {showPassword ? (
                   <EyeOff className='w-5 h-5' />
@@ -227,11 +222,6 @@ export default function LoginForm() {
                   <Eye className='w-5 h-5' />
                 )}
               </button>
-              {formData.password && !errors.password && (
-                <div className='absolute right-12 top-1/2 transform -translate-y-1/2'>
-                  <CheckCircle className='w-5 h-5 text-green-500' />
-                </div>
-              )}
             </div>
             {errors.password && (
               <p className='mt-2 text-sm text-red-600 flex items-center gap-1 font-medium'>
