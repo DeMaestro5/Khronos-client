@@ -56,15 +56,15 @@ export default function SocialsAuth() {
   ];
 
   return (
-    <div className='space-y-4'>
+    <div className='space-y-3'>
       {/* Divider */}
       <div className='relative'>
         <div className='absolute inset-0 flex items-center'>
           <div className='w-full border-t border-slate-200' />
         </div>
         <div className='relative flex justify-center text-sm'>
-          <div className='rounded-full bg-white/80 backdrop-blur-xl shadow-2xl border border-white/20 p-2'>
-            <span className='px-4 text-slate-500 font-medium'>
+          <div className='rounded-full bg-white/80 backdrop-blur-xl shadow-2xl border border-white/20 p-1'>
+            <span className='px-3 text-slate-500 font-medium'>
               Or continue with
             </span>
           </div>
@@ -72,7 +72,7 @@ export default function SocialsAuth() {
       </div>
 
       {/* Social Buttons */}
-      <div className='flex flex-col gap-4'>
+      <div className='flex flex-col gap-3'>
         {socialProviders.map((provider) => (
           <button
             key={provider.name}
@@ -80,7 +80,7 @@ export default function SocialsAuth() {
             disabled={provider.isLoading}
             onMouseEnter={() => setHoveredButton(provider.name)}
             onMouseLeave={() => setHoveredButton('')}
-            className={`flex items-center justify-center space-x-2 px-4 py-3 border border-slate-200 rounded-xl bg-white/50 backdrop-blur-sm font-medium text-slate-700 transition-all duration-200 transform hover:scale-[1.02] hover:shadow-lg disabled:opacity-50 disabled:cursor-not-allowed ${
+            className={`flex items-center justify-center space-x-2 px-4 py-2.5 border border-slate-200 rounded-xl bg-white/50 backdrop-blur-sm font-medium text-slate-700 transition-all duration-200 transform hover:scale-[1.02] hover:shadow-lg disabled:opacity-50 disabled:cursor-not-allowed ${
               provider.hoverColor
             } ${hoveredButton === provider.name ? 'animate-pulse' : ''}`}
           >

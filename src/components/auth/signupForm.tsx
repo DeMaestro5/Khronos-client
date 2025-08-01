@@ -4,12 +4,12 @@ import {
   ChevronRight,
   Mail,
   User,
-  X,
   Lock,
   Eye,
   EyeOff,
   ChevronLeft,
   CheckCircle,
+  AlertCircle,
 } from 'lucide-react';
 import PasswordStrength from './password-strength-ind';
 import SocialLogin from './SocialsAuth';
@@ -63,24 +63,117 @@ export default function SignupForm({
   const [isLoading, setIsLoading] = useState(false);
   const [formErrors, setFormErrors] = useState(errors);
   const [focusedField, setFocusedField] = useState('');
+  const [touchedFields, setTouchedFields] = useState<Set<string>>(new Set());
   const router = useRouter();
+
+  // Real-time validation function
+  const validateField = (field: string, value: string | boolean) => {
+    switch (field) {
+      case 'firstName':
+        if (!value) return 'First name is required';
+        if (typeof value === 'string' && value.length < 2)
+          return 'First name must be at least 2 characters';
+        return '';
+      case 'lastName':
+        if (!value) return 'Last name is required';
+        if (typeof value === 'string' && value.length < 2)
+          return 'Last name must be at least 2 characters';
+        return '';
+      case 'email':
+        if (!value) return 'Email is required';
+        if (typeof value === 'string' && !/\S+@\S+\.\S+/.test(value))
+          return 'Please enter a valid email address';
+        return '';
+      case 'password':
+        if (!value) return 'Password is required';
+        if (typeof value === 'string' && value.length < 8)
+          return 'Password must be at least 8 characters';
+        return '';
+      case 'confirmPassword':
+        if (!value) return 'Please confirm your password';
+        if (typeof value === 'string' && value !== formData.password)
+          return 'Passwords do not match';
+        return '';
+      case 'agreeToTerms':
+        if (!value) return 'You must agree to the terms and conditions';
+        return '';
+      default:
+        return '';
+    }
+  };
+
+  // Handle input change with real-time validation
+  const handleInputChangeWithValidation = (
+    field: keyof SignupFormProps['formData'],
+    value: string | boolean
+  ) => {
+    handleInputChange(field, value);
+
+    // Mark field as touched
+    setTouchedFields((prev) => new Set(prev).add(field));
+
+    // Clear existing error for this field
+    if (formErrors[field as keyof typeof formErrors]) {
+      setFormErrors((prev) => ({ ...prev, [field]: '' }));
+    }
+
+    // Validate field in real-time if it's been touched
+    if (touchedFields.has(field)) {
+      const error = validateField(field, value);
+      if (error) {
+        setFormErrors((prev) => ({ ...prev, [field]: error }));
+      }
+    }
+  };
+
+  // Handle field blur with validation
+  const handleFieldBlur = (field: string) => {
+    setFocusedField('');
+    setTouchedFields((prev) => new Set(prev).add(field));
+
+    const value = formData[field as keyof typeof formData];
+    const error = validateField(field, value);
+
+    if (error) {
+      setFormErrors((prev) => ({ ...prev, [field]: error }));
+    } else {
+      setFormErrors((prev) => ({ ...prev, [field]: '' }));
+    }
+  };
 
   const handleSignupSubmit = async (e: React.MouseEvent<HTMLButtonElement>) => {
     e.preventDefault();
     setIsLoading(true);
     setFormErrors({});
 
+    // Mark all fields as touched for validation
+    setTouchedFields(
+      new Set([
+        'firstName',
+        'lastName',
+        'email',
+        'password',
+        'confirmPassword',
+        'agreeToTerms',
+      ])
+    );
+
     // Validation
     const newErrors: typeof errors = {};
 
     // Name validation
     if (!formData.firstName) newErrors.firstName = 'First name is required';
+    else if (formData.firstName.length < 2)
+      newErrors.firstName = 'First name must be at least 2 characters';
+
     if (!formData.lastName) newErrors.lastName = 'Last name is required';
+    else if (formData.lastName.length < 2)
+      newErrors.lastName = 'Last name must be at least 2 characters';
 
     // Email validation
     if (!formData.email) newErrors.email = 'Email is required';
     else if (!/\S+@\S+\.\S+/.test(formData.email))
-      newErrors.email = 'Email is invalid';
+      newErrors.email = 'Please enter a valid email address';
 
     // Password validation
     if (!formData.password) newErrors.password = 'Password is required';
@@ -169,24 +262,24 @@ export default function SignupForm({
   };
 
   return (
-    <div className='bg-white/95 backdrop-blur-sm rounded-3xl shadow-2xl border border-slate-200/50 p-8 animate-slideUp animation-delay-400'>
+    <div className='bg-white/95 backdrop-blur-sm rounded-3xl shadow-2xl border border-slate-200/50 p-4 sm:p-6'>
       <form>
         <div>
           {/* Step 1: Personal Information */}
           {currentStep === 1 && (
-            <div className='space-y-6 animate-slideUp'>
-              <div className='grid grid-cols-2 gap-4'>
+            <div className='space-y-4'>
+              <div className='grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4'>
                 <div>
-                  <label className='block text-sm font-semibold text-purple-700 dark:text-purple-300 mb-3'>
+                  <label className='block text-sm font-semibold text-slate-800 mb-2'>
                     First Name
                   </label>
                   <div className='relative'>
-                    <div className='absolute left-3 top-1/2 transform -translate-y-1/2 z-10'>
+                    <div className='absolute left-4 top-1/2 transform -translate-y-1/2 z-10'>
                       <User
                         className={`w-5 h-5 transition-colors duration-200 ${
                           focusedField === 'firstName' || formData.firstName
-                            ? 'text-indigo-500'
-                            : 'text-purple-400'
+                            ? 'text-indigo-600'
+                            : 'text-slate-400'
                         }`}
                       />
                     </div>
@@ -194,49 +287,42 @@ export default function SignupForm({
                       type='text'
                       value={formData.firstName}
                       onChange={(e) =>
-                        handleInputChange('firstName', e.target.value)
+                        handleInputChangeWithValidation(
+                          'firstName',
+                          e.target.value
+                        )
                       }
                       onFocus={() => setFocusedField('firstName')}
-                      onBlur={() => setFocusedField('')}
-                      className={`w-full pl-12 pr-4 py-4 border-2 rounded-xl transition-all duration-300 text-purple-900 placeholder:text-purple-400 placeholder:font-normal ${
+                      onBlur={() => handleFieldBlur('firstName')}
+                      className={`w-full pl-12 pr-4 py-3 border-2 rounded-2xl transition-all duration-300 text-slate-900 placeholder:text-slate-500 placeholder:font-normal text-base ${
                         formErrors.firstName
-                          ? 'border-red-300 focus:border-red-500 focus:ring-red-100 !bg-red-50/20 dark:!bg-red-50/20'
+                          ? 'border-red-300 focus:border-red-500 focus:ring-red-100 bg-red-50/50'
                           : focusedField === 'firstName'
-                          ? 'border-indigo-400 focus:border-indigo-500 focus:ring-indigo-100 !bg-white dark:!bg-white shadow-lg'
-                          : 'border-slate-200 hover:border-slate-300 focus:border-indigo-400 focus:ring-indigo-100 !bg-white dark:!bg-white hover:!bg-slate-50/30 dark:hover:!bg-slate-50/30'
+                          ? 'border-indigo-500 focus:border-indigo-600 focus:ring-indigo-100 bg-white shadow-lg'
+                          : 'border-slate-200 hover:border-slate-300 focus:border-indigo-500 focus:ring-indigo-100 bg-white hover:bg-slate-50/50'
                       }`}
                       placeholder='First name'
-                      style={{
-                        backgroundColor: formErrors.firstName
-                          ? 'rgba(254, 242, 242, 0.2)'
-                          : 'white',
-                        color: '#581c87', // purple-900
-                      }}
+                      style={{ minHeight: '48px' }}
                     />
-                    {formData.firstName && !formErrors.firstName && (
-                      <div className='absolute right-3 top-1/2 transform -translate-y-1/2'>
-                        <CheckCircle className='w-5 h-5 text-green-500' />
-                      </div>
-                    )}
                   </div>
                   {formErrors.firstName && (
-                    <p className='text-red-600 text-sm mt-2 flex items-center gap-1'>
-                      <X className='w-4 h-4' />
+                    <p className='text-red-600 text-sm mt-1 flex items-center gap-1'>
+                      <AlertCircle className='w-4 h-4' />
                       {formErrors.firstName}
                     </p>
                   )}
                 </div>
                 <div>
-                  <label className='block text-sm font-semibold text-purple-700 dark:text-purple-300 mb-3'>
+                  <label className='block text-sm font-semibold text-slate-800 mb-2'>
                     Last Name
                   </label>
                   <div className='relative'>
-                    <div className='absolute left-3 top-1/2 transform -translate-y-1/2 z-10'>
+                    <div className='absolute left-4 top-1/2 transform -translate-y-1/2 z-10'>
                       <User
                         className={`w-5 h-5 transition-colors duration-200 ${
                           focusedField === 'lastName' || formData.lastName
-                            ? 'text-indigo-500'
-                            : 'text-purple-400'
+                            ? 'text-indigo-600'
+                            : 'text-slate-400'
                         }`}
                       />
                     </div>
@@ -244,34 +330,27 @@ export default function SignupForm({
                       type='text'
                       value={formData.lastName}
                       onChange={(e) =>
-                        handleInputChange('lastName', e.target.value)
+                        handleInputChangeWithValidation(
+                          'lastName',
+                          e.target.value
+                        )
                       }
                       onFocus={() => setFocusedField('lastName')}
-                      onBlur={() => setFocusedField('')}
-                      className={`w-full pl-12 pr-4 py-4 border-2 rounded-xl transition-all duration-300 text-purple-900 placeholder:text-purple-400 placeholder:font-normal ${
+                      onBlur={() => handleFieldBlur('lastName')}
+                      className={`w-full pl-12 pr-4 py-3 border-2 rounded-2xl transition-all duration-300 text-slate-900 placeholder:text-slate-500 placeholder:font-normal text-base ${
                         formErrors.lastName
-                          ? 'border-red-300 focus:border-red-500 focus:ring-red-100 !bg-red-50/20 dark:!bg-red-50/20'
+                          ? 'border-red-300 focus:border-red-500 focus:ring-red-100 bg-red-50/50'
                           : focusedField === 'lastName'
-                          ? 'border-indigo-400 focus:border-indigo-500 focus:ring-indigo-100 !bg-white dark:!bg-white shadow-lg'
-                          : 'border-slate-200 hover:border-slate-300 focus:border-indigo-400 focus:ring-indigo-100 !bg-white dark:!bg-white hover:!bg-slate-50/30 dark:hover:!bg-slate-50/30'
+                          ? 'border-indigo-500 focus:border-indigo-600 focus:ring-indigo-100 bg-white shadow-lg'
+                          : 'border-slate-200 hover:border-slate-300 focus:border-indigo-500 focus:ring-indigo-100 bg-white hover:bg-slate-50/50'
                       }`}
                       placeholder='Last name'
-                      style={{
-                        backgroundColor: formErrors.lastName
-                          ? 'rgba(254, 242, 242, 0.2)'
-                          : 'white',
-                        color: '#581c87', // purple-900
-                      }}
+                      style={{ minHeight: '48px' }}
                     />
-                    {formData.lastName && !formErrors.lastName && (
-                      <div className='absolute right-3 top-1/2 transform -translate-y-1/2'>
-                        <CheckCircle className='w-5 h-5 text-green-500' />
-                      </div>
-                    )}
                   </div>
                   {formErrors.lastName && (
-                    <p className='text-red-600 text-sm mt-2 flex items-center gap-1'>
-                      <X className='w-4 h-4' />
+                    <p className='text-red-600 text-sm mt-1 flex items-center gap-1'>
+                      <AlertCircle className='w-4 h-4' />
                       {formErrors.lastName}
                     </p>
                   )}
@@ -279,49 +358,41 @@ export default function SignupForm({
               </div>
 
               <div>
-                <label className='block text-sm font-semibold text-purple-700 dark:text-purple-300 mb-3'>
+                <label className='block text-sm font-semibold text-slate-800 mb-2'>
                   Email Address
                 </label>
                 <div className='relative'>
-                  <div className='absolute left-3 top-1/2 transform -translate-y-1/2 z-10'>
+                  <div className='absolute left-4 top-1/2 transform -translate-y-1/2 z-10'>
                     <Mail
                       className={`w-5 h-5 transition-colors duration-200 ${
                         focusedField === 'email' || formData.email
-                          ? 'text-indigo-500'
-                          : 'text-purple-400'
+                          ? 'text-indigo-600'
+                          : 'text-slate-400'
                       }`}
                     />
                   </div>
                   <input
                     type='email'
                     value={formData.email}
-                    onChange={(e) => handleInputChange('email', e.target.value)}
+                    onChange={(e) =>
+                      handleInputChangeWithValidation('email', e.target.value)
+                    }
                     onFocus={() => setFocusedField('email')}
-                    onBlur={() => setFocusedField('')}
-                    className={`w-full pl-12 pr-4 py-4 border-2 rounded-xl transition-all duration-300 text-purple-900 placeholder:text-purple-400 placeholder:font-normal ${
+                    onBlur={() => handleFieldBlur('email')}
+                    className={`w-full pl-12 pr-4 py-3 border-2 rounded-2xl transition-all duration-300 text-slate-900 placeholder:text-slate-500 placeholder:font-normal text-base ${
                       formErrors.email
-                        ? 'border-red-300 focus:border-red-500 focus:ring-red-100 !bg-red-50/20 dark:!bg-red-50/20'
+                        ? 'border-red-300 focus:border-red-500 focus:ring-red-100 bg-red-50/50'
                         : focusedField === 'email'
-                        ? 'border-indigo-400 focus:border-indigo-500 focus:ring-indigo-100 !bg-white dark:!bg-white shadow-lg'
-                        : 'border-slate-200 hover:border-slate-300 focus:border-indigo-400 focus:ring-indigo-100 !bg-white dark:!bg-white hover:!bg-slate-50/30 dark:hover:!bg-slate-50/30'
+                        ? 'border-indigo-500 focus:border-indigo-600 focus:ring-indigo-100 bg-white shadow-lg'
+                        : 'border-slate-200 hover:border-slate-300 focus:border-indigo-500 focus:ring-indigo-100 bg-white hover:bg-slate-50/50'
                     }`}
                     placeholder='Email address'
-                    style={{
-                      backgroundColor: formErrors.email
-                        ? 'rgba(254, 242, 242, 0.2)'
-                        : 'white',
-                      color: '#581c87', // purple-900
-                    }}
+                    style={{ minHeight: '48px' }}
                   />
-                  {formData.email && !formErrors.email && (
-                    <div className='absolute right-3 top-1/2 transform -translate-y-1/2'>
-                      <CheckCircle className='w-5 h-5 text-green-500' />
-                    </div>
-                  )}
                 </div>
                 {formErrors.email && (
-                  <p className='text-red-600 text-sm mt-2 flex items-center gap-1'>
-                    <X className='w-4 h-4' />
+                  <p className='text-red-600 text-sm mt-1 flex items-center gap-1'>
+                    <AlertCircle className='w-4 h-4' />
                     {formErrors.email}
                   </p>
                 )}
@@ -331,7 +402,8 @@ export default function SignupForm({
                 onClick={handleNext}
                 size='lg'
                 type='button'
-                className='w-full bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 text-white py-4 px-4 rounded-xl font-semibold shadow-lg hover:shadow-xl transition-all duration-300 flex items-center justify-center group'
+                className='w-full bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 text-white py-3 px-6 rounded-2xl font-semibold shadow-lg hover:shadow-xl transition-all duration-300 flex items-center justify-center group text-base'
+                style={{ minHeight: '48px' }}
               >
                 Continue
                 <ChevronRight className='ml-2 w-5 h-5 group-hover:translate-x-1 transition-transform' />
@@ -341,18 +413,18 @@ export default function SignupForm({
 
           {/* Step 2: Password and Security */}
           {currentStep === 2 && (
-            <div className='space-y-6 animate-slideUp'>
+            <div className='space-y-4'>
               <div>
-                <label className='block text-sm font-semibold text-purple-700 dark:text-purple-300 mb-3'>
+                <label className='block text-sm font-semibold text-slate-800 mb-2'>
                   Password
                 </label>
                 <div className='relative'>
-                  <div className='absolute left-3 top-1/2 transform -translate-y-1/2 z-10'>
+                  <div className='absolute left-4 top-1/2 transform -translate-y-1/2 z-10'>
                     <Lock
                       className={`w-5 h-5 transition-colors duration-200 ${
                         focusedField === 'password' || formData.password
-                          ? 'text-indigo-500'
-                          : 'text-purple-400'
+                          ? 'text-indigo-600'
+                          : 'text-slate-400'
                       }`}
                     />
                   </div>
@@ -360,29 +432,27 @@ export default function SignupForm({
                     type={showPassword ? 'text' : 'password'}
                     value={formData.password}
                     onChange={(e) =>
-                      handleInputChange('password', e.target.value)
+                      handleInputChangeWithValidation(
+                        'password',
+                        e.target.value
+                      )
                     }
                     onFocus={() => setFocusedField('password')}
-                    onBlur={() => setFocusedField('')}
-                    className={`w-full pl-12 pr-12 py-4 border-2 rounded-xl transition-all duration-300 text-purple-900 placeholder:text-purple-400 placeholder:font-normal ${
+                    onBlur={() => handleFieldBlur('password')}
+                    className={`w-full pl-12 pr-12 py-3 border-2 rounded-2xl transition-all duration-300 text-slate-900 placeholder:text-slate-500 placeholder:font-normal text-base ${
                       formErrors.password
-                        ? 'border-red-300 focus:border-red-500 focus:ring-red-100 !bg-red-50/20 dark:!bg-red-50/20'
+                        ? 'border-red-300 focus:border-red-500 focus:ring-red-100 bg-red-50/50'
                         : focusedField === 'password'
-                        ? 'border-indigo-400 focus:border-indigo-500 focus:ring-indigo-100 !bg-white dark:!bg-white shadow-lg'
-                        : 'border-slate-200 hover:border-slate-300 focus:border-indigo-400 focus:ring-indigo-100 !bg-white dark:!bg-white hover:!bg-slate-50/30 dark:hover:!bg-slate-50/30'
+                        ? 'border-indigo-500 focus:border-indigo-600 focus:ring-indigo-100 bg-white shadow-lg'
+                        : 'border-slate-200 hover:border-slate-300 focus:border-indigo-500 focus:ring-indigo-100 bg-white hover:bg-slate-50/50'
                     }`}
                     placeholder='Create a strong password'
-                    style={{
-                      backgroundColor: formErrors.password
-                        ? 'rgba(254, 242, 242, 0.2)'
-                        : 'white',
-                      color: '#581c87', // purple-900
-                    }}
+                    style={{ minHeight: '48px' }}
                   />
                   <button
                     type='button'
                     onClick={() => setShowPassword(!showPassword)}
-                    className='absolute right-3 top-1/2 transform -translate-y-1/2 text-purple-400 hover:text-purple-600 transition-colors p-1 rounded-lg hover:bg-slate-100'
+                    className='absolute right-4 top-1/2 transform -translate-y-1/2 text-slate-400 hover:text-slate-600 transition-colors p-1 rounded-lg hover:bg-slate-100'
                   >
                     {showPassword ? (
                       <EyeOff className='w-5 h-5' />
@@ -390,35 +460,30 @@ export default function SignupForm({
                       <Eye className='w-5 h-5' />
                     )}
                   </button>
-                  {formData.password && !formErrors.password && (
-                    <div className='absolute right-12 top-1/2 transform -translate-y-1/2'>
-                      <CheckCircle className='w-5 h-5 text-green-500' />
-                    </div>
-                  )}
                 </div>
-                <div className='mt-3'>
+                <div className='mt-2'>
                   <PasswordStrength password={formData.password} />
                 </div>
                 {formErrors.password && (
-                  <p className='text-red-600 text-sm mt-2 flex items-center gap-1'>
-                    <X className='w-4 h-4' />
+                  <p className='text-red-600 text-sm mt-1 flex items-center gap-1'>
+                    <AlertCircle className='w-4 h-4' />
                     {formErrors.password}
                   </p>
                 )}
               </div>
 
               <div>
-                <label className='block text-sm font-semibold text-purple-700 dark:text-purple-300 mb-3'>
+                <label className='block text-sm font-semibold text-slate-800 mb-2'>
                   Confirm Password
                 </label>
                 <div className='relative'>
-                  <div className='absolute left-3 top-1/2 transform -translate-y-1/2 z-10'>
+                  <div className='absolute left-4 top-1/2 transform -translate-y-1/2 z-10'>
                     <Lock
                       className={`w-5 h-5 transition-colors duration-200 ${
                         focusedField === 'confirmPassword' ||
                         formData.confirmPassword
-                          ? 'text-indigo-500'
-                          : 'text-purple-400'
+                          ? 'text-indigo-600'
+                          : 'text-slate-400'
                       }`}
                     />
                   </div>
@@ -426,29 +491,27 @@ export default function SignupForm({
                     type={showConfirmPassword ? 'text' : 'password'}
                     value={formData.confirmPassword}
                     onChange={(e) =>
-                      handleInputChange('confirmPassword', e.target.value)
+                      handleInputChangeWithValidation(
+                        'confirmPassword',
+                        e.target.value
+                      )
                     }
                     onFocus={() => setFocusedField('confirmPassword')}
-                    onBlur={() => setFocusedField('')}
-                    className={`w-full pl-12 pr-12 py-4 border-2 rounded-xl transition-all duration-300 text-purple-900 placeholder:text-purple-400 placeholder:font-normal ${
+                    onBlur={() => handleFieldBlur('confirmPassword')}
+                    className={`w-full pl-12 pr-12 py-3 border-2 rounded-2xl transition-all duration-300 text-slate-900 placeholder:text-slate-500 placeholder:font-normal text-base ${
                       formErrors.confirmPassword
-                        ? 'border-red-300 focus:border-red-500 focus:ring-red-100 !bg-red-50/20 dark:!bg-red-50/20'
+                        ? 'border-red-300 focus:border-red-500 focus:ring-red-100 bg-red-50/50'
                         : focusedField === 'confirmPassword'
-                        ? 'border-indigo-400 focus:border-indigo-500 focus:ring-indigo-100 !bg-white dark:!bg-white shadow-lg'
-                        : 'border-slate-200 hover:border-slate-300 focus:border-indigo-400 focus:ring-indigo-100 !bg-white dark:!bg-white hover:!bg-slate-50/30 dark:hover:!bg-slate-50/30'
+                        ? 'border-indigo-500 focus:border-indigo-600 focus:ring-indigo-100 bg-white shadow-lg'
+                        : 'border-slate-200 hover:border-slate-300 focus:border-indigo-500 focus:ring-indigo-100 bg-white hover:bg-slate-50/50'
                     }`}
                     placeholder='Confirm your password'
-                    style={{
-                      backgroundColor: formErrors.confirmPassword
-                        ? 'rgba(254, 242, 242, 0.2)'
-                        : 'white',
-                      color: '#581c87', // purple-900
-                    }}
+                    style={{ minHeight: '48px' }}
                   />
                   <button
                     type='button'
                     onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                    className='absolute right-3 top-1/2 transform -translate-y-1/2 text-purple-400 hover:text-purple-600 transition-colors p-1 rounded-lg hover:bg-slate-100'
+                    className='absolute right-4 top-1/2 transform -translate-y-1/2 text-slate-400 hover:text-slate-600 transition-colors p-1 rounded-lg hover:bg-slate-100'
                   >
                     {showConfirmPassword ? (
                       <EyeOff className='w-5 h-5' />
@@ -456,30 +519,26 @@ export default function SignupForm({
                       <Eye className='w-5 h-5' />
                     )}
                   </button>
-                  {formData.confirmPassword &&
-                    !formErrors.confirmPassword &&
-                    formData.password === formData.confirmPassword && (
-                      <div className='absolute right-12 top-1/2 transform -translate-y-1/2'>
-                        <CheckCircle className='w-5 h-5 text-green-500' />
-                      </div>
-                    )}
                 </div>
                 {formErrors.confirmPassword && (
-                  <p className='text-red-600 text-sm mt-2 flex items-center gap-1'>
-                    <X className='w-4 h-4' />
+                  <p className='text-red-600 text-sm mt-1 flex items-center gap-1'>
+                    <AlertCircle className='w-4 h-4' />
                     {formErrors.confirmPassword}
                   </p>
                 )}
               </div>
 
-              <div className='flex items-start space-x-3 p-4 bg-white/50 backdrop-blur-sm rounded-xl border border-slate-200/50'>
+              <div className='flex items-start space-x-3 p-3 bg-slate-50/80 backdrop-blur-sm rounded-2xl border border-slate-200/50'>
                 <div className='relative'>
                   <input
                     type='checkbox'
                     id='terms'
                     checked={formData.agreeToTerms}
                     onChange={(e) =>
-                      handleInputChange('agreeToTerms', e.target.checked)
+                      handleInputChangeWithValidation(
+                        'agreeToTerms',
+                        e.target.checked
+                      )
                     }
                     className='sr-only'
                   />
@@ -490,7 +549,7 @@ export default function SignupForm({
                     <div
                       className={`w-5 h-5 border-2 rounded-md transition-all duration-200 flex items-center justify-center flex-shrink-0 mt-0.5 ${
                         formData.agreeToTerms
-                          ? 'bg-indigo-600 border-indigo-600'
+                          ? 'bg-indigo-600 border-indigo-600 scale-110'
                           : 'border-slate-300 group-hover:border-indigo-400'
                       }`}
                     >
@@ -498,7 +557,7 @@ export default function SignupForm({
                         <CheckCircle className='w-3 h-3 text-white' />
                       )}
                     </div>
-                    <div className='ml-3 text-sm text-purple-600 leading-relaxed'>
+                    <div className='ml-3 text-sm text-slate-700 leading-relaxed'>
                       I agree to the{' '}
                       <button
                         type='button'
@@ -519,7 +578,7 @@ export default function SignupForm({
               </div>
               {formErrors.agreeToTerms && (
                 <p className='text-red-600 text-sm flex items-center gap-1'>
-                  <X className='w-4 h-4' />
+                  <AlertCircle className='w-4 h-4' />
                   {formErrors.agreeToTerms}
                 </p>
               )}
@@ -528,7 +587,8 @@ export default function SignupForm({
                 <button
                   type='button'
                   onClick={handleBack}
-                  className='flex-1 bg-slate-100 hover:bg-slate-200 text-slate-700 py-4 px-4 rounded-xl font-semibold transition-all duration-300 flex items-center justify-center group shadow-sm'
+                  className='flex-1 bg-slate-100 hover:bg-slate-200 text-slate-700 py-3 px-6 rounded-2xl font-semibold transition-all duration-300 flex items-center justify-center group shadow-sm text-base'
+                  style={{ minHeight: '48px' }}
                 >
                   <ChevronLeft className='mr-2 w-5 h-5 group-hover:-translate-x-1 transition-transform' />
                   Back
@@ -537,7 +597,8 @@ export default function SignupForm({
                   type='submit'
                   onClick={handleSignupSubmit}
                   disabled={isLoading}
-                  className='flex-1 bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 text-white py-4 px-4 rounded-xl font-semibold shadow-lg hover:shadow-xl transition-all duration-300 flex items-center justify-center disabled:opacity-50 disabled:cursor-not-allowed'
+                  className='flex-1 bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 text-white py-3 px-6 rounded-2xl font-semibold shadow-lg hover:shadow-xl transition-all duration-300 flex items-center justify-center disabled:opacity-50 disabled:cursor-not-allowed text-base'
+                  style={{ minHeight: '48px' }}
                 >
                   {isLoading ? (
                     <div className='flex items-center space-x-2'>
@@ -555,7 +616,7 @@ export default function SignupForm({
 
         {/* Social Login - Only show on step 1 */}
         {currentStep === 1 && (
-          <div className='mt-8'>
+          <div className='mt-6'>
             <SocialLogin />
           </div>
         )}

@@ -184,7 +184,7 @@ const ContentCalendar = () => {
   const weekDays = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
 
   return (
-    <div className='bg-white rounded-xl sm:rounded-2xl shadow-2xl border border-slate-200 p-3 sm:p-4 lg:p-6 w-full max-w-xs sm:max-w-sm lg:max-w-md mx-auto'>
+    <div className='bg-white rounded-xl sm:rounded-2xl shadow-2xl border border-slate-200 p-3 sm:p-4 lg:p-6 w-full max-w-xs sm:max-w-sm lg:max-w-md mx-auto relative z-0'>
       {/* Calendar Header */}
       <div className='flex items-center justify-between mb-3 sm:mb-4'>
         <div>
