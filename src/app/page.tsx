@@ -7,63 +7,15 @@ import ContentCalendar from '../components/ui/content-calendar';
 import FeaturesSection from '../components/features';
 import Testimonial from '../components/testimonial';
 import StatsSection from '../components/stats';
-import { ThemeToggle } from '../components/ui/theme-toggle';
 import { Footer } from '../components/ui/footer';
 import { CTASection } from '../components/ui/cta-section';
+import { MainNavbar } from '../components/ui/main-navbar';
 
 export default function Home() {
   return (
     <div className='min-h-screen bg-theme-secondary theme-transition overflow-x-hidden'>
       {/* Navigation */}
-      <motion.nav
-        className='fixed top-0 w-full bg-theme-card border-b border-theme-primary z-50 theme-transition sm:bg-theme-card/95 sm:backdrop-blur-md'
-        initial={{ opacity: 0, y: -20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.6 }}
-      >
-        <div className='w-full px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto'>
-          <div className='flex justify-between items-center py-3 sm:py-4'>
-            <div className='flex items-center space-x-2'>
-              <div className='w-7 h-7 sm:w-8 sm:h-8 bg-accent-primary rounded-lg flex items-center justify-center flex-shrink-0'>
-                <span className='text-white font-bold text-xs sm:text-sm'>
-                  K
-                </span>
-              </div>
-              <span className='text-base sm:text-xl font-bold text-theme-primary truncate'>
-                KHRONOS
-              </span>
-            </div>
-            <div className='flex items-center space-x-2 sm:space-x-3 flex-shrink-0'>
-              {/* Show theme toggle on all screen sizes */}
-              <ThemeToggle variant='compact' showLabels={false} size='sm' />
-              <Button
-                variant='ghost'
-                size='sm'
-                className='text-theme-secondary hover:text-theme-primary hover:bg-theme-hover px-3 sm:px-4 py-2 text-sm font-medium rounded-lg transition-all duration-200 flex items-center justify-center'
-              >
-                <Link
-                  href='/auth/login'
-                  className='flex items-center justify-center w-full'
-                >
-                  Login
-                </Link>
-              </Button>
-              <Button
-                size='sm'
-                className='bg-accent-primary hover:bg-accent-secondary text-white px-3 sm:px-6 py-2 text-sm font-semibold rounded-lg shadow-sm hover:shadow-md transition-all duration-200 flex items-center justify-center'
-              >
-                <Link
-                  href='/auth/signup'
-                  className='flex items-center justify-center w-full'
-                >
-                  <span className='hidden sm:inline'>Get Started</span>
-                  <span className='sm:hidden'>Start</span>
-                </Link>
-              </Button>
-            </div>
-          </div>
-        </div>
-      </motion.nav>
+      <MainNavbar />
 
       {/* Hero Section */}
       <section className='pt-20 sm:pt-24 lg:pt-28 pb-4 sm:pb-6 lg:pb-8 px-4 sm:px-6 lg:px-8 overflow-hidden'>
@@ -133,7 +85,7 @@ export default function Home() {
                   className='border-2 border-accent-primary text-accent-primary hover:bg-accent-primary hover:text-white px-6 sm:px-8 py-3 sm:py-4 text-sm sm:text-lg font-medium w-full sm:w-auto flex items-center justify-center'
                 >
                   <Link
-                    href='#demo'
+                    href='/demo'
                     className='flex items-center justify-center w-full'
                   >
                     Watch Demo

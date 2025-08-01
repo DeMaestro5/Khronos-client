@@ -296,7 +296,7 @@ export default function LoginForm() {
             {isLoading ? (
               <div className='flex items-center justify-center space-x-2'>
                 <div className='w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin' />
-                <span className='font-bold'>Login you in...</span>
+                <span className='font-bold'>Logging you in...</span>
               </div>
             ) : (
               <span className='flex items-center justify-center space-x-2'>
