@@ -2,7 +2,6 @@
 
 import { Button } from '../../components/ui/button';
 import { Input } from '../../components/ui/input';
-import { motion } from 'framer-motion';
 import { Footer } from '../../components/ui/footer';
 import { MainNavbar } from '../../components/ui/main-navbar';
 import { useState } from 'react';
@@ -36,23 +35,13 @@ export default function ContactPage() {
       {/* Hero Section */}
       <section className='pt-20 sm:pt-24 lg:pt-28 pb-4 sm:pb-6 lg:pb-8 px-4 sm:px-6 lg:px-8 overflow-hidden'>
         <div className='w-full max-w-4xl mx-auto'>
-          <motion.div
-            className='text-center space-y-6 sm:space-y-8'
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.8 }}
-          >
+          <div className='text-center space-y-6 sm:space-y-8'>
             <div className='space-y-4 sm:space-y-6'>
-              <motion.div
-                className='inline-flex items-center px-3 sm:px-4 py-2 rounded-full bg-theme-tertiary border border-theme-primary'
-                initial={{ opacity: 0, scale: 0.8 }}
-                animate={{ opacity: 1, scale: 1 }}
-                transition={{ duration: 0.6, delay: 0.2 }}
-              >
+              <div className='inline-flex items-center px-3 sm:px-4 py-2 rounded-full bg-theme-tertiary border border-theme-primary'>
                 <span className='text-accent-primary text-xs sm:text-sm font-medium'>
                   📧 Get in Touch
                 </span>
-              </motion.div>
+              </div>
 
               <h1 className='text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-bold text-theme-primary leading-tight'>
                 Contact Us
@@ -63,7 +52,7 @@ export default function ContactPage() {
                 Send us a message and we&apos;ll respond as soon as possible.
               </p>
             </div>
-          </motion.div>
+          </div>
         </div>
       </section>
 
@@ -72,12 +61,7 @@ export default function ContactPage() {
         <div className='w-full max-w-4xl mx-auto'>
           <div className='grid lg:grid-cols-2 gap-8 lg:gap-12'>
             {/* Contact Form */}
-            <motion.div
-              className='w-full'
-              initial={{ opacity: 0, x: -30 }}
-              animate={{ opacity: 1, x: 0 }}
-              transition={{ duration: 0.8, delay: 0.2 }}
-            >
+            <div className='w-full'>
               <div className='bg-theme-card rounded-2xl p-6 sm:p-8 shadow-theme-lg border border-theme-primary'>
                 <h2 className='text-xl sm:text-2xl font-bold text-theme-primary mb-6'>
                   Send us a message
@@ -158,15 +142,10 @@ export default function ContactPage() {
                   </Button>
                 </form>
               </div>
-            </motion.div>
+            </div>
 
             {/* Contact Information */}
-            <motion.div
-              className='w-full'
-              initial={{ opacity: 0, x: 30 }}
-              animate={{ opacity: 1, x: 0 }}
-              transition={{ duration: 0.8, delay: 0.4 }}
-            >
+            <div className='w-full'>
               <div className='space-y-8'>
                 {/* General Contact */}
                 <div className='bg-theme-card rounded-2xl p-6 sm:p-8 shadow-theme-lg border border-theme-primary'>
@@ -251,7 +230,7 @@ export default function ContactPage() {
                   </div>
                 </div>
               </div>
-            </motion.div>
+            </div>
           </div>
         </div>
       </section>

@@ -20,6 +20,7 @@ import { useAuth } from '@/src/context/AuthContext';
 import { useNotifications } from '@/src/context/NotificationContext';
 import { useUserData } from '@/src/context/UserDataContext';
 import NotificationDropdown from '@/src/components/notifications/NotificationDropdown';
+import { KhronosLogo } from '@/src/components/ui/khronos-logo';
 
 export default function Navbar() {
   const [notificationsOpen, setNotificationsOpen] = useState(false);
@@ -146,9 +147,11 @@ export default function Navbar() {
               className='flex items-center space-x-3 group'
             >
               <div className='relative'>
-                <div className='w-10 h-10 bg-gradient-to-br from-indigo-600 via-purple-600 to-pink-600 dark:from-blue-600 dark:via-indigo-600 dark:to-violet-700 rounded-xl flex items-center justify-center shadow-xl group-hover:shadow-2xl transition-all duration-300 transform group-hover:scale-105'>
-                  <span className='text-white font-bold text-sm'>KH</span>
-                </div>
+                <KhronosLogo
+                  size='md'
+                  showText={false}
+                  logoClassName='group-hover:shadow-2xl transition-all duration-300 transform group-hover:scale-105'
+                />
                 <div className='absolute -inset-1 bg-gradient-to-r from-indigo-600 to-purple-600 dark:from-blue-600 dark:to-indigo-600 rounded-xl blur opacity-25 group-hover:opacity-75 transition duration-300'></div>
               </div>
               <div className='hidden sm:block'>

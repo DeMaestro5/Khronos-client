@@ -7,6 +7,7 @@ import ProgressIndicator from '@/src/components/auth/progress-indicator';
 import SignupForm from '@/src/components/auth/signupForm';
 import LeftSideSignUp from '@/src/components/auth/leftsideSignUp';
 import { Footer } from '@/src/components/ui/footer';
+import { KhronosLogo } from '@/src/components/ui/khronos-logo';
 
 export default function SignupPage() {
   const [currentStep, setCurrentStep] = useState<number>(1);
@@ -123,15 +124,7 @@ export default function SignupPage() {
             <div className='text-center mb-3 lg:mb-4'>
               {/* Logo */}
               <div className='flex items-center justify-center space-x-3 mb-3'>
-                <div className='w-10 h-10 bg-gradient-to-r from-indigo-600 via-purple-600 to-indigo-600 rounded-2xl flex items-center justify-center shadow-xl transform hover:scale-110 transition-all duration-300'>
-                  <span className='text-white font-bold text-base'>K</span>
-                </div>
-                <div
-                  onClick={() => router.push('/')}
-                  className='text-xl font-bold bg-gradient-to-r from-indigo-600 to-purple-600 bg-clip-text text-transparent cursor-pointer'
-                >
-                  KHRONOS
-                </div>
+                <KhronosLogo size='md' showText={true} clickable={true} />
               </div>
 
               {/* Welcome Text */}

@@ -9,6 +9,7 @@ import { useCalendar } from '@/src/context/CalendarContext';
 import { useUserData } from '@/src/context/UserDataContext';
 import { useGlobalConfetti } from '@/src/context/ConfettiContext';
 import { CreatedContent } from '@/src/types/modal';
+import { KhronosLogo } from '@/src/components/ui/khronos-logo';
 
 const CalendarPage = () => {
   const [showModal, setShowModal] = useState(false);
@@ -133,11 +134,9 @@ const CalendarPage = () => {
               {/* Mobile Layout */}
               <div className='block sm:hidden'>
                 <div className='flex items-center justify-between mb-4'>
-                  {/* Mobile Logo */}
-                  <div className='flex items-center space-x-2'>
-                    <div className='w-10 h-10 bg-gradient-to-br from-purple-600 to-pink-600 rounded-xl flex items-center justify-center shadow-lg'>
-                      <span className='text-white font-black text-lg'>KH</span>
-                    </div>
+                  {/* Mobile Header */}
+                  <div className='flex items-center space-x-3'>
+                    <KhronosLogo size='md' showText={false} />
                     <div>
                       <h1 className='text-xl font-black text-theme-primary'>
                         KHRONOS
@@ -168,11 +167,7 @@ const CalendarPage = () => {
                     <div className='flex items-center justify-between mb-6'>
                       {/* Left: Logo and Title */}
                       <div className='flex items-center space-x-4'>
-                        <div className='w-14 h-14 lg:w-16 lg:h-16 bg-gradient-to-br from-purple-600 to-pink-600 rounded-xl flex items-center justify-center shadow-lg'>
-                          <span className='text-white font-black text-xl lg:text-2xl'>
-                            KH
-                          </span>
-                        </div>
+                        <KhronosLogo size='lg' showText={false} />
                         <div>
                           <h1 className='text-2xl lg:text-3xl xl:text-4xl font-black bg-gradient-to-r from-purple-800 via-purple-600 to-pink-600 dark:from-purple-400 dark:via-purple-300 dark:to-pink-400 bg-clip-text text-transparent'>
                             KHRONOS
