@@ -528,7 +528,7 @@ export default function SignupForm({
                 )}
               </div>
 
-              <div className='flex items-start space-x-3 p-3 bg-slate-50/80 backdrop-blur-sm rounded-2xl border border-slate-200/50'>
+              <div className='bg-gradient-to-br from-indigo-50/80 to-purple-50/80 backdrop-blur-sm rounded-2xl border border-indigo-100/60 p-4 shadow-sm hover:shadow-md transition-all duration-300'>
                 <div className='relative'>
                   <input
                     type='checkbox'
@@ -547,31 +547,40 @@ export default function SignupForm({
                     className='flex items-start cursor-pointer group'
                   >
                     <div
-                      className={`w-5 h-5 border-2 rounded-md transition-all duration-200 flex items-center justify-center flex-shrink-0 mt-0.5 ${
+                      className={`w-5 h-5 border-2 rounded-md transition-all duration-300 flex items-center justify-center flex-shrink-0 mt-0 shadow-sm ${
                         formData.agreeToTerms
-                          ? 'bg-indigo-600 border-indigo-600 scale-110'
-                          : 'border-slate-300 group-hover:border-indigo-400'
+                          ? 'bg-gradient-to-r from-indigo-600 to-purple-600 border-indigo-600 shadow-indigo-200'
+                          : 'border-slate-300 group-hover:border-indigo-400 group-hover:shadow-md'
                       }`}
                     >
                       {formData.agreeToTerms && (
                         <CheckCircle className='w-3 h-3 text-white' />
                       )}
                     </div>
-                    <div className='ml-3 text-sm text-slate-700 leading-relaxed'>
-                      I agree to the{' '}
-                      <button
-                        type='button'
-                        className='text-indigo-600 hover:text-indigo-700 underline font-medium'
-                      >
-                        Terms of Service
-                      </button>{' '}
-                      and{' '}
-                      <button
-                        type='button'
-                        className='text-indigo-600 hover:text-indigo-700 underline font-medium'
-                      >
-                        Privacy Policy
-                      </button>
+                    <div className='ml-3 flex-1'>
+                      <div className='text-sm text-slate-700 leading-tight space-y-0'>
+                        <p className='font-medium text-slate-800 mb-0 text-sm'>
+                          I agree to the terms and conditions
+                        </p>
+                        <p className='text-xs text-slate-600 leading-tight'>
+                          By creating an account, you agree to our{' '}
+                          <button
+                            type='button'
+                            className='text-indigo-600 hover:text-indigo-700 font-semibold hover:underline transition-colors duration-200 inline text-xs'
+                            onClick={(e) => e.stopPropagation()}
+                          >
+                            Terms of Service
+                          </button>{' '}
+                          and{' '}
+                          <button
+                            type='button'
+                            className='text-indigo-600 hover:text-indigo-700 font-semibold hover:underline transition-colors duration-200 inline text-xs'
+                            onClick={(e) => e.stopPropagation()}
+                          >
+                            Privacy Policy
+                          </button>
+                        </p>
+                      </div>
                     </div>
                   </label>
                 </div>
