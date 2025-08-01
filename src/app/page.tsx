@@ -8,6 +8,7 @@ import FeaturesSection from '../components/features';
 import Testimonial from '../components/testimonial';
 import StatsSection from '../components/stats';
 import { ThemeToggle } from '../components/ui/theme-toggle';
+import { Footer } from '../components/ui/footer';
 
 export default function Home() {
   return (
@@ -270,25 +271,7 @@ export default function Home() {
       </section>
 
       {/* Footer */}
-      <footer className='bg-theme-card border-t border-theme-primary py-4 sm:py-6 overflow-hidden'>
-        <div className='w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8'>
-          <div className='flex flex-col sm:flex-row justify-between items-center space-y-4 sm:space-y-0'>
-            <div className='flex items-center space-x-2'>
-              <div className='w-7 h-7 sm:w-8 sm:h-8 bg-accent-primary rounded-lg flex items-center justify-center'>
-                <span className='text-white font-bold text-xs sm:text-sm'>
-                  K
-                </span>
-              </div>
-              <span className='text-lg sm:text-xl font-bold text-theme-primary'>
-                KHRONOS
-              </span>
-            </div>
-            <div className='text-theme-secondary text-xs sm:text-sm text-center'>
-              © 2025 KHRONOS. All rights reserved.
-            </div>
-          </div>
-        </div>
-      </footer>
+      <Footer variant='main' />
     </div>
   );
 }

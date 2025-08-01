@@ -4,6 +4,7 @@ import FloatingOrbs from '@/src/components/ui/floating-animation';
 import React, { useEffect, useState } from 'react';
 import LoginForm from '@/src/components/auth/LoginForm';
 import SocialsAuth from '@/src/components/auth/SocialsAuth';
+import { Footer } from '@/src/components/ui/footer';
 import { useRouter } from 'next/navigation';
 
 export default function LoginPage() {
@@ -75,9 +76,7 @@ export default function LoginPage() {
         </div>
 
         {/* Footer */}
-        <div className='text-center text-xs text-slate-900 animate-slideUp animation-delay-600'>
-          <p>© 2025 KHRONOS. All rights reserved.</p>
-        </div>
+        <Footer variant='auth' animate={true} />
       </div>
 
       <style jsx>{`
