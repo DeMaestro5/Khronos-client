@@ -1,6 +1,5 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { motion, useAnimation, useInView } from 'framer-motion';
-
 const TestimonialsSection = () => {
   const ref = useRef(null);
   const isInView = useInView(ref, { once: true, amount: 0.1 });
@@ -82,7 +81,7 @@ const TestimonialsSection = () => {
   return (
     <section
       ref={ref}
-      className='relative py-32 overflow-hidden bg-theme-primary theme-transition'
+      className='relative py-16 sm:py-24 lg:py-32 overflow-hidden bg-theme-primary theme-transition'
     >
       {/* Animated background elements */}
       <div className='absolute inset-0'>
@@ -131,7 +130,7 @@ const TestimonialsSection = () => {
       <div className='relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8'>
         {/* Header */}
         <motion.div
-          className='text-center mb-20'
+          className='text-center mb-12 sm:mb-16 lg:mb-20'
           initial={{ opacity: 0, y: 30 }}
           animate={controls}
           variants={{
@@ -143,15 +142,15 @@ const TestimonialsSection = () => {
           }}
         >
           <motion.div
-            className='inline-flex items-center px-6 py-3 rounded-full bg-theme-tertiary border border-theme-primary mb-6'
+            className='inline-flex items-center px-4 sm:px-6 py-2 sm:py-3 rounded-full bg-theme-tertiary border border-theme-primary mb-4 sm:mb-6'
             whileHover={{ scale: 1.05 }}
           >
-            <span className='text-accent-primary text-sm font-medium'>
+            <span className='text-accent-primary text-xs sm:text-sm font-medium'>
               💬 What Our Users Say
             </span>
           </motion.div>
 
-          <h2 className='text-5xl lg:text-6xl font-bold mb-6'>
+          <h2 className='text-3xl sm:text-4xl lg:text-5xl xl:text-6xl font-bold mb-4 sm:mb-6'>
             <span className='text-theme-primary'>
               Loved by content creators
             </span>
@@ -161,7 +160,7 @@ const TestimonialsSection = () => {
             </span>
           </h2>
 
-          <p className='text-xl text-theme-secondary max-w-3xl mx-auto leading-relaxed'>
+          <p className='text-base sm:text-lg lg:text-xl text-theme-secondary max-w-3xl mx-auto leading-relaxed px-4'>
             Join thousands of creators, marketers, and businesses who&apos;ve
             transformed their content strategy with KHRONOS.
           </p>
@@ -169,7 +168,7 @@ const TestimonialsSection = () => {
 
         {/* Testimonials Grid */}
         <motion.div
-          className='grid md:grid-cols-3 gap-8'
+          className='grid md:grid-cols-3 gap-4 sm:gap-6 lg:gap-8'
           variants={containerVariants}
           initial='hidden'
           animate={controls}
@@ -191,27 +190,27 @@ const TestimonialsSection = () => {
               <div className='absolute inset-0 bg-gradient-to-br from-theme-card/20 to-theme-tertiary/10 rounded-2xl blur-xl opacity-0 group-hover:opacity-100 transition-opacity duration-500'></div>
 
               {/* Main testimonial card */}
-              <div className='relative h-full bg-theme-card/90 backdrop-blur-lg border border-theme-primary rounded-2xl p-8 shadow-theme-xl hover:shadow-theme-xl transition-all duration-300 group-hover:bg-theme-card group-hover:border-theme-secondary'>
+              <div className='relative h-full bg-theme-card/90 backdrop-blur-lg border border-theme-primary rounded-2xl p-4 sm:p-6 lg:p-8 shadow-theme-xl hover:shadow-theme-xl transition-all duration-300 group-hover:bg-theme-card group-hover:border-theme-secondary'>
                 {/* Quote */}
-                <div className='mb-6'>
-                  <div className='flex items-start mb-4'>
+                <div className='mb-4 sm:mb-6'>
+                  <div className='flex items-start mb-3 sm:mb-4'>
                     <div
-                      className={`text-4xl bg-gradient-to-r ${testimonial.gradient} bg-clip-text text-transparent opacity-50`}
+                      className={`text-2xl sm:text-3xl lg:text-4xl bg-gradient-to-r ${testimonial.gradient} bg-clip-text text-transparent opacity-50`}
                     >
                       &ldquo;
                     </div>
                   </div>
-                  <p className='text-theme-secondary text-lg leading-relaxed italic group-hover:text-theme-primary transition-colors duration-300'>
+                  <p className='text-theme-secondary text-sm sm:text-base lg:text-lg leading-relaxed italic group-hover:text-theme-primary transition-colors duration-300'>
                     {testimonial.quote}
                   </p>
                 </div>
 
                 {/* Rating */}
-                <div className='flex items-center mb-6'>
+                <div className='flex items-center mb-4 sm:mb-6'>
                   {[...Array(testimonial.rating)].map((_, i) => (
                     <motion.div
                       key={i}
-                      className='text-yellow-400'
+                      className='text-yellow-400 text-sm sm:text-base'
                       animate={
                         hoveredCard === index
                           ? {
@@ -233,90 +232,43 @@ const TestimonialsSection = () => {
                 {/* Profile section */}
                 <div className='flex items-center'>
                   <div
-                    className={`w-12 h-12 bg-gradient-to-r ${testimonial.gradient} rounded-xl flex items-center justify-center text-white font-bold shadow-theme-lg mr-4`}
+                    className={`w-10 h-10 sm:w-12 sm:h-12 bg-gradient-to-r ${testimonial.gradient} rounded-lg sm:rounded-xl flex items-center justify-center text-white font-bold shadow-theme-lg mr-3 sm:mr-4 text-sm sm:text-base`}
                   >
                     {testimonial.avatar}
                   </div>
                   <div>
-                    <h4 className='text-theme-primary font-semibold text-lg'>
+                    <h4 className='text-theme-primary font-semibold text-base sm:text-lg'>
                       {testimonial.name}
                     </h4>
-                    <p className='text-theme-secondary text-sm'>
+                    <p className='text-theme-secondary text-xs sm:text-sm'>
                       {testimonial.role}
                     </p>
                   </div>
                 </div>
 
                 {/* Metric badge */}
-                <div className='mt-6 pt-6 border-t border-theme-primary'>
+                <div className='mt-4 sm:mt-6 pt-4 sm:pt-6 border-t border-theme-primary'>
                   <div
-                    className={`inline-flex items-center px-4 py-2 bg-gradient-to-r ${testimonial.gradient} bg-opacity-10 rounded-full`}
+                    className={`inline-flex items-center px-3 sm:px-4 py-1.5 sm:py-2 bg-gradient-to-r ${testimonial.gradient} bg-opacity-10 rounded-full`}
                   >
                     <div
-                      className={`w-2 h-2 bg-gradient-to-r ${testimonial.gradient} rounded-full mr-2`}
+                      className={`w-1.5 h-1.5 sm:w-2 sm:h-2 bg-gradient-to-r ${testimonial.gradient} rounded-full mr-1.5 sm:mr-2`}
                     ></div>
-                    <span className='text-sm font-medium text-theme-primary'>
+                    <span className='text-xs sm:text-sm font-medium text-theme-primary'>
                       {testimonial.metric}
                     </span>
                   </div>
                 </div>
 
                 {/* Hover indicator */}
-                <div className='absolute top-4 right-4 opacity-0 group-hover:opacity-100 transition-opacity duration-300'>
+                <div className='absolute top-3 right-3 sm:top-4 sm:right-4 opacity-0 group-hover:opacity-100 transition-opacity duration-300'>
                   <div
-                    className={`w-3 h-3 bg-gradient-to-r ${testimonial.gradient} rounded-full animate-pulse`}
+                    className={`w-2 h-2 sm:w-3 sm:h-3 bg-gradient-to-r ${testimonial.gradient} rounded-full animate-pulse`}
                   ></div>
                 </div>
               </div>
             </motion.div>
           ))}
-        </motion.div>
-
-        {/* Bottom section */}
-        <motion.div
-          className='text-center mt-20'
-          initial={{ opacity: 0, y: 30 }}
-          animate={controls}
-          variants={{
-            visible: {
-              opacity: 1,
-              y: 0,
-              transition: { duration: 0.8, ease: 'easeOut', delay: 1 },
-            },
-          }}
-        >
-          <div className='flex items-center justify-center space-x-8 mb-8'>
-            <div className='flex items-center space-x-2'>
-              <div className='w-3 h-3 bg-accent-success rounded-full'></div>
-              <span className='text-theme-secondary font-medium'>
-                99.9% Uptime
-              </span>
-            </div>
-            <div className='flex items-center space-x-2'>
-              <div className='w-3 h-3 bg-accent-primary rounded-full'></div>
-              <span className='text-theme-secondary font-medium'>
-                24/7 Support
-              </span>
-            </div>
-            <div className='flex items-center space-x-2'>
-              <div className='w-3 h-3 bg-accent-secondary rounded-full'></div>
-              <span className='text-theme-secondary font-medium'>
-                Enterprise Grade
-              </span>
-            </div>
-          </div>
-
-          <p className='text-lg text-theme-secondary mb-8'>
-            Join thousands of satisfied customers who trust KHRONOS
-          </p>
-
-          <motion.button
-            className='px-8 py-4 bg-accent-primary hover:bg-accent-secondary text-white font-semibold rounded-2xl shadow-theme-lg hover:shadow-theme-xl transition-all duration-300'
-            whileHover={{ scale: 1.05 }}
-            whileTap={{ scale: 0.95 }}
-          >
-            Start Your Success Story
-          </motion.button>
         </motion.div>
       </div>
     </section>

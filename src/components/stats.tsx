@@ -128,10 +128,10 @@ const StatsSection = () => {
         />
 
         {/* Main card */}
-        <div className='relative bg-theme-card/90 backdrop-blur-lg border border-theme-primary rounded-2xl p-8 h-full transition-all duration-300 group-hover:bg-theme-card group-hover:border-theme-secondary shadow-theme-lg hover:shadow-theme-xl'>
+        <div className='relative bg-theme-card/90 backdrop-blur-lg border border-theme-primary rounded-2xl p-4 sm:p-6 lg:p-8 h-full transition-all duration-300 group-hover:bg-theme-card group-hover:border-theme-secondary shadow-theme-lg hover:shadow-theme-xl'>
           {/* Icon */}
           <motion.div
-            className={`w-16 h-16 bg-gradient-to-br ${stat.color} rounded-2xl flex items-center justify-center text-2xl mb-6 shadow-theme-lg`}
+            className={`w-10 h-10 sm:w-12 sm:h-12 lg:w-16 lg:h-16 bg-gradient-to-br ${stat.color} rounded-xl sm:rounded-2xl flex items-center justify-center text-lg sm:text-xl lg:text-2xl mb-4 sm:mb-6 shadow-theme-lg`}
             whileHover={{ scale: 1.1, rotate: 5 }}
             transition={{ duration: 0.3 }}
           >
@@ -139,9 +139,9 @@ const StatsSection = () => {
           </motion.div>
 
           {/* Content */}
-          <div className='space-y-3 mb-6'>
+          <div className='space-y-2 sm:space-y-3 mb-4 sm:mb-6'>
             <motion.div
-              className={`text-3xl font-bold bg-gradient-to-r ${stat.color} bg-clip-text text-transparent`}
+              className={`text-2xl sm:text-3xl font-bold bg-gradient-to-r ${stat.color} bg-clip-text text-transparent`}
               initial={{ opacity: 0, scale: 0.8 }}
               animate={{ opacity: 1, scale: 1 }}
               transition={{ duration: 0.5, delay: stat.delay + 0.5 }}
@@ -149,15 +149,17 @@ const StatsSection = () => {
               {formatNumber(count, stat.suffix)}
             </motion.div>
 
-            <h3 className='text-xl font-semibold text-theme-primary mb-2'>
+            <h3 className='text-lg sm:text-xl font-semibold text-theme-primary mb-1 sm:mb-2'>
               {stat.label}
             </h3>
           </div>
 
-          <p className='text-theme-secondary text-sm'>{stat.description}</p>
+          <p className='text-theme-secondary text-xs sm:text-sm'>
+            {stat.description}
+          </p>
 
           {/* Progress bar */}
-          <div className='mt-6 h-1 bg-theme-tertiary rounded-full overflow-hidden'>
+          <div className='mt-4 sm:mt-6 h-1 bg-theme-tertiary rounded-full overflow-hidden'>
             <motion.div
               className={`h-full bg-gradient-to-r ${stat.color} rounded-full`}
               initial={{ width: '0%' }}
@@ -172,7 +174,7 @@ const StatsSection = () => {
 
           {/* Floating dot animation */}
           <motion.div
-            className={`absolute top-4 right-4 w-2 h-2 bg-gradient-to-r ${stat.color} rounded-full`}
+            className={`absolute top-3 right-3 sm:top-4 sm:right-4 w-1.5 h-1.5 sm:w-2 sm:h-2 bg-gradient-to-r ${stat.color} rounded-full`}
             animate={{
               scale: [1, 1.5, 1],
               opacity: [0.5, 1, 0.5],
@@ -191,7 +193,7 @@ const StatsSection = () => {
   return (
     <section
       ref={ref}
-      className='relative py-20 overflow-hidden bg-theme-secondary theme-transition'
+      className='relative py-12 sm:py-16 lg:py-20 overflow-hidden bg-theme-secondary theme-transition'
     >
       {/* Background decorations */}
       <div className='absolute inset-0'>
@@ -231,7 +233,7 @@ const StatsSection = () => {
       <div className='relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8'>
         {/* Header */}
         <motion.div
-          className='text-center mb-16'
+          className='text-center mb-8 sm:mb-12 lg:mb-16'
           initial={{ opacity: 0, y: 30 }}
           animate={controls}
           variants={{
@@ -243,15 +245,15 @@ const StatsSection = () => {
           }}
         >
           <motion.div
-            className='inline-flex items-center px-6 py-3 rounded-full bg-theme-tertiary border border-theme-primary backdrop-blur-sm mb-6'
+            className='inline-flex items-center px-4 sm:px-6 py-2 sm:py-3 rounded-full bg-theme-tertiary border border-theme-primary backdrop-blur-sm mb-4 sm:mb-6'
             whileHover={{ scale: 1.05 }}
           >
-            <span className='text-accent-primary text-sm font-medium'>
+            <span className='text-accent-primary text-xs sm:text-sm font-medium'>
               📊 Our Impact
             </span>
           </motion.div>
 
-          <h2 className='text-5xl lg:text-6xl font-bold mb-6'>
+          <h2 className='text-3xl sm:text-4xl lg:text-5xl xl:text-6xl font-bold mb-4 sm:mb-6'>
             <span className='text-theme-primary'>Trusted by thousands</span>
             <br />
             <span className='bg-gradient-to-r from-indigo-600 to-purple-600 dark:from-blue-400 dark:to-indigo-500 bg-clip-text text-transparent'>
@@ -259,43 +261,20 @@ const StatsSection = () => {
             </span>
           </h2>
 
-          <p className='text-xl text-theme-secondary max-w-3xl mx-auto leading-relaxed'>
+          <p className='text-base sm:text-lg lg:text-xl text-theme-secondary max-w-3xl mx-auto leading-relaxed px-4'>
             See the real impact KHRONOS has made for content creators and
             businesses around the globe.
           </p>
         </motion.div>
 
         {/* Stats Grid */}
-        <div className='grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8'>
+        <div className='grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6 lg:gap-8'>
           {stats.map((stat, index) => (
             <StatCard key={stat.id} stat={stat} index={index} />
           ))}
         </div>
 
         {/* Bottom CTA */}
-        <motion.div
-          className='text-center mt-20'
-          initial={{ opacity: 0, y: 30 }}
-          animate={controls}
-          variants={{
-            visible: {
-              opacity: 1,
-              y: 0,
-              transition: { duration: 0.8, ease: 'easeOut', delay: 1 },
-            },
-          }}
-        >
-          <p className='text-lg text-theme-secondary mb-8'>
-            Ready to join our growing community?
-          </p>
-          <motion.button
-            className='px-8 py-4 bg-accent-primary hover:bg-accent-secondary text-white font-semibold rounded-2xl shadow-theme-lg hover:shadow-theme-xl transition-all duration-300'
-            whileHover={{ scale: 1.05 }}
-            whileTap={{ scale: 0.95 }}
-          >
-            Get Started Today
-          </motion.button>
-        </motion.div>
       </div>
     </section>
   );

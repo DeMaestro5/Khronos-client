@@ -265,31 +265,6 @@ const FeaturesSection = () => {
             </motion.div>
           ))}
         </motion.div>
-
-        {/* Bottom CTA */}
-        <motion.div
-          className='text-center mt-12 sm:mt-16 lg:mt-20'
-          initial={{ opacity: 0, y: 30 }}
-          animate={controls}
-          variants={{
-            visible: {
-              opacity: 1,
-              y: 0,
-              transition: { duration: 0.8, ease: 'easeOut', delay: 1 },
-            },
-          }}
-        >
-          <p className='text-sm sm:text-base lg:text-lg text-theme-secondary mb-6 sm:mb-8 px-4'>
-            Ready to transform your content strategy?
-          </p>
-          <motion.button
-            className='px-6 py-3 sm:px-8 sm:py-4 bg-accent-primary hover:bg-accent-secondary text-white font-semibold rounded-xl sm:rounded-2xl shadow-theme-lg hover:shadow-theme-xl transition-all duration-300 text-sm sm:text-base'
-            whileHover={{ scale: 1.05 }}
-            whileTap={{ scale: 0.95 }}
-          >
-            Start Your Free Trial
-          </motion.button>
-        </motion.div>
       </div>
     </section>
   );
