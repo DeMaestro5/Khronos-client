@@ -1,6 +1,5 @@
 import React from 'react';
 import { motion } from 'framer-motion';
-import { Button } from './button';
 import Link from 'next/link';
 
 interface CTASectionProps {
@@ -76,32 +75,21 @@ export function CTASection({
           variants={animate ? itemVariants : undefined}
         >
           {/* Primary Button */}
-          <Button
-            size='lg'
-            className='bg-white text-indigo-600 hover:bg-white/90 px-4 sm:px-6 lg:px-8 py-3 sm:py-4 text-sm sm:text-base lg:text-lg font-semibold w-full sm:w-auto flex items-center justify-center rounded-xl sm:rounded-2xl shadow-lg hover:shadow-xl transition-all duration-300'
+          <Link
+            href={primaryButton.href}
+            className='inline-flex items-center justify-center h-11 rounded-md px-8 bg-white text-indigo-600 hover:bg-white/90 px-4 sm:px-6 lg:px-8 py-3 sm:py-4 text-sm sm:text-base lg:text-lg font-semibold w-full sm:w-auto rounded-xl sm:rounded-2xl shadow-lg hover:shadow-xl transition-all duration-300 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 disabled:pointer-events-none'
           >
-            <Link
-              href={primaryButton.href}
-              className='flex items-center justify-center w-full'
-            >
-              {primaryButton.text}
-            </Link>
-          </Button>
+            {primaryButton.text}
+          </Link>
 
           {/* Secondary Button */}
           {secondaryButton && (
-            <Button
-              size='lg'
-              variant='outline'
-              className='border-2 border-white bg-transparent text-white hover:bg-white hover:text-indigo-600 px-4 sm:px-6 lg:px-8 py-3 sm:py-4 text-sm sm:text-base lg:text-lg font-medium transition-all duration-300 w-full sm:w-auto flex items-center justify-center rounded-xl sm:rounded-2xl'
+            <Link
+              href={secondaryButton.href}
+              className='inline-flex items-center justify-center h-11 rounded-md px-8 border-2 border-white bg-transparent text-white hover:bg-white hover:text-indigo-600 px-4 sm:px-6 lg:px-8 py-3 sm:py-4 text-sm sm:text-base lg:text-lg font-medium transition-all duration-300 w-full sm:w-auto rounded-xl sm:rounded-2xl focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 disabled:pointer-events-none'
             >
-              <Link
-                href={secondaryButton.href}
-                className='flex items-center justify-center w-full'
-              >
-                {secondaryButton.text}
-              </Link>
-            </Button>
+              {secondaryButton.text}
+            </Link>
           )}
         </motion.div>
 

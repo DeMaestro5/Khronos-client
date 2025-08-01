@@ -1,7 +1,6 @@
 'use client';
 
 import Link from 'next/link';
-import { Button } from '../../components/ui/button';
 import { motion } from 'framer-motion';
 import { Footer } from '../../components/ui/footer';
 import { MainNavbar } from '../../components/ui/main-navbar';
@@ -118,30 +117,19 @@ export default function DemoPage() {
                 trial.
               </p>
               <div className='flex flex-col sm:flex-row gap-3 sm:gap-4 justify-center'>
-                <Button
-                  size='lg'
-                  className='bg-accent-primary hover:bg-accent-secondary text-white px-6 sm:px-8 py-3 sm:py-4 text-sm sm:text-lg font-semibold shadow-theme-lg hover:shadow-theme-xl'
+                <Link
+                  href='/auth/signup'
+                  className='inline-flex items-center justify-center h-11 rounded-md px-6 sm:px-8 py-3 sm:py-4 bg-accent-primary hover:bg-accent-secondary text-white text-sm sm:text-lg font-semibold shadow-theme-lg hover:shadow-theme-xl transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 disabled:pointer-events-none space-x-2'
                 >
-                  <Link
-                    href='/auth/signup'
-                    className='flex items-center justify-center space-x-2'
-                  >
-                    <span>Start Free Trial</span>
-                    <span>→</span>
-                  </Link>
-                </Button>
-                <Button
-                  size='lg'
-                  variant='outline'
-                  className='border-2 border-accent-primary text-accent-primary hover:bg-accent-primary hover:text-white px-6 sm:px-8 py-3 sm:py-4 text-sm sm:text-lg font-medium'
+                  <span>Start Free Trial</span>
+                  <span>→</span>
+                </Link>
+                <Link
+                  href='/contact'
+                  className='inline-flex items-center justify-center h-11 rounded-md px-6 sm:px-8 py-3 sm:py-4 border-2 border-accent-primary text-accent-primary hover:bg-accent-primary hover:text-white text-sm sm:text-lg font-medium transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 disabled:pointer-events-none'
                 >
-                  <Link
-                    href='/contact'
-                    className='flex items-center justify-center w-full'
-                  >
-                    Contact Us
-                  </Link>
-                </Button>
+                  Contact Us
+                </Link>
               </div>
             </div>
           </motion.div>

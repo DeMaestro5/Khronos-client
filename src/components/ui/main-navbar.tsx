@@ -1,7 +1,6 @@
 'use client';
 
 import Link from 'next/link';
-import { Button } from './button';
 import { motion } from 'framer-motion';
 import { ThemeToggle } from './theme-toggle';
 
@@ -42,30 +41,19 @@ export function MainNavbar({ logoClickable = false }: MainNavbarProps) {
           <div className='flex items-center space-x-2 sm:space-x-3 flex-shrink-0'>
             {/* Show theme toggle on all screen sizes */}
             <ThemeToggle variant='compact' showLabels={false} size='sm' />
-            <Button
-              variant='ghost'
-              size='sm'
-              className='text-theme-secondary hover:text-theme-primary hover:bg-theme-hover px-3 sm:px-4 py-2 text-sm font-medium rounded-lg transition-all duration-200 flex items-center justify-center'
+            <Link
+              href='/auth/login'
+              className='inline-flex items-center justify-center h-9 px-3 sm:px-4 py-2 text-sm font-medium rounded-lg transition-all duration-200 text-theme-secondary hover:text-theme-primary hover:bg-theme-hover focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 disabled:pointer-events-none'
             >
-              <Link
-                href='/auth/login'
-                className='flex items-center justify-center w-full'
-              >
-                Login
-              </Link>
-            </Button>
-            <Button
-              size='sm'
-              className='bg-accent-primary hover:bg-accent-secondary text-white px-3 sm:px-6 py-2 text-sm font-semibold rounded-lg shadow-sm hover:shadow-md transition-all duration-200 flex items-center justify-center'
+              Login
+            </Link>
+            <Link
+              href='/auth/signup'
+              className='inline-flex items-center justify-center h-9 px-3 sm:px-6 py-2 text-sm font-semibold rounded-lg shadow-sm hover:shadow-md transition-all duration-200 bg-accent-primary hover:bg-accent-secondary text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 disabled:pointer-events-none'
             >
-              <Link
-                href='/auth/signup'
-                className='flex items-center justify-center w-full'
-              >
-                <span className='hidden sm:inline'>Get Started</span>
-                <span className='sm:hidden'>Start</span>
-              </Link>
-            </Button>
+              <span className='hidden sm:inline'>Get Started</span>
+              <span className='sm:hidden'>Start</span>
+            </Link>
           </div>
         </div>
       </div>

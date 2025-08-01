@@ -1,7 +1,6 @@
 'use client';
 
 import Link from 'next/link';
-import { Button } from '../components/ui/button';
 import { motion } from 'framer-motion';
 import ContentCalendar from '../components/ui/content-calendar';
 import FeaturesSection from '../components/features';
@@ -66,31 +65,22 @@ export default function Home() {
                 </p>
               </div>
 
-              <div className='flex flex-col gap-3 sm:gap-4 px-4 sm:px-0'>
-                <Button
-                  size='lg'
-                  className='bg-accent-primary hover:bg-accent-secondary text-white px-6 sm:px-8 py-3 sm:py-4 text-sm sm:text-lg font-semibold shadow-theme-lg hover:shadow-theme-xl w-full sm:w-auto'
+              <div className='flex flex-col gap-3 sm:gap-4 px-4 sm:px-0 relative z-10'>
+                <Link
+                  href='/auth/signup'
+                  className='inline-flex items-center justify-center h-11 rounded-md bg-accent-primary hover:bg-accent-secondary text-white px-6 sm:px-8 py-3 sm:py-4 text-sm sm:text-lg font-semibold shadow-theme-lg hover:shadow-theme-xl w-full sm:w-auto transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 disabled:pointer-events-none space-x-2 relative z-20 touch-manipulation select-none'
+                  style={{ minHeight: '44px' }}
                 >
-                  <Link
-                    href='/auth/signup'
-                    className='flex items-center justify-center space-x-2'
-                  >
-                    <span>Get Started Free</span>
-                    <span>→</span>
-                  </Link>
-                </Button>
-                <Button
-                  size='lg'
-                  variant='outline'
-                  className='border-2 border-accent-primary text-accent-primary hover:bg-accent-primary hover:text-white px-6 sm:px-8 py-3 sm:py-4 text-sm sm:text-lg font-medium w-full sm:w-auto flex items-center justify-center'
+                  <span>Get Started Free</span>
+                  <span>→</span>
+                </Link>
+                <Link
+                  href='/demo'
+                  className='inline-flex items-center justify-center h-11 rounded-md border-2 border-accent-primary text-accent-primary hover:bg-accent-primary hover:text-white px-6 sm:px-8 py-3 sm:py-4 text-sm sm:text-lg font-medium w-full sm:w-auto transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 disabled:pointer-events-none shadow-theme-sm hover:shadow-theme-md relative z-20 touch-manipulation select-none'
+                  style={{ minHeight: '44px' }}
                 >
-                  <Link
-                    href='/demo'
-                    className='flex items-center justify-center w-full'
-                  >
-                    Watch Demo
-                  </Link>
-                </Button>
+                  Watch Demo
+                </Link>
               </div>
 
               {/* Stats - Mobile Optimized and Properly Centered */}
@@ -136,7 +126,7 @@ export default function Home() {
 
                 {/* Floating Elements */}
                 <motion.div
-                  className='absolute -top-4 -right-4 bg-accent-primary text-white p-3 rounded-full shadow-theme-lg'
+                  className='absolute -top-4 -right-4 bg-accent-primary text-white p-3 rounded-full shadow-theme-lg z-0 pointer-events-none'
                   initial={{ scale: 0 }}
                   animate={{ scale: 1 }}
                   transition={{ duration: 0.6, delay: 0.8 }}
@@ -145,7 +135,7 @@ export default function Home() {
                   📊
                 </motion.div>
                 <motion.div
-                  className='absolute -bottom-4 -left-4 bg-accent-secondary text-white p-3 rounded-full shadow-theme-lg'
+                  className='absolute -bottom-4 -left-4 bg-accent-secondary text-white p-3 rounded-full shadow-theme-lg z-0 pointer-events-none'
                   initial={{ scale: 0 }}
                   animate={{ scale: 1 }}
                   transition={{ duration: 0.6, delay: 1.0 }}

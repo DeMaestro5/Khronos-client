@@ -7,24 +7,24 @@ export default function ProgressIndicator({
   currentStep: number;
 }) {
   return (
-    <div className='m-2 animate-slideUp animation-delay-200'>
-      <div className='flex items-center justify-center space-x-4'>
+    <div className='m-1 animate-slideUp animation-delay-200'>
+      <div className='flex items-center justify-center space-x-3'>
         <div
-          className={`flex items-center justify-center w-8 h-8 rounded-full border-2 transition-all duration-300 ${
+          className={`flex items-center justify-center w-7 h-7 rounded-full border-2 transition-all duration-300 ${
             currentStep >= 1
               ? 'bg-indigo-600 border-indigo-600 text-white'
               : 'border-slate-300 text-slate-400'
           }`}
         >
-          {currentStep > 1 ? <Check className='w-4 h-4' /> : '1'}
+          {currentStep > 1 ? <Check className='w-3 h-3' /> : '1'}
         </div>
         <div
-          className={`h-1 w-16 rounded-full transition-all duration-300 ${
+          className={`h-1 w-12 rounded-full transition-all duration-300 ${
             currentStep >= 2 ? 'bg-indigo-600' : 'bg-slate-200'
           }`}
         />
         <div
-          className={`flex items-center justify-center w-8 h-8 rounded-full border-2 transition-all duration-300 ${
+          className={`flex items-center justify-center w-7 h-7 rounded-full border-2 transition-all duration-300 ${
             currentStep >= 2
               ? 'bg-indigo-600 border-indigo-600 text-white'
               : 'border-slate-300 text-slate-400'
@@ -33,7 +33,7 @@ export default function ProgressIndicator({
           2
         </div>
       </div>
-      <div className='flex justify-between text-xs text-white-500 mt-2 px-2'>
+      <div className='flex justify-between text-xs text-slate-500 mt-1 px-1'>
         <span>Personal Info</span>
         <span>Security</span>
       </div>
