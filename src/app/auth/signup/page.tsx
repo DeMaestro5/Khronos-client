@@ -8,6 +8,7 @@ import React, { useState, useEffect } from 'react';
 import ProgressIndicator from '@/src/components/auth/progress-indicator';
 import SignupForm from '@/src/components/auth/signupForm';
 import LeftSideSignUp from '@/src/components/auth/leftsideSignUp';
+import { Footer } from '@/src/components/ui/footer';
 
 // Password Strength Component
 <PasswordStrength password='12345678' />;
@@ -184,9 +185,7 @@ export default function SignupPage() {
           </div>
 
           {/* Footer */}
-          <div className='text-center text-xs text-slate-400 mt-1 animate-slideInRight animation-delay-800'>
-            <p>© 2025 KHRONOS. All rights reserved.</p>
-          </div>
+          <Footer variant='auth' animate={true} />
         </div>
       </div>
 
