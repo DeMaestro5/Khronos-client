@@ -9,6 +9,7 @@ import Testimonial from '../components/testimonial';
 import StatsSection from '../components/stats';
 import { ThemeToggle } from '../components/ui/theme-toggle';
 import { Footer } from '../components/ui/footer';
+import { CTASection } from '../components/ui/cta-section';
 
 export default function Home() {
   return (
@@ -222,53 +223,19 @@ export default function Home() {
       </div>
 
       {/* CTA Section */}
-      <section className='py-6 sm:py-8 lg:py-12 bg-gradient-to-r from-indigo-600 to-purple-600 overflow-hidden'>
-        <div className='w-full max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center'>
-          <motion.div
-            className='space-y-6 sm:space-y-8'
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            transition={{ duration: 0.6 }}
-          >
-            <h2 className='text-xl sm:text-2xl md:text-3xl lg:text-4xl font-bold text-white leading-tight'>
-              Ready to transform your content strategy?
-            </h2>
-            <p className='text-sm sm:text-base lg:text-xl text-white/90 max-w-2xl mx-auto leading-relaxed'>
-              Join thousands of creators who&apos;ve already boosted their
-              engagement by 300% with KHRONOS
-            </p>
-            <div className='flex flex-col gap-3 sm:gap-4 max-w-sm mx-auto sm:max-w-none sm:flex-row sm:justify-center'>
-              <Button
-                size='lg'
-                className='bg-white text-indigo-600 hover:bg-white/90 px-6 sm:px-8 py-3 sm:py-4 text-sm sm:text-lg font-semibold w-full sm:w-auto flex items-center justify-center'
-              >
-                <Link
-                  href='/auth/signup'
-                  className='flex items-center justify-center w-full'
-                >
-                  Start Now
-                </Link>
-              </Button>
-              <Button
-                size='lg'
-                variant='outline'
-                className='border-2 border-white bg-transparent text-white hover:bg-white hover:text-indigo-600 px-6 sm:px-8 py-3 sm:py-4 text-sm sm:text-lg font-medium transition-all duration-300 w-full sm:w-auto flex items-center justify-center'
-              >
-                <Link
-                  href='/contact'
-                  className='flex items-center justify-center w-full'
-                >
-                  Contact Us
-                </Link>
-              </Button>
-            </div>
-            <p className='text-white/80 text-xs sm:text-sm text-center'>
-              No payments required • All Free
-            </p>
-          </motion.div>
-        </div>
-      </section>
+      <CTASection
+        title='Ready to transform your content strategy?'
+        subtitle="Join thousands of creators who've already boosted their engagement by 300% with KHRONOS"
+        primaryButton={{
+          text: 'Start Your Free Trial',
+          href: '/auth/signup',
+        }}
+        secondaryButton={{
+          text: 'Contact Us',
+          href: '/contact',
+        }}
+        footerText='7 days free trial '
+      />
 
       {/* Footer */}
       <Footer variant='main' />
