@@ -1,5 +1,19 @@
 @import 'tailwindcss';
 
+/* Khronos Logo Spin Animation */
+@keyframes spin-slow {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.animate-spin-slow {
+  animation: spin-slow 20s linear infinite;
+}
+
 /* Hide Next.js development indicators and logos completely */
 .__next-dev-overlay-logo,
 .__next-dev-overlay,

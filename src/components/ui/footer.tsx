@@ -1,4 +1,7 @@
+'use client';
+
 import { motion } from 'framer-motion';
+import { KhronosLogo } from './khronos-logo';
 
 interface FooterProps {
   variant?: 'main' | 'auth' | 'custom';
@@ -26,12 +29,7 @@ export function Footer({
       <div className='w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8'>
         <div className='flex flex-col sm:flex-row justify-between items-center space-y-4 sm:space-y-0'>
           <div className='flex items-center space-x-2'>
-            <div className='w-7 h-7 sm:w-8 sm:h-8 bg-accent-primary rounded-lg flex items-center justify-center'>
-              <span className='text-white font-bold text-xs sm:text-sm'>K</span>
-            </div>
-            <span className='text-lg sm:text-xl font-bold text-theme-primary'>
-              KHRONOS
-            </span>
+            <KhronosLogo size='sm' showText={true} />
           </div>
           {showCopyright && (
             <div className='text-theme-secondary text-xs sm:text-sm text-center'>
@@ -67,14 +65,7 @@ export function Footer({
         <div className='flex flex-col sm:flex-row justify-between items-center space-y-4 sm:space-y-0'>
           {showLogo && (
             <div className='flex items-center space-x-2'>
-              <div className='w-7 h-7 sm:w-8 sm:h-8 bg-accent-primary rounded-lg flex items-center justify-center'>
-                <span className='text-white font-bold text-xs sm:text-sm'>
-                  K
-                </span>
-              </div>
-              <span className='text-lg sm:text-xl font-bold text-theme-primary'>
-                KHRONOS
-              </span>
+              <KhronosLogo size='sm' showText={true} />
             </div>
           )}
           {children}

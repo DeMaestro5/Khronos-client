@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
+import { KhronosLogo } from '@/src/components/ui/khronos-logo';
 
 export default function LeftSideSignUp({
   mousePosition,
@@ -182,9 +183,13 @@ export default function LeftSideSignUp({
             {/* Main heading with spectacular typography */}
             <div className='space-y-4'>
               <div className='space-y-2'>
-                <h1 className='text-xl font-medium text-purple-300/80 tracking-wider uppercase'>
-                  KHRONOS
-                </h1>
+                <div className='flex justify-center'>
+                  <KhronosLogo
+                    size='md'
+                    showText={true}
+                    textClassName='text-purple-300/80 tracking-wider uppercase'
+                  />
+                </div>
                 <h2 className='text-4xl md:text-5xl font-bold leading-none'>
                   <span className='block text-white'>Master Your</span>
                   <span className='block bg-gradient-to-r from-purple-400 via-fuchsia-400 to-cyan-400 bg-clip-text text-transparent animate-gradient-shift'>

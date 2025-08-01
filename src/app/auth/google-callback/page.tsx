@@ -4,6 +4,7 @@ import { useEffect, useState, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useGoogleAuth } from '@/src/hooks/useGoogleAuth';
 import FloatingOrbs from '@/src/components/ui/floating-animation';
+import { KhronosLogo } from '@/src/components/ui/khronos-logo';
 
 function GoogleCallbackContent() {
   const [status, setStatus] = useState<'loading' | 'success' | 'error'>(
@@ -190,12 +191,7 @@ function GoogleCallbackContent() {
         <div className='text-center mb-8 animate-slideUp'>
           {/* Logo */}
           <div className='flex items-center justify-center space-x-2 mb-4'>
-            <div className='w-12 h-12 bg-gradient-to-r from-indigo-600 via-purple-600 to-indigo-600 rounded-2xl flex items-center justify-center shadow-xl'>
-              <span className='text-white font-bold text-lg'>K</span>
-            </div>
-            <div className='text-2xl font-bold bg-gradient-to-r from-indigo-600 to-purple-600 bg-clip-text text-transparent'>
-              KHRONOS
-            </div>
+            <KhronosLogo size='lg' showText={true} />
           </div>
 
           <h1 className='text-2xl font-bold text-slate-900 mb-2'>

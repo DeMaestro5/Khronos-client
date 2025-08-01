@@ -3,23 +3,13 @@
 import Link from 'next/link';
 import { motion } from 'framer-motion';
 import { ThemeToggle } from './theme-toggle';
+import { KhronosLogo } from './khronos-logo';
 
 interface MainNavbarProps {
   logoClickable?: boolean;
 }
 
 export function MainNavbar({ logoClickable = false }: MainNavbarProps) {
-  const Logo = () => (
-    <div className='flex items-center space-x-2'>
-      <div className='w-7 h-7 sm:w-8 sm:h-8 bg-accent-primary rounded-lg flex items-center justify-center flex-shrink-0'>
-        <span className='text-white font-bold text-xs sm:text-sm'>K</span>
-      </div>
-      <span className='text-base sm:text-xl font-bold text-theme-primary truncate'>
-        KHRONOS
-      </span>
-    </div>
-  );
-
   return (
     <motion.nav
       className='fixed top-0 w-full bg-theme-card border-b border-theme-primary z-50 theme-transition sm:bg-theme-card/95 sm:backdrop-blur-md'
@@ -31,11 +21,9 @@ export function MainNavbar({ logoClickable = false }: MainNavbarProps) {
         <div className='flex justify-between items-center py-3 sm:py-4'>
           <div className='flex items-center space-x-2'>
             {logoClickable ? (
-              <Link href='/' className='flex items-center space-x-2'>
-                <Logo />
-              </Link>
+              <KhronosLogo size='sm' clickable={true} />
             ) : (
-              <Logo />
+              <KhronosLogo size='sm' />
             )}
           </div>
           <div className='flex items-center space-x-2 sm:space-x-3 flex-shrink-0'>
