@@ -13,6 +13,7 @@ import {
 } from '@/src/components/content-detail';
 import ContentEditModal from '@/src/components/content/content-edit-modal';
 import PageLoading from '@/src/components/ui/page-loading';
+import FloatingAIButton from '@/src/components/ai/floating-ai-button';
 
 const ContentDetailPage = () => {
   const [content, setContent] = useState<ContentData | null>(null);
@@ -158,7 +159,7 @@ const ContentDetailPage = () => {
           <div className='flex items-center justify-between mb-6'>
             <button
               onClick={() => router.back()}
-              className='inline-flex items-center cursor-pointer gap-2 px-3 py-2 text-theme-secondary hover:text-theme-primary hover:bg-theme-card/60 rounded-xl transition-all duration-200 backdrop-blur-sm'
+              className='inline-flex items-center cursor-pointer gap-2 px-3 py-2 text-theme-secondary hover:text-theme-primary hover:bg-theme-card/60 rounded-xl transition-all duration-200'
             >
               <ArrowLeft className='w-4 h-4' />
               <span className='font-medium text-sm'>Back</span>
@@ -219,19 +220,19 @@ const ContentDetailPage = () => {
 
   return (
     <div className='min-h-screen bg-theme-primary pb-20'>
-      {/* Mobile Header - Fixed at top */}
-      <div className='sticky top-0 z-40 bg-theme-primary/95 backdrop-blur-md border-b border-theme-tertiary/50'>
+      {/* Mobile Header - Fixed at top with solid background */}
+      <div className='sticky top-0 z-40 bg-theme-primary border-b border-theme-tertiary/50 shadow-sm'>
         <div className='flex items-center justify-between px-4 py-3'>
           <button
             onClick={() => router.back()}
-            className='inline-flex items-center cursor-pointer gap-2 px-3 py-2 text-theme-secondary hover:text-theme-primary hover:bg-theme-card/60 rounded-xl transition-all duration-200 backdrop-blur-sm'
+            className='inline-flex items-center cursor-pointer gap-2 px-3 py-2 text-theme-secondary hover:text-theme-primary hover:bg-theme-card/60 rounded-xl transition-all duration-200'
           >
             <ArrowLeft className='w-4 h-4' />
             <span className='font-medium text-sm'>Back</span>
           </button>
 
           <div className='flex items-center gap-2'>
-            <button className='p-2 text-theme-secondary hover:text-theme-primary hover:bg-theme-card/60 rounded-xl transition-all duration-200 backdrop-blur-sm'>
+            <button className='p-2 text-theme-secondary hover:text-theme-primary hover:bg-theme-card/60 rounded-xl transition-all duration-200'>
               <Share2 className='w-4 h-4' />
             </button>
             <button
@@ -241,9 +242,6 @@ const ContentDetailPage = () => {
               <Edit className='w-3 h-3' />
               <span className='font-medium'>Edit</span>
             </button>
-            {/* <button className='p-2 text-theme-secondary hover:text-theme-primary hover:bg-theme-card/60 rounded-xl transition-all duration-200 backdrop-blur-sm'>
-              <MoreVertical className='w-4 h-4' />
-            </button> */}
           </div>
         </div>
       </div>
@@ -253,19 +251,27 @@ const ContentDetailPage = () => {
         {/* Hero Section */}
         <HeroSection content={content} />
 
-        {/* Content Layout - Two columns on desktop, stacked on mobile */}
+        {/* Content Layout - Responsive design */}
         <div className='grid grid-cols-1 lg:grid-cols-5 gap-6'>
-          {/* Main Content Area - Takes 3 columns on desktop */}
+          {/* Main Content Area - Takes full width on mobile, 3 columns on desktop */}
           <div className='lg:col-span-3'>
             <ContentTabs content={content} />
           </div>
 
-          {/* Sidebar - Takes 2 columns on desktop, full width on mobile */}
-          <div className='lg:col-span-2'>
+          {/* Sidebar - Hidden on mobile, takes 2 columns on desktop */}
+          <div className='hidden lg:block lg:col-span-2'>
             <Sidebar content={content} />
           </div>
         </div>
+
+        {/* Mobile Sidebar Content - Displayed as cards below main content */}
+        <div className='lg:hidden mt-6 space-y-4'>
+          <MobileSidebarContent content={content} />
+        </div>
       </div>
+
+      {/* Floating AI Button for Mobile */}
+      <FloatingAIButton contentId={content._id} contentTitle={content.title} />
 
       {/* Edit Modal */}
       {isEditModalOpen && content && (
@@ -281,6 +287,174 @@ const ContentDetailPage = () => {
         />
       )}
     </div>
+  );
+};
+
+// Mobile Sidebar Content Component
+const MobileSidebarContent: React.FC<{ content: ContentData }> = ({
+  content,
+}) => {
+  return (
+    <>
+      {/* Author Card */}
+      <div className='bg-theme-card/95 rounded-xl shadow-sm border border-theme-tertiary p-4'>
+        <h3 className='font-bold text-theme-primary mb-3 text-sm'>Author</h3>
+        <div className='flex items-center gap-3'>
+          <div className='w-10 h-10 bg-accent-primary rounded-full flex items-center justify-center text-white font-bold text-sm'>
+            {content.author?.name?.charAt(0) || 'U'}
+          </div>
+          <div>
+            <div className='font-medium text-theme-primary text-sm'>
+              {content.author?.name || 'Unknown Author'}
+            </div>
+            <div className='text-theme-secondary text-xs'>
+              {content.author?.role || 'Content Creator'}
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Timeline */}
+      <div className='bg-theme-card/95 rounded-xl shadow-sm border border-theme-tertiary p-4'>
+        <h3 className='font-bold text-theme-primary mb-3 text-sm'>Timeline</h3>
+        <div className='space-y-2'>
+          <div className='flex items-center gap-3 text-xs'>
+            <div className='w-2 h-2 bg-green-500 rounded-full'></div>
+            <span className='text-theme-secondary'>Created</span>
+            <span className='text-theme-primary ml-auto'>
+              {new Date(content.createdAt).toLocaleDateString()}
+            </span>
+          </div>
+          {content.updatedAt && (
+            <div className='flex items-center gap-3 text-xs'>
+              <div className='w-2 h-2 bg-blue-500 rounded-full'></div>
+              <span className='text-theme-secondary'>Updated</span>
+              <span className='text-theme-primary ml-auto'>
+                {new Date(content.updatedAt).toLocaleDateString()}
+              </span>
+            </div>
+          )}
+        </div>
+      </div>
+
+      {/* Tags */}
+      {content.tags && content.tags.length > 0 && (
+        <div className='bg-theme-card/95 rounded-xl shadow-sm border border-theme-tertiary p-4'>
+          <h3 className='font-bold text-theme-primary mb-3 text-sm'>Tags</h3>
+          <div className='flex flex-wrap gap-2'>
+            {content.tags.map((tag, index) => (
+              <span
+                key={index}
+                className='px-2 py-1 bg-accent-primary/10 text-accent-primary rounded-full text-xs font-medium'
+              >
+                {tag}
+              </span>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* Platforms */}
+      {content.platforms && content.platforms.length > 0 && (
+        <div className='bg-theme-card/95 rounded-xl shadow-sm border border-theme-tertiary p-4'>
+          <h3 className='font-bold text-theme-primary mb-3 text-sm'>
+            Platforms
+          </h3>
+          <div className='flex flex-wrap gap-2'>
+            {content.platforms.map((platform, index) => (
+              <span
+                key={index}
+                className='px-2 py-1 bg-theme-secondary/20 text-theme-primary rounded-full text-xs font-medium'
+              >
+                {platform.name}
+              </span>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* Attachments */}
+      {content.attachments && content.attachments.length > 0 && (
+        <div className='bg-theme-card/95 rounded-xl shadow-sm border border-theme-tertiary p-4'>
+          <h3 className='font-bold text-theme-primary mb-3 text-sm'>
+            Attachments
+          </h3>
+          <div className='space-y-2'>
+            {content.attachments.slice(0, 3).map((attachment, index) => (
+              <div
+                key={index}
+                className='flex items-center gap-3 p-2 bg-theme-secondary rounded-lg'
+              >
+                <div className='w-6 h-6 bg-blue-100 dark:bg-blue-900/50 rounded flex items-center justify-center'>
+                  <span className='text-xs font-bold text-blue-700 dark:text-blue-300'>
+                    {attachment.name.split('.').pop()?.toUpperCase()}
+                  </span>
+                </div>
+                <div className='flex-1 min-w-0'>
+                  <div className='font-medium text-theme-primary truncate text-xs'>
+                    {attachment.name}
+                  </div>
+                  <div className='text-theme-secondary text-xs'>
+                    {attachment.size}
+                  </div>
+                </div>
+              </div>
+            ))}
+            {content.attachments.length > 3 && (
+              <div className='text-center'>
+                <span className='text-xs text-theme-secondary'>
+                  +{content.attachments.length - 3} more attachments
+                </span>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+
+      {/* Recommendations */}
+      {content.recommendations && content.recommendations.length > 0 && (
+        <div className='bg-theme-card/95 rounded-xl shadow-sm border border-theme-tertiary p-4'>
+          <h3 className='font-bold text-theme-primary mb-3 text-sm'>
+            Recommended Ideas
+          </h3>
+          <div className='space-y-2'>
+            {content.recommendations.slice(0, 2).map((rec, index) => (
+              <div
+                key={index}
+                className='p-3 bg-accent-primary/5 rounded-lg border border-accent-primary/20'
+              >
+                <h4 className='font-semibold text-theme-primary mb-1 text-xs break-words'>
+                  {rec.title}
+                </h4>
+                <p className='text-theme-secondary text-xs mb-2 line-clamp-2 break-words'>
+                  {rec.description}
+                </p>
+                {rec.difficulty && (
+                  <span
+                    className={`px-2 py-1 rounded-full text-xs font-medium ${
+                      rec.difficulty === 'easy'
+                        ? 'bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-300'
+                        : rec.difficulty === 'moderate'
+                        ? 'bg-yellow-100 dark:bg-yellow-900/30 text-yellow-800 dark:text-yellow-300'
+                        : 'bg-red-100 dark:bg-red-900/30 text-red-800 dark:text-red-300'
+                    }`}
+                  >
+                    {rec.difficulty}
+                  </span>
+                )}
+              </div>
+            ))}
+            {content.recommendations.length > 2 && (
+              <div className='text-center'>
+                <span className='text-xs text-theme-secondary'>
+                  +{content.recommendations.length - 2} more recommendations
+                </span>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+    </>
   );
 };
 
