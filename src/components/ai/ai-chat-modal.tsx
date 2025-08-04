@@ -79,7 +79,7 @@ const StreamingText = ({
         }, 0);
       }
     }
-  }, [messageId, shouldAnimate, text]);
+  }, [messageId, shouldAnimate, text, hasAnimated, initializedForMessage]);
 
   // Handle the streaming effect
   useEffect(() => {
@@ -473,25 +473,25 @@ const AIChatModal: React.FC = () => {
     <AnimatePresence>
       {isOpen && (
         <>
-          {/* Backdrop */}
+          {/* Backdrop - Only show on mobile */}
           <motion.div
-            className='fixed inset-0 bg-black/50 backdrop-blur-sm z-50'
+            className='fixed inset-0 bg-black/50 backdrop-blur-sm z-50 sm:hidden'
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             onClick={closeChat}
           />
 
-          {/* Chat Modal - Mobile Optimized */}
+          {/* Chat Modal - Responsive Design */}
           <motion.div
-            className='fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4'
+            className='fixed z-[99999] inset-0 flex items-end justify-center p-0 sm:inset-auto sm:bottom-6 sm:right-6 sm:left-auto sm:top-auto sm:p-0 sm:items-end'
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
           >
             <motion.div
-              className={`w-full h-full sm:h-auto sm:max-w-2xl sm:max-h-[90vh] bg-white rounded-none sm:rounded-2xl shadow-2xl flex flex-col overflow-hidden ${
-                isMinimized ? 'h-16' : 'h-full'
+              className={`bg-white shadow-2xl flex flex-col overflow-hidden w-full h-full rounded-none sm:w-96 sm:h-[600px] sm:rounded-2xl sm:border sm:border-gray-200 ${
+                isMinimized ? 'sm:h-16' : ''
               }`}
               initial={{
                 y: '100%',
@@ -514,7 +514,7 @@ const AIChatModal: React.FC = () => {
                 damping: 30,
               }}
             >
-              {/* Header - Mobile Optimized */}
+              {/* Header */}
               <div className='flex items-center justify-between p-4 bg-gradient-to-r from-purple-600 to-indigo-600 text-white shadow-sm'>
                 <div className='flex items-center gap-3 flex-1 min-w-0'>
                   {/* Status Indicator */}
@@ -552,7 +552,7 @@ const AIChatModal: React.FC = () => {
 
                 {/* Header Actions */}
                 <div className='flex items-center gap-2'>
-                  {/* Hide minimize button on mobile since modal is already full-screen */}
+                  {/* Minimize button - Only show on desktop */}
                   <button
                     onClick={() => setIsMinimized(!isMinimized)}
                     className='hidden sm:block p-2 hover:bg-white/10 rounded-lg transition-colors'
@@ -616,11 +616,11 @@ const AIChatModal: React.FC = () => {
                           <p className='text-sm text-gray-600 leading-relaxed'>
                             {currentContentTitle
                               ? `I can assist with content strategy, SEO improvements, engagement tactics, and performance insights. Your conversation will be saved for this content.`
-                              : "Ask me anything about your content, strategy, or creative ideas. I'm here to help you create amazing content!"}
+                              : 'I can help you with content strategy, SEO tips, creative ideas, and general content marketing advice. Ask me anything!'}
                           </p>
                         </div>
 
-                        {/* Quick Actions - Mobile Optimized */}
+                        {/* Quick Actions */}
                         {actions.length > 0 && (
                           <div className='grid grid-cols-2 gap-2 w-full max-w-xs'>
                             {actions.map((action) => (
@@ -645,7 +645,7 @@ const AIChatModal: React.FC = () => {
                           </div>
                         )}
 
-                        {/* Conversation Starters - Mobile Optimized */}
+                        {/* Conversation Starters */}
                         {conversationStarters.length > 0 && (
                           <div className='w-full max-w-xs space-y-2'>
                             <p className='text-xs font-medium text-gray-500 mb-2'>
@@ -710,7 +710,7 @@ const AIChatModal: React.FC = () => {
                             </div>
                             <div className='px-3 py-2 bg-green-50 rounded-lg border border-green-200'>
                               <p className='text-xs text-green-700 font-medium flex items-center gap-1'>
-                                <div className='w-2 h-2 bg-green-500 rounded-full'></div>
+                                <span className='w-2 h-2 bg-green-500 rounded-full'></span>
                                 Enhanced AI with server synchronization
                               </p>
                             </div>
@@ -821,7 +821,7 @@ const AIChatModal: React.FC = () => {
                                   )}
                                 </div>
 
-                                {/* Timestamp - removed model info */}
+                                {/* Timestamp */}
                                 <div className='mt-1 flex items-center gap-2 text-xs text-gray-500'>
                                   <span>{formatTime(message.timestamp)}</span>
                                 </div>
@@ -880,7 +880,7 @@ const AIChatModal: React.FC = () => {
                     <div ref={messagesEndRef} />
                   </div>
 
-                  {/* Input Area - Mobile Optimized */}
+                  {/* Input Area */}
                   <div className='border-t border-gray-200 bg-white p-4'>
                     <div className='flex items-end gap-3'>
                       <div className='flex-1 relative'>

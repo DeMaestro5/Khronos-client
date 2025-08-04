@@ -6,6 +6,7 @@ import { useRouter, useParams } from 'next/navigation';
 import { contentAPI } from '@/src/lib/api';
 import { ContentData } from '@/src/types/content';
 import { useUserData } from '@/src/context/UserDataContext';
+
 import {
   HeroSection,
   ContentTabs,
@@ -35,25 +36,6 @@ const ContentDetailPage = () => {
   useEffect(() => {
     const loadContent = async () => {
       if (!contentId) return;
-
-      // If we have cached data, use it immediately
-      if (cachedContent) {
-        console.log('✅ Using cached content data');
-        setContent(cachedContent as ContentData);
-        setIsLoading(false);
-        return;
-      }
-
-      // If context is still loading, wait for it
-      if (contextLoading) {
-        console.log('⏳ Waiting for context to load...');
-        setIsLoading(true);
-        return;
-      }
-
-      // If no cached data and context is done loading, fetch from API as fallback
-      console.log('📡 No cached data found, fetching from API as fallback...');
-      setIsLoading(true);
 
       try {
         const response = await contentAPI.getById(contentId);
@@ -114,7 +96,6 @@ const ContentDetailPage = () => {
     // Try to use cached data first after edit
     if (cachedContent) {
       // The edit modal should have updated the cache via updateContent
-      console.log('✅ Using updated cached content data');
       const updatedCachedContent = userContent?.find(
         (content) => content._id === contentId
       );
@@ -235,6 +216,7 @@ const ContentDetailPage = () => {
             <button className='p-2 text-theme-secondary hover:text-theme-primary hover:bg-theme-card/60 rounded-xl transition-all duration-200'>
               <Share2 className='w-4 h-4' />
             </button>
+
             <button
               onClick={handleEditClick}
               className='inline-flex items-center gap-2 px-3 py-2 bg-accent-primary text-white hover:bg-accent-secondary rounded-xl transition-all duration-200 shadow-lg hover:shadow-xl text-sm'
@@ -270,7 +252,7 @@ const ContentDetailPage = () => {
         </div>
       </div>
 
-      {/* Floating AI Button for Mobile */}
+      {/* Floating AI Button for Mobile Only */}
       <FloatingAIButton contentId={content._id} contentTitle={content.title} />
 
       {/* Edit Modal */}

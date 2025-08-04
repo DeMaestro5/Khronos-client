@@ -137,14 +137,14 @@ export const AIChatProvider: React.FC<{ children: ReactNode }> = ({
     initialPrompt?: string
   ) => {
     if (!contentId) {
-      // General chat (no specific content) - not supported in enhanced mode
+      // General chat (no specific content) - show with helpful message
       setState((prev) => ({
         ...prev,
         isOpen: true,
         currentContentId: null,
         currentContentTitle: null,
         initialPrompt: initialPrompt || '',
-        error: 'Content ID is required for AI chat',
+        error: null,
       }));
       return;
     }
@@ -309,10 +309,45 @@ export const AIChatProvider: React.FC<{ children: ReactNode }> = ({
     const currentContentId = state.currentContentId;
 
     if (!currentContentId) {
-      setState((prev) => ({
-        ...prev,
-        error: 'No content selected for chat',
-      }));
+      // For general chat without specific content, just show a helpful message
+      const userMessage: AIChatMessage = {
+        id: Date.now().toString(),
+        role: 'user',
+        content: message,
+        timestamp: new Date(),
+      };
+
+      const assistantMessage: AIChatMessage = {
+        id: (Date.now() + 1).toString(),
+        role: 'assistant',
+        content:
+          "I'm here to help with general content strategy and marketing advice! However, for the best experience with specific content optimization, please select a content item from your dashboard. This will allow me to provide more targeted and contextual assistance.",
+        timestamp: new Date(),
+      };
+
+      // Store these messages in a special "general" conversation
+      const generalConversation: ContentConversation = {
+        contentId: 'general',
+        contentTitle: 'General Chat',
+        sessionId: undefined,
+        messages: [userMessage, assistantMessage],
+        lastUpdated: new Date(),
+        conversationStarters: [],
+        actions: [],
+      };
+
+      setState((prev) => {
+        const newConversations = {
+          ...prev.conversations,
+          general: generalConversation,
+        };
+        saveConversations(newConversations);
+        return {
+          ...prev,
+          conversations: newConversations,
+          isLoading: false,
+        };
+      });
       return;
     }
 
