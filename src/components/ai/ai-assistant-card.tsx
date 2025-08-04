@@ -132,7 +132,7 @@ export const AIAssistantCard: React.FC<AIAssistantCardProps> = ({
 
       <button
         onClick={() => handleAIAction()}
-        className='w-full flex items-center justify-center gap-3 px-6 py-4 bg-accent-primary text-white rounded-xl hover:bg-accent-secondary transition-all duration-200 shadow-lg hover:shadow-xl font-medium text-base'
+        className='w-full flex items-center justify-center cursor-pointer gap-3 px-6 py-4 bg-accent-primary text-white rounded-xl hover:bg-accent-secondary transition-all duration-200 shadow-lg hover:shadow-xl font-medium text-base'
       >
         <MessageCircle className='w-5 h-5' />
         <span>Open AI Chat</span>

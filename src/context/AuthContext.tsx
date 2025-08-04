@@ -10,6 +10,7 @@ import React, {
 import { AuthState, GoogleAuthResponse } from '../types/auth';
 import { AuthUtils } from '../lib/auth-utils';
 import { authAPI } from '../lib/api';
+import { AxiosError } from 'axios';
 
 interface AuthContextType extends AuthState {
   login: (
@@ -59,14 +60,29 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const refreshTokens = async (): Promise<boolean> => {
     try {
       const refreshToken = AuthUtils.getRefreshToken();
+      console.log(
+        'Refresh tokens called, refresh token:',
+        refreshToken ? 'present' : 'missing'
+      );
+
       if (!refreshToken) {
+        console.log('No refresh token available');
         return false;
       }
 
+      console.log('Making refresh token request...');
       const response = await authAPI.refreshToken(refreshToken);
+      console.log('Refresh response:', response.data);
 
+      // Check for the actual response format from the server
       if (response.data?.data?.tokens) {
-        AuthUtils.storeTokens(response.data.data.tokens);
+        console.log('Storing new tokens...');
+        const tokens = {
+          accessToken: response.data.data.tokens.accessToken,
+          refreshToken: response.data.data.tokens.refreshToken,
+          expiresIn: response.data.data.tokens.accessTokenExpiresIn,
+        };
+        AuthUtils.storeTokens(tokens);
 
         // Store user data if available in refresh response
         if (response.data.data.user) {
@@ -76,9 +92,29 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         return true;
       }
 
+      console.log('Invalid refresh response format');
       return false;
     } catch (error) {
       console.error('Token refresh failed:', error);
+      if (error instanceof Error) {
+        console.error('Refresh error details:', {
+          message: error.message,
+          name: error.name,
+          stack: error.stack,
+        });
+      }
+      // Add AxiosError specific logging
+      if (error && typeof error === 'object' && 'response' in error) {
+        const axiosError = error as AxiosError;
+        console.error('Axios error details:', {
+          status: axiosError.response?.status,
+          statusText: axiosError.response?.statusText,
+          data: axiosError.response?.data,
+          url: axiosError.config?.url,
+          method: axiosError.config?.method,
+          requestData: axiosError.config?.data,
+        });
+      }
       return false;
     }
   };
@@ -89,7 +125,13 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       setAuthState((prev) => ({ ...prev, loading: true, error: null }));
 
       const tokens = AuthUtils.getStoredTokens();
+      console.log(
+        'Checking auth status, tokens:',
+        tokens ? 'present' : 'missing'
+      );
+
       if (!tokens) {
+        console.log('No tokens found, setting unauthenticated');
         setAuthState({
           isAuthenticated: false,
           user: null,
@@ -101,20 +143,33 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
 
       // Check if token is expired and try to refresh
       if (AuthUtils.shouldRefreshToken()) {
+        console.log('Token needs refresh, attempting refresh...');
         const refreshSuccess = await refreshTokens();
         if (!refreshSuccess) {
+          console.log(
+            'Token refresh failed, clearing tokens and redirecting to login'
+          );
+          AuthUtils.clearTokens();
           setAuthState({
             isAuthenticated: false,
             user: null,
             loading: false,
             error: 'Session expired',
           });
+          // Redirect to login
+          if (typeof window !== 'undefined') {
+            window.location.href = '/auth/login';
+          }
           return;
         }
       }
 
       // Get stored user data
       const storedUser = AuthUtils.getUser();
+      console.log(
+        'Setting authenticated state with user:',
+        storedUser ? 'present' : 'missing'
+      );
 
       setAuthState({
         isAuthenticated: true,
@@ -143,10 +198,18 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       setAuthState((prev) => ({ ...prev, loading: true, error: null }));
 
       const response = await authAPI.login(email, password, rememberMe);
+      console.log('Login response:', response.data);
 
+      // Check for the actual response format from the server
       if (response.data?.data?.tokens) {
+        console.log('Storing tokens from login response');
         // Store both tokens and user data
-        AuthUtils.storeTokens(response.data.data.tokens);
+        const tokens = {
+          accessToken: response.data.data.tokens.accessToken,
+          refreshToken: response.data.data.tokens.refreshToken,
+          expiresIn: response.data.data.tokens.accessTokenExpiresIn,
+        };
+        AuthUtils.storeTokens(tokens);
         if (response.data.data.user) {
           AuthUtils.storeUser(response.data.data.user);
         }

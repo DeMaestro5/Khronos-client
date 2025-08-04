@@ -95,7 +95,7 @@ api.interceptors.response.use(
       if (
         originalRequest.url?.includes('/api/v1/login') ||
         originalRequest.url?.includes('/api/v1/signup') ||
-        originalRequest.url?.includes('/api/v1/token/refresh-token')
+        originalRequest.url?.includes('/api/v1/token/refresh')
       ) {
         return Promise.reject(error);
       }
@@ -103,32 +103,41 @@ api.interceptors.response.use(
       // If we have a refresh token, try to refresh
       const refreshToken = AuthUtils.getRefreshToken();
       if (refreshToken && !isRefreshing) {
-        if (isRefreshing) {
-          // If already refreshing, queue this request
-          return new Promise((resolve, reject) => {
-            failedQueue.push({ resolve, reject });
-          })
-            .then(() => {
-              originalRequest.headers.Authorization = `Bearer ${AuthUtils.getAccessToken()}`;
-              return api(originalRequest);
-            })
-            .catch((err) => {
-              return Promise.reject(err);
-            });
-        }
-
         originalRequest._retry = true;
         isRefreshing = true;
 
         try {
           // Use oauthApi for refresh token (no API key required)
+          console.log(
+            'Attempting token refresh with token:',
+            refreshToken ? 'present' : 'missing'
+          );
+          console.log('Refresh token length:', refreshToken?.length);
+          console.log(
+            'Refresh token format:',
+            refreshToken?.substring(0, 20) + '...'
+          );
+          console.log('Sending request with data:', { refreshToken });
           const refreshResponse = await oauthApi.post(
-            '/api/v1/token/refresh-token',
-            { refreshToken }
+            '/api/v1/token/refresh',
+            { refreshToken },
+            {
+              headers: {
+                'Content-Type': 'application/json',
+                Accept: 'application/json',
+              },
+            }
           );
 
+          console.log('Refresh response:', refreshResponse.data);
+
+          // Check for the actual response format from the server
           if (refreshResponse.data?.data?.tokens) {
-            const newTokens = refreshResponse.data.data.tokens;
+            const newTokens = {
+              accessToken: refreshResponse.data.data.tokens.accessToken,
+              refreshToken: refreshResponse.data.data.tokens.refreshToken,
+              expiresIn: refreshResponse.data.data.tokens.accessTokenExpiresIn,
+            };
             AuthUtils.storeTokens(newTokens);
 
             // Update the authorization header
@@ -143,14 +152,22 @@ api.interceptors.response.use(
           }
         } catch (refreshError) {
           console.error('Token refresh failed:', refreshError);
+          if (refreshError instanceof AxiosError) {
+            console.error('Refresh error details:', {
+              status: refreshError.response?.status,
+              statusText: refreshError.response?.statusText,
+              data: refreshError.response?.data,
+              headers: refreshError.response?.headers,
+              url: refreshError.config?.url,
+              method: refreshError.config?.method,
+              requestData: refreshError.config?.data,
+            });
+          }
           processQueue(refreshError as AxiosError);
           AuthUtils.clearTokens();
 
-          // Only redirect to login if we're not already on the login page
-          if (
-            typeof window !== 'undefined' &&
-            !window.location.pathname.includes('/auth/login')
-          ) {
+          // Always redirect to login when refresh fails
+          if (typeof window !== 'undefined') {
             window.location.href = '/auth/login';
           }
 
@@ -190,8 +207,9 @@ export const authAPI = {
     });
   },
 
-  refreshToken: (refreshToken: string) =>
-    oauthApi.post('/api/v1/token/refresh-token', { refreshToken }),
+  refreshToken: (refreshToken: string) => {
+    return oauthApi.post('/api/v1/token/refresh', { refreshToken });
+  },
 
   logout: () => {
     const refreshToken = AuthUtils.getRefreshToken();

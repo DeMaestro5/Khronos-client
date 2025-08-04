@@ -16,6 +16,12 @@ export class AuthUtils {
     if (typeof window === 'undefined') return;
 
     try {
+      console.log('Storing tokens:', {
+        hasAccessToken: !!tokens.accessToken,
+        hasRefreshToken: !!tokens.refreshToken,
+        expiresIn: tokens.expiresIn,
+      });
+
       localStorage.setItem(TOKEN_KEYS.ACCESS_TOKEN, tokens.accessToken);
       localStorage.setItem(TOKEN_KEYS.REFRESH_TOKEN, tokens.refreshToken);
 
@@ -23,6 +29,9 @@ export class AuthUtils {
       if (tokens.expiresIn) {
         const expiryTime = Date.now() + tokens.expiresIn * 1000;
         localStorage.setItem(TOKEN_KEYS.TOKEN_EXPIRY, expiryTime.toString());
+        console.log('Stored token expiry:', new Date(expiryTime));
+      } else {
+        console.log('No expiresIn provided, not storing expiry');
       }
     } catch (error) {
       console.error('Failed to store tokens:', error);
@@ -103,11 +112,24 @@ export class AuthUtils {
    */
   static isTokenExpired(): boolean {
     const expiry = this.getTokenExpiry();
-    if (!expiry) return false;
+    if (!expiry) {
+      console.log('No token expiry found');
+      return false;
+    }
 
-    // Consider token expired if it expires within 5 minutes (300000ms)
-    const bufferTime = 5 * 60 * 1000;
-    return Date.now() >= expiry - bufferTime;
+    // Consider token expired if it expires within 10 minutes (600000ms) instead of 5 minutes
+    const bufferTime = 10 * 60 * 1000;
+    const isExpired = Date.now() >= expiry - bufferTime;
+
+    console.log('Token expiry check:', {
+      expiry,
+      now: Date.now(),
+      bufferTime,
+      expiryWithBuffer: expiry - bufferTime,
+      isExpired,
+    });
+
+    return isExpired;
   }
 
   /**
@@ -146,7 +168,16 @@ export class AuthUtils {
     const refreshToken = this.getRefreshToken();
     const expiry = this.getTokenExpiry();
 
+    console.log('Getting stored tokens:', {
+      hasAccessToken: !!accessToken,
+      hasRefreshToken: !!refreshToken,
+      expiry,
+      accessTokenLength: accessToken?.length,
+      refreshTokenLength: refreshToken?.length,
+    });
+
     if (!accessToken || !refreshToken) {
+      console.log('Missing tokens, returning null');
       return null;
     }
 
@@ -161,7 +192,20 @@ export class AuthUtils {
    * Check if we should attempt to refresh the token
    */
   static shouldRefreshToken(): boolean {
-    return this.hasValidTokens() && this.isTokenExpired();
+    const hasValidTokens = this.hasValidTokens();
+    const isExpired = this.isTokenExpired();
+    const expiry = this.getTokenExpiry();
+    const now = Date.now();
+
+    console.log('Token refresh check:', {
+      hasValidTokens,
+      isExpired,
+      expiry,
+      now,
+      timeUntilExpiry: expiry ? expiry - now : 'no expiry',
+    });
+
+    return hasValidTokens && isExpired;
   }
 
   // Google Auth specific methods

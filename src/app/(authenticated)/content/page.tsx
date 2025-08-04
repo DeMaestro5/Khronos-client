@@ -1,16 +1,18 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { Search, Plus, FileText } from 'lucide-react';
+import { Search, Plus, FileText, Sparkles } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useUserData } from '@/src/context/UserDataContext';
 import { useGlobalConfetti } from '@/src/context/ConfettiContext';
+import { useAIChat } from '@/src/context/AIChatContext';
 import { Content, ContentStatus, ContentType } from '@/src/types/content';
 import { ContentCard } from '@/src/components/content/content-card';
 import { ContentListItem } from '@/src/components/content/content-list-items';
 import CreateContentModal from '@/src/components/content/content-creation-modal';
 import ContentFilter from '@/src/components/content/content-filter';
 import PageLoading from '@/src/components/ui/page-loading';
+import FloatingAIButton from '@/src/components/ai/floating-ai-button';
 import { CreatedContent } from '@/src/types/modal';
 
 type ViewMode = 'grid' | 'list';
@@ -42,6 +44,9 @@ export default function ContentPage() {
 
   // Add confetti context
   const { triggerContentCreationCelebration } = useGlobalConfetti();
+
+  // Add AI chat context
+  const { openChat } = useAIChat();
 
   useEffect(() => {
     // Use cached content data instead of API call
@@ -159,13 +164,24 @@ export default function ContentPage() {
           </p>
         </div>
 
-        <button
-          onClick={() => setShowModal(true)}
-          className='group flex items-center justify-center space-x-2 px-4 sm:px-6 py-2.5 sm:py-3 bg-gradient-to-r from-purple-600 to-pink-600 dark:from-blue-600 dark:to-indigo-700 hover:from-purple-500 hover:to-pink-500 dark:hover:from-blue-500 dark:hover:to-indigo-600 rounded-xl sm:rounded-2xl text-white font-medium transition-all duration-300 hover:scale-105 hover:shadow-lg hover:shadow-purple-500/50 dark:hover:shadow-blue-500/50 w-full sm:w-auto'
-        >
-          <Plus className='h-4 w-4 sm:h-5 sm:w-5 group-hover:rotate-90 transition-transform duration-300' />
-          <span className='text-sm sm:text-base'>Create Content</span>
-        </button>
+        <div className='flex flex-col sm:flex-row gap-3 w-full sm:w-auto'>
+          <button
+            onClick={() => setShowModal(true)}
+            className='group flex items-center justify-center space-x-2 px-4 sm:px-6 py-2.5 sm:py-3 bg-gradient-to-r from-purple-600 to-pink-600 dark:from-blue-600 dark:to-indigo-700 hover:from-purple-500 hover:to-pink-500 dark:hover:from-blue-500 dark:hover:to-indigo-600 rounded-xl sm:rounded-2xl text-white font-medium transition-all duration-300 hover:scale-105 hover:shadow-lg hover:shadow-purple-500/50 dark:hover:shadow-blue-500/50 w-full sm:w-auto'
+          >
+            <Plus className='h-4 w-4 sm:h-5 sm:w-5 group-hover:rotate-90 transition-transform duration-300' />
+            <span className='text-sm sm:text-base'>Create Content</span>
+          </button>
+
+          {/* AI Chat Button - Desktop Only */}
+          <button
+            onClick={() => openChat()}
+            className='hidden sm:flex items-center justify-center space-x-2 px-4 sm:px-6 py-2.5 sm:py-3 bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-500 hover:to-purple-500 rounded-xl sm:rounded-2xl text-white font-medium transition-all duration-300 hover:scale-105 hover:shadow-lg hover:shadow-indigo-500/50'
+          >
+            <Sparkles className='h-4 w-4 sm:h-5 sm:w-5' />
+            <span className='text-sm sm:text-base'>AI Assistant</span>
+          </button>
+        </div>
       </div>
 
       {/* Enhanced Controls Section */}
@@ -291,6 +307,9 @@ export default function ContentPage() {
         onSubmit={handleContentCreated}
         initialData={aiSuggestion}
       />
+
+      {/* Floating AI Button for mobile only */}
+      <FloatingAIButton />
     </div>
   );
 }
