@@ -136,27 +136,25 @@ export const AIChatProvider: React.FC<{ children: ReactNode }> = ({
     contentTitle?: string,
     initialPrompt?: string
   ) => {
-    if (!contentId) {
-      // General chat (no specific content) - show with helpful message
-      setState((prev) => ({
-        ...prev,
-        isOpen: true,
-        currentContentId: null,
-        currentContentTitle: null,
-        initialPrompt: initialPrompt || '',
-        error: null,
-      }));
-      return;
-    }
-
+    // Open modal immediately for instant feedback
     setState((prev) => ({
       ...prev,
       isOpen: true,
-      currentContentId: contentId,
+      currentContentId: contentId || null,
       currentContentTitle: contentTitle || null,
       initialPrompt: initialPrompt || '',
-      isLoading: true,
       error: null,
+    }));
+
+    if (!contentId) {
+      // General chat (no specific content) - no API calls needed
+      return;
+    }
+
+    // Load data in background after modal is already open
+    setState((prev) => ({
+      ...prev,
+      isLoading: true,
     }));
 
     try {

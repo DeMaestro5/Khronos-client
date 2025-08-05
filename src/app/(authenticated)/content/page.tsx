@@ -12,7 +12,7 @@ import { ContentListItem } from '@/src/components/content/content-list-items';
 import CreateContentModal from '@/src/components/content/content-creation-modal';
 import ContentFilter from '@/src/components/content/content-filter';
 import PageLoading from '@/src/components/ui/page-loading';
-import FloatingAIButton from '@/src/components/ai/floating-ai-button';
+// import FloatingAIButton from '@/src/components/ai/floating-ai-button';
 import { CreatedContent } from '@/src/types/modal';
 
 type ViewMode = 'grid' | 'list';
@@ -309,7 +309,7 @@ export default function ContentPage() {
       />
 
       {/* Floating AI Button for mobile only */}
-      <FloatingAIButton />
+      {/* <FloatingAIButton /> */}
     </div>
   );
 }
