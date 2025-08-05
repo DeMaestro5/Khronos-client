@@ -16,9 +16,13 @@ const FloatingAIButton: React.FC<FloatingAIButtonProps> = ({
 }) => {
   const { openChat, isOpen } = useAIChat();
   const [isHovered, setIsHovered] = useState(false);
+  const [isPressed, setIsPressed] = useState(false);
 
   const handleClick = () => {
+    setIsPressed(true);
+    // Immediate response - no delay
     openChat(contentId, contentTitle);
+    setIsPressed(false);
   };
 
   if (isOpen) return null;
@@ -29,15 +33,41 @@ const FloatingAIButton: React.FC<FloatingAIButtonProps> = ({
       initial={{ scale: 0, opacity: 0 }}
       animate={{ scale: 1, opacity: 1 }}
       exit={{ scale: 0, opacity: 0 }}
-      transition={{ type: 'spring', stiffness: 260, damping: 20 }}
+      transition={{
+        type: 'spring',
+        stiffness: 400,
+        damping: 30,
+        mass: 0.6,
+      }}
+      style={{ willChange: 'transform, opacity' }}
     >
       <motion.button
         onClick={handleClick}
         onHoverStart={() => setIsHovered(true)}
         onHoverEnd={() => setIsHovered(false)}
-        className='group relative flex items-center justify-center w-12 h-12 md:w-auto md:h-auto md:gap-2 md:gap-3 bg-gradient-to-r from-purple-600 via-violet-600 to-indigo-600 hover:from-purple-500 hover:via-violet-500 hover:to-indigo-500 text-white rounded-full md:rounded-2xl shadow-2xl hover:shadow-purple-500/25 transition-all duration-300 overflow-hidden'
-        whileHover={{ scale: 1.05, y: -2 }}
-        whileTap={{ scale: 0.95 }}
+        className='group relative flex items-center justify-center w-12 h-12 md:w-auto md:h-auto md:gap-2 md:gap-3 bg-gradient-to-r from-purple-600 via-violet-600 to-indigo-600 hover:from-purple-500 hover:via-violet-500 hover:to-indigo-500 text-white rounded-full md:rounded-2xl shadow-2xl hover:shadow-purple-500/25 transition-all duration-200 overflow-hidden'
+        whileHover={{
+          scale: 1.05,
+          y: -2,
+          transition: { duration: 0.15 },
+        }}
+        whileTap={{
+          scale: 0.95,
+          transition: { duration: 0.08 },
+        }}
+        animate={{
+          scale: isPressed ? 0.9 : 1,
+          rotate: isPressed ? 3 : 0,
+        }}
+        transition={{
+          type: 'spring',
+          stiffness: 500,
+          damping: 35,
+        }}
+        style={{
+          willChange: 'transform',
+          transform: 'translateZ(0)',
+        }}
       >
         {/* Sparkle Animation Background */}
         <div className='absolute inset-0 opacity-20'>
@@ -52,8 +82,13 @@ const FloatingAIButton: React.FC<FloatingAIButtonProps> = ({
             <motion.div
               animate={{
                 rotate: isHovered ? 360 : 0,
+                scale: isPressed ? 1.1 : 1,
               }}
-              transition={{ duration: 0.6, ease: 'easeInOut' }}
+              transition={{
+                duration: 0.6,
+                ease: 'easeInOut',
+                scale: { duration: 0.1 },
+              }}
             >
               <Sparkles className='w-5 h-5 md:w-5 md:h-5' />
             </motion.div>
