@@ -5,7 +5,6 @@ import {
   ContentAttachment,
   ContentIdea,
 } from '@/src/types/content';
-import { AuthorCard } from './AuthorCard';
 import { Timeline } from './Timeline';
 import { TagsCard } from './TagsCard';
 import { PlatformsCard } from './PlatformsCard';
@@ -25,7 +24,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ content }) => {
         variant='compact'
       />
 
-      <AuthorCard author={content.author} />
+      {/* <AuthorCard author={content.author} /> */}
       <Timeline content={content} />
       <TagsCard tags={content.tags} />
       <PlatformsCard platforms={content.platforms} />
