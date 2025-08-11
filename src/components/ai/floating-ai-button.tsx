@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Sparkles, MessageCircle, Zap } from 'lucide-react';
 import { useAIChat } from '@/src/context/AIChatContext';
@@ -16,14 +16,11 @@ const FloatingAIButton: React.FC<FloatingAIButtonProps> = ({
 }) => {
   const { openChat, isOpen } = useAIChat();
   const [isHovered, setIsHovered] = useState(false);
-  const [isPressed, setIsPressed] = useState(false);
 
-  const handleClick = () => {
-    setIsPressed(true);
+  const handleClick = useCallback(() => {
     // Immediate response - no delay
     openChat(contentId, contentTitle);
-    setIsPressed(false);
-  };
+  }, [openChat, contentId, contentTitle]);
 
   if (isOpen) return null;
 
@@ -39,7 +36,11 @@ const FloatingAIButton: React.FC<FloatingAIButtonProps> = ({
         damping: 30,
         mass: 0.6,
       }}
-      style={{ willChange: 'transform, opacity' }}
+      style={{
+        willChange: 'transform, opacity',
+        transform: 'translateZ(0)',
+        backfaceVisibility: 'hidden',
+      }}
     >
       <motion.button
         onClick={handleClick}
@@ -55,21 +56,13 @@ const FloatingAIButton: React.FC<FloatingAIButtonProps> = ({
           scale: 0.95,
           transition: { duration: 0.08 },
         }}
-        animate={{
-          scale: isPressed ? 0.9 : 1,
-          rotate: isPressed ? 3 : 0,
-        }}
-        transition={{
-          type: 'spring',
-          stiffness: 500,
-          damping: 35,
-        }}
         style={{
           willChange: 'transform',
           transform: 'translateZ(0)',
+          backfaceVisibility: 'hidden',
         }}
       >
-        {/* Sparkle Animation Background */}
+        {/* Sparkle Animation Background - Simplified */}
         <div className='absolute inset-0 opacity-20'>
           <div className='absolute top-1 left-2 w-1 h-1 bg-white rounded-full animate-ping'></div>
           <div className='absolute top-3 right-3 w-0.5 h-0.5 bg-white rounded-full animate-pulse delay-300'></div>
@@ -82,18 +75,16 @@ const FloatingAIButton: React.FC<FloatingAIButtonProps> = ({
             <motion.div
               animate={{
                 rotate: isHovered ? 360 : 0,
-                scale: isPressed ? 1.1 : 1,
               }}
               transition={{
                 duration: 0.6,
                 ease: 'easeInOut',
-                scale: { duration: 0.1 },
               }}
             >
               <Sparkles className='w-5 h-5 md:w-5 md:h-5' />
             </motion.div>
 
-            {/* Pulse Ring */}
+            {/* Pulse Ring - Simplified */}
             <motion.div
               className='absolute inset-0 border-2 border-white rounded-full'
               animate={{
