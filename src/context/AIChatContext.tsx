@@ -29,6 +29,7 @@ interface AIChatState {
   isMessageLoading: boolean; // New state for AI response loading
   error: string | null;
   initialPrompt: string;
+  hasHydrated: boolean;
 }
 
 interface AIChatContextType {
@@ -97,13 +98,17 @@ export const AIChatProvider: React.FC<{ children: ReactNode }> = ({
     isMessageLoading: false,
     error: null,
     initialPrompt: '',
+    hasHydrated: false,
   });
 
   // Load conversations from localStorage on mount - optimized
   useEffect(() => {
     const loadConversations = () => {
       const stored = storage.get(STORAGE_KEY);
-      if (!stored) return;
+      if (!stored) {
+        setState((prev) => ({ ...prev, hasHydrated: true }));
+        return;
+      }
 
       // Check if this is old dummy data format (no sessionId)
       const isOldFormat = Object.values(stored).some((conv: unknown) => {
@@ -120,6 +125,7 @@ export const AIChatProvider: React.FC<{ children: ReactNode }> = ({
           'Detected old chat data format, clearing and starting fresh...'
         );
         storage.remove(STORAGE_KEY);
+        setState((prev) => ({ ...prev, hasHydrated: true }));
         return;
       }
 
@@ -140,6 +146,7 @@ export const AIChatProvider: React.FC<{ children: ReactNode }> = ({
       setState((prev) => ({
         ...prev,
         conversations,
+        hasHydrated: true,
       }));
     };
 
@@ -172,6 +179,60 @@ export const AIChatProvider: React.FC<{ children: ReactNode }> = ({
     []
   );
 
+  // Default conversation starters and actions for immediate display
+  const getDefaultConversationStarters = (
+    title?: string
+  ): ConversationStarter[] => [
+    {
+      type: 'optimization',
+      prompt: title
+        ? `How can I optimize "${title}" for better engagement?`
+        : 'How can I improve my content strategy?',
+      category: 'strategy',
+    },
+    {
+      type: 'ideas',
+      prompt: title
+        ? `What are some creative ideas to expand on "${title}"?`
+        : 'What are the latest content marketing trends?',
+      category: 'creativity',
+    },
+    {
+      type: 'seo',
+      prompt: title
+        ? `How can I improve the SEO for "${title}"?`
+        : 'How can I increase engagement on my posts?',
+      category: 'performance',
+    },
+  ];
+
+  const defaultActions: ChatUIAction[] = [
+    {
+      type: 'optimize',
+      label: 'Optimize',
+      description: 'Get optimization suggestions',
+      icon: '⚡',
+    },
+    {
+      type: 'ideas',
+      label: 'Ideas',
+      description: 'Get creative ideas',
+      icon: '✨',
+    },
+    {
+      type: 'strategy',
+      label: 'Strategy',
+      description: 'Get strategic advice',
+      icon: '🎯',
+    },
+    {
+      type: 'analyze',
+      label: 'Analyze',
+      description: 'Analyze content',
+      icon: '📊',
+    },
+  ];
+
   // Optimized openChat function for instant modal display
   const openChat = useCallback(
     async (
@@ -179,15 +240,63 @@ export const AIChatProvider: React.FC<{ children: ReactNode }> = ({
       contentTitle?: string,
       initialPrompt?: string
     ) => {
-      // Open modal immediately for instant feedback
-      setState((prev) => ({
-        ...prev,
-        isOpen: true,
-        currentContentId: contentId || null,
-        currentContentTitle: contentTitle || null,
-        initialPrompt: initialPrompt || '',
-        error: null,
-      }));
+      // Try to synchronously locate an existing conversation (state or localStorage)
+      let existingConversation: ContentConversation | undefined = undefined;
+      if (contentId) {
+        existingConversation = state.conversations[contentId];
+        if (!existingConversation) {
+          const stored = storage.get(STORAGE_KEY);
+          const fromStorage = stored?.[contentId];
+          if (fromStorage) {
+            existingConversation = {
+              ...fromStorage,
+              lastUpdated: new Date(fromStorage.lastUpdated),
+              messages: fromStorage.messages.map((m: AIChatMessage) => ({
+                ...m,
+                timestamp: new Date(m.timestamp),
+              })),
+            } as ContentConversation;
+          }
+        }
+      }
+
+      // Open modal immediately with default data for instant feedback
+      setState((prev) => {
+        const alreadyExists = contentId
+          ? prev.conversations[contentId] || existingConversation
+          : undefined;
+
+        return {
+          ...prev,
+          isOpen: true,
+          currentContentId: contentId || null,
+          currentContentTitle:
+            contentTitle || alreadyExists?.contentTitle || null,
+          initialPrompt: initialPrompt || '',
+          error: null,
+          // Only pre-populate with default conversation if one does not already exist
+          conversations: contentId
+            ? alreadyExists
+              ? {
+                  ...prev.conversations,
+                  [contentId]: alreadyExists,
+                }
+              : {
+                  ...prev.conversations,
+                  [contentId]: {
+                    contentId,
+                    contentTitle: contentTitle || `Content ${contentId}`,
+                    sessionId: undefined,
+                    messages: [],
+                    lastUpdated: new Date(),
+                    conversationStarters:
+                      getDefaultConversationStarters(contentTitle),
+                    actions: defaultActions,
+                  } as ContentConversation,
+                }
+            : prev.conversations,
+        };
+      });
 
       if (!contentId) {
         // General chat (no specific content) - no API calls needed
@@ -201,14 +310,14 @@ export const AIChatProvider: React.FC<{ children: ReactNode }> = ({
       }));
 
       try {
-        // Check if we already have a session for this content
-        const existingConversation = state.conversations[contentId];
+        // Use the synchronously discovered existing conversation (if any)
+        const conversationForSession = existingConversation;
 
-        if (existingConversation && existingConversation.sessionId) {
+        if (conversationForSession && conversationForSession.sessionId) {
           // Load existing session from server
           try {
             const response = await aiChatAPI.getSession(
-              existingConversation.sessionId
+              conversationForSession.sessionId
             );
 
             // Handle the server response structure: { statusCode, message, data }
@@ -219,17 +328,72 @@ export const AIChatProvider: React.FC<{ children: ReactNode }> = ({
 
             const sessionData: GetSessionResponse = responseData.data;
 
+            // Provide default conversation starters if none provided by server
+            const defaultConversationStarters = [
+              {
+                type: 'optimization',
+                prompt:
+                  contentTitle || conversationForSession.contentTitle
+                    ? `How can I optimize "${
+                        contentTitle || conversationForSession.contentTitle
+                      }" for better engagement?`
+                    : 'How can I improve my content strategy?',
+                category: 'strategy',
+              },
+              {
+                type: 'ideas',
+                prompt:
+                  contentTitle || conversationForSession.contentTitle
+                    ? `What are some creative ideas to expand on "${
+                        contentTitle || conversationForSession.contentTitle
+                      }"?`
+                    : 'What are the latest content marketing trends?',
+                category: 'creativity',
+              },
+              {
+                type: 'seo',
+                prompt:
+                  contentTitle || conversationForSession.contentTitle
+                    ? `How can I improve the SEO for "${
+                        contentTitle || conversationForSession.contentTitle
+                      }"?`
+                    : 'How can I increase engagement on my posts?',
+                category: 'performance',
+              },
+            ];
+
             const updatedConversation: ContentConversation = {
               contentId,
-              contentTitle: contentTitle || existingConversation.contentTitle,
-              sessionId: existingConversation.sessionId,
+              contentTitle: contentTitle || conversationForSession.contentTitle,
+              sessionId: conversationForSession.sessionId,
               messages: sessionData.session.messages.map((msg) => ({
                 ...msg,
                 timestamp: new Date(msg.timestamp),
               })),
               lastUpdated: new Date(sessionData.session.updatedAt),
-              conversationStarters: sessionData.conversationStarters || [],
-              actions: sessionData.ui?.actions || [],
+              conversationStarters: (() => {
+                const serverStarters = sessionData.conversationStarters || [];
+                const validServerStarters = serverStarters.filter(
+                  (s) =>
+                    s &&
+                    typeof s.prompt === 'string' &&
+                    s.prompt.trim().length > 0
+                );
+                if (validServerStarters.length > 0) return validServerStarters;
+                const existingStarters =
+                  conversationForSession.conversationStarters || [];
+                const validExistingStarters = existingStarters.filter(
+                  (s) =>
+                    s &&
+                    typeof s.prompt === 'string' &&
+                    s.prompt.trim().length > 0
+                );
+                if (validExistingStarters.length > 0)
+                  return validExistingStarters;
+                return defaultConversationStarters;
+              })(),
+              actions:
+                sessionData.ui?.actions || conversationForSession.actions || [],
             };
 
             setState((prev) => {
@@ -293,14 +457,48 @@ export const AIChatProvider: React.FC<{ children: ReactNode }> = ({
         console.log('Session data:', sessionData);
         console.log('Conversation starters:', sessionData.conversationStarters);
 
+        // Provide default conversation starters if none provided by server
+        const defaultConversationStarters = [
+          {
+            type: 'optimization',
+            prompt: contentTitle
+              ? `How can I optimize "${contentTitle}" for better engagement?`
+              : 'How can I improve my content strategy?',
+            category: 'strategy',
+          },
+          {
+            type: 'ideas',
+            prompt: contentTitle
+              ? `What are some creative ideas to expand on "${contentTitle}"?`
+              : 'What are the latest content marketing trends?',
+            category: 'creativity',
+          },
+          {
+            type: 'seo',
+            prompt: contentTitle
+              ? `How can I improve the SEO for "${contentTitle}"?`
+              : 'How can I increase engagement on my posts?',
+            category: 'performance',
+          },
+        ];
+
         const newConversation: ContentConversation = {
           contentId,
           contentTitle: contentTitle || sessionData.session.title,
           sessionId: sessionData.session.id,
           messages: [],
           lastUpdated: new Date(),
-          conversationStarters: sessionData.conversationStarters || [],
-          actions: sessionData.ui?.actions || [],
+          conversationStarters: (() => {
+            const serverStarters = sessionData.conversationStarters || [];
+            const validServerStarters = serverStarters.filter(
+              (s) =>
+                s && typeof s.prompt === 'string' && s.prompt.trim().length > 0
+            );
+            return validServerStarters.length > 0
+              ? validServerStarters
+              : defaultConversationStarters;
+          })(),
+          actions: sessionData.ui?.actions || defaultActions,
         };
 
         console.log('New conversation created:', newConversation);

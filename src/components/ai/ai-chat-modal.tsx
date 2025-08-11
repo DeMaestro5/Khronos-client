@@ -6,6 +6,7 @@ import React, {
   useEffect,
   useCallback,
   useMemo,
+  useLayoutEffect,
 } from 'react';
 import Image from 'next/image';
 import {
@@ -314,19 +315,19 @@ const LoadingIndicator: React.FC = () => (
   </div>
 );
 
-// Simple empty state
+// Simple empty state with suggested questions and quick actions
 const EmptyState: React.FC<{
   currentContentTitle: string | null;
   actions: Array<{ type: string; label: string }>;
   conversationStarters: Array<{ prompt: string }>;
   onConversationStarter: (prompt: string) => void;
-  isMessageLoading: boolean; // Change from isLoading to isMessageLoading
+  isMessageLoading: boolean;
 }> = ({
   currentContentTitle,
   actions,
   conversationStarters,
   onConversationStarter,
-  isMessageLoading, // Change from isLoading to isMessageLoading
+  isMessageLoading,
 }) => {
   const getActionIcon = (type: string) => {
     switch (type) {
@@ -343,107 +344,140 @@ const EmptyState: React.FC<{
     }
   };
 
-  return (
-    <div className='flex flex-col items-center justify-center h-full text-center space-y-6 p-4'>
-      <div className='w-16 h-16 bg-gradient-to-r from-purple-500 to-indigo-500 rounded-full flex items-center justify-center'>
-        <Sparkles className='w-8 h-8 text-white' />
-      </div>
+  // Get default suggested questions if none provided
+  const getDefaultQuestions = () => {
+    if (currentContentTitle) {
+      return [
+        `How can I optimize "${currentContentTitle}" for better engagement?`,
+        `What are some creative ideas to expand on "${currentContentTitle}"?`,
+        `How can I improve the SEO for "${currentContentTitle}"?`,
+      ];
+    }
+    return [
+      'How can I improve my content strategy?',
+      'What are the latest content marketing trends?',
+      'How can I increase engagement on my posts?',
+    ];
+  };
 
-      <div className='max-w-sm'>
-        <h3 className='text-lg font-semibold text-gray-900 mb-2'>
-          {currentContentTitle
-            ? `Ready to help optimize "${currentContentTitle}"!`
-            : 'AI Assistant Ready'}
-        </h3>
-        <p className='text-sm text-theme-secondary'>
-          {currentContentTitle
-            ? `I can assist with content strategy, SEO improvements, engagement tactics, and performance insights.`
-            : 'I can help you with content strategy, SEO tips, creative ideas, and general content marketing advice.'}
-        </p>
+  // Always show questions - either from server or defaults
+  const questions = (() => {
+    const fromServer = (conversationStarters || [])
+      .map((s) => (typeof s?.prompt === 'string' ? s.prompt.trim() : ''))
+      .filter((p) => p.length > 0);
+    if (fromServer.length > 0) return fromServer.slice(0, 3);
+    return getDefaultQuestions();
+  })();
+
+  return (
+    <div className='flex flex-col h-full'>
+      {/* Welcome Section */}
+      <div className='flex flex-col items-center justify-center text-center space-y-6 p-4 flex-shrink-0'>
+        <div className='w-16 h-16 bg-gradient-to-r from-purple-500 to-indigo-500 rounded-full flex items-center justify-center'>
+          <Sparkles className='w-8 h-8 text-white' />
+        </div>
+
+        <div className='max-w-sm'>
+          <h3 className='text-lg font-semibold text-theme-primary mb-2'>
+            {currentContentTitle
+              ? `Ready to help optimize "${currentContentTitle}"!`
+              : 'AI Assistant Ready'}
+          </h3>
+          <p className='text-sm text-theme-secondary'>
+            {currentContentTitle
+              ? `I can assist with content strategy, SEO improvements, engagement tactics, and performance insights.`
+              : 'I can help you with content strategy, SEO tips, creative ideas, and general content marketing advice.'}
+          </p>
+        </div>
+
+        {currentContentTitle && (
+          <div className='space-y-2 w-full max-w-xs'>
+            <div className='px-3 py-2 bg-theme-secondary rounded-lg border border-theme-primary'>
+              <p className='text-xs text-theme-secondary font-medium'>
+                Content Context: {currentContentTitle}
+              </p>
+            </div>
+            <div className='px-3 py-2 bg-green-50 dark:bg-green-900/20 rounded-lg border border-green-200 dark:border-green-800'>
+              <p className='text-xs text-green-700 dark:text-green-300 font-medium flex items-center gap-1'>
+                <span className='w-2 h-2 bg-green-500 rounded-full'></span>
+                Enhanced AI with server synchronization
+              </p>
+            </div>
+          </div>
+        )}
       </div>
 
       {/* Quick Actions */}
       {actions.length > 0 && (
-        <div className='grid grid-cols-2 gap-2 w-full max-w-xs'>
-          {actions.map((action) => (
-            <button
-              key={action.type}
-              onClick={() =>
-                onConversationStarter(
-                  `Help me ${action.label.toLowerCase()} this content`
-                )
-              }
-              className='flex items-center gap-2 p-3 bg-theme-card hover:bg-theme-hover rounded-xl transition-colors border border-theme-primary'
-              disabled={isMessageLoading}
-            >
-              <span className='text-purple-600'>
-                {getActionIcon(action.type)}
-              </span>
-              <span className='text-xs font-medium text-theme-primary'>
-                {action.label}
-              </span>
-            </button>
-          ))}
-        </div>
-      )}
-
-      {/* Conversation Starters */}
-      {conversationStarters.length > 0 && (
-        <div className='w-full max-w-xs space-y-2'>
-          <p className='text-xs font-medium text-theme-muted'>
-            Suggested questions:
-          </p>
-          {conversationStarters.slice(0, 3).map((starter, index) => (
-            <button
-              key={index}
-              onClick={() => onConversationStarter(starter.prompt)}
-              className='w-full text-left p-3 bg-purple-50 hover:bg-purple-100 rounded-lg border border-purple-200 transition-colors'
-              disabled={isMessageLoading}
-            >
-              <p className='text-xs text-purple-700'>{starter.prompt}</p>
-            </button>
-          ))}
-        </div>
-      )}
-
-      {/* Fallback conversation starters */}
-      {conversationStarters.length === 0 && currentContentTitle && (
-        <div className='w-full max-w-xs space-y-2'>
-          <p className='text-xs font-medium text-theme-muted'>
-            Suggested questions:
-          </p>
-          {[
-            `How can I optimize "${currentContentTitle}" for better engagement?`,
-            `What are some creative ideas to expand on "${currentContentTitle}"?`,
-            `How can I improve the SEO for "${currentContentTitle}"?`,
-          ].map((prompt, index) => (
-            <button
-              key={index}
-              onClick={() => onConversationStarter(prompt)}
-              className='w-full text-left p-3 bg-purple-50 hover:bg-purple-100 rounded-lg border border-purple-200 transition-colors'
-              disabled={isMessageLoading}
-            >
-              <p className='text-xs text-purple-700'>{prompt}</p>
-            </button>
-          ))}
-        </div>
-      )}
-
-      {currentContentTitle && (
-        <div className='mt-4 space-y-2 w-full max-w-xs'>
-          <div className='px-3 py-2 bg-purple-50 rounded-lg border border-purple-200'>
-            <p className='text-xs text-purple-700 font-medium'>
-              Content Context: {currentContentTitle}
-            </p>
-          </div>
-          <div className='px-3 py-2 bg-green-50 rounded-lg border border-green-200'>
-            <p className='text-xs text-green-700 font-medium flex items-center gap-1'>
-              <span className='w-2 h-2 bg-green-500 rounded-full'></span>
-              Enhanced AI with server synchronization
-            </p>
+        <div className='px-4 pb-4 flex-shrink-0'>
+          <div className='space-y-3'>
+            <h4 className='text-sm font-medium text-theme-primary'>
+              Quick Actions
+            </h4>
+            <div className='grid grid-cols-2 gap-2'>
+              {actions.map((action) => (
+                <button
+                  key={action.type}
+                  onClick={() =>
+                    onConversationStarter(
+                      `Help me ${action.label.toLowerCase()} this content`
+                    )
+                  }
+                  className='flex items-center gap-2 p-3 bg-theme-secondary hover:bg-theme-hover rounded-xl transition-colors border border-theme-primary'
+                  disabled={isMessageLoading}
+                >
+                  <span className='text-purple-500'>
+                    {getActionIcon(action.type)}
+                  </span>
+                  <span className='text-xs font-medium text-theme-primary'>
+                    {action.label}
+                  </span>
+                </button>
+              ))}
+            </div>
           </div>
         </div>
       )}
+
+      {/* Suggested Questions */}
+      <div className='px-4 pb-4 flex-shrink-0'>
+        <div className='space-y-3'>
+          <div className='flex items-center gap-2'>
+            <Sparkles className='w-4 h-4 text-purple-500' />
+            <h4 className='text-sm font-medium text-theme-primary'>
+              Suggested questions
+            </h4>
+            {/* Show loading indicator if conversation starters are being updated */}
+            {isMessageLoading && (
+              <div className='flex items-center gap-1'>
+                <div className='w-1.5 h-1.5 bg-purple-500 rounded-full animate-pulse'></div>
+                <div
+                  className='w-1.5 h-1.5 bg-purple-500 rounded-full animate-pulse'
+                  style={{ animationDelay: '0.2s' }}
+                ></div>
+                <div
+                  className='w-1.5 h-1.5 bg-purple-500 rounded-full animate-pulse'
+                  style={{ animationDelay: '0.4s' }}
+                ></div>
+              </div>
+            )}
+          </div>
+          <div className='grid grid-cols-1 gap-2'>
+            {questions.map((question, index) => (
+              <button
+                key={index}
+                onClick={() => onConversationStarter(question)}
+                className='w-full text-left p-3 bg-theme-secondary hover:bg-theme-hover rounded-lg border border-theme-primary transition-colors group'
+                disabled={isMessageLoading}
+              >
+                <p className='text-xs text-theme-primary group-hover:text-theme-primary transition-colors'>
+                  {question}
+                </p>
+              </button>
+            ))}
+          </div>
+        </div>
+      </div>
     </div>
   );
 };
@@ -470,9 +504,6 @@ const AIChatModal: React.FC = () => {
   const userInitials = user?.name ? generateInitials(user.name) : 'U';
   const userAvatar = user?.profilePicUrl || user?.avatar || null;
 
-  // Remove the local isMessageLoading state since we're using context state
-  // const [isMessageLoading, setIsMessageLoading] = useState(false);
-
   const [inputMessage, setInputMessage] = useState('');
   const [copiedMessageId, setCopiedMessageId] = useState<string | null>(null);
   const [showCopyToast, setShowCopyToast] = useState(false); // Add toast state
@@ -480,7 +511,6 @@ const AIChatModal: React.FC = () => {
     new Set()
   );
 
-  const messagesEndRef = useRef<HTMLDivElement>(null);
   const messagesContainerRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
   const hasPrefilledRef = useRef(false);
@@ -528,51 +558,6 @@ const AIChatModal: React.FC = () => {
   useEffect(() => {
     if (!isOpen) {
       hasPrefilledRef.current = false;
-    }
-  }, [isOpen]);
-
-  // Ensure messages container starts at bottom immediately
-  useEffect(() => {
-    if (isOpen) {
-      // Force scroll to bottom immediately when modal opens
-      if (messagesContainerRef.current) {
-        // Set scroll position immediately
-        messagesContainerRef.current.scrollTop =
-          messagesContainerRef.current.scrollHeight;
-
-        // Also use a microtask to ensure it happens after DOM updates
-        setTimeout(() => {
-          if (messagesContainerRef.current) {
-            messagesContainerRef.current.scrollTop =
-              messagesContainerRef.current.scrollHeight;
-          }
-        }, 0);
-      }
-    }
-  }, [isOpen]);
-
-  // Keep messages at bottom when new messages are added
-  useEffect(() => {
-    if (messages.length > 0 && messagesContainerRef.current) {
-      messagesContainerRef.current.scrollTop =
-        messagesContainerRef.current.scrollHeight;
-    }
-  }, [messages]);
-
-  // Remove the message loading state tracking useEffect since we're using context state
-  // useEffect(() => {
-  //   if (isOpen && isLoading && messages.length > 0) {
-  //     setIsMessageLoading(true);
-  //   } else {
-  //     setIsMessageLoading(false);
-  //   }
-  // }, [isOpen, isLoading, messages.length]);
-
-  // Focus input when modal opens
-  useEffect(() => {
-    if (isOpen) {
-      const timer = setTimeout(() => inputRef.current?.focus(), 100);
-      return () => clearTimeout(timer);
     }
   }, [isOpen]);
 
@@ -635,6 +620,22 @@ const AIChatModal: React.FC = () => {
     });
   }, []);
 
+  // Focus input when modal opens
+  useEffect(() => {
+    if (isOpen) {
+      const timer = setTimeout(() => inputRef.current?.focus(), 100);
+      return () => clearTimeout(timer);
+    }
+  }, [isOpen]);
+
+  // Always scroll to bottom when modal opens or messages update
+  useLayoutEffect(() => {
+    if (!isOpen) return;
+    const container = messagesContainerRef.current;
+    if (!container) return;
+    container.scrollTop = container.scrollHeight;
+  }, [isOpen, messages.length, isMessageLoading]);
+
   if (!isOpen) return null;
 
   return (
@@ -647,7 +648,7 @@ const AIChatModal: React.FC = () => {
 
       {/* Modal Container - No animations */}
       <div className='fixed z-[99999] inset-0 flex items-end justify-center p-0 sm:inset-auto sm:bottom-6 sm:right-6 sm:left-auto sm:top-auto sm:p-0 sm:items-end'>
-        <div className='bg-white shadow-2xl flex flex-col overflow-hidden w-full h-full rounded-none sm:w-96 sm:h-[600px] sm:rounded-2xl sm:border sm:border-gray-200'>
+        <div className='bg-theme-primary shadow-2xl flex flex-col overflow-hidden w-full h-full rounded-none sm:w-96 sm:h-[600px] sm:rounded-2xl sm:border sm:border-theme-primary'>
           {/* Copy Toast Notification */}
           {showCopyToast && (
             <div className='absolute top-4 left-1/2 transform -translate-x-1/2 z-10 bg-green-500 text-white px-4 py-2 rounded-lg shadow-lg flex items-center gap-2 transition-all duration-300 ease-in-out'>
@@ -670,12 +671,12 @@ const AIChatModal: React.FC = () => {
                   <div className='w-6 h-6 bg-white/20 rounded-lg flex items-center justify-center'>
                     <Sparkles className='w-3 h-3 text-white' />
                   </div>
-                  <h2 className='font-semibold text-sm sm:text-base'>
+                  <h2 className='font-semibold text-sm sm:text-base text-white'>
                     AI Assistant
                   </h2>
                   <div className='flex items-center gap-1 px-2 py-0.5 bg-white/20 rounded-full'>
                     <div className='w-1.5 h-1.5 bg-green-400 rounded-full'></div>
-                    <span className='text-xs'>Enhanced</span>
+                    <span className='text-xs text-white'>Enhanced</span>
                   </div>
                 </div>
 
@@ -694,7 +695,7 @@ const AIChatModal: React.FC = () => {
                 className='p-2 hover:bg-white/10 rounded-lg transition-colors'
                 title='Close'
               >
-                <X className='w-4 h-4' />
+                <X className='w-4 h-4 text-white' />
               </button>
             </div>
           </div>
@@ -703,19 +704,21 @@ const AIChatModal: React.FC = () => {
           <div className='flex-1 flex flex-col overflow-hidden'>
             {/* Error Banner */}
             {error && (
-              <div className='bg-red-50 border-b border-red-200 p-3'>
+              <div className='bg-red-50 dark:bg-red-900/20 border-b border-red-200 dark:border-red-800 p-3'>
                 <div className='flex items-center justify-between'>
-                  <p className='text-sm text-red-700'>{error}</p>
+                  <p className='text-sm text-red-700 dark:text-red-300'>
+                    {error}
+                  </p>
                   <div className='flex gap-2'>
                     <button
                       onClick={handleClearAllConversations}
-                      className='text-xs text-red-600 hover:text-red-800 underline'
+                      className='text-xs text-red-600 dark:text-red-400 hover:text-red-800 dark:hover:text-red-200 underline'
                     >
                       Clear All
                     </button>
                     <button
                       onClick={() => window.location.reload()}
-                      className='text-xs text-red-600 hover:text-red-800 underline'
+                      className='text-xs text-red-600 dark:text-red-400 hover:text-red-800 dark:hover:text-red-200 underline'
                     >
                       Reload
                     </button>
@@ -727,7 +730,7 @@ const AIChatModal: React.FC = () => {
             {/* Messages Area */}
             <div
               ref={messagesContainerRef}
-              className='messages-container flex-1 overflow-y-auto p-4 space-y-4 bg-theme-secondary'
+              className='messages-container flex-1 overflow-y-auto p-4 space-y-4 bg-theme-secondary flex flex-col justify-end'
             >
               {messages.length === 0 ? (
                 <EmptyState
@@ -757,7 +760,6 @@ const AIChatModal: React.FC = () => {
                   {isMessageLoading && <LoadingIndicator />}
                 </>
               )}
-              <div ref={messagesEndRef} />
             </div>
 
             {/* Input Area */}
