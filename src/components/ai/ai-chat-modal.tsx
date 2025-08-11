@@ -7,6 +7,7 @@ import React, {
   useCallback,
   useMemo,
 } from 'react';
+import Image from 'next/image';
 import {
   X,
   Send,
@@ -102,7 +103,7 @@ const StreamingText: React.FC<{
         return (
           <h4
             key={index}
-            className='text-base font-semibold text-gray-900 mt-4 mb-2'
+            className='text-base font-semibold text-theme-primary mt-4 mb-2'
           >
             {line.replace('### ', '')}
           </h4>
@@ -112,7 +113,7 @@ const StreamingText: React.FC<{
         return (
           <h3
             key={index}
-            className='text-lg font-semibold text-gray-900 mt-3 mb-2'
+            className='text-lg font-semibold text-theme-primary mt-3 mb-2'
           >
             {line.replace('## ', '')}
           </h3>
@@ -120,7 +121,10 @@ const StreamingText: React.FC<{
       }
       if (line.startsWith('# ')) {
         return (
-          <h2 key={index} className='text-xl font-bold text-gray-900 mt-4 mb-2'>
+          <h2
+            key={index}
+            className='text-xl font-bold text-theme-primary mt-4 mb-2'
+          >
             {line.replace('# ', '')}
           </h2>
         );
@@ -129,7 +133,7 @@ const StreamingText: React.FC<{
         return (
           <div key={index} className='flex items-start gap-2 mb-1'>
             <span className='w-1.5 h-1.5 bg-purple-400 rounded-full mt-2 flex-shrink-0'></span>
-            <span className='text-gray-700'>
+            <span className='text-theme-secondary'>
               {line.replace(/^[\s]*[\*\-]\s/, '')}
             </span>
           </div>
@@ -137,7 +141,7 @@ const StreamingText: React.FC<{
       }
 
       return (
-        <p key={index} className='text-gray-700 mb-2'>
+        <p key={index} className='text-theme-secondary mb-2'>
           {line}
         </p>
       );
@@ -205,14 +209,15 @@ const MessageBubble: React.FC<{
 
               {/* Overlay profile picture if available */}
               {userAvatar && (
-                <img
+                <Image
                   src={userAvatar}
                   alt='User avatar'
+                  width={32}
+                  height={32}
                   className='absolute w-8 h-8 rounded-full object-cover'
-                  onError={(e) => {
+                  onError={() => {
                     // Hide image if it fails to load, initials will show
-                    const target = e.target as HTMLImageElement;
-                    target.style.display = 'none';
+                    // Note: Next.js Image handles errors differently, so we'll rely on the initials fallback
                   }}
                 />
               )}
@@ -230,7 +235,7 @@ const MessageBubble: React.FC<{
                 ? 'bg-blue-500 text-white'
                 : message.metadata?.inappropriate
                 ? 'bg-red-50 text-red-900 border border-red-200'
-                : 'bg-white text-gray-900 border border-gray-200'
+                : 'bg-theme-card text-theme-primary border border-theme-primary'
             }`}
           >
             <div className='text-sm'>
@@ -258,7 +263,7 @@ const MessageBubble: React.FC<{
           {!isUser && (
             <button
               onClick={() => onCopy(message.id || '', message.content)}
-              className={`absolute -right-8 top-1/2 -translate-y-1/2 opacity-0 group-hover:opacity-100 p-1.5 bg-white border border-gray-200 rounded-lg shadow-sm hover:bg-gray-50 transition-all duration-200 ${
+              className={`absolute -right-8 top-1/2 -translate-y-1/2 opacity-0 group-hover:opacity-100 p-1.5 bg-theme-card border border-theme-primary rounded-lg shadow-sm hover:bg-theme-hover transition-all duration-200 ${
                 copiedMessageId === message.id
                   ? 'bg-green-50 border-green-200 shadow-green-100'
                   : 'hover:shadow-md'
@@ -276,7 +281,7 @@ const MessageBubble: React.FC<{
           )}
 
           {/* Timestamp */}
-          <div className='mt-1 text-xs text-gray-500'>
+          <div className='mt-1 text-xs text-theme-muted'>
             {formatTime(message.timestamp)}
           </div>
         </div>
@@ -292,7 +297,7 @@ const LoadingIndicator: React.FC = () => (
       <div className='w-8 h-8 rounded-full bg-purple-500 flex items-center justify-center'>
         <Bot className='w-4 h-4 text-white' />
       </div>
-      <div className='bg-white border border-gray-200 rounded-2xl px-4 py-3'>
+      <div className='bg-theme-card border border-theme-primary rounded-2xl px-4 py-3'>
         <div className='flex items-center gap-2'>
           <div className='w-2 h-2 bg-purple-500 rounded-full animate-pulse'></div>
           <div
@@ -350,7 +355,7 @@ const EmptyState: React.FC<{
             ? `Ready to help optimize "${currentContentTitle}"!`
             : 'AI Assistant Ready'}
         </h3>
-        <p className='text-sm text-gray-600'>
+        <p className='text-sm text-theme-secondary'>
           {currentContentTitle
             ? `I can assist with content strategy, SEO improvements, engagement tactics, and performance insights.`
             : 'I can help you with content strategy, SEO tips, creative ideas, and general content marketing advice.'}
@@ -368,13 +373,13 @@ const EmptyState: React.FC<{
                   `Help me ${action.label.toLowerCase()} this content`
                 )
               }
-              className='flex items-center gap-2 p-3 bg-white hover:bg-gray-50 rounded-xl transition-colors border border-gray-200'
+              className='flex items-center gap-2 p-3 bg-theme-card hover:bg-theme-hover rounded-xl transition-colors border border-theme-primary'
               disabled={isMessageLoading}
             >
               <span className='text-purple-600'>
                 {getActionIcon(action.type)}
               </span>
-              <span className='text-xs font-medium text-gray-700'>
+              <span className='text-xs font-medium text-theme-primary'>
                 {action.label}
               </span>
             </button>
@@ -385,7 +390,7 @@ const EmptyState: React.FC<{
       {/* Conversation Starters */}
       {conversationStarters.length > 0 && (
         <div className='w-full max-w-xs space-y-2'>
-          <p className='text-xs font-medium text-gray-500'>
+          <p className='text-xs font-medium text-theme-muted'>
             Suggested questions:
           </p>
           {conversationStarters.slice(0, 3).map((starter, index) => (
@@ -404,7 +409,7 @@ const EmptyState: React.FC<{
       {/* Fallback conversation starters */}
       {conversationStarters.length === 0 && currentContentTitle && (
         <div className='w-full max-w-xs space-y-2'>
-          <p className='text-xs font-medium text-gray-500'>
+          <p className='text-xs font-medium text-theme-muted'>
             Suggested questions:
           </p>
           {[
@@ -722,7 +727,7 @@ const AIChatModal: React.FC = () => {
             {/* Messages Area */}
             <div
               ref={messagesContainerRef}
-              className='messages-container flex-1 overflow-y-auto p-4 space-y-4 bg-gray-50'
+              className='messages-container flex-1 overflow-y-auto p-4 space-y-4 bg-theme-secondary'
             >
               {messages.length === 0 ? (
                 <EmptyState
@@ -756,7 +761,7 @@ const AIChatModal: React.FC = () => {
             </div>
 
             {/* Input Area */}
-            <div className='border-t border-gray-200 bg-white p-4'>
+            <div className='border-t border-theme-primary bg-theme-card p-4'>
               <div className='flex items-end gap-3'>
                 <div className='flex-1 relative'>
                   <input
@@ -766,7 +771,7 @@ const AIChatModal: React.FC = () => {
                     onChange={(e) => setInputMessage(e.target.value)}
                     onKeyPress={handleKeyPress}
                     placeholder='Ask me anything about your content...'
-                    className='w-full px-4 py-3 pr-12 bg-gray-50 border border-gray-200 rounded-2xl focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent resize-none text-sm'
+                    className='w-full px-4 py-3 pr-12 bg-theme-secondary border border-theme-primary rounded-2xl focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent resize-none text-sm text-theme-primary placeholder:text-theme-muted'
                     disabled={isMessageLoading} // Use isMessageLoading instead of isLoading
                   />
                 </div>
