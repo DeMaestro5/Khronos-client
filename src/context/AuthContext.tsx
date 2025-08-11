@@ -60,23 +60,17 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const refreshTokens = async (): Promise<boolean> => {
     try {
       const refreshToken = AuthUtils.getRefreshToken();
-      console.log(
-        'Refresh tokens called, refresh token:',
-        refreshToken ? 'present' : 'missing'
-      );
 
       if (!refreshToken) {
         console.log('No refresh token available');
         return false;
       }
 
-      console.log('Making refresh token request...');
       const response = await authAPI.refreshToken(refreshToken);
       console.log('Refresh response:', response.data);
 
       // Check for the actual response format from the server
       if (response.data?.data?.tokens) {
-        console.log('Storing new tokens...');
         const tokens = {
           accessToken: response.data.data.tokens.accessToken,
           refreshToken: response.data.data.tokens.refreshToken,
