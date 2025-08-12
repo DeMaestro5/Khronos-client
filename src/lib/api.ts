@@ -56,6 +56,69 @@ const oauthApi = axios.create({
   },
 });
 
+// Helper to normalize refresh responses from server (SuccessResponse vs TokenRefreshResponse)
+function extractTokensFromRefreshResponse(responseData: unknown): {
+  accessToken?: string;
+  refreshToken?: string;
+  accessTokenExpiresIn?: number;
+} {
+  const isRecord = (v: unknown): v is Record<string, unknown> =>
+    typeof v === 'object' && v !== null;
+
+  const getString = (
+    o: Record<string, unknown> | undefined,
+    k: string
+  ): string | undefined => {
+    const v = o?.[k];
+    return typeof v === 'string' ? v : undefined;
+  };
+
+  const getNumber = (
+    o: Record<string, unknown> | undefined,
+    k: string
+  ): number | undefined => {
+    const v = o?.[k];
+    return typeof v === 'number' ? v : undefined;
+  };
+
+  const rd = isRecord(responseData)
+    ? (responseData as Record<string, unknown>)
+    : undefined;
+
+  const rdData = isRecord(rd?.data)
+    ? (rd!.data as Record<string, unknown>)
+    : undefined;
+
+  const tokensNode = isRecord(rdData?.tokens)
+    ? (rdData!.tokens as Record<string, unknown>)
+    : undefined;
+
+  // SuccessResponse shape: { statusCode, message, data: { tokens: { accessToken, refreshToken, accessTokenExpiresIn } } }
+  if (tokensNode) {
+    const at = getString(tokensNode, 'accessToken');
+    const rt = getString(tokensNode, 'refreshToken');
+    const exp = getNumber(tokensNode, 'accessTokenExpiresIn');
+    if (at && rt && typeof exp === 'number') {
+      return {
+        accessToken: at,
+        refreshToken: rt,
+        accessTokenExpiresIn: exp,
+      };
+    }
+  }
+
+  // TokenRefreshResponse or flattened data shape
+  const accessToken =
+    getString(rd, 'accessToken') || getString(rdData, 'accessToken');
+  const refreshToken =
+    getString(rd, 'refreshToken') || getString(rdData, 'refreshToken');
+  const accessTokenExpiresIn =
+    getNumber(rd, 'accessTokenExpiresIn') ??
+    getNumber(rdData, 'accessTokenExpiresIn');
+
+  return { accessToken, refreshToken, accessTokenExpiresIn };
+}
+
 // Request interceptor for adding auth token
 api.interceptors.request.use(
   (config: InternalAxiosRequestConfig) => {
@@ -107,17 +170,8 @@ api.interceptors.response.use(
         isRefreshing = true;
 
         try {
-          // Use oauthApi for refresh token (no API key required)
-          console.log(
-            'Attempting token refresh with token:',
-            refreshToken ? 'present' : 'missing'
-          );
-          console.log('Refresh token length:', refreshToken?.length);
-          console.log(
-            'Refresh token format:',
-            refreshToken?.substring(0, 20) + '...'
-          );
-          console.log('Sending request with data:', { refreshToken });
+          // Use oauthApi for refresh token and include Authorization header with current access token
+          const currentAccessToken = AuthUtils.getAccessToken();
           const refreshResponse = await oauthApi.post(
             '/api/v1/token/refresh',
             { refreshToken },
@@ -125,23 +179,28 @@ api.interceptors.response.use(
               headers: {
                 'Content-Type': 'application/json',
                 Accept: 'application/json',
+                ...(currentAccessToken
+                  ? { Authorization: `Bearer ${currentAccessToken}` }
+                  : {}),
               },
             }
           );
 
-          console.log('Refresh response:', refreshResponse.data);
+          const {
+            accessToken: newAccessToken,
+            refreshToken: newRefreshToken,
+            accessTokenExpiresIn,
+          } = extractTokensFromRefreshResponse(refreshResponse.data) || {};
 
-          // Check for the actual response format from the server
-          if (refreshResponse.data?.data?.tokens) {
-            const newTokens = {
-              accessToken: refreshResponse.data.data.tokens.accessToken,
-              refreshToken: refreshResponse.data.data.tokens.refreshToken,
-              expiresIn: refreshResponse.data.data.tokens.accessTokenExpiresIn,
-            };
-            AuthUtils.storeTokens(newTokens);
+          if (newAccessToken && newRefreshToken && accessTokenExpiresIn) {
+            AuthUtils.storeTokens({
+              accessToken: newAccessToken,
+              refreshToken: newRefreshToken,
+              expiresIn: accessTokenExpiresIn,
+            });
 
             // Update the authorization header
-            originalRequest.headers.Authorization = `Bearer ${newTokens.accessToken}`;
+            originalRequest.headers.Authorization = `Bearer ${newAccessToken}`;
 
             processQueue(null);
 
@@ -208,7 +267,20 @@ export const authAPI = {
   },
 
   refreshToken: (refreshToken: string) => {
-    return oauthApi.post('/api/v1/token/refresh', { refreshToken });
+    const currentAccessToken = AuthUtils.getAccessToken();
+    return oauthApi.post(
+      '/api/v1/token/refresh',
+      { refreshToken },
+      {
+        headers: {
+          'Content-Type': 'application/json',
+          Accept: 'application/json',
+          ...(currentAccessToken
+            ? { Authorization: `Bearer ${currentAccessToken}` }
+            : {}),
+        },
+      }
+    );
   },
 
   logout: () => {

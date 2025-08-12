@@ -56,6 +56,79 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   // Google Auth state
   const [isGoogleAuthenticating, setIsGoogleAuthenticating] = useState(false);
 
+  const isRecord = (val: unknown): val is Record<string, unknown> =>
+    typeof val === 'object' && val !== null;
+
+  // Normalize refresh response from server (SuccessResponse or TokenRefreshResponse)
+  const extractTokensFromRefresh = (responseData: unknown) => {
+    const rd = isRecord(responseData) ? responseData : undefined;
+
+    // SuccessResponse shape
+    const rdData = isRecord(rd?.data)
+      ? (rd.data as Record<string, unknown>)
+      : undefined;
+    const rdDataTokens = isRecord(rdData?.tokens)
+      ? (rdData?.tokens as Record<string, unknown>)
+      : undefined;
+    if (
+      rdDataTokens &&
+      typeof rdDataTokens.accessToken === 'string' &&
+      typeof rdDataTokens.refreshToken === 'string' &&
+      typeof rdDataTokens.accessTokenExpiresIn === 'number'
+    ) {
+      return {
+        accessToken: rdDataTokens.accessToken,
+        refreshToken: rdDataTokens.refreshToken,
+        accessTokenExpiresIn: rdDataTokens.accessTokenExpiresIn,
+      } as {
+        accessToken: string;
+        refreshToken: string;
+        accessTokenExpiresIn: number;
+      };
+    }
+
+    // TokenRefreshResponse shape
+    if (
+      rd &&
+      typeof (rd as Record<string, unknown>).accessToken === 'string' &&
+      typeof (rd as Record<string, unknown>).refreshToken === 'string' &&
+      typeof (rd as Record<string, unknown>).accessTokenExpiresIn === 'number'
+    ) {
+      const r = rd as Record<string, unknown> & {
+        accessToken: string;
+        refreshToken: string;
+        accessTokenExpiresIn: number;
+      };
+      return {
+        accessToken: r.accessToken,
+        refreshToken: r.refreshToken,
+        accessTokenExpiresIn: r.accessTokenExpiresIn,
+      };
+    }
+
+    // Sometimes wrapped again under data
+    if (
+      rdData &&
+      typeof (rdData as Record<string, unknown>).accessToken === 'string' &&
+      typeof (rdData as Record<string, unknown>).refreshToken === 'string' &&
+      typeof (rdData as Record<string, unknown>).accessTokenExpiresIn ===
+        'number'
+    ) {
+      const d = rdData as Record<string, unknown> & {
+        accessToken: string;
+        refreshToken: string;
+        accessTokenExpiresIn: number;
+      };
+      return {
+        accessToken: d.accessToken,
+        refreshToken: d.refreshToken,
+        accessTokenExpiresIn: d.accessTokenExpiresIn,
+      };
+    }
+
+    return null;
+  };
+
   // Refresh tokens function
   const refreshTokens = async (): Promise<boolean> => {
     try {
@@ -67,22 +140,18 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       }
 
       const response = await authAPI.refreshToken(refreshToken);
-      console.log('Refresh response:', response.data);
+      const parsed = extractTokensFromRefresh(response.data);
 
-      // Check for the actual response format from the server
-      if (response.data?.data?.tokens) {
-        const tokens = {
-          accessToken: response.data.data.tokens.accessToken,
-          refreshToken: response.data.data.tokens.refreshToken,
-          expiresIn: response.data.data.tokens.accessTokenExpiresIn,
-        };
-        AuthUtils.storeTokens(tokens);
-
-        // Store user data if available in refresh response
-        if (response.data.data.user) {
-          AuthUtils.storeUser(response.data.data.user);
-        }
-
+      if (
+        parsed?.accessToken &&
+        parsed?.refreshToken &&
+        parsed?.accessTokenExpiresIn
+      ) {
+        AuthUtils.storeTokens({
+          accessToken: parsed.accessToken,
+          refreshToken: parsed.refreshToken,
+          expiresIn: parsed.accessTokenExpiresIn,
+        });
         return true;
       }
 
