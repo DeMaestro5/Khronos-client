@@ -515,6 +515,21 @@ const AIChatModal: React.FC = () => {
   const inputRef = useRef<HTMLInputElement>(null);
   const hasPrefilledRef = useRef(false);
 
+  // Ensure we always can jump to the very bottom reliably
+  const scrollToBottom = useCallback((behavior: ScrollBehavior = 'auto') => {
+    const container = messagesContainerRef.current;
+    if (!container) return;
+
+    // Wait for layout/paint so scrollHeight is accurate
+    requestAnimationFrame(() => {
+      try {
+        container.scrollTo({ top: container.scrollHeight, behavior });
+      } catch {
+        container.scrollTop = container.scrollHeight;
+      }
+    });
+  }, []);
+
   // Memoized values
   const lastAssistantMessageId = useMemo(() => {
     const assistantMessages = messages.filter((m) => m.role === 'assistant');
@@ -558,8 +573,37 @@ const AIChatModal: React.FC = () => {
   useEffect(() => {
     if (!isOpen) {
       hasPrefilledRef.current = false;
+      return;
     }
-  }, [isOpen]);
+    // When the modal opens, jump to the bottom immediately
+    scrollToBottom('auto');
+  }, [isOpen, scrollToBottom]);
+
+  // Always scroll to bottom when modal opens or messages update (layout-safe)
+  useLayoutEffect(() => {
+    if (!isOpen) return;
+    scrollToBottom('auto');
+  }, [isOpen, messages.length, isMessageLoading, scrollToBottom]);
+
+  // Observe DOM changes inside the messages container (streaming text, images)
+  useEffect(() => {
+    if (!isOpen) return;
+    const container = messagesContainerRef.current;
+    if (!container || typeof MutationObserver === 'undefined') return;
+
+    const observer = new MutationObserver(() => {
+      // Keep pinned to bottom while new content appears
+      scrollToBottom('auto');
+    });
+
+    observer.observe(container, {
+      childList: true,
+      subtree: true,
+      characterData: true,
+    });
+
+    return () => observer.disconnect();
+  }, [isOpen, scrollToBottom]);
 
   const handleSendMessage = useCallback(async () => {
     if (!inputMessage.trim() || isMessageLoading) return; // Use isMessageLoading instead of isLoading
@@ -628,13 +672,13 @@ const AIChatModal: React.FC = () => {
     }
   }, [isOpen]);
 
-  // Always scroll to bottom when modal opens or messages update
-  useLayoutEffect(() => {
-    if (!isOpen) return;
-    const container = messagesContainerRef.current;
-    if (!container) return;
-    container.scrollTop = container.scrollHeight;
-  }, [isOpen, messages.length, isMessageLoading]);
+  // Remove old scroll effect (kept here for reference)
+  // useLayoutEffect(() => {
+  //   if (!isOpen) return;
+  //   const container = messagesContainerRef.current;
+  //   if (!container) return;
+  //   container.scrollTop = container.scrollHeight;
+  // }, [isOpen, messages.length, isMessageLoading]);
 
   if (!isOpen) return null;
 
@@ -648,7 +692,7 @@ const AIChatModal: React.FC = () => {
 
       {/* Modal Container - No animations */}
       <div className='fixed z-[99999] inset-0 flex items-end justify-center p-0 sm:inset-auto sm:bottom-6 sm:right-6 sm:left-auto sm:top-auto sm:p-0 sm:items-end'>
-        <div className='bg-theme-primary shadow-2xl flex flex-col overflow-hidden w-full h-full rounded-none sm:w-96 sm:h-[600px] sm:rounded-2xl sm:border sm:border-theme-primary'>
+        <div className='bg-theme-primary shadow-2xl flex flex-col min-h-0 overflow-hidden w-full h-full rounded-none sm:w-96 sm:h-[600px] sm:rounded-2xl sm:border sm:border-theme-primary'>
           {/* Copy Toast Notification */}
           {showCopyToast && (
             <div className='absolute top-4 left-1/2 transform -translate-x-1/2 z-10 bg-green-500 text-white px-4 py-2 rounded-lg shadow-lg flex items-center gap-2 transition-all duration-300 ease-in-out'>
@@ -701,7 +745,7 @@ const AIChatModal: React.FC = () => {
           </div>
 
           {/* Chat Content */}
-          <div className='flex-1 flex flex-col overflow-hidden'>
+          <div className='flex-1 flex flex-col min-h-0 overflow-hidden'>
             {/* Error Banner */}
             {error && (
               <div className='bg-red-50 dark:bg-red-900/20 border-b border-red-200 dark:border-red-800 p-3'>
@@ -730,7 +774,12 @@ const AIChatModal: React.FC = () => {
             {/* Messages Area */}
             <div
               ref={messagesContainerRef}
-              className='messages-container flex-1 overflow-y-auto p-4 space-y-4 bg-theme-secondary flex flex-col justify-end'
+              className='messages-container flex-1 min-h-0 overflow-y-auto bg-theme-secondary'
+              style={{
+                WebkitOverflowScrolling: 'touch',
+                overscrollBehavior:
+                  'contain' as React.CSSProperties['overscrollBehavior'],
+              }}
             >
               {messages.length === 0 ? (
                 <EmptyState
@@ -741,7 +790,7 @@ const AIChatModal: React.FC = () => {
                   isMessageLoading={isMessageLoading}
                 />
               ) : (
-                <>
+                <div className='p-4 space-y-4'>
                   {messages.map((message, index) => (
                     <MessageBubble
                       key={message.id || `${message.timestamp}-${index}`}
@@ -758,7 +807,7 @@ const AIChatModal: React.FC = () => {
 
                   {/* Loading indicator - only show when AI is responding to a message */}
                   {isMessageLoading && <LoadingIndicator />}
-                </>
+                </div>
               )}
             </div>
 
