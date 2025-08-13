@@ -133,7 +133,7 @@ export default function LoginForm() {
                 onChange={handleChange}
                 onFocus={() => setFocusedField('email')}
                 onBlur={() => setFocusedField('')}
-                className={`w-full pl-12 pr-4 py-3 sm:py-4 border-2 rounded-xl transition-all duration-300 text-purple-900 placeholder:text-purple-500 placeholder:font-medium ${
+                className={`w-full pl-12 pr-4 py-3 sm:py-4 border-2 rounded-xl transition-all duration-300 text-base text-purple-900 placeholder:text-purple-500 placeholder:font-medium ${
                   errors.email
                     ? 'border-red-400 focus:border-red-500 focus:ring-red-100 !bg-red-50/20 dark:!bg-red-50/20'
                     : focusedField === 'email'
@@ -195,7 +195,7 @@ export default function LoginForm() {
                 onChange={handleChange}
                 onFocus={() => setFocusedField('password')}
                 onBlur={() => setFocusedField('')}
-                className={`w-full pl-12 pr-12 py-3 sm:py-4 border-2 rounded-xl transition-all duration-300 text-purple-900 placeholder:text-purple-500 placeholder:font-medium ${
+                className={`w-full pl-12 pr-12 py-3 sm:py-4 border-2 rounded-xl transition-all duration-300 text-base text-purple-900 placeholder:text-purple-500 placeholder:font-medium ${
                   errors.password
                     ? 'border-red-400 focus:border-red-500 focus:ring-red-100 !bg-red-50/20 dark:!bg-red-50/20'
                     : focusedField === 'password'

@@ -417,7 +417,7 @@ const ContentEditModal: React.FC<ContentEditModalProps> = ({
                           onChange={(e) =>
                             handleInputChange('scheduledDate', e.target.value)
                           }
-                          className={`w-full px-3 py-2 border rounded-lg text-sm text-theme-primary bg-theme-card focus:outline-none focus:ring-2 focus:ring-accent-primary ${
+                          className={`w-full px-3 py-2 border rounded-lg text-base text-theme-primary bg-theme-card focus:outline-none focus:ring-2 focus:ring-accent-primary ${
                             errors.scheduledDate
                               ? 'border-accent-error bg-accent-error/10'
                               : 'border-theme-tertiary'
@@ -441,7 +441,7 @@ const ContentEditModal: React.FC<ContentEditModalProps> = ({
                           onChange={(e) =>
                             handleInputChange('scheduledTime', e.target.value)
                           }
-                          className={`w-full px-3 py-2 border rounded-lg text-sm text-theme-primary bg-theme-card focus:outline-none focus:ring-2 focus:ring-accent-primary ${
+                          className={`w-full px-3 py-2 border rounded-lg text-base text-theme-primary bg-theme-card focus:outline-none focus:ring-2 focus:ring-accent-primary ${
                             errors.scheduledTime
                               ? 'border-accent-error bg-accent-error/10'
                               : 'border-theme-tertiary'

@@ -1042,7 +1042,7 @@ const AIChatModal: React.FC = () => {
                     onChange={(e) => setInputMessage(e.target.value)}
                     onKeyPress={handleKeyPress}
                     placeholder='Ask me anything about your content...'
-                    className='w-full px-5 py-4 pr-12 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-600 rounded-2xl focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent resize-none text-sm text-gray-900 dark:text-gray-100 placeholder:text-gray-500 dark:placeholder:text-gray-400 shadow-sm hover:shadow-md transition-shadow duration-200'
+                    className='w-full px-5 py-4 pr-12 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-600 rounded-2xl focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent resize-none text-base text-gray-900 dark:text-gray-100 placeholder:text-gray-500 dark:placeholder:text-gray-400 shadow-sm hover:shadow-md transition-shadow duration-200'
                     disabled={isMessageLoading} // Use isMessageLoading instead of isLoading
                   />
                 </div>
