@@ -558,7 +558,7 @@ export default function CreateContentModal({
                 onChange={(e) => handleInputChange('title', e.target.value)}
                 className={`w-full px-3 sm:px-4 py-2.5 sm:py-3 bg-theme-tertiary border ${
                   errors.title ? 'border-accent-error' : 'border-theme-primary'
-                } rounded-xl text-theme-primary placeholder-theme-secondary focus:outline-none focus:ring-2 focus:ring-accent-primary focus:border-transparent transition-all duration-200 text-sm sm:text-base`}
+                } rounded-xl text-theme-primary placeholder-theme-secondary focus:outline-none focus:ring-2 focus:ring-accent-primary focus:border-transparent transition-all duration-200 text-base sm:text-base`}
                 placeholder='Enter content title...'
               />
               {errors.title && (
@@ -582,7 +582,7 @@ export default function CreateContentModal({
                   errors.description
                     ? 'border-accent-error'
                     : 'border-theme-primary'
-                } rounded-xl text-theme-primary placeholder-theme-secondary focus:outline-none focus:ring-2 focus:ring-accent-primary focus:border-transparent transition-all duration-200 resize-none text-sm sm:text-base`}
+                } rounded-xl text-theme-primary placeholder-theme-secondary focus:outline-none focus:ring-2 focus:ring-accent-primary focus:border-transparent transition-all duration-200 resize-none text-base sm:text-base`}
                 placeholder='Describe your content... (AI will generate if left empty)'
               />
               {errors.description && (
@@ -676,7 +676,7 @@ export default function CreateContentModal({
                   errors.scheduledDate
                     ? 'border-accent-error'
                     : 'border-theme-primary'
-                } rounded-xl text-theme-primary focus:outline-none focus:ring-2 focus:ring-accent-primary focus:border-transparent transition-all duration-200 text-sm sm:text-base`}
+                } rounded-xl text-theme-primary focus:outline-none focus:ring-2 focus:ring-accent-primary focus:border-transparent transition-all duration-200 text-base sm:text-base`}
               />
               {errors.scheduledDate && (
                 <p className='text-accent-error text-xs sm:text-sm mt-1'>
@@ -699,7 +699,7 @@ export default function CreateContentModal({
                   errors.scheduledTime
                     ? 'border-accent-error'
                     : 'border-theme-primary'
-                } rounded-xl text-theme-primary focus:outline-none focus:ring-2 focus:ring-accent-primary focus:border-transparent transition-all duration-200 text-sm sm:text-base`}
+                } rounded-xl text-theme-primary focus:outline-none focus:ring-2 focus:ring-accent-primary focus:border-transparent transition-all duration-200 text-base sm:text-base`}
               />
               {errors.scheduledTime && (
                 <p className='text-accent-error text-xs sm:text-sm mt-1'>
@@ -739,7 +739,7 @@ export default function CreateContentModal({
                 value={newTag}
                 onChange={(e) => setNewTag(e.target.value)}
                 onKeyPress={handleKeyPress}
-                className='flex-1 px-3 sm:px-4 py-2 bg-theme-tertiary border border-theme-primary rounded-xl text-theme-primary placeholder-theme-secondary focus:outline-none focus:ring-2 focus:ring-accent-primary focus:border-transparent transition-all duration-200 text-sm sm:text-base'
+                className='flex-1 px-3 sm:px-4 py-2 bg-theme-tertiary border border-theme-primary rounded-xl text-theme-primary placeholder-theme-secondary focus:outline-none focus:ring-2 focus:ring-accent-primary focus:border-transparent transition-all duration-200 text-base sm:text-base'
                 placeholder='Add a tag...'
               />
               <button

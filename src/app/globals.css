@@ -38,11 +38,25 @@ svg[data-testid*='next'] {
   height: 0 !important;
 }
 
+/* Ensure consistent text sizing behavior on iOS */
+html,
+body {
+  -webkit-text-size-adjust: 100%;
+  text-size-adjust: 100%;
+}
+
 /* Mobile-specific improvements */
 @media (max-width: 768px) {
-  /* Prevent horizontal scrolling */
   body {
     overflow-x: hidden;
+  }
+
+  /* Prevent iOS Safari from zooming inputs on focus by ensuring 16px font-size */
+  input,
+  textarea,
+  select,
+  button {
+    font-size: 16px !important;
   }
 
   /* Improve touch targets */
@@ -136,21 +150,6 @@ svg[data-testid*='next'] {
   /* Mobile-specific toast positioning */
   [data-react-hot-toast] [role='status'] {
     margin: 0.5rem !important;
-    max-width: 350px !important;
-  }
-
-  /* Ensure toasts don't overlap with mobile navigation */
-  @media (max-width: 640px) {
-    [data-react-hot-toast] {
-      top: 0.5rem !important;
-      max-width: calc(100vw - 2rem) !important;
-      min-width: 280px !important;
-    }
-
-    [data-react-hot-toast] > div {
-      padding: 0.625rem 0.875rem !important;
-      font-size: 0.8125rem !important;
-    }
   }
 }
 
