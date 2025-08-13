@@ -21,6 +21,7 @@ import {
   FiChevronLeft,
 } from 'react-icons/fi';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import { formatDistanceToNow } from 'date-fns';
 
 interface NotificationDropdownProps {
@@ -169,6 +170,8 @@ export default function NotificationDropdown({
     refreshNotifications,
   } = useNotifications();
 
+  const router = useRouter();
+
   useEffect(() => {
     // Remove the click outside handler from here since NavBar handles it
     // This prevents conflicts with the notification button toggle
@@ -179,7 +182,12 @@ export default function NotificationDropdown({
       await markAsRead(notification._id);
     }
     if (notification.metadata?.link) {
-      window.location.href = notification.metadata.link;
+      const link = notification.metadata.link;
+      if (link.startsWith('/')) {
+        router.push(link);
+      } else {
+        window.location.href = link; // external link fallback
+      }
     }
   };
 
