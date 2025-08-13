@@ -95,17 +95,19 @@ const StreamingText: React.FC<{
     };
   }, [text, shouldAnimate, hasAnimated, messageId, onComplete]);
 
-  // Simple markdown parsing
+  // Enhanced markdown parsing with modern styling
   const formatText = (text: string) => {
     return text.split('\n').map((line, index) => {
       if (line.trim() === '') return <div key={index} className='h-2' />;
 
+      // Headings with gradient text and better spacing
       if (line.startsWith('### ')) {
         return (
           <h4
             key={index}
-            className='text-base font-semibold text-theme-primary mt-4 mb-2'
+            className='text-base font-semibold bg-gradient-to-r from-purple-600 to-indigo-600 bg-clip-text text-transparent mt-6 mb-3 flex items-center gap-2'
           >
+            <div className='w-1 h-4 bg-gradient-to-b from-purple-500 to-indigo-500 rounded-full'></div>
             {line.replace('### ', '')}
           </h4>
         );
@@ -114,8 +116,9 @@ const StreamingText: React.FC<{
         return (
           <h3
             key={index}
-            className='text-lg font-semibold text-theme-primary mt-3 mb-2'
+            className='text-lg font-bold bg-gradient-to-r from-purple-600 to-indigo-600 bg-clip-text text-transparent mt-5 mb-3 flex items-center gap-2'
           >
+            <div className='w-1.5 h-5 bg-gradient-to-b from-purple-500 to-indigo-500 rounded-full'></div>
             {line.replace('## ', '')}
           </h3>
         );
@@ -124,25 +127,231 @@ const StreamingText: React.FC<{
         return (
           <h2
             key={index}
-            className='text-xl font-bold text-theme-primary mt-4 mb-2'
+            className='text-xl font-bold bg-gradient-to-r from-purple-600 to-indigo-600 bg-clip-text text-transparent mt-6 mb-4 flex items-center gap-3'
           >
+            <div className='w-2 h-6 bg-gradient-to-b from-purple-500 to-indigo-500 rounded-full'></div>
             {line.replace('# ', '')}
           </h2>
         );
       }
+
+      // Enhanced bullet points with ChatGPT/Claude-like styling
       if (line.match(/^[\s]*[\*\-]\s/)) {
         return (
-          <div key={index} className='flex items-start gap-2 mb-1'>
-            <span className='w-1.5 h-1.5 bg-purple-400 rounded-full mt-2 flex-shrink-0'></span>
-            <span className='text-theme-secondary'>
+          <div key={index} className='flex items-start gap-4 mb-3 group'>
+            <div className='w-1.5 h-1.5 bg-gray-600 dark:bg-gray-400 rounded-full mt-2.5 flex-shrink-0'></div>
+            <div className='flex-1 text-gray-800 dark:text-gray-200 leading-6'>
               {line.replace(/^[\s]*[\*\-]\s/, '')}
-            </span>
+            </div>
           </div>
         );
       }
 
+      // Numbered lists with ChatGPT/Claude-like styling
+      if (line.match(/^[\s]*\d+\.\s/)) {
+        return (
+          <div key={index} className='flex items-start gap-4 mb-3 group'>
+            <div className='w-6 h-6 bg-gray-100 dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-full flex items-center justify-center mt-1 flex-shrink-0'>
+              <span className='text-gray-700 dark:text-gray-300 text-sm font-medium'>
+                {line.match(/^[\s]*(\d+)\.\s/)?.[1]}
+              </span>
+            </div>
+            <div className='flex-1 text-gray-800 dark:text-gray-200 leading-6'>
+              {line.replace(/^[\s]*\d+\.\s/, '')}
+            </div>
+          </div>
+        );
+      }
+
+      // Bold text with ** - but exclude platform names
+      if (line.includes('**')) {
+        const parts = line.split('**');
+        return (
+          <p key={index} className='text-theme-secondary mb-2 leading-relaxed'>
+            {parts.map((part, partIndex) => {
+              // Check if this is a platform name that should be styled differently
+              const platformNames = [
+                'LinkedIn',
+                'Twitter',
+                'Instagram',
+                'YouTube',
+                'TikTok',
+                'Facebook',
+                'Pinterest',
+                'Snapchat',
+                'Discord',
+                'Telegram',
+              ];
+              const isPlatform = platformNames.some((platform) =>
+                part.toLowerCase().includes(platform.toLowerCase())
+              );
+
+              if (partIndex % 2 === 1) {
+                if (isPlatform) {
+                  // Style platform names with special styling instead of bold
+                  return (
+                    <span
+                      key={partIndex}
+                      className='inline-flex items-center gap-1 px-2 py-1 bg-gradient-to-r from-blue-50 to-purple-50 dark:from-blue-900/20 dark:to-purple-900/20 border border-blue-200 dark:border-blue-700 rounded-lg text-blue-700 dark:text-blue-300 font-medium text-sm'
+                    >
+                      <div className='w-2 h-2 bg-gradient-to-r from-blue-500 to-purple-500 rounded-full'></div>
+                      {part}
+                    </span>
+                  );
+                } else {
+                  // Regular bold text - ChatGPT/Claude style
+                  return (
+                    <span
+                      key={partIndex}
+                      className='font-semibold text-gray-900 dark:text-gray-100'
+                    >
+                      {part}
+                    </span>
+                  );
+                }
+              } else {
+                return part;
+              }
+            })}
+          </p>
+        );
+      }
+
+      // Italic text with * - ChatGPT/Claude style
+      if (line.includes('*') && !line.includes('**')) {
+        const parts = line.split('*');
+        return (
+          <p
+            key={index}
+            className='text-gray-800 dark:text-gray-200 mb-4 leading-6'
+          >
+            {parts.map((part, partIndex) =>
+              partIndex % 2 === 1 ? (
+                <span
+                  key={partIndex}
+                  className='italic text-gray-700 dark:text-gray-300'
+                >
+                  {part}
+                </span>
+              ) : (
+                part
+              )
+            )}
+          </p>
+        );
+      }
+
+      // Code blocks with backticks - ChatGPT/Claude style
+      if (line.includes('`')) {
+        const parts = line.split('`');
+        return (
+          <p
+            key={index}
+            className='text-gray-800 dark:text-gray-200 mb-4 leading-6'
+          >
+            {parts.map((part, partIndex) =>
+              partIndex % 2 === 1 ? (
+                <code
+                  key={partIndex}
+                  className='bg-gray-100 dark:bg-gray-800 text-gray-800 dark:text-gray-200 px-1.5 py-0.5 rounded text-sm font-mono'
+                >
+                  {part}
+                </code>
+              ) : (
+                part
+              )
+            )}
+          </p>
+        );
+      }
+
+      // Hashtags styling - ChatGPT/Claude style
+      if (line.includes('#')) {
+        const hashtagRegex = /#(\w+)/g;
+        const parts = line.split(hashtagRegex);
+        return (
+          <p
+            key={index}
+            className='text-gray-800 dark:text-gray-200 mb-4 leading-6'
+          >
+            {parts.map((part, partIndex) =>
+              part.match(hashtagRegex) ? (
+                <span
+                  key={partIndex}
+                  className='text-blue-600 dark:text-blue-400 font-medium'
+                >
+                  {part}
+                </span>
+              ) : (
+                part
+              )
+            )}
+          </p>
+        );
+      }
+
+      // Links (basic detection)
+      if (line.includes('http')) {
+        const urlRegex = /(https?:\/\/[^\s]+)/g;
+        const parts = line.split(urlRegex);
+        return (
+          <p key={index} className='text-theme-secondary mb-2 leading-relaxed'>
+            {parts.map((part, partIndex) =>
+              part.match(urlRegex) ? (
+                <a
+                  key={partIndex}
+                  href={part}
+                  target='_blank'
+                  rel='noopener noreferrer'
+                  className='text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300 underline decoration-dotted hover:decoration-solid transition-all duration-200'
+                >
+                  {part}
+                </a>
+              ) : (
+                part
+              )
+            )}
+          </p>
+        );
+      }
+
+      // Emoji styling - ChatGPT/Claude style
+      if (
+        line.match(
+          /[\u{1F600}-\u{1F64F}]|[\u{1F300}-\u{1F5FF}]|[\u{1F680}-\u{1F6FF}]|[\u{1F1E0}-\u{1F1FF}]|[\u{2600}-\u{26FF}]|[\u{2700}-\u{27BF}]/u
+        )
+      ) {
+        const emojiRegex =
+          /([\u{1F600}-\u{1F64F}]|[\u{1F300}-\u{1F5FF}]|[\u{1F680}-\u{1F6FF}]|[\u{1F1E0}-\u{1F1FF}]|[\u{2600}-\u{26FF}]|[\u{2700}-\u{27BF}])/gu;
+        const parts = line.split(emojiRegex);
+        return (
+          <p
+            key={index}
+            className='text-gray-800 dark:text-gray-200 mb-4 leading-6'
+          >
+            {parts.map((part, partIndex) =>
+              emojiRegex.test(part) ? (
+                <span
+                  key={partIndex}
+                  className='inline-block'
+                  style={{ fontSize: '1.1em' }}
+                >
+                  {part}
+                </span>
+              ) : (
+                part
+              )
+            )}
+          </p>
+        );
+      }
+
+      // Regular paragraphs with ChatGPT/Claude-like styling
       return (
-        <p key={index} className='text-theme-secondary mb-2'>
+        <p
+          key={index}
+          className='text-gray-800 dark:text-gray-200 mb-4 leading-6'
+        >
           {line}
         </p>
       );
@@ -153,7 +362,7 @@ const StreamingText: React.FC<{
     <div className='relative'>
       <div>{formatText(displayedText)}</div>
       {isStreaming && (
-        <span className='inline-block w-0.5 h-4 bg-purple-500 ml-1 animate-pulse' />
+        <span className='inline-block w-0.5 h-5 bg-gradient-to-b from-purple-500 to-indigo-500 ml-1 animate-pulse rounded-full shadow-sm' />
       )}
     </div>
   );
@@ -196,15 +405,17 @@ const MessageBubble: React.FC<{
       >
         {/* Avatar */}
         <div
-          className={`w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 relative ${
-            isUser ? 'bg-blue-500' : 'bg-purple-500'
+          className={`w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0 relative shadow-md hover:shadow-lg transition-shadow duration-200 ${
+            isUser
+              ? 'bg-gradient-to-br from-blue-500 to-blue-600 shadow-blue-200/50'
+              : 'bg-gradient-to-br from-purple-500 to-indigo-600 shadow-purple-200/50'
           }`}
         >
           {isUser ? (
             // User avatar - always show initials, overlay image if available
             <>
               {/* Always show initials as fallback */}
-              <span className='text-white text-sm font-semibold tracking-wide'>
+              <span className='text-white text-sm font-bold tracking-wide'>
                 {userInitials}
               </span>
 
@@ -213,9 +424,9 @@ const MessageBubble: React.FC<{
                 <Image
                   src={userAvatar}
                   alt='User avatar'
-                  width={32}
-                  height={32}
-                  className='absolute w-8 h-8 rounded-full object-cover'
+                  width={40}
+                  height={40}
+                  className='absolute w-10 h-10 rounded-full object-cover ring-2 ring-white/20'
                   onError={() => {
                     // Hide image if it fails to load, initials will show
                     // Note: Next.js Image handles errors differently, so we'll rely on the initials fallback
@@ -224,22 +435,25 @@ const MessageBubble: React.FC<{
               )}
             </>
           ) : (
-            <Bot className='w-4 h-4 text-white' />
+            <div className='relative'>
+              <Bot className='w-5 h-5 text-white' />
+              <div className='absolute -top-1 -right-1 w-3 h-3 bg-green-400 rounded-full border-2 border-white'></div>
+            </div>
           )}
         </div>
 
         {/* Message Content */}
         <div className='group relative'>
           <div
-            className={`px-4 py-3 rounded-2xl ${
+            className={`px-5 py-4 rounded-2xl shadow-sm hover:shadow-md transition-all duration-200 ${
               isUser
-                ? 'bg-blue-500 text-white'
+                ? 'bg-gradient-to-r from-blue-500 to-blue-600 text-white shadow-blue-200/50'
                 : message.metadata?.inappropriate
                 ? 'bg-red-50 text-red-900 border border-red-200'
-                : 'bg-theme-card text-theme-primary border border-theme-primary'
+                : 'bg-gradient-to-br from-white to-gray-50 dark:from-gray-800 dark:to-gray-900 text-theme-primary border border-gray-200 dark:border-gray-700 shadow-gray-200/50 dark:shadow-gray-800/50'
             }`}
           >
-            <div className='text-sm'>
+            <div className='text-sm leading-relaxed'>
               {!isUser ? (
                 <StreamingText
                   text={message.content}
@@ -264,25 +478,25 @@ const MessageBubble: React.FC<{
           {!isUser && (
             <button
               onClick={() => onCopy(message.id || '', message.content)}
-              className={`absolute -right-8 top-1/2 -translate-y-1/2 opacity-0 group-hover:opacity-100 p-1.5 bg-theme-card border border-theme-primary rounded-lg shadow-sm hover:bg-theme-hover transition-all duration-200 ${
+              className={`absolute -right-10 top-1/2 -translate-y-1/2 opacity-0 group-hover:opacity-100 p-2 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-105 ${
                 copiedMessageId === message.id
-                  ? 'bg-green-50 border-green-200 shadow-green-100'
-                  : 'hover:shadow-md'
+                  ? 'bg-green-50 border-green-200 shadow-green-100 scale-110'
+                  : 'hover:bg-gray-50 dark:hover:bg-gray-700'
               }`}
               title={
                 copiedMessageId === message.id ? 'Copied!' : 'Copy message'
               }
             >
               {copiedMessageId === message.id ? (
-                <Check className='w-3 h-3 text-green-600 animate-pulse' />
+                <Check className='w-4 h-4 text-green-600 animate-pulse' />
               ) : (
-                <Copy className='w-3 h-3 text-gray-400 hover:text-gray-600 transition-colors' />
+                <Copy className='w-4 h-4 text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200 transition-colors' />
               )}
             </button>
           )}
 
           {/* Timestamp */}
-          <div className='mt-1 text-xs text-theme-muted'>
+          <div className='mt-2 text-xs text-gray-500 dark:text-gray-400 font-medium'>
             {formatTime(message.timestamp)}
           </div>
         </div>
@@ -291,22 +505,25 @@ const MessageBubble: React.FC<{
   );
 };
 
-// Simple loading indicator
+// Modern loading indicator
 const LoadingIndicator: React.FC = () => (
   <div className='flex justify-start mb-4'>
     <div className='flex gap-3 max-w-[85%]'>
-      <div className='w-8 h-8 rounded-full bg-purple-500 flex items-center justify-center'>
-        <Bot className='w-4 h-4 text-white' />
+      <div className='w-10 h-10 rounded-full bg-gradient-to-br from-purple-500 to-indigo-600 flex items-center justify-center shadow-md'>
+        <div className='relative'>
+          <Bot className='w-5 h-5 text-white' />
+          <div className='absolute -top-1 -right-1 w-3 h-3 bg-green-400 rounded-full border-2 border-white animate-pulse'></div>
+        </div>
       </div>
-      <div className='bg-theme-card border border-theme-primary rounded-2xl px-4 py-3'>
+      <div className='bg-gradient-to-br from-white to-gray-50 dark:from-gray-800 dark:to-gray-900 border border-gray-200 dark:border-gray-700 rounded-2xl px-5 py-4 shadow-sm'>
         <div className='flex items-center gap-2'>
-          <div className='w-2 h-2 bg-purple-500 rounded-full animate-pulse'></div>
+          <div className='w-2 h-2 bg-gradient-to-r from-purple-500 to-indigo-500 rounded-full animate-pulse'></div>
           <div
-            className='w-2 h-2 bg-purple-500 rounded-full animate-pulse'
+            className='w-2 h-2 bg-gradient-to-r from-purple-500 to-indigo-500 rounded-full animate-pulse'
             style={{ animationDelay: '0.2s' }}
           ></div>
           <div
-            className='w-2 h-2 bg-purple-500 rounded-full animate-pulse'
+            className='w-2 h-2 bg-gradient-to-r from-purple-500 to-indigo-500 rounded-full animate-pulse'
             style={{ animationDelay: '0.4s' }}
           ></div>
         </div>
@@ -695,9 +912,12 @@ const AIChatModal: React.FC = () => {
         <div className='bg-theme-primary shadow-2xl flex flex-col min-h-0 overflow-hidden w-full h-full rounded-none sm:w-96 sm:h-[600px] sm:rounded-2xl sm:border sm:border-theme-primary'>
           {/* Copy Toast Notification */}
           {showCopyToast && (
-            <div className='absolute top-4 left-1/2 transform -translate-x-1/2 z-10 bg-green-500 text-white px-4 py-2 rounded-lg shadow-lg flex items-center gap-2 transition-all duration-300 ease-in-out'>
-              <Check className='w-4 h-4' />
-              <span className='text-sm font-medium'>Copied to clipboard!</span>
+            <div className='absolute top-4 left-1/2 transform -translate-x-1/2 z-10 bg-gradient-to-r from-green-500 to-emerald-500 text-white px-6 py-3 rounded-xl shadow-2xl flex items-center gap-3 transition-all duration-300 ease-in-out animate-in slide-in-from-top-2'>
+              <div className='w-2 h-2 bg-white rounded-full animate-pulse'></div>
+              <Check className='w-5 h-5' />
+              <span className='text-sm font-semibold'>
+                Copied to clipboard!
+              </span>
             </div>
           )}
 
@@ -812,7 +1032,7 @@ const AIChatModal: React.FC = () => {
             </div>
 
             {/* Input Area */}
-            <div className='border-t border-theme-primary bg-theme-card p-4'>
+            <div className='border-t border-gray-200 dark:border-gray-700 bg-gradient-to-r from-gray-50 to-white dark:from-gray-900 dark:to-gray-800 p-4'>
               <div className='flex items-end gap-3'>
                 <div className='flex-1 relative'>
                   <input
@@ -822,16 +1042,16 @@ const AIChatModal: React.FC = () => {
                     onChange={(e) => setInputMessage(e.target.value)}
                     onKeyPress={handleKeyPress}
                     placeholder='Ask me anything about your content...'
-                    className='w-full px-4 py-3 pr-12 bg-theme-secondary border border-theme-primary rounded-2xl focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent resize-none text-sm text-theme-primary placeholder:text-theme-muted'
+                    className='w-full px-5 py-4 pr-12 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-600 rounded-2xl focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent resize-none text-sm text-gray-900 dark:text-gray-100 placeholder:text-gray-500 dark:placeholder:text-gray-400 shadow-sm hover:shadow-md transition-shadow duration-200'
                     disabled={isMessageLoading} // Use isMessageLoading instead of isLoading
                   />
                 </div>
                 <button
                   onClick={handleSendMessage}
                   disabled={!inputMessage.trim() || isMessageLoading} // Use isMessageLoading instead of isLoading
-                  className='p-3 bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 disabled:from-gray-300 disabled:to-gray-400 text-white rounded-2xl transition-colors shadow-lg hover:shadow-xl disabled:shadow-none'
+                  className='p-4 bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 disabled:from-gray-300 disabled:to-gray-400 text-white rounded-2xl transition-all duration-200 shadow-lg hover:shadow-xl disabled:shadow-none hover:scale-105 disabled:hover:scale-100'
                 >
-                  <Send className='w-4 h-4' />
+                  <Send className='w-5 h-5' />
                 </button>
               </div>
             </div>
