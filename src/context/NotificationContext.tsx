@@ -196,7 +196,7 @@ export function NotificationProvider({
       fetchNotifications(undefined, 1, false);
       fetchSettings();
     }
-  }, [user, fetchSettings]);
+  }, [user, fetchSettings, fetchNotifications]);
 
   // Background polling for new notifications every 5 minutes
   useEffect(() => {

@@ -251,7 +251,7 @@ const ProfileSettingsSection: React.FC = () => {
     });
 
     setHasChanges(profileChanged);
-  }, [localSettings, settings?.profile]);
+  }, [localSettings, settings?.profile, settings]);
 
   const handleChange = (field: keyof ProfileSettingsUpdate, value: string) => {
     setLocalSettings((prev) => ({
