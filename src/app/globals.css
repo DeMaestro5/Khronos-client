@@ -10,6 +10,14 @@
   }
 }
 
+/* When mobile notifications drawer is open, hide AI floating button on small screens */
+@media (max-width: 639px) {
+  body[data-mobile-notifications-open='true'] .ai-floating-button {
+    display: none !important;
+  }
+}
+
+/* Khronos Logo Spin Animation */
 .animate-spin-slow {
   animation: spin-slow 20s linear infinite;
 }
