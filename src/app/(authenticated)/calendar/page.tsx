@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Plus } from 'lucide-react';
 import StatsCard from '@/src/components/stats-card';
 import Calendar from '@/src/components/calender/calendar';
@@ -28,7 +28,7 @@ const CalendarPage = () => {
   const { triggerContentCreationCelebration } = useGlobalConfetti();
 
   // Animation trigger on mount
-  React.useEffect(() => {
+  useEffect(() => {
     setAnimateStats(true);
   }, []);
 

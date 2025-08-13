@@ -26,7 +26,7 @@ const FloatingAIButton: React.FC<FloatingAIButtonProps> = ({
 
   return (
     <motion.div
-      className='fixed bottom-20 right-4 z-[99999] sm:hidden'
+      className='ai-floating-button fixed bottom-20 right-4 z-[99999] sm:hidden'
       initial={{ scale: 0, opacity: 0 }}
       animate={{ scale: 1, opacity: 1 }}
       exit={{ scale: 0, opacity: 0 }}
