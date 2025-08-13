@@ -206,32 +206,151 @@ export const AIChatProvider: React.FC<{ children: ReactNode }> = ({
     },
   ];
 
-  const defaultActions: ChatUIAction[] = [
-    {
-      type: 'optimize',
-      label: 'Optimize',
-      description: 'Get optimization suggestions',
-      icon: '⚡',
+  const defaultActions: ChatUIAction[] = useMemo(
+    () => [
+      {
+        type: 'optimize',
+        label: 'Optimize',
+        description: 'Get optimization suggestions',
+        icon: '⚡',
+      },
+      {
+        type: 'ideas',
+        label: 'Ideas',
+        description: 'Get creative ideas',
+        icon: '✨',
+      },
+      {
+        type: 'strategy',
+        label: 'Strategy',
+        description: 'Get strategic advice',
+        icon: '🎯',
+      },
+      {
+        type: 'analyze',
+        label: 'Analyze',
+        description: 'Analyze content',
+        icon: '📊',
+      },
+    ],
+    []
+  );
+
+  const createNewSession = useCallback(
+    async (contentId: string, contentTitle?: string) => {
+      try {
+        console.log(
+          'Creating new session for content:',
+          contentId,
+          contentTitle
+        );
+
+        const response = await aiChatAPI.startSession(
+          contentTitle || `Chat for Content ${contentId}`,
+          contentId,
+          `AI assistant session for content: ${contentTitle || contentId}`
+        );
+
+        console.log('Start session response:', response.data);
+
+        // Handle the server response structure: { statusCode, message, data }
+        const responseData = response.data;
+        if (responseData.statusCode !== '10000') {
+          throw new Error(responseData.message || 'Failed to create session');
+        }
+
+        const sessionData: StartSessionResponse = responseData.data;
+
+        console.log('Session data:', sessionData);
+        console.log('Conversation starters:', sessionData.conversationStarters);
+
+        // Provide default conversation starters if none provided by server
+        const defaultConversationStarters = [
+          {
+            type: 'optimization',
+            prompt: contentTitle
+              ? `How can I optimize "${contentTitle}" for better engagement?`
+              : 'How can I improve my content strategy?',
+            category: 'strategy',
+          },
+          {
+            type: 'ideas',
+            prompt: contentTitle
+              ? `What are some creative ideas to expand on "${contentTitle}"?`
+              : 'What are the latest content marketing trends?',
+            category: 'creativity',
+          },
+          {
+            type: 'seo',
+            prompt: contentTitle
+              ? `How can I improve the SEO for "${contentTitle}"?`
+              : 'How can I increase engagement on my posts?',
+            category: 'performance',
+          },
+        ];
+
+        const newConversation: ContentConversation = {
+          contentId,
+          contentTitle: contentTitle || sessionData.session.title,
+          sessionId: sessionData.session.id,
+          messages: [],
+          lastUpdated: new Date(),
+          conversationStarters: (() => {
+            const serverStarters = sessionData.conversationStarters || [];
+            const validServerStarters = serverStarters.filter(
+              (s) =>
+                s && typeof s.prompt === 'string' && s.prompt.trim().length > 0
+            );
+            return validServerStarters.length > 0
+              ? validServerStarters
+              : defaultConversationStarters;
+          })(),
+          actions: sessionData.ui?.actions || defaultActions,
+        };
+
+        console.log('New conversation created:', newConversation);
+
+        setState((prev) => {
+          const newConversations = {
+            ...prev.conversations,
+            [contentId]: newConversation,
+          };
+          saveConversations(newConversations);
+          return {
+            ...prev,
+            conversations: newConversations,
+            isLoading: false,
+          };
+        });
+      } catch (error) {
+        console.error('Failed to create new session:', error);
+        console.error('Error details:', {
+          message: (error as Error)?.message,
+          response: (
+            error as { response?: { data?: unknown; status?: number } }
+          )?.response?.data,
+          status: (error as { response?: { data?: unknown; status?: number } })
+            ?.response?.status,
+        });
+
+        // If the error might be due to conflicting old data, clear it and show helpful message
+        const errorResponse = error as {
+          response?: { data?: { message?: string } };
+        };
+        const errorMessage =
+          errorResponse.response?.data?.message ||
+          (error as Error)?.message ||
+          'Unknown error';
+
+        setState((prev) => ({
+          ...prev,
+          isLoading: false,
+          error: `Failed to create chat session: ${errorMessage}. Try clearing your chat history if this persists.`,
+        }));
+      }
     },
-    {
-      type: 'ideas',
-      label: 'Ideas',
-      description: 'Get creative ideas',
-      icon: '✨',
-    },
-    {
-      type: 'strategy',
-      label: 'Strategy',
-      description: 'Get strategic advice',
-      icon: '🎯',
-    },
-    {
-      type: 'analyze',
-      label: 'Analyze',
-      description: 'Analyze content',
-      icon: '📊',
-    },
-  ];
+    [saveConversations, defaultActions]
+  );
 
   // Optimized openChat function for instant modal display
   const openChat = useCallback(
@@ -426,123 +545,7 @@ export const AIChatProvider: React.FC<{ children: ReactNode }> = ({
         }));
       }
     },
-    [state.conversations, saveConversations]
-  );
-
-  const createNewSession = useCallback(
-    async (contentId: string, contentTitle?: string) => {
-      try {
-        console.log(
-          'Creating new session for content:',
-          contentId,
-          contentTitle
-        );
-
-        const response = await aiChatAPI.startSession(
-          contentTitle || `Chat for Content ${contentId}`,
-          contentId,
-          `AI assistant session for content: ${contentTitle || contentId}`
-        );
-
-        console.log('Start session response:', response.data);
-
-        // Handle the server response structure: { statusCode, message, data }
-        const responseData = response.data;
-        if (responseData.statusCode !== '10000') {
-          throw new Error(responseData.message || 'Failed to create session');
-        }
-
-        const sessionData: StartSessionResponse = responseData.data;
-
-        console.log('Session data:', sessionData);
-        console.log('Conversation starters:', sessionData.conversationStarters);
-
-        // Provide default conversation starters if none provided by server
-        const defaultConversationStarters = [
-          {
-            type: 'optimization',
-            prompt: contentTitle
-              ? `How can I optimize "${contentTitle}" for better engagement?`
-              : 'How can I improve my content strategy?',
-            category: 'strategy',
-          },
-          {
-            type: 'ideas',
-            prompt: contentTitle
-              ? `What are some creative ideas to expand on "${contentTitle}"?`
-              : 'What are the latest content marketing trends?',
-            category: 'creativity',
-          },
-          {
-            type: 'seo',
-            prompt: contentTitle
-              ? `How can I improve the SEO for "${contentTitle}"?`
-              : 'How can I increase engagement on my posts?',
-            category: 'performance',
-          },
-        ];
-
-        const newConversation: ContentConversation = {
-          contentId,
-          contentTitle: contentTitle || sessionData.session.title,
-          sessionId: sessionData.session.id,
-          messages: [],
-          lastUpdated: new Date(),
-          conversationStarters: (() => {
-            const serverStarters = sessionData.conversationStarters || [];
-            const validServerStarters = serverStarters.filter(
-              (s) =>
-                s && typeof s.prompt === 'string' && s.prompt.trim().length > 0
-            );
-            return validServerStarters.length > 0
-              ? validServerStarters
-              : defaultConversationStarters;
-          })(),
-          actions: sessionData.ui?.actions || defaultActions,
-        };
-
-        console.log('New conversation created:', newConversation);
-
-        setState((prev) => {
-          const newConversations = {
-            ...prev.conversations,
-            [contentId]: newConversation,
-          };
-          saveConversations(newConversations);
-          return {
-            ...prev,
-            conversations: newConversations,
-            isLoading: false,
-          };
-        });
-      } catch (error) {
-        console.error('Failed to create new session:', error);
-        console.error('Error details:', {
-          message: (error as Error)?.message,
-          response: (
-            error as { response?: { data?: unknown; status?: number } }
-          )?.response?.data,
-          status: (error as { response?: { data?: unknown; status?: number } })
-            ?.response?.status,
-        });
-
-        // If the error might be due to conflicting old data, clear it and show helpful message
-        const errorResponse = error as {
-          response?: { data?: { message?: string } };
-        };
-        const errorMessage =
-          errorResponse.response?.data?.message ||
-          (error as Error)?.message ||
-          'Unknown error';
-
-        setState((prev) => ({
-          ...prev,
-          isLoading: false,
-          error: `Failed to create chat session: ${errorMessage}. Try clearing your chat history if this persists.`,
-        }));
-      }
-    },
-    [saveConversations]
+    [state.conversations, saveConversations, createNewSession, defaultActions]
   );
 
   const closeChat = useCallback(() => {
@@ -763,7 +766,7 @@ export const AIChatProvider: React.FC<{ children: ReactNode }> = ({
       // Note: We don't delete the server session here, just clear local messages
       // If you want to delete the server session, you can call aiChatAPI.deleteSession
     }
-  }, [state.currentContentId, state.conversations, saveConversations]);
+  }, [state.currentContentId, saveConversations]);
 
   const clearAllConversations = useCallback(() => {
     setState((prev) => ({

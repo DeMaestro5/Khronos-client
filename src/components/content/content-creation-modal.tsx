@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { CreateContentModalProps, CreatedContent } from '../../types/modal';
 import {
   ContentFormData,
@@ -138,16 +138,7 @@ export default function CreateContentModal({
   const [newTag, setNewTag] = useState<string>('');
   const [errors, setErrors] = useState<FormErrors>({});
 
-  // Reset form when modal opens or closes
-  useEffect(() => {
-    if (isOpen) {
-      resetForm();
-    } else {
-      resetForm();
-    }
-  }, [isOpen]);
-
-  const resetForm = () => {
+  const resetForm = useCallback(() => {
     const newFormData: ContentFormData = {
       title: initialData?.title || '',
       description: initialData?.description || '',
@@ -162,7 +153,16 @@ export default function CreateContentModal({
     setFormData(newFormData);
     setErrors({});
     setNewTag('');
-  };
+  }, [initialData]);
+
+  // Reset form when modal opens or closes
+  useEffect(() => {
+    if (isOpen) {
+      resetForm();
+    } else {
+      resetForm();
+    }
+  }, [isOpen, resetForm]);
 
   // AI Suggestion Handler
   const handleAISuggestion = (suggestion: AISuggestionResult) => {

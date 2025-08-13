@@ -46,7 +46,7 @@ const FloatingAIButton: React.FC<FloatingAIButtonProps> = ({
         onClick={handleClick}
         onHoverStart={() => setIsHovered(true)}
         onHoverEnd={() => setIsHovered(false)}
-        className='group relative flex items-center justify-center w-12 h-12 md:w-auto md:h-auto md:gap-2 md:gap-3 bg-gradient-to-r from-purple-600 via-violet-600 to-indigo-600 hover:from-purple-500 hover:via-violet-500 hover:to-indigo-500 text-white rounded-full md:rounded-2xl shadow-2xl hover:shadow-purple-500/25 transition-all duration-200 overflow-hidden'
+        className='group relative flex items-center justify-center w-12 h-12 md:w-auto md:h-auto md:gap-2 bg-gradient-to-r from-purple-600 via-violet-600 to-indigo-600 hover:from-purple-500 hover:via-violet-500 hover:to-indigo-500 text-white rounded-full md:rounded-2xl shadow-2xl hover:shadow-purple-500/25 transition-all duration-200 overflow-hidden'
         whileHover={{
           scale: 1.05,
           y: -2,
@@ -70,7 +70,7 @@ const FloatingAIButton: React.FC<FloatingAIButtonProps> = ({
         </div>
 
         {/* Main Content */}
-        <div className='relative z-10 flex items-center justify-center md:gap-2 md:gap-3'>
+        <div className='relative z-10 flex items-center justify-center md:gap-2'>
           <div className='relative'>
             <motion.div
               animate={{

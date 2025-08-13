@@ -175,7 +175,7 @@ function GoogleCallbackContent() {
     };
 
     handleCallback();
-  }, [searchParams, processGoogleCallback, router]);
+  }, [searchParams, processGoogleCallback, router, isProcessing, status]);
 
   return (
     <div className='h-screen bg-gradient-to-br from-slate-50 via-indigo-50/30 to-purple-50/30 flex items-center justify-center p-4 relative overflow-hidden'>

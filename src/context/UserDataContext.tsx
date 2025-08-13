@@ -1111,7 +1111,17 @@ export function UserDataProvider({ children }: { children: React.ReactNode }) {
 
     // Mark initial load as complete for this user
     initialLoadCompleteRef.current = currentUserId;
-  }, [isAuthenticated, user?.id, user?._id]); // Only depend on authentication and user ID
+  }, [
+    isAuthenticated,
+    user?.id,
+    user?._id,
+    fetchUserData,
+    fetchAISuggestions,
+    fetchAnalyticsData,
+    fetchTrendsData,
+    fetchPlatformData,
+    user,
+  ]); // Only depend on authentication and user ID
 
   const value: UserDataContextType = {
     profileData,

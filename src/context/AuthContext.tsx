@@ -6,6 +6,7 @@ import React, {
   useEffect,
   useState,
   ReactNode,
+  useCallback,
 } from 'react';
 import { AuthState, GoogleAuthResponse } from '../types/auth';
 import { AuthUtils } from '../lib/auth-utils';
@@ -60,7 +61,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     typeof val === 'object' && val !== null;
 
   // Normalize refresh response from server (SuccessResponse or TokenRefreshResponse)
-  const extractTokensFromRefresh = (responseData: unknown) => {
+  const extractTokensFromRefresh = useCallback((responseData: unknown) => {
     const rd = isRecord(responseData) ? responseData : undefined;
 
     // SuccessResponse shape
@@ -127,10 +128,10 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     }
 
     return null;
-  };
+  }, []);
 
   // Refresh tokens function
-  const refreshTokens = async (): Promise<boolean> => {
+  const refreshTokens = useCallback(async (): Promise<boolean> => {
     try {
       const refreshToken = AuthUtils.getRefreshToken();
 
@@ -180,10 +181,10 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       }
       return false;
     }
-  };
+  }, [extractTokensFromRefresh]);
 
   // Check authentication status on mount and when tokens change
-  const checkAuthStatus = async () => {
+  const checkAuthStatus = useCallback(async () => {
     try {
       setAuthState((prev) => ({ ...prev, loading: true, error: null }));
 
@@ -249,7 +250,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         error: 'Authentication check failed',
       });
     }
-  };
+  }, [refreshTokens]);
 
   // Login function
   const login = async (
@@ -393,7 +394,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     }, 5 * 60 * 1000); // 5 minutes
 
     return () => clearInterval(interval);
-  }, []); // Remove dependency array to avoid stale closure issues
+  }, [checkAuthStatus, refreshTokens]); // Remove dependency array to avoid stale closure issues
 
   // Listen for storage changes (e.g., logout in another tab)
   useEffect(() => {
@@ -447,7 +448,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         handleUserUpdated as EventListener
       );
     };
-  }, []);
+  }, [checkAuthStatus]);
 
   const contextValue: AuthContextType = {
     ...authState,

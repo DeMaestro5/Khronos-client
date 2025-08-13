@@ -6,6 +6,7 @@ import React, {
   useState,
   useEffect,
   ReactNode,
+  useCallback,
 } from 'react';
 import toast from 'react-hot-toast';
 import { useGlobalConfetti } from './ConfettiContext';
@@ -50,6 +51,36 @@ export const ContentCreationProvider: React.FC<{ children: ReactNode }> = ({
 
   // Timeout duration: 5 minutes
   const CREATION_TIMEOUT = 5 * 60 * 1000;
+
+  const failContentCreation = useCallback(
+    (error: string) => {
+      // Clear timeout
+      if (timeoutId) {
+        clearTimeout(timeoutId);
+        setTimeoutId(null);
+      }
+
+      toast.error(`❌ ${error}`, {
+        duration: 6000,
+        style: {
+          background: '#ef4444',
+          color: 'white',
+          border: 'none',
+          fontWeight: '500',
+        },
+      });
+
+      // Clear state
+      setState({
+        isCreating: false,
+        creatingContentTitle: '',
+        createdContentId: null,
+        hasScheduledDate: false,
+        creationStartTime: null,
+      });
+    },
+    [timeoutId]
+  );
 
   // Load state from localStorage on mount
   useEffect(() => {
@@ -97,7 +128,7 @@ export const ContentCreationProvider: React.FC<{ children: ReactNode }> = ({
         localStorage.removeItem(STORAGE_KEY);
       }
     }
-  }, []);
+  }, [CREATION_TIMEOUT, failContentCreation]);
 
   // Save state to localStorage whenever it changes
   useEffect(() => {
@@ -181,33 +212,6 @@ export const ContentCreationProvider: React.FC<{ children: ReactNode }> = ({
     setTimeout(() => {
       triggerContentCreationCelebration();
     }, 100);
-
-    // Clear state
-    setState({
-      isCreating: false,
-      creatingContentTitle: '',
-      createdContentId: null,
-      hasScheduledDate: false,
-      creationStartTime: null,
-    });
-  };
-
-  const failContentCreation = (error: string) => {
-    // Clear timeout
-    if (timeoutId) {
-      clearTimeout(timeoutId);
-      setTimeoutId(null);
-    }
-
-    toast.error(`❌ ${error}`, {
-      duration: 6000,
-      style: {
-        background: '#ef4444',
-        color: 'white',
-        border: 'none',
-        fontWeight: '500',
-      },
-    });
 
     // Clear state
     setState({
