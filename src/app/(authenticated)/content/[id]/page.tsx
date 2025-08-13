@@ -1,9 +1,9 @@
 'use client';
 
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useMemo } from 'react';
 import { ArrowLeft, Edit, Share2, FileText } from 'lucide-react';
 import { useRouter, useParams } from 'next/navigation';
-import { contentAPI } from '@/src/lib/api';
+// import { contentAPI } from '@/src/lib/api';
 import { ContentData } from '@/src/types/content';
 import { useUserData } from '@/src/context/UserDataContext';
 
@@ -17,9 +17,7 @@ import PageLoading from '@/src/components/ui/page-loading';
 import FloatingAIButton from '@/src/components/ai/floating-ai-button';
 
 const ContentDetailPage = () => {
-  const [content, setContent] = useState<ContentData | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
-  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+  const [isEditModalOpen, setIsEditModalOpen] = React.useState(false);
   const router = useRouter();
   const params = useParams();
   const contentId = params.id as string;
@@ -30,61 +28,9 @@ const ContentDetailPage = () => {
   // Find content in cached data
   const cachedContent = useMemo(() => {
     if (!userContent || !contentId) return null;
-    return userContent.find((content) => content._id === contentId) || null;
+    return (userContent.find((c) => c._id === contentId) ||
+      null) as ContentData | null;
   }, [userContent, contentId]);
-
-  useEffect(() => {
-    const loadContent = async () => {
-      if (!contentId) return;
-
-      try {
-        const response = await contentAPI.getById(contentId);
-
-        // Try different response structures
-        let contentData = null;
-
-        if (response.data?.statusCode === '10000') {
-          // Structure 1: response.data.data.content (nested) + other fields
-          if (response.data?.data?.content) {
-            // Merge the content object with other fields at the same level
-            contentData = {
-              ...response.data.data.content,
-              contentIdeas: response.data.data.contentIdeas,
-              optimizedContent: response.data.data.optimizedContent,
-              aiSuggestions: response.data.data.aiSuggestions,
-              platforms: response.data.data.platforms,
-              author: response.data.data.author,
-              recommendations: response.data.data.recommendations,
-              insights: response.data.data.insights,
-            };
-          }
-          // Structure 2: response.data.data (direct content object)
-          else if (response.data?.data) {
-            contentData = response.data.data;
-          }
-        }
-        // Structure 3: Direct content object in response.data
-        else if (response.data && response.data._id) {
-          contentData = response.data;
-        }
-
-        if (contentData) {
-          setContent(contentData);
-        } else {
-          console.error(
-            'Content not found. Response structure:',
-            response.data
-          );
-        }
-      } catch (error) {
-        console.error('Failed to fetch content:', error);
-      } finally {
-        setIsLoading(false);
-      }
-    };
-
-    loadContent();
-  }, [contentId, cachedContent, contextLoading]);
 
   const handleEditClick = () => {
     setIsEditModalOpen(true);
@@ -92,51 +38,23 @@ const ContentDetailPage = () => {
 
   const handleEditSuccess = async () => {
     setIsEditModalOpen(false);
-
-    // Try to use cached data first after edit
-    if (cachedContent) {
-      // The edit modal should have updated the cache via updateContent
-      const updatedCachedContent = userContent?.find(
-        (content) => content._id === contentId
-      );
-      if (updatedCachedContent) {
-        setContent(updatedCachedContent as ContentData);
-        return;
-      }
-    }
-
-    // Fallback to API call if cached data not available
-    try {
-      const response = await contentAPI.getById(contentId);
-      if (response.data?.data) {
-        setContent(response.data.data);
-      }
-    } catch (error) {
-      console.error('Failed to refresh content after edit:', error);
-    }
+    // No-op: content comes from cache, which edit modal updates via context
   };
 
   const handleEditCancel = () => {
     setIsEditModalOpen(false);
   };
 
-  if (isLoading) {
-    // Determine loading state based on available data
-    let loadingTitle = 'Loading Content';
-    let loadingSubtitle = "We're fetching your content details...";
+  // Loading state only when cache not yet available AND context is loading
+  const isLoading = !cachedContent && contextLoading;
 
-    if (cachedContent?.title) {
-      loadingTitle = cachedContent.title;
-      loadingSubtitle = `Loading details for "${cachedContent.title}"...`;
-    } else if (contentId) {
-      loadingTitle = 'Loading Content Details';
-      loadingSubtitle = `Fetching content information...`;
-    }
+  if (isLoading) {
+    const loadingTitle = 'Loading Content Details';
+    const loadingSubtitle = `Preparing content information...`;
 
     return (
       <div className='min-h-screen bg-theme-primary pb-20'>
         <div className='max-w-7xl mx-auto px-4 py-4'>
-          {/* Show back button even during loading */}
           <div className='flex items-center justify-between mb-6'>
             <button
               onClick={() => router.back()}
@@ -145,35 +63,22 @@ const ContentDetailPage = () => {
               <ArrowLeft className='w-4 h-4' />
               <span className='font-medium text-sm'>Back</span>
             </button>
-
-            {/* Show skeleton edit button */}
             <div className='h-10 w-20 shimmer-theme rounded-xl'></div>
           </div>
 
-          {/* Enhanced PageLoading with content context */}
           <PageLoading
             title={loadingTitle}
             subtitle={loadingSubtitle}
             contentType='content'
             showGrid={false}
             isContentDetail={true}
-            contentPreview={
-              cachedContent
-                ? {
-                    title: cachedContent.title,
-                    type: cachedContent.type,
-                    status: cachedContent.status,
-                    tags: cachedContent.tags,
-                  }
-                : undefined
-            }
           />
         </div>
       </div>
     );
   }
 
-  if (!content) {
+  if (!cachedContent) {
     return (
       <div className='min-h-screen bg-theme-primary flex items-center justify-center pb-20'>
         <div className='text-center px-4'>
@@ -198,6 +103,8 @@ const ContentDetailPage = () => {
       </div>
     );
   }
+
+  const content = cachedContent;
 
   return (
     <div className='min-h-screen bg-theme-primary pb-20'>

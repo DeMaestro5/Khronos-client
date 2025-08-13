@@ -13,6 +13,7 @@ import {
 import { motion, AnimatePresence } from 'framer-motion';
 import Image from 'next/image';
 import toast from 'react-hot-toast';
+import { useRouter } from 'next/navigation';
 import { Content, ContentStatus, ContentType } from '../../types/content';
 import { Card, CardContent, CardHeader, CardTitle } from '../ui/card';
 import {
@@ -186,6 +187,7 @@ export const ContentCard = ({
   const [isDeleting, setIsDeleting] = useState(false);
   const [isArchiving, setIsArchiving] = useState(false);
   const { openChat } = useAIChat();
+  const router = useRouter();
 
   const handleMoreClick = (e: React.MouseEvent) => {
     e.preventDefault();
@@ -235,7 +237,7 @@ export const ContentCard = ({
 
   const handleCardClick = () => {
     if (!isDropdownOpen) {
-      window.location.href = `/content/${content._id}`;
+      router.push(`/content/${content._id}`);
     }
   };
 

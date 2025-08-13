@@ -1,17 +1,9 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import Link from 'next/link';
-import { useRouter } from 'next/navigation';
-import {
-  FiSave,
-  FiX,
-  FiAlertCircle,
-  FiCheck,
-  FiArrowLeft,
-  FiUser,
-} from 'react-icons/fi';
 import { useAuth } from '@/src/context/AuthContext';
+import { useUserData } from '@/src/context/UserDataContext';
 import { profileAPI } from '@/src/lib/api';
 import { User } from '@/src/types/auth';
 import { ProfileFormData, ProfileFormErrors } from '@/src/types/profile';
@@ -21,9 +13,9 @@ import SecuritySection from '@/src/components/profile/SecuritySection';
 
 export default function EditProfilePage() {
   const { user: contextUser, updateUser } = useAuth();
-  const router = useRouter();
+  const { profileData: cachedProfile, loading: userDataLoading } =
+    useUserData();
 
-  const [profileData, setProfileData] = useState<User | null>(null);
   const [formData, setFormData] = useState<ProfileFormData>({
     name: '',
     email: '',
@@ -39,73 +31,34 @@ export default function EditProfilePage() {
   const [changePassword, setChangePassword] = useState(false);
   const [success, setSuccess] = useState<string>('');
 
-  // Fetch profile data
+  const effectiveUser: User | null = useMemo(() => {
+    return cachedProfile || contextUser || null;
+  }, [cachedProfile, contextUser]);
+
+  // Initialize form from cached/context user; avoid fetching on mount
   useEffect(() => {
-    const fetchProfileData = async () => {
-      if (!contextUser) {
-        setLoading(false);
-        return;
-      }
-
+    if (userDataLoading) {
       setLoading(true);
-      try {
-        const profileResponse = await profileAPI.getProfile();
-        if (profileResponse.data?.data) {
-          const userData = profileResponse.data.data;
-          setProfileData(userData);
-          setFormData({
-            name: userData.name || '',
-            email: userData.email || '',
-            profilePicUrl: userData.profilePicUrl || userData.avatar || '',
-            currentPassword: '',
-            newPassword: '',
-            confirmPassword: '',
-          });
-          setPreviewImage(userData.profilePicUrl || userData.avatar || '');
-        } else {
-          // Use context user as fallback
-          setProfileData(contextUser);
-          setFormData({
-            name: contextUser.name || '',
-            email: contextUser.email || '',
-            profilePicUrl:
-              contextUser.profilePicUrl || contextUser.avatar || '',
-            currentPassword: '',
-            newPassword: '',
-            confirmPassword: '',
-          });
-          setPreviewImage(
-            contextUser.profilePicUrl || contextUser.avatar || ''
-          );
-        }
-      } catch (error) {
-        console.error('Failed to fetch profile data:', error);
-        setErrors({ general: 'Failed to load profile data' });
-        // Use context user as fallback
-        if (contextUser) {
-          setProfileData(contextUser);
-          setFormData({
-            name: contextUser.name || '',
-            email: contextUser.email || '',
-            profilePicUrl:
-              contextUser.profilePicUrl || contextUser.avatar || '',
-            currentPassword: '',
-            newPassword: '',
-            confirmPassword: '',
-          });
-          setPreviewImage(
-            contextUser.profilePicUrl || contextUser.avatar || ''
-          );
-        }
-      } finally {
-        setLoading(false);
-      }
-    };
+      return;
+    }
 
-    fetchProfileData();
-  }, [contextUser, router]);
+    if (effectiveUser) {
+      setFormData({
+        name: effectiveUser.name || '',
+        email: effectiveUser.email || '',
+        profilePicUrl:
+          effectiveUser.profilePicUrl || effectiveUser.avatar || '',
+        currentPassword: '',
+        newPassword: '',
+        confirmPassword: '',
+      });
+      setPreviewImage(
+        effectiveUser.profilePicUrl || effectiveUser.avatar || ''
+      );
+    }
 
-  const user = profileData || contextUser;
+    setLoading(false);
+  }, [effectiveUser, userDataLoading]);
 
   const validateForm = (): boolean => {
     const newErrors: ProfileFormErrors = {};
@@ -178,28 +131,31 @@ export default function EditProfilePage() {
     setSuccess('');
 
     try {
-      const updateData: { name: string; profilePicUrl?: string } = {
+      setLoading(true);
+      // Only call API to update; do not refetch profile afterwards
+      const payload: Partial<User> & {
+        currentPassword?: string;
+        newPassword?: string;
+      } = {
         name: formData.name.trim(),
+        email: formData.email.trim(),
+        profilePicUrl: formData.profilePicUrl,
       };
 
-      // Only include profilePicUrl if it's different from current
-      if (
-        formData.profilePicUrl !== (user?.profilePicUrl || user?.avatar || '')
-      ) {
-        updateData.profilePicUrl = formData.profilePicUrl;
+      if (formData.currentPassword && formData.newPassword) {
+        (payload as unknown as { currentPassword: string }).currentPassword =
+          formData.currentPassword;
+        (payload as unknown as { newPassword: string }).newPassword =
+          formData.newPassword;
       }
 
-      const response = await profileAPI.updateProfile(updateData);
-
+      const response = await profileAPI.updateProfile(payload as User);
       if (response.data?.data) {
-        // Update the user context
+        // Update auth context cache
         updateUser(response.data.data);
         setSuccess('Profile updated successfully!');
-
-        // Redirect after a short delay
-        setTimeout(() => {
-          router.push('/profile');
-        }, 2000);
+        // Optionally navigate back
+        // router.push('/profile');
       } else {
         setErrors({ general: 'Failed to update profile. Please try again.' });
       }
@@ -224,6 +180,7 @@ export default function EditProfilePage() {
       }
     } finally {
       setSaving(false);
+      setLoading(false);
     }
   };
 
@@ -240,12 +197,26 @@ export default function EditProfilePage() {
     );
   }
 
-  if (!user) {
+  if (!effectiveUser) {
     return (
       <div className='min-h-screen bg-gray-50 dark:bg-slate-950 flex items-center justify-center'>
         <div className='text-center'>
           <div className='w-16 h-16 bg-red-100 dark:bg-red-900/40 rounded-full flex items-center justify-center mx-auto mb-4'>
-            <FiUser className='h-8 w-8 text-red-600 dark:text-red-400' />
+            {/* FiUser is removed, so using a placeholder or removing if not needed */}
+            <svg
+              xmlns='http://www.w3.org/2000/svg'
+              width='24'
+              height='24'
+              viewBox='0 0 24 24'
+              fill='none'
+              stroke='currentColor'
+              strokeWidth='2'
+              strokeLinecap='round'
+              strokeLinejoin='round'
+              className='h-8 w-8 text-red-600 dark:text-red-400'
+            >
+              <path d='M15 6v12a3 3 0 1 0 3-3H6a3 3 0 1 0-3 3V6a3 3 0 1 0 3-3 3 3 0 0 1 3 3 3 3 0 0 1-3 3' />
+            </svg>
           </div>
           <p className='text-red-600 dark:text-red-400 font-medium'>
             Failed to load profile
@@ -271,7 +242,21 @@ export default function EditProfilePage() {
               href='/profile'
               className='p-2 text-gray-400 dark:text-slate-500 hover:text-gray-600 dark:hover:text-slate-300 hover:bg-white dark:hover:bg-slate-800 rounded-lg transition-colors duration-200'
             >
-              <FiArrowLeft className='h-5 w-5' />
+              <svg
+                xmlns='http://www.w3.org/2000/svg'
+                width='24'
+                height='24'
+                viewBox='0 0 24 24'
+                fill='none'
+                stroke='currentColor'
+                strokeWidth='2'
+                strokeLinecap='round'
+                strokeLinejoin='round'
+                className='h-5 w-5'
+              >
+                <path d='M19 12H5' />
+                <path d='M12 19l-7-7 7-7' />
+              </svg>
             </Link>
             <div>
               <h1 className='text-2xl font-bold text-gray-900 dark:text-slate-100'>
@@ -287,7 +272,21 @@ export default function EditProfilePage() {
         {/* Success Message */}
         {success && (
           <div className='mb-6 p-4 bg-green-50 dark:bg-green-900/40 border border-green-200 dark:border-green-700 rounded-lg flex items-start space-x-3'>
-            <FiCheck className='h-5 w-5 text-green-600 dark:text-green-400 flex-shrink-0 mt-0.5' />
+            <svg
+              xmlns='http://www.w3.org/2000/svg'
+              width='24'
+              height='24'
+              viewBox='0 0 24 24'
+              fill='none'
+              stroke='currentColor'
+              strokeWidth='2'
+              strokeLinecap='round'
+              strokeLinejoin='round'
+              className='h-5 w-5 text-green-600 dark:text-green-400 flex-shrink-0 mt-0.5'
+            >
+              <path d='M22 11.08V12a10 10 0 1 1-5.93-9.14' />
+              <path d='M22 4L12 14.01l-3-3' />
+            </svg>
             <p className='text-green-800 dark:text-green-300 text-sm font-medium'>
               {success}
             </p>
@@ -297,7 +296,22 @@ export default function EditProfilePage() {
         {/* General Error */}
         {errors.general && (
           <div className='mb-6 p-4 bg-red-50 dark:bg-red-900/40 border border-red-200 dark:border-red-700 rounded-lg flex items-start space-x-3'>
-            <FiAlertCircle className='h-5 w-5 text-red-600 dark:text-red-400 flex-shrink-0 mt-0.5' />
+            <svg
+              xmlns='http://www.w3.org/2000/svg'
+              width='24'
+              height='24'
+              viewBox='0 0 24 24'
+              fill='none'
+              stroke='currentColor'
+              strokeWidth='2'
+              strokeLinecap='round'
+              strokeLinejoin='round'
+              className='h-5 w-5 text-red-600 dark:text-red-400 flex-shrink-0 mt-0.5'
+            >
+              <circle cx='12' cy='12' r='10' />
+              <path d='m15 9-6 6' />
+              <path d='m9 9 6 6' />
+            </svg>
             <p className='text-red-800 dark:text-red-300 text-sm font-medium'>
               {errors.general}
             </p>
@@ -310,7 +324,7 @@ export default function EditProfilePage() {
             previewImage={previewImage}
             setPreviewImage={setPreviewImage}
             onImageChange={handleImageChange}
-            userName={formData.name || user.name}
+            userName={formData.name || effectiveUser.name}
             errors={errors.general}
           />
 
@@ -349,7 +363,21 @@ export default function EditProfilePage() {
                 href='/profile'
                 className='inline-flex items-center justify-center px-6 py-3 bg-white dark:bg-slate-700 border border-gray-200 dark:border-slate-600 text-gray-700 dark:text-slate-300 font-medium rounded-lg hover:bg-gray-50 dark:hover:bg-slate-600 hover:border-gray-300 dark:hover:border-slate-500 transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-gray-500 dark:focus:ring-slate-400 focus:ring-offset-2 dark:focus:ring-offset-slate-800'
               >
-                <FiX className='h-4 w-4 mr-2' />
+                <svg
+                  xmlns='http://www.w3.org/2000/svg'
+                  width='24'
+                  height='24'
+                  viewBox='0 0 24 24'
+                  fill='none'
+                  stroke='currentColor'
+                  strokeWidth='2'
+                  strokeLinecap='round'
+                  strokeLinejoin='round'
+                  className='h-4 w-4 mr-2'
+                >
+                  <path d='M19 11H5' />
+                  <path d='M12 4L5 12l7 8' />
+                </svg>
                 Cancel
               </Link>
 
@@ -365,7 +393,22 @@ export default function EditProfilePage() {
                   </>
                 ) : (
                   <>
-                    <FiSave className='h-4 w-4 mr-2' />
+                    <svg
+                      xmlns='http://www.w3.org/2000/svg'
+                      width='24'
+                      height='24'
+                      viewBox='0 0 24 24'
+                      fill='none'
+                      stroke='currentColor'
+                      strokeWidth='2'
+                      strokeLinecap='round'
+                      strokeLinejoin='round'
+                      className='h-4 w-4 mr-2'
+                    >
+                      <path d='M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4' />
+                      <path d='M7 10l5 5 5-5' />
+                      <path d='M22 12H7' />
+                    </svg>
                     Save Changes
                   </>
                 )}

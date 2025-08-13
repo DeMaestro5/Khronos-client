@@ -8,7 +8,7 @@ import React, {
   ReactNode,
 } from 'react';
 import { Platform } from '@/src/types/modal';
-import { contentAPI } from '@/src/lib/api';
+import { useUserData } from '@/src/context/UserDataContext';
 
 export interface ScheduledContentItem {
   _id: string; // Use _id to match API response
@@ -58,12 +58,15 @@ export const CalendarProvider = ({ children }: CalendarProviderProps) => {
   );
   const [isLoading, setIsLoading] = useState(false);
 
-  // Convert API content to calendar format with proper error handling
+  // Use cached content from UserDataContext, cache-first approach
+  const { userContent, loading: userDataLoading } = useUserData();
+
+  // Convert API or cached content to calendar format with proper error handling
   const convertAPIContentToCalendar = (apiData: unknown): ScheduledContent => {
     const calendarData: ScheduledContent = {};
 
     try {
-      // Handle the API response structure: { contents: [...], totalContents: number }
+      // Handle the API/cached response structure
       let contentArray: unknown[] = [];
 
       if (Array.isArray(apiData)) {
@@ -220,61 +223,27 @@ export const CalendarProvider = ({ children }: CalendarProviderProps) => {
     return calendarData;
   };
 
-  // Load scheduled content from API
+  // Load scheduled content from cached user content
   const loadScheduledContent = async () => {
     setIsLoading(true);
-
     try {
-      const response = await contentAPI.getUserContent();
-
-      if (
-        response.data?.statusCode === '10000' &&
-        response.data?.data !== undefined
-      ) {
-        const apiCalendarData = convertAPIContentToCalendar(response.data.data);
-
+      if (Array.isArray(userContent)) {
+        const apiCalendarData = convertAPIContentToCalendar(userContent);
         setScheduledContent(apiCalendarData);
-
-        // Optional: Save to localStorage for caching (but API is the source of truth)
         try {
           localStorage.setItem(
             'khronos-scheduled-content-cache',
             JSON.stringify({
               data: apiCalendarData,
               timestamp: Date.now(),
-              version: '2.0', // Version to handle future changes
+              version: '2.0',
             })
           );
         } catch (storageError) {
           console.warn('📅 Could not save to localStorage:', storageError);
         }
       } else {
-        console.warn('📅 CalendarContext: Invalid API response structure');
-        setScheduledContent({});
-      }
-    } catch (error) {
-      console.error(
-        '📅 CalendarContext: Failed to load scheduled content:',
-        error
-      );
-
-      // Try to load from cache as fallback
-      try {
-        const cachedData = localStorage.getItem(
-          'khronos-scheduled-content-cache'
-        );
-        if (cachedData) {
-          const parsed = JSON.parse(cachedData);
-          if (parsed.data && parsed.version === '2.0') {
-            setScheduledContent(parsed.data);
-          } else {
-            setScheduledContent({});
-          }
-        } else {
-          setScheduledContent({});
-        }
-      } catch (cacheError) {
-        console.error('📅 CalendarContext: Cache fallback failed:', cacheError);
+        // No cached data available yet
         setScheduledContent({});
       }
     } finally {
@@ -282,14 +251,30 @@ export const CalendarProvider = ({ children }: CalendarProviderProps) => {
     }
   };
 
-  // Force refresh calendar by clearing cache and reloading
+  // Force refresh calendar by rebuilding from cache only
   const forceRefreshCalendar = async () => {
     localStorage.removeItem('khronos-scheduled-content-cache');
     localStorage.removeItem('khronos-scheduled-content'); // Remove old cache
     await loadScheduledContent();
   };
 
-  // Add new scheduled content (for manual additions)
+  // When cached user content changes (initial load or updates), rebuild calendar
+  useEffect(() => {
+    if (userDataLoading) {
+      setIsLoading(true);
+      return;
+    }
+    loadScheduledContent();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [userContent, userDataLoading]);
+
+  // Clear all data
+  const clearAllData = () => {
+    setScheduledContent({});
+    localStorage.removeItem('khronos-scheduled-content-cache');
+    localStorage.removeItem('khronos-scheduled-content'); // Remove old cache
+  };
+
   const addScheduledContent = (content: ScheduledContentItem, date: string) => {
     setScheduledContent((prev) => {
       const updated = {
@@ -315,7 +300,6 @@ export const CalendarProvider = ({ children }: CalendarProviderProps) => {
     });
   };
 
-  // Update existing scheduled content
   const updateScheduledContent = (
     id: string,
     date: string,
@@ -350,7 +334,6 @@ export const CalendarProvider = ({ children }: CalendarProviderProps) => {
     });
   };
 
-  // Delete scheduled content
   const deleteScheduledContent = (id: string, date: string) => {
     setScheduledContent((prev) => {
       const dateContent = prev[date] || [];
@@ -388,18 +371,6 @@ export const CalendarProvider = ({ children }: CalendarProviderProps) => {
       return updated;
     });
   };
-
-  // Clear all data
-  const clearAllData = () => {
-    setScheduledContent({});
-    localStorage.removeItem('khronos-scheduled-content-cache');
-    localStorage.removeItem('khronos-scheduled-content'); // Remove old cache
-  };
-
-  // Load content on mount
-  useEffect(() => {
-    loadScheduledContent();
-  }, []);
 
   const value: CalendarContextType = {
     scheduledContent,
