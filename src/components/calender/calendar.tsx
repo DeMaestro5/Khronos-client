@@ -4,6 +4,9 @@ import ContentModal from './content-modal';
 import EmptyDateModal from './emptyDateModal';
 import { Platform } from '@/src/types/modal';
 import { ScheduledContent } from '@/src/context/CalendarContext';
+import RescheduleModal from './reschedule-modal';
+import { contentAPI } from '@/src/lib/api';
+import { useCalendar } from '@/src/context/CalendarContext';
 
 export default function CalendarComponent({
   scheduledContent = {},
@@ -19,6 +22,19 @@ export default function CalendarComponent({
   const [hoveredDate, setHoveredDate] = useState<string | null>(null);
   const [isContentModalOpen, setIsContentModalOpen] = useState(false);
   const [isEmptyModalOpen, setIsEmptyModalOpen] = useState(false);
+
+  // Drag state
+  const [dragSourceDate, setDragSourceDate] = useState<string | null>(null);
+  const [pendingTargetDate, setPendingTargetDate] = useState<string | null>(
+    null
+  );
+  const [rescheduleOpen, setRescheduleOpen] = useState(false);
+  const [pastDateModalOpen, setPastDateModalOpen] = useState(false);
+  const [pastDateTarget, setPastDateTarget] = useState<string>('');
+  const [originalDateISO, setOriginalDateISO] = useState<string>('');
+
+  const { moveScheduledContentOptimistic, restoreScheduledContent } =
+    useCalendar();
 
   // Log the received scheduled content for debugging
   console.log('📅 Calendar Component: Received scheduled content:', {
@@ -176,6 +192,78 @@ export default function CalendarComponent({
     setIsContentModalOpen(false);
     setIsEmptyModalOpen(false);
     setSelectedDate(null);
+  };
+
+  const onDragStart = (dateKey: string) => {
+    setDragSourceDate(dateKey);
+    // pick first item time as baseline for rescheduling dialog
+    const first = (scheduledContent[dateKey] || [])[0];
+    if (first?.scheduledDate) setOriginalDateISO(first.scheduledDate);
+  };
+
+  const onDragOver = (e: React.DragEvent) => {
+    e.preventDefault();
+  };
+
+  const onDrop = (targetDateKey: string) => {
+    if (!dragSourceDate || dragSourceDate === targetDateKey) return;
+
+    // Check if target date is in the past
+    const isTargetDateInPast = () => {
+      const today = new Date();
+      const targetDate = new Date(targetDateKey);
+
+      // Set time to beginning of day for accurate comparison
+      today.setHours(0, 0, 0, 0);
+      targetDate.setHours(0, 0, 0, 0);
+
+      return targetDate < today;
+    };
+
+    if (isTargetDateInPast()) {
+      // Show past date modal instead of reschedule modal
+      setPastDateTarget(targetDateKey);
+      setPastDateModalOpen(true);
+      // Clear drag state
+      setDragSourceDate(null);
+      setPendingTargetDate(null);
+      return;
+    }
+
+    setPendingTargetDate(targetDateKey);
+    setRescheduleOpen(true);
+  };
+
+  const performReschedule = async (newISO: string) => {
+    const sourceDateKey = dragSourceDate || '';
+    const targetDateKey = pendingTargetDate || '';
+    if (!sourceDateKey || !targetDateKey) return;
+
+    // Optimistic update first
+    const snapshot = moveScheduledContentOptimistic(
+      sourceDateKey,
+      targetDateKey,
+      newISO
+    );
+
+    try {
+      const sourceItems = scheduledContent[sourceDateKey] || [];
+      const calls = sourceItems.map((item) =>
+        contentAPI.updateSchedule(item._id || item.id, {
+          scheduledDate: newISO,
+        })
+      );
+      await Promise.all(calls);
+      // Optionally refresh from cache source if needed
+      // await loadScheduledContent();
+    } catch (err) {
+      console.error('Failed to persist reschedule, restoring snapshot', err);
+      if (snapshot) restoreScheduledContent(snapshot);
+    } finally {
+      setRescheduleOpen(false);
+      setDragSourceDate(null);
+      setPendingTargetDate(null);
+    }
   };
 
   const days = getDaysInMonth(currentDate);
@@ -365,6 +453,10 @@ export default function CalendarComponent({
                   onMouseEnter={() => day && setHoveredDate(dateKey)}
                   onMouseLeave={() => setHoveredDate(null)}
                   onClick={() => handleDateClick(day as number)}
+                  draggable={Boolean(day && content.length > 0)}
+                  onDragStart={() => dateKey && onDragStart(dateKey)}
+                  onDragOver={onDragOver}
+                  onDrop={() => dateKey && onDrop(dateKey)}
                 >
                   {day && (
                     <>
@@ -497,6 +589,32 @@ export default function CalendarComponent({
         onClose={closeModals}
         selectedDate={selectedDate}
         onCreateContent={onCreateContent}
+      />
+
+      {/* Reschedule Modal */}
+      {rescheduleOpen && dragSourceDate && pendingTargetDate && (
+        <RescheduleModal
+          open={rescheduleOpen}
+          onClose={() => {
+            setRescheduleOpen(false);
+            setDragSourceDate(null);
+            setPendingTargetDate(null);
+          }}
+          fromDateKey={dragSourceDate}
+          toDateKey={pendingTargetDate}
+          originalDateISO={originalDateISO}
+          onConfirm={performReschedule}
+        />
+      )}
+
+      {/* Past Date Modal */}
+      <EmptyDateModal
+        isOpen={pastDateModalOpen}
+        onClose={() => {
+          setPastDateModalOpen(false);
+          setPastDateTarget('');
+        }}
+        selectedDate={pastDateTarget}
       />
     </>
   );

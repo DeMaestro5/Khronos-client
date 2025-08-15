@@ -42,6 +42,13 @@ interface CalendarContextType {
   forceRefreshCalendar: () => Promise<void>;
   clearAllData: () => void;
   isLoading: boolean;
+  // Optimistic operations
+  moveScheduledContentOptimistic: (
+    sourceDateKey: string,
+    targetDateKey: string,
+    newISO: string
+  ) => ScheduledContent | null;
+  restoreScheduledContent: (snapshot: ScheduledContent) => void;
 }
 
 const CalendarContext = createContext<CalendarContextType | undefined>(
@@ -275,27 +282,28 @@ export const CalendarProvider = ({ children }: CalendarProviderProps) => {
     localStorage.removeItem('khronos-scheduled-content'); // Remove old cache
   };
 
+  const persistToLocalStorage = (data: ScheduledContent) => {
+    try {
+      localStorage.setItem(
+        'khronos-scheduled-content-cache',
+        JSON.stringify({
+          data,
+          timestamp: Date.now(),
+          version: '2.0',
+        })
+      );
+    } catch (storageError) {
+      console.warn('📅 Could not update cache:', storageError);
+    }
+  };
+
   const addScheduledContent = (content: ScheduledContentItem, date: string) => {
     setScheduledContent((prev) => {
       const updated = {
         ...prev,
         [date]: prev[date] ? [...prev[date], content] : [content],
       };
-
-      // Update cache
-      try {
-        localStorage.setItem(
-          'khronos-scheduled-content-cache',
-          JSON.stringify({
-            data: updated,
-            timestamp: Date.now(),
-            version: '2.0',
-          })
-        );
-      } catch (storageError) {
-        console.warn('📅 Could not update cache:', storageError);
-      }
-
+      persistToLocalStorage(updated);
       return updated;
     });
   };
@@ -316,20 +324,7 @@ export const CalendarProvider = ({ children }: CalendarProviderProps) => {
         [date]: updatedDateContent,
       };
 
-      // Update cache
-      try {
-        localStorage.setItem(
-          'khronos-scheduled-content-cache',
-          JSON.stringify({
-            data: updated,
-            timestamp: Date.now(),
-            version: '2.0',
-          })
-        );
-      } catch (storageError) {
-        console.warn('📅 Could not update cache:', storageError);
-      }
-
+      persistToLocalStorage(updated);
       return updated;
     });
   };
@@ -354,22 +349,55 @@ export const CalendarProvider = ({ children }: CalendarProviderProps) => {
         };
       }
 
-      // Update cache
-      try {
-        localStorage.setItem(
-          'khronos-scheduled-content-cache',
-          JSON.stringify({
-            data: updated,
-            timestamp: Date.now(),
-            version: '2.0',
-          })
-        );
-      } catch (storageError) {
-        console.warn('📅 Could not update cache:', storageError);
-      }
-
+      persistToLocalStorage(updated);
       return updated;
     });
+  };
+
+  // Optimistic: move all items from one day to another with a new ISO time
+  const moveScheduledContentOptimistic = (
+    sourceDateKey: string,
+    targetDateKey: string,
+    newISO: string
+  ): ScheduledContent | null => {
+    if (!sourceDateKey || !targetDateKey) return null;
+    const snapshot = JSON.parse(
+      JSON.stringify(scheduledContent)
+    ) as ScheduledContent;
+
+    setScheduledContent((prev) => {
+      const sourceItems = prev[sourceDateKey] || [];
+      if (sourceItems.length === 0) return prev;
+
+      const moved = sourceItems.map((item) => ({
+        ...item,
+        scheduledDate: newISO,
+        time: (() => {
+          const d = new Date(newISO);
+          return `${String(d.getHours()).padStart(2, '0')}:${String(
+            d.getMinutes()
+          ).padStart(2, '0')}`;
+        })(),
+      }));
+
+      const withoutSource = { ...prev };
+      delete withoutSource[sourceDateKey];
+      const updatedTarget = [...(withoutSource[targetDateKey] || []), ...moved];
+      const updated = {
+        ...withoutSource,
+        [targetDateKey]: updatedTarget,
+      };
+
+      persistToLocalStorage(updated);
+      return updated;
+    });
+
+    return snapshot;
+  };
+
+  const restoreScheduledContent = (snapshot: ScheduledContent) => {
+    setScheduledContent(snapshot);
+    persistToLocalStorage(snapshot);
   };
 
   const value: CalendarContextType = {
@@ -381,6 +409,8 @@ export const CalendarProvider = ({ children }: CalendarProviderProps) => {
     forceRefreshCalendar,
     clearAllData,
     isLoading,
+    moveScheduledContentOptimistic,
+    restoreScheduledContent,
   };
 
   return (
