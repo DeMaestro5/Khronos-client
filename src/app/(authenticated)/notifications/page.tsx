@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState, useEffect, useRef } from 'react';
+import { useRouter } from 'next/navigation';
 import { useNotifications } from '@/src/context/NotificationContext';
 import {
   Notification,
@@ -21,7 +22,6 @@ import {
 } from 'react-icons/fi';
 import { formatDistanceToNow } from 'date-fns';
 import { toast } from 'react-hot-toast';
-import router from 'next/router';
 import { useAuth } from '@/src/context/AuthContext';
 
 const getNotificationIcon = (type: NotificationType) => {
@@ -95,6 +95,8 @@ export default function NotificationsPage() {
     markAsRead,
     markAllAsRead,
     refreshNotifications,
+    hasMore,
+    currentPage,
   } = useNotifications();
 
   const { user } = useAuth();
@@ -104,6 +106,7 @@ export default function NotificationsPage() {
   const [selectedNotifications, setSelectedNotifications] = useState<
     Set<string>
   >(new Set());
+  const router = useRouter();
 
   // Track if initial fetch has happened
   const hasInitialFetch = useRef(false);
@@ -115,6 +118,11 @@ export default function NotificationsPage() {
       hasInitialFetch.current = true;
     }
   }, [user, fetchNotifications]); // Proper dependencies, but controlled execution
+
+  const handleLoadMore = async () => {
+    const nextPage = (currentPage || 1) + 1;
+    await fetchNotifications(undefined, nextPage);
+  };
 
   const handleNotificationClick = async (notification: Notification) => {
     if (notification.status === NotificationStatus.UNREAD) {
@@ -454,6 +462,16 @@ export default function NotificationsPage() {
                     ))}
                   </div>
                 )
+              )}
+              {hasMore && (
+                <div className='p-4 text-center'>
+                  <button
+                    onClick={handleLoadMore}
+                    className='px-4 py-2 bg-theme-background hover:bg-theme-hover border border-theme-primary rounded-lg text-sm'
+                  >
+                    Load older notifications
+                  </button>
+                </div>
               )}
             </div>
           )}

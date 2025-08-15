@@ -35,6 +35,16 @@ interface NotificationContextType {
   markAllAsRead: () => Promise<void>;
   updateSettings: (settings: Partial<NotificationSettings>) => Promise<void>;
   refreshNotifications: () => Promise<void>;
+  // Pagination and local insertion helpers
+  hasMore?: boolean;
+  currentPage?: number;
+  addLocalNotification?: (input: {
+    type: Notification['type'];
+    title: string;
+    message: string;
+    priority: Notification['priority'];
+    data?: Record<string, unknown>;
+  }) => void;
 }
 
 const NotificationContext = createContext<NotificationContextType | undefined>(
@@ -55,6 +65,69 @@ export function NotificationProvider({
   const [unreadCount, setUnreadCount] = useState(0);
   const socketRef = useRef<Socket | null>(null);
   const notificationsRef = useRef<Notification[]>([]);
+  const [hasMore, setHasMore] = useState<boolean>(true);
+  const [currentPage, setCurrentPage] = useState<number>(1);
+  // Aggregation queue to avoid spamming toasts on bulk events
+  const incomingQueueRef = useRef<Notification[]>([]);
+  const aggregateTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  // Hydrate from cache immediately
+  useEffect(() => {
+    try {
+      const raw = localStorage.getItem('khronos-notifications-cache');
+      if (raw) {
+        const parsed = JSON.parse(raw) as {
+          data: Notification[];
+          unreadCount: number;
+          timestamp: number;
+          version: string;
+        };
+        if (parsed && Array.isArray(parsed.data)) {
+          setNotifications(parsed.data);
+          notificationsRef.current = parsed.data;
+          setUnreadCount(parsed.unreadCount || 0);
+          setInitialLoading(false);
+        }
+      }
+    } catch {
+      // no-op for cache errors
+    }
+  }, []);
+
+  // Persist cache whenever notifications change
+  useEffect(() => {
+    try {
+      localStorage.setItem(
+        'khronos-notifications-cache',
+        JSON.stringify({
+          data: notificationsRef.current,
+          unreadCount,
+          timestamp: Date.now(),
+          version: '1.0',
+        })
+      );
+    } catch {
+      // ignore storage failures
+    }
+  }, [notifications, unreadCount]);
+
+  const mergeUnique = (
+    existing: Notification[],
+    incoming: Notification[],
+    { appendOlder }: { appendOlder: boolean }
+  ): Notification[] => {
+    const byId = new Map(existing.map((n) => [n._id, n] as const));
+    for (const n of incoming) {
+      if (!byId.has(n._id)) byId.set(n._id, n);
+    }
+    const merged = Array.from(byId.values());
+    merged.sort(
+      (a, b) =>
+        new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+    );
+    if (appendOlder) return merged; // order already newest-first
+    return merged;
+  };
 
   const fetchNotifications = useCallback(
     async (
@@ -75,7 +148,16 @@ export function NotificationProvider({
 
         if (data) {
           const newNotifications = data.notifications;
-          const newUnreadCount = newNotifications.filter(
+          const appendOlder = page > 1;
+
+          // Calculate unread from the combination that will be set
+          const combined = appendOlder
+            ? mergeUnique(notificationsRef.current, newNotifications, {
+                appendOlder: true,
+              })
+            : newNotifications;
+
+          const newUnreadCount = combined.filter(
             (n) => n.status === NotificationStatus.UNREAD
           ).length;
 
@@ -91,26 +173,20 @@ export function NotificationProvider({
               reallyNewNotifications.length > 0 &&
               reallyNewNotifications.length <= 3
             ) {
-              reallyNewNotifications.forEach((notification) => {
-                toast.success(`New notification: ${notification.title}`, {
-                  duration: 4000,
-                  icon: '🔔',
-                });
-              });
+              // queue toasts; actual toast emission is aggregated below
+              incomingQueueRef.current.push(...reallyNewNotifications);
             } else if (reallyNewNotifications.length > 3) {
-              toast.success(
-                `${reallyNewNotifications.length} new notifications`,
-                {
-                  duration: 4000,
-                  icon: '🔔',
-                }
-              );
+              incomingQueueRef.current.push(...reallyNewNotifications);
             }
           }
 
-          setNotifications(newNotifications);
-          notificationsRef.current = newNotifications;
+          const next = appendOlder ? combined : newNotifications;
+
+          setNotifications(next);
+          notificationsRef.current = next;
           setUnreadCount(newUnreadCount);
+          setHasMore(Boolean(data.hasMore));
+          setCurrentPage(page);
         }
       } catch (err) {
         if (!isBackgroundRefresh) {
@@ -200,6 +276,21 @@ export function NotificationProvider({
     await fetchNotifications(undefined, 1, false);
   }, [fetchNotifications]);
 
+  // Helper: emit aggregated toast for queued items
+  const flushAggregatedToasts = useCallback(() => {
+    const items = incomingQueueRef.current.splice(0);
+    if (items.length === 0) return;
+    if (items.length === 1) {
+      const n = items[0];
+      toast.success(`New: ${n.title}`, { duration: 4000, icon: '🔔' });
+      return;
+    }
+    toast.success(`${items.length} new notifications`, {
+      duration: 4000,
+      icon: '🔔',
+    });
+  }, []);
+
   // Setup websocket for real-time notifications
   useEffect(() => {
     if (!user) {
@@ -250,14 +341,12 @@ export function NotificationProvider({
         return updated;
       });
 
-      toast.custom(() => (
-        <div className='px-4 py-3 rounded-lg shadow-lg bg-theme-card border border-theme-primary max-w-sm'>
-          <div className='text-sm font-semibold text-theme-primary'>
-            {incoming.title}
-          </div>
-          <div className='text-sm text-theme-secondary'>{incoming.message}</div>
-        </div>
-      ));
+      // queue for aggregated toast
+      incomingQueueRef.current.push(incoming);
+      if (aggregateTimerRef.current) clearTimeout(aggregateTimerRef.current);
+      aggregateTimerRef.current = setTimeout(() => {
+        flushAggregatedToasts();
+      }, 800);
     });
 
     socket.on('disconnect', () => {
@@ -269,15 +358,54 @@ export function NotificationProvider({
       socket.disconnect();
       socketRef.current = null;
     };
-  }, [user]);
+  }, [user, flushAggregatedToasts]);
 
-  // Initial fetch only
+  // Initial fetch only (keeps cache hydration from earlier effect)
   useEffect(() => {
     if (user) {
       fetchNotifications(undefined, 1, false);
       fetchSettings();
     }
   }, [user, fetchSettings, fetchNotifications]);
+
+  const addLocalNotification = useCallback(
+    (input: {
+      type: Notification['type'];
+      title: string;
+      message: string;
+      priority: Notification['priority'];
+      data?: Record<string, unknown>;
+    }) => {
+      const now = new Date().toISOString();
+      const local: Notification = {
+        _id: `local-${Date.now()}`,
+        userId: AuthUtils.getUserId() || 'local',
+        type: input.type,
+        title: input.title,
+        message: input.message,
+        priority: input.priority,
+        status: NotificationStatus.UNREAD,
+        data: input.data,
+        createdAt: now,
+        updatedAt: now,
+      };
+
+      setNotifications((prev) => {
+        const updated = [local, ...prev];
+        notificationsRef.current = updated;
+        setUnreadCount((c) => c + 1);
+        return updated;
+      });
+
+      // also queue the toast using the same aggregator
+      incomingQueueRef.current.push(local);
+      if (aggregateTimerRef.current) clearTimeout(aggregateTimerRef.current);
+      aggregateTimerRef.current = setTimeout(() => {
+        flushAggregatedToasts();
+      }, 300);
+    },
+    [flushAggregatedToasts]
+  );
 
   const value = {
     notifications,
@@ -291,6 +419,9 @@ export function NotificationProvider({
     markAllAsRead,
     updateSettings,
     refreshNotifications,
+    hasMore,
+    currentPage,
+    addLocalNotification,
   };
 
   return (

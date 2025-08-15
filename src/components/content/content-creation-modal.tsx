@@ -790,7 +790,7 @@ export default function CreateContentModal({
             <button
               type='button'
               onClick={handleSubmit}
-              className='px-4 sm:px-6 py-2.5 sm:py-3 bg-gradient-to-r from-accent-primary to-accent-secondary hover:from-accent-secondary hover:to-accent-primary rounded-xl text-white font-medium transition-all duration-200 text-sm sm:text-base w-full sm:w-auto order-1 sm:order-2'
+              className='px-4 sm:px-6 py-2 sm:py-3 bg-accent-primary hover:bg-accent-secondary rounded-xl text-white font-medium transition-all duration-200 text-sm sm:text-base w-full sm:w-auto order-1 sm:order-2'
             >
               Create Content
             </button>
