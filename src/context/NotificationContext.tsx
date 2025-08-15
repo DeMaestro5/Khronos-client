@@ -6,6 +6,7 @@ import React, {
   useState,
   useEffect,
   useCallback,
+  useRef,
 } from 'react';
 import { useAuth } from './AuthContext';
 import {
@@ -17,6 +18,8 @@ import {
 } from '@/src/types/notification';
 import { notificationAPI } from '@/src/lib/api';
 import { toast } from 'react-hot-toast';
+import { io, Socket } from 'socket.io-client';
+import { AuthUtils } from '@/src/lib/auth-utils';
 
 interface NotificationContextType {
   notifications: Notification[];
@@ -50,6 +53,8 @@ export function NotificationProvider({
   const [initialLoading, setInitialLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [unreadCount, setUnreadCount] = useState(0);
+  const socketRef = useRef<Socket | null>(null);
+  const notificationsRef = useRef<Notification[]>([]);
 
   const fetchNotifications = useCallback(
     async (
@@ -59,7 +64,6 @@ export function NotificationProvider({
     ) => {
       if (!user) return;
 
-      // Only show loading state for initial load or manual refresh, not background polling
       if (!isBackgroundRefresh) {
         setLoading(true);
       }
@@ -75,14 +79,14 @@ export function NotificationProvider({
             (n) => n.status === NotificationStatus.UNREAD
           ).length;
 
-          // Check if there are new notifications (only for background refresh)
-          if (isBackgroundRefresh && notifications.length > 0) {
-            const existingIds = new Set(notifications.map((n) => n._id));
+          if (isBackgroundRefresh && notificationsRef.current.length > 0) {
+            const existingIds = new Set(
+              notificationsRef.current.map((n) => n._id)
+            );
             const reallyNewNotifications = newNotifications.filter(
               (n) => !existingIds.has(n._id)
             );
 
-            // Show toast for new notifications (limit to avoid spam)
             if (
               reallyNewNotifications.length > 0 &&
               reallyNewNotifications.length <= 3
@@ -105,15 +109,14 @@ export function NotificationProvider({
           }
 
           setNotifications(newNotifications);
+          notificationsRef.current = newNotifications;
           setUnreadCount(newUnreadCount);
         }
       } catch (err) {
-        // Only show error to user if it's not a background refresh
         if (!isBackgroundRefresh) {
           setError('Failed to fetch notifications');
           console.error('Error fetching notifications:', err);
         } else {
-          // Silently log background fetch errors
           console.warn('Background notification fetch failed:', err);
         }
       } finally {
@@ -123,7 +126,7 @@ export function NotificationProvider({
         setInitialLoading(false);
       }
     },
-    [user, notifications]
+    [user]
   );
 
   const fetchSettings = useCallback(async () => {
@@ -134,8 +137,15 @@ export function NotificationProvider({
       if (response.data?.data) {
         setSettings(response.data.data);
       }
-    } catch (err) {
-      console.error('Error fetching notification settings:', err);
+    } catch (err: unknown) {
+      const maybeMessage =
+        typeof err === 'object' && err && 'message' in err
+          ? String((err as { message?: unknown }).message)
+          : '';
+      if (maybeMessage && /aborted|canceled|cancelled/i.test(maybeMessage)) {
+        return;
+      }
+      console.warn('Notification settings fetch failed:', err);
     }
   }, [user]);
 
@@ -190,7 +200,78 @@ export function NotificationProvider({
     await fetchNotifications(undefined, 1, false);
   }, [fetchNotifications]);
 
-  // Initial fetch
+  // Setup websocket for real-time notifications
+  useEffect(() => {
+    if (!user) {
+      if (socketRef.current) {
+        socketRef.current.disconnect();
+        socketRef.current = null;
+      }
+      return;
+    }
+
+    const baseUrl =
+      process.env.NEXT_PUBLIC_API_URL ||
+      'https://khronos-api-bp71.onrender.com';
+
+    const socket = io(baseUrl, {
+      transports: ['websocket', 'polling'],
+      withCredentials: true,
+      autoConnect: true,
+    });
+
+    socketRef.current = socket;
+
+    socket.on('connect', () => {
+      const userId = AuthUtils.getUserId();
+      const token = AuthUtils.getAccessToken();
+      if (userId && token) {
+        socket.emit('authenticate', { userId, token });
+      }
+    });
+
+    socket.on('authenticated', () => {
+      // no-op
+    });
+
+    socket.on('authentication_error', () => {
+      console.warn('Socket authentication failed');
+    });
+
+    socket.on('notification', (incoming: Notification) => {
+      setNotifications((prev) => {
+        const exists = prev.some((n) => n._id === incoming._id);
+        const updated = exists ? prev : [incoming, ...prev];
+        notificationsRef.current = updated;
+        const newUnread = updated.filter(
+          (n) => n.status === NotificationStatus.UNREAD
+        ).length;
+        setUnreadCount(newUnread);
+        return updated;
+      });
+
+      toast.custom(() => (
+        <div className='px-4 py-3 rounded-lg shadow-lg bg-theme-card border border-theme-primary max-w-sm'>
+          <div className='text-sm font-semibold text-theme-primary'>
+            {incoming.title}
+          </div>
+          <div className='text-sm text-theme-secondary'>{incoming.message}</div>
+        </div>
+      ));
+    });
+
+    socket.on('disconnect', () => {
+      // no-op
+    });
+
+    return () => {
+      socket.removeAllListeners();
+      socket.disconnect();
+      socketRef.current = null;
+    };
+  }, [user]);
+
+  // Initial fetch only
   useEffect(() => {
     if (user) {
       fetchNotifications(undefined, 1, false);
@@ -198,26 +279,14 @@ export function NotificationProvider({
     }
   }, [user, fetchSettings, fetchNotifications]);
 
-  // Background polling for new notifications every 5 minutes
-  useEffect(() => {
-    if (!user) return;
-
-    const interval = setInterval(() => {
-      // Background refresh - silent, no loading states shown to user
-      fetchNotifications(undefined, 1, true);
-    }, 300000); // 5 minutes (300,000ms) - realistic polling interval
-
-    return () => clearInterval(interval);
-  }, [user, fetchNotifications]);
-
   const value = {
     notifications,
     unreadCount,
     settings,
-    loading: initialLoading || loading, // Show loading only on initial load or manual refresh
+    loading: initialLoading || loading,
     error,
     fetchNotifications: (filters?: NotificationFilters, page?: number) =>
-      fetchNotifications(filters, page, false), // Manual fetches are not background
+      fetchNotifications(filters, page, false),
     markAsRead,
     markAllAsRead,
     updateSettings,

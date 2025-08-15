@@ -1,20 +1,25 @@
 export enum NotificationType {
-  SYSTEM = 'SYSTEM',
-  CONTENT = 'CONTENT',
-  PERFORMANCE = 'PERFORMANCE',
-  TREND = 'TREND',
-  SCHEDULE = 'SCHEDULE',
+  SYSTEM = 'system',
+  PERFORMANCE = 'performance',
+  TREND = 'trend',
+  SCHEDULE = 'schedule',
+  SECURITY = 'security',
+  REMINDER = 'reminder',
+  MESSAGE = 'message',
+  MARKETING = 'marketing',
+  PRODUCT_UPDATE = 'product_update',
+  REPORT = 'report',
 }
 
 export enum NotificationPriority {
-  LOW = 'LOW',
-  MEDIUM = 'MEDIUM',
-  HIGH = 'HIGH',
+  LOW = 'low',
+  MEDIUM = 'medium',
+  HIGH = 'high',
 }
 
 export enum NotificationStatus {
-  UNREAD = 'UNREAD',
-  READ = 'READ',
+  UNREAD = 'unread',
+  READ = 'read',
 }
 
 export interface Notification {
@@ -25,11 +30,7 @@ export interface Notification {
   message: string;
   priority: NotificationPriority;
   status: NotificationStatus;
-  metadata?: {
-    contentId?: string;
-    link?: string;
-    [key: string]: unknown;
-  };
+  data?: Record<string, unknown>;
   createdAt: string;
   updatedAt: string;
 }
@@ -44,7 +45,14 @@ export interface NotificationSettings {
   performanceAlerts: boolean;
   trendUpdates: boolean;
   systemUpdates: boolean;
+  securityAlerts?: boolean;
+  productUpdates?: boolean;
+  messages?: boolean;
+  reminders?: boolean;
+  marketing?: boolean;
+  reports?: boolean;
   quietHours: {
+    enabled?: boolean;
     start: string;
     end: string;
   };
@@ -63,5 +71,5 @@ export interface NotificationResponse {
   total: number;
   page: number;
   limit: number;
-  hasMore: boolean;
+  hasMore?: boolean;
 }

@@ -14,7 +14,6 @@ import {
   FiAlertCircle,
   FiTrendingUp,
   FiCalendar,
-  FiZap,
   FiClock,
   FiRefreshCw,
 } from 'react-icons/fi';
@@ -35,8 +34,6 @@ const getNotificationIcon = (type: NotificationType) => {
       return (
         <FiAlertCircle className='h-5 w-5 text-blue-500 dark:text-blue-400' />
       );
-    case NotificationType.CONTENT:
-      return <FiZap className='h-5 w-5 text-purple-500 dark:text-purple-400' />;
     case NotificationType.PERFORMANCE:
       return (
         <FiTrendingUp className='h-5 w-5 text-green-500 dark:text-green-400' />
@@ -81,8 +78,6 @@ const getNotificationStyle = (
   switch (type) {
     case NotificationType.SCHEDULE:
       return `${baseStyle} bg-indigo-50/30 dark:bg-indigo-900/10 hover:from-indigo-50/50 hover:to-indigo-50/30 dark:hover:from-indigo-900/20 dark:hover:to-indigo-900/10`;
-    case NotificationType.CONTENT:
-      return `${baseStyle} bg-purple-50/30 dark:bg-purple-900/10 hover:from-purple-50/50 hover:to-purple-50/30 dark:hover:from-purple-900/20 dark:hover:to-purple-900/10`;
     case NotificationType.PERFORMANCE:
       return `${baseStyle} bg-green-50/30 dark:bg-green-900/10 hover:from-green-50/50 hover:to-green-50/30 dark:hover:from-green-900/20 dark:hover:to-green-900/10`;
     default:
@@ -98,7 +93,6 @@ export default function NotificationDropdown({
   const {
     notifications,
     unreadCount,
-    loading,
     markAsRead,
     markAllAsRead,
     refreshNotifications,
@@ -107,15 +101,36 @@ export default function NotificationDropdown({
   const router = useRouter();
 
   const handleNotificationClick = async (notification: Notification) => {
-    if (notification.status === 'UNREAD') {
+    if (notification.status === 'unread') {
       await markAsRead(notification._id);
     }
-    if (notification.metadata?.link) {
-      const link = notification.metadata.link;
+
+    const data = notification.data as Record<string, unknown> | undefined;
+
+    // Prefer contentId navigation if present
+    const rawContentId = data?.['contentId'];
+    const contentId =
+      typeof rawContentId === 'string'
+        ? rawContentId
+        : typeof rawContentId === 'object' &&
+          rawContentId &&
+          '_id' in rawContentId
+        ? String((rawContentId as { _id?: unknown })._id ?? '')
+        : undefined;
+
+    if (contentId) {
+      router.push(`/content/${contentId}`);
+      return;
+    }
+
+    // Fallback to link navigation
+    const linkValue = data ? data['link'] : undefined;
+    if (typeof linkValue === 'string') {
+      const link = linkValue;
       if (link.startsWith('/')) {
         router.push(link);
       } else {
-        window.location.href = link; // external link fallback
+        window.location.href = link;
       }
     }
   };
@@ -124,7 +139,6 @@ export default function NotificationDropdown({
     await refreshNotifications();
   };
 
-  // Group notifications by type (memoized)
   const groupedNotifications = useMemo(() => {
     return notifications.reduce((acc, notification) => {
       const type = notification.type;
@@ -136,7 +150,6 @@ export default function NotificationDropdown({
     }, {} as Record<NotificationType, Notification[]>);
   }, [notifications]);
 
-  // Detect screen size to avoid mounting both desktop and mobile dropdowns simultaneously
   const [isSmallScreen, setIsSmallScreen] = useState<boolean>(
     typeof window !== 'undefined'
       ? window.matchMedia('(min-width: 640px)').matches
@@ -160,14 +173,13 @@ export default function NotificationDropdown({
         onClose={onClose}
         dropdownRef={dropdownRef}
         unreadCount={unreadCount}
-        loading={loading}
         groupedNotifications={Object.entries(groupedNotifications)}
         onRefresh={handleRefresh}
         onMarkAllAsRead={markAllAsRead}
         onItemClick={handleNotificationClick}
       />
 
-      {/* Desktop Dropdown (unchanged) */}
+      {/* Desktop Dropdown */}
       <AnimatePresence>
         {isOpen && isSmallScreen && (
           <motion.div
@@ -195,9 +207,7 @@ export default function NotificationDropdown({
                     className='p-1.5 text-theme-secondary hover:text-accent-primary hover:bg-theme-hover rounded-lg transition-all duration-200'
                     title='Refresh notifications'
                   >
-                    <FiRefreshCw
-                      className={`h-4 w-4 ${loading ? 'animate-spin' : ''}`}
-                    />
+                    <FiRefreshCw className='h-4 w-4' />
                   </button>
                 </div>
               </div>
@@ -205,14 +215,7 @@ export default function NotificationDropdown({
 
             {/* Desktop Notifications List */}
             <div className='max-h-64 sm:max-h-80 overflow-y-auto'>
-              {loading && notifications.length === 0 ? (
-                <div className='p-6 text-center'>
-                  <div className='animate-spin rounded-full h-8 w-8 border-b-2 border-accent-primary mx-auto mb-3'></div>
-                  <p className='text-sm text-theme-secondary'>
-                    Loading your notifications...
-                  </p>
-                </div>
-              ) : notifications.length === 0 ? (
+              {notifications.length === 0 ? (
                 <div className='p-6 text-center'>
                   <FiBell className='h-12 w-12 text-theme-muted mx-auto mb-4' />
                   <h4 className='text-sm font-semibold text-theme-primary mb-2'>
@@ -258,7 +261,7 @@ export default function NotificationDropdown({
                                     notification.priority
                                   )}`}
                                 >
-                                  {notification.priority.toLowerCase()}
+                                  {notification.priority}
                                 </span>
                               </div>
                               <p className='text-sm text-theme-secondary mt-1 line-clamp-2'>
