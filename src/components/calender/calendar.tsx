@@ -3,7 +3,10 @@ import { Calendar, ChevronLeft, ChevronRight } from 'lucide-react';
 import ContentModal from './content-modal';
 import EmptyDateModal from './emptyDateModal';
 import { Platform } from '@/src/types/modal';
-import { ScheduledContent } from '@/src/context/CalendarContext';
+import {
+  ScheduledContent,
+  ScheduledContentItem,
+} from '@/src/context/CalendarContext';
 import RescheduleModal from './reschedule-modal';
 import { contentAPI } from '@/src/lib/api';
 import { useCalendar } from '@/src/context/CalendarContext';
@@ -12,6 +15,9 @@ import {
   NotificationPriority,
   NotificationType,
 } from '@/src/types/notification';
+import toast from 'react-hot-toast';
+import DeleteConfirmationModal from '../content/delete-confirmation-modal';
+import ContentEditModal from '../content/content-edit-modal';
 
 export default function CalendarComponent({
   scheduledContent = {},
@@ -28,6 +34,15 @@ export default function CalendarComponent({
   const [isContentModalOpen, setIsContentModalOpen] = useState(false);
   const [isEmptyModalOpen, setIsEmptyModalOpen] = useState(false);
 
+  // Delete and Edit modal state
+  const [deleteModalOpen, setDeleteModalOpen] = useState(false);
+  const [editModalOpen, setEditModalOpen] = useState(false);
+  const [contentToDelete, setContentToDelete] =
+    useState<ScheduledContentItem | null>(null);
+  const [editingContent, setEditingContent] =
+    useState<ScheduledContentItem | null>(null);
+  const [isDeleting, setIsDeleting] = useState(false);
+
   // Drag state
   const [dragSourceDate, setDragSourceDate] = useState<string | null>(null);
   const [pendingTargetDate, setPendingTargetDate] = useState<string | null>(
@@ -38,8 +53,11 @@ export default function CalendarComponent({
   const [pastDateTarget, setPastDateTarget] = useState<string>('');
   const [originalDateISO, setOriginalDateISO] = useState<string>('');
 
-  const { moveScheduledContentOptimistic, restoreScheduledContent } =
-    useCalendar();
+  const {
+    moveScheduledContentOptimistic,
+    restoreScheduledContent,
+    loadScheduledContent,
+  } = useCalendar();
   const { addLocalNotification } = useNotifications();
 
   // Log the received scheduled content for debugging
@@ -198,6 +216,62 @@ export default function CalendarComponent({
     setIsContentModalOpen(false);
     setIsEmptyModalOpen(false);
     setSelectedDate(null);
+  };
+
+  // Delete and Edit handlers
+  const handleDeleteClick = (item: ScheduledContentItem) => {
+    setContentToDelete(item);
+    setDeleteModalOpen(true);
+    setIsContentModalOpen(false); // Close content modal
+  };
+
+  const handleEditClick = (item: ScheduledContentItem) => {
+    setEditingContent(item);
+    setEditModalOpen(true);
+    setIsContentModalOpen(false); // Close content modal
+  };
+
+  const handleDeleteConfirm = async () => {
+    if (!contentToDelete) return;
+
+    setIsDeleting(true);
+    try {
+      await contentAPI.delete(contentToDelete.id);
+      toast.success('Content deleted successfully');
+      await loadScheduledContent();
+      setDeleteModalOpen(false);
+      setContentToDelete(null);
+    } catch (error) {
+      console.error('Failed to delete content:', error);
+      toast.error('Failed to delete content');
+    } finally {
+      setIsDeleting(false);
+    }
+  };
+
+  const handleDeleteCancel = () => {
+    setDeleteModalOpen(false);
+    setContentToDelete(null);
+  };
+
+  const handleEditSuccess = async () => {
+    await loadScheduledContent();
+    setEditModalOpen(false);
+    setEditingContent(null);
+    toast.success('Content updated successfully');
+  };
+
+  const handleEditCancel = () => {
+    setEditModalOpen(false);
+    setEditingContent(null);
+  };
+
+  // Wrapper function to close content modal and open content creation modal
+  const handleCreateContent = () => {
+    setIsContentModalOpen(false); // Close the content modal
+    if (onCreateContent) {
+      onCreateContent(); // Call the original onCreateContent function
+    }
   };
 
   const onDragStart = (dateKey: string) => {
@@ -610,8 +684,35 @@ export default function CalendarComponent({
         onClose={closeModals}
         selectedDate={selectedDate}
         content={selectedDate ? scheduledContent[selectedDate] || [] : []}
-        onCreateContent={onCreateContent}
+        onCreateContent={handleCreateContent}
+        onDeleteClick={handleDeleteClick}
+        onEditClick={handleEditClick}
       />
+
+      {/* Delete Confirmation Modal */}
+      <DeleteConfirmationModal
+        isOpen={deleteModalOpen}
+        onClose={handleDeleteCancel}
+        onConfirm={handleDeleteConfirm}
+        contentTitle={contentToDelete?.title || ''}
+        isDeleting={isDeleting}
+      />
+
+      {/* Edit Modal */}
+      {editingContent && (
+        <ContentEditModal
+          isOpen={editModalOpen}
+          onClose={handleEditCancel}
+          contentId={editingContent.id}
+          currentStatus={editingContent.status}
+          currentPriority='medium'
+          currentScheduledDate={
+            selectedDate ? `${selectedDate}T${editingContent.time}:00.000Z` : ''
+          }
+          contentTitle={editingContent.title}
+          onSuccess={handleEditSuccess}
+        />
+      )}
 
       {/* Empty Date Modal */}
       <EmptyDateModal
