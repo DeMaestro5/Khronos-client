@@ -7,6 +7,7 @@ import toast from 'react-hot-toast';
 import { contentAPI } from '@/src/lib/api';
 import { Content } from '@/src/types/content';
 import { useUserData } from '@/src/context/UserDataContext';
+import { createPortal } from 'react-dom';
 
 interface ContentEditModalProps {
   isOpen: boolean;
@@ -318,9 +319,9 @@ const ContentEditModal: React.FC<ContentEditModalProps> = ({
 
   if (!isOpen) return null;
 
-  return (
+  const modalContent = (
     <AnimatePresence>
-      <div className='fixed inset-0 z-50 flex items-center justify-center p-4'>
+      <div className='fixed inset-0 z-[10000] flex items-center justify-center p-4'>
         {/* Simple backdrop */}
         <motion.div
           initial={{ opacity: 0 }}
@@ -523,6 +524,11 @@ const ContentEditModal: React.FC<ContentEditModalProps> = ({
       </div>
     </AnimatePresence>
   );
+
+  if (typeof window !== 'undefined') {
+    return createPortal(modalContent, document.body);
+  }
+  return modalContent;
 };
 
 export default ContentEditModal;
