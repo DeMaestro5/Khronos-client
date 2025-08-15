@@ -18,7 +18,6 @@ interface MobileNotificationDrawerProps {
   onClose: () => void;
   dropdownRef: React.RefObject<HTMLDivElement | null>;
   unreadCount: number;
-  loading: boolean;
   groupedNotifications: Array<[string, Notification[]]>;
   onRefresh: () => void | Promise<void>;
   onMarkAllAsRead: () => void | Promise<void>;
@@ -41,7 +40,6 @@ export default function MobileNotificationDrawer({
   onClose,
   dropdownRef,
   unreadCount,
-  loading,
   groupedNotifications,
   onRefresh,
   onMarkAllAsRead,
@@ -67,11 +65,9 @@ export default function MobileNotificationDrawer({
   useEffect(() => {
     if (open) {
       setIsMounted(true);
-      // next frame, toggle visible to trigger CSS transition
       const id = requestAnimationFrame(() => setIsVisible(true));
       return () => cancelAnimationFrame(id);
     }
-    // start closing
     setIsVisible(false);
   }, [open]);
 
@@ -127,23 +123,14 @@ export default function MobileNotificationDrawer({
               className='p-2 text-theme-secondary hover:text-theme-primary hover:bg-theme-hover rounded-lg transition-all duration-200'
               title='Refresh notifications'
             >
-              <FiRefreshCw
-                className={`h-4 w-4 ${loading ? 'animate-spin' : ''}`}
-              />
+              <FiRefreshCw className='h-4 w-4' />
             </button>
           </div>
         </div>
 
         {/* List */}
         <div className='flex-1 overflow-y-auto overscroll-contain touch-pan-y'>
-          {loading && groupedNotifications.length === 0 ? (
-            <div className='flex flex-col items-center justify-center h-full p-6'>
-              <div className='animate-spin rounded-full h-8 w-8 border-b-2 border-accent-primary mb-4'></div>
-              <p className='text-theme-secondary text-center'>
-                Loading notifications...
-              </p>
-            </div>
-          ) : groupedNotifications.length === 0 ? (
+          {groupedNotifications.length === 0 ? (
             <div className='flex flex-col items-center justify-center h-full p-6'>
               <div className='w-16 h-16 bg-theme-secondary rounded-full flex items-center justify-center mb-4'>
                 <FiBell className='h-8 w-8 text-theme-muted' />
@@ -170,7 +157,7 @@ export default function MobileNotificationDrawer({
                       key={notification._id}
                       onClick={() => onItemClick(notification)}
                       className={`w-full text-left p-4 border-b border-theme-primary/20 last:border-b-0 active:bg-theme-hover transition-all duration-200 ${
-                        notification.status === 'UNREAD'
+                        notification.status === 'unread'
                           ? 'bg-blue-50/50 dark:bg-blue-900/10'
                           : ''
                       }`}
@@ -184,7 +171,7 @@ export default function MobileNotificationDrawer({
                             <p className='text-sm font-semibold text-theme-primary line-clamp-2 flex-1'>
                               {notification.title}
                             </p>
-                            {notification.status === 'UNREAD' && (
+                            {notification.status === 'unread' && (
                               <span className='w-2 h-2 bg-blue-500 rounded-full flex-shrink-0 mt-1'></span>
                             )}
                           </div>

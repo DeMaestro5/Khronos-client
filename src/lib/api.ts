@@ -547,14 +547,42 @@ export const contentAPI = {
 
 // Calendar API methods
 export const calendarAPI = {
+  // Back-compat helpers (will be replaced by new endpoints)
   getEvents: (startDate: string, endDate: string) =>
-    api.get('/calendar', { params: { startDate, endDate } }),
+    api.get('/api/v1/calendar', { params: { startDate, endDate } }),
 
   scheduleContent: (contentId: string, date: string) =>
-    api.post('/calendar/schedule', { contentId, date }),
+    api.post('/api/v1/calendar/schedule', { contentId, date }),
 
   rescheduleContent: (eventId: string, newDate: string) =>
-    api.put(`/calendar/${eventId}`, { date: newDate }),
+    api.put(`/api/v1/calendar/${eventId}`, { date: newDate }),
+
+  // New calendar routes
+  getAll: () => api.get('/api/v1/calendar'),
+  getMonth: (year: number, month: number) =>
+    api.get(`/api/v1/calendar/${year}/${month}`),
+  getDay: (year: number, month: number, day: number) =>
+    api.get(`/api/v1/calendar/${year}/${month}/${day}`),
+
+  createEvent: (payload: Record<string, unknown>) =>
+    api.post('/api/v1/calendar/event', payload),
+  getEvent: (id: string) => api.get(`/api/v1/calendar/event/${id}`),
+  updateEvent: (id: string, updates: Record<string, unknown>) =>
+    api.put(`/api/v1/calendar/event/${id}`, updates),
+  deleteEvent: (id: string) => api.delete(`/api/v1/calendar/event/${id}`),
+
+  bulkUpdate: (
+    updates: Array<{ id: string; updates: Record<string, unknown> }>
+  ) => api.post('/api/v1/calendar/bulk-update', { updates }),
+
+  getOptimalTimes: (params: Record<string, unknown>) =>
+    api.get('/api/v1/calendar/optimal-times', { params }),
+  getUpcoming: (limit = 10) =>
+    api.get('/api/v1/calendar/upcoming', { params: { limit } }),
+  getOverdue: () => api.get('/api/v1/calendar/overdue'),
+  getStats: () => api.get('/api/v1/calendar/stats'),
+  search: (params: Record<string, unknown>) =>
+    api.get('/api/v1/calendar/search', { params }),
 };
 
 // AI API methods
