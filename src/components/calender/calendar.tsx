@@ -7,6 +7,11 @@ import { ScheduledContent } from '@/src/context/CalendarContext';
 import RescheduleModal from './reschedule-modal';
 import { contentAPI } from '@/src/lib/api';
 import { useCalendar } from '@/src/context/CalendarContext';
+import { useNotifications } from '@/src/context/NotificationContext';
+import {
+  NotificationPriority,
+  NotificationType,
+} from '@/src/types/notification';
 
 export default function CalendarComponent({
   scheduledContent = {},
@@ -35,6 +40,7 @@ export default function CalendarComponent({
 
   const { moveScheduledContentOptimistic, restoreScheduledContent } =
     useCalendar();
+  const { addLocalNotification } = useNotifications();
 
   // Log the received scheduled content for debugging
   console.log('📅 Calendar Component: Received scheduled content:', {
@@ -254,6 +260,30 @@ export default function CalendarComponent({
         })
       );
       await Promise.all(calls);
+
+      // Add a local notification for the reschedule (aggregated toast will handle UX)
+      if (addLocalNotification && sourceItems.length > 0) {
+        const titles = sourceItems
+          .map((i) => i.title)
+          .slice(0, 2)
+          .join(', ');
+        const more =
+          sourceItems.length > 2 ? ` and ${sourceItems.length - 2} more` : '';
+        addLocalNotification({
+          type: NotificationType.SCHEDULE,
+          title: 'Content rescheduled',
+          message: `${titles}${more} moved to ${new Date(
+            newISO
+          ).toLocaleString()}`,
+          priority: NotificationPriority.MEDIUM,
+          data: {
+            scheduledDate: newISO,
+            contentIds: sourceItems.map((i) => i._id || i.id),
+            fromDate: sourceDateKey,
+            toDate: targetDateKey,
+          },
+        });
+      }
       // Optionally refresh from cache source if needed
       // await loadScheduledContent();
     } catch (err) {
