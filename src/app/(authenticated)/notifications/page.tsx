@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useNotifications } from '@/src/context/NotificationContext';
 import {
   Notification,
@@ -22,6 +22,7 @@ import {
 import { formatDistanceToNow } from 'date-fns';
 import { toast } from 'react-hot-toast';
 import router from 'next/router';
+import { useAuth } from '@/src/context/AuthContext';
 
 const getNotificationIcon = (type: NotificationType) => {
   switch (type) {
@@ -96,17 +97,24 @@ export default function NotificationsPage() {
     refreshNotifications,
   } = useNotifications();
 
+  const { user } = useAuth();
+
   const [filters, setFilters] = useState<NotificationFilters>({});
   const [showFilters, setShowFilters] = useState(false);
   const [selectedNotifications, setSelectedNotifications] = useState<
     Set<string>
   >(new Set());
 
+  // Track if initial fetch has happened
+  const hasInitialFetch = useRef(false);
+
   // Only fetch on initial load, not on every filter/page change
-  // eslint-disable-next-line react-hooks/exhaustive-deps
   useEffect(() => {
-    fetchNotifications();
-  }, []); // run once on mount
+    if (user && !hasInitialFetch.current) {
+      fetchNotifications();
+      hasInitialFetch.current = true;
+    }
+  }, [user, fetchNotifications]); // Proper dependencies, but controlled execution
 
   const handleNotificationClick = async (notification: Notification) => {
     if (notification.status === NotificationStatus.UNREAD) {
