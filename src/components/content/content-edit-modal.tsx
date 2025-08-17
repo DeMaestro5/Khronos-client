@@ -8,6 +8,7 @@ import { contentAPI } from '@/src/lib/api';
 import { Content } from '@/src/types/content';
 import { useUserData } from '@/src/context/UserDataContext';
 import { createPortal } from 'react-dom';
+import { useCalendar } from '@/src/context/CalendarContext';
 
 interface ContentEditModalProps {
   isOpen: boolean;
@@ -41,6 +42,7 @@ const ContentEditModal: React.FC<ContentEditModalProps> = ({
 }) => {
   // Use UserDataContext to update cached data
   const { updateContent } = useUserData();
+  const { loadScheduledContent } = useCalendar();
 
   const [formData, setFormData] = useState<EditFormData>({
     status: currentStatus,
@@ -178,6 +180,41 @@ const ContentEditModal: React.FC<ContentEditModalProps> = ({
       return;
     }
 
+    // Check what needs to be updated
+    const willBeScheduled = formData.status === 'scheduled';
+
+    // Apply optimistic update immediately
+    const optimisticUpdates: Partial<Content> = {
+      status: formData.status,
+    };
+    if (willBeScheduled && formData.scheduledDate && formData.scheduledTime) {
+      optimisticUpdates.metadata = {
+        ...(optimisticUpdates.metadata || {}),
+        scheduledDate: `${formData.scheduledDate}T${formData.scheduledTime}:00.000Z`,
+      } as Content['metadata'];
+    } else {
+      // When moving away from scheduled, clear local scheduledDate so calendar rebuild excludes it immediately
+      optimisticUpdates.metadata = {
+        ...(optimisticUpdates.metadata || {}),
+        scheduledDate: undefined,
+      } as Content['metadata'];
+    }
+
+    // Apply optimistic update immediately
+    updateContent(contentId, optimisticUpdates);
+
+    // Close modal immediately and show success toast
+    onClose();
+    toast.success('✅ Content updated successfully!', {
+      duration: 4000,
+      style: {
+        background: 'linear-gradient(135deg, #10b981 0%, #059669 100%)',
+        color: 'white',
+        fontWeight: '500',
+      },
+    });
+
+    // Continue with server update in background
     setIsLoading(true);
 
     try {
@@ -187,8 +224,6 @@ const ContentEditModal: React.FC<ContentEditModalProps> = ({
       let hasPriorityUpdate = false;
       let hasStatusUpdate = false;
 
-      // Check what needs to be updated
-      const willBeScheduled = formData.status === 'scheduled';
       const priorityChanged = formData.priority !== currentPriority;
       const statusChanged = formData.status !== currentStatus;
 
@@ -223,12 +258,9 @@ const ContentEditModal: React.FC<ContentEditModalProps> = ({
         );
         hasScheduleUpdate = true;
       } else if (statusChanged && !willBeScheduled) {
-        // If changing from scheduled to draft/published, use general update
+        // Use dedicated status endpoint to change status
         updatePromises.push(
-          contentAPI.update(contentId, {
-            status: formData.status,
-            scheduledDate: null,
-          } as Partial<Content>)
+          contentAPI.updateStatus(contentId, { status: formData.status })
         );
         hasStatusUpdate = true;
       }
@@ -241,14 +273,21 @@ const ContentEditModal: React.FC<ContentEditModalProps> = ({
         !hasScheduleUpdate
       ) {
         updatePromises.push(
-          contentAPI.update(contentId, {
-            status: formData.status,
-          } as Partial<Content>)
+          contentAPI.updateStatus(contentId, { status: formData.status })
         );
         hasStatusUpdate = true;
       }
 
       // Execute all updates
+      // If nothing to update (e.g., only schedule removal and status same), avoid bad request
+      if (updatePromises.length === 0) {
+        // Refresh calendar from cache to ensure UI is in sync
+        await loadScheduledContent();
+        onSuccess?.();
+        setIsLoading(false);
+        return;
+      }
+
       const responses = await Promise.all(updatePromises);
 
       console.log('Update responses:', responses);
@@ -274,21 +313,18 @@ const ContentEditModal: React.FC<ContentEditModalProps> = ({
         // Update the cached content
         updateContent(contentId, updates);
 
-        toast.success(
-          `✅ Content ${updateTypes.join(' and ')} updated successfully!`,
-          {
-            duration: 4000,
-            style: {
-              background: 'linear-gradient(135deg, #10b981 0%, #059669 100%)',
-              color: 'white',
-              fontWeight: '500',
-            },
-          }
-        );
+        // Refresh calendar snapshot from cache so the UI reflects new schedule
+        await loadScheduledContent();
 
         onSuccess?.();
-        onClose();
       } else {
+        // Rollback optimistic update on failure
+        updateContent(contentId, {
+          status: currentStatus,
+          metadata: {
+            scheduledDate: currentScheduledDate,
+          } as Content['metadata'],
+        });
         throw new Error('One or more updates failed');
       }
     } catch (error: unknown) {

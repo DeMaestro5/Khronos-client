@@ -414,6 +414,11 @@ export const contentAPI = {
     scheduleData: { scheduledDate: string; priority?: string }
   ) => api.put(`/api/v1/content/${id}/schedule`, scheduleData),
 
+  updateStatus: (
+    id: string,
+    statusData: { status: 'draft' | 'scheduled' | 'published' | 'archived' }
+  ) => api.put(`/api/v1/content/${id}/status`, statusData),
+
   updatePriority: (id: string, priorityData: { priority: string }) =>
     api.put(`/api/v1/content/${id}/priority`, priorityData),
 

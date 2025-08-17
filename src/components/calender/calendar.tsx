@@ -10,6 +10,7 @@ import {
 import RescheduleModal from './reschedule-modal';
 import { contentAPI } from '@/src/lib/api';
 import { useCalendar } from '@/src/context/CalendarContext';
+import { useUserData } from '@/src/context/UserDataContext';
 import { useNotifications } from '@/src/context/NotificationContext';
 import {
   NotificationPriority,
@@ -57,8 +58,10 @@ export default function CalendarComponent({
     moveScheduledContentOptimistic,
     restoreScheduledContent,
     loadScheduledContent,
+    deleteScheduledContent,
   } = useCalendar();
   const { addLocalNotification } = useNotifications();
+  const { removeContent, updateContent } = useUserData();
 
   // Log the received scheduled content for debugging
   console.log('📅 Calendar Component: Received scheduled content:', {
@@ -132,7 +135,9 @@ export default function CalendarComponent({
       currentDate.getMonth(),
       day
     );
-    const content = scheduledContent[dateKey] || [];
+    const content = (scheduledContent[dateKey] || []).filter(
+      (item) => item.status === 'scheduled'
+    );
 
     // Log content for debugging
     if (content.length > 0) {
@@ -236,14 +241,26 @@ export default function CalendarComponent({
 
     setIsDeleting(true);
     try {
-      await contentAPI.delete(contentToDelete.id);
+      // Optimistic: remove from calendar and global cache immediately
+      const id = contentToDelete._id || contentToDelete.id;
+      const dateKey = selectedDate || '';
+      deleteScheduledContent(id, dateKey);
+      removeContent(id);
+
+      await contentAPI.delete(id);
       toast.success('Content deleted successfully');
-      await loadScheduledContent();
       setDeleteModalOpen(false);
       setContentToDelete(null);
+      // Rebuild calendar from cache to ensure consistency
+      await loadScheduledContent();
     } catch (error) {
       console.error('Failed to delete content:', error);
       toast.error('Failed to delete content');
+      // Rollback calendar state if needed
+      try {
+        // If needed, trigger a full reload from cache
+        await loadScheduledContent();
+      } catch {}
     } finally {
       setIsDeleting(false);
     }
@@ -255,6 +272,7 @@ export default function CalendarComponent({
   };
 
   const handleEditSuccess = async () => {
+    // Rebuild calendar from latest global cache to drop items that are no longer scheduled
     await loadScheduledContent();
     setEditModalOpen(false);
     setEditingContent(null);
@@ -319,12 +337,23 @@ export default function CalendarComponent({
     const targetDateKey = pendingTargetDate || '';
     if (!sourceDateKey || !targetDateKey) return;
 
-    // Optimistic update first
+    // Optimistic update first - also reflect status as scheduled in global cache
     const snapshot = moveScheduledContentOptimistic(
       sourceDateKey,
       targetDateKey,
       newISO
     );
+    const sourceItems = scheduledContent[sourceDateKey] || [];
+    sourceItems.forEach((item) => {
+      const id = item._id || item.id;
+      if (!id) return;
+      updateContent(id, {
+        status: 'scheduled',
+        metadata: {
+          scheduledDate: newISO,
+        } as unknown as import('@/src/types/content').Content['metadata'],
+      });
+    });
 
     try {
       const sourceItems = scheduledContent[sourceDateKey] || [];
@@ -334,6 +363,18 @@ export default function CalendarComponent({
         })
       );
       await Promise.all(calls);
+
+      // Sync global cache so other pages reflect immediately
+      sourceItems.forEach((item) => {
+        const id = item._id || item.id;
+        if (!id) return;
+        updateContent(id, {
+          status: 'scheduled',
+          metadata: {
+            scheduledDate: newISO,
+          } as unknown as import('@/src/types/content').Content['metadata'],
+        });
+      });
 
       // Add a local notification for the reschedule (aggregated toast will handle UX)
       if (addLocalNotification && sourceItems.length > 0) {

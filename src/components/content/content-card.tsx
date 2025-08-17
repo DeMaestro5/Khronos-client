@@ -27,6 +27,8 @@ import DeleteConfirmationModal from './delete-confirmation-modal';
 import ContentEditModal from './content-edit-modal';
 import ArchiveConfirmationModal from './archive-confirmation-modal';
 import { useAIChat } from '@/src/context/AIChatContext';
+import { useUserData } from '@/src/context/UserDataContext';
+import { useCalendar } from '@/src/context/CalendarContext';
 
 interface ContentCardProps {
   content: Content;
@@ -188,6 +190,8 @@ export const ContentCard = ({
   const [isArchiving, setIsArchiving] = useState(false);
   const { openChat } = useAIChat();
   const router = useRouter();
+  const { removeContent } = useUserData();
+  const { loadScheduledContent } = useCalendar();
 
   const handleMoreClick = (e: React.MouseEvent) => {
     e.preventDefault();
@@ -217,15 +221,20 @@ export const ContentCard = ({
   const handleDeleteConfirm = async () => {
     setIsDeleting(true);
     try {
+      // Optimistic: remove from global cache immediately
+      removeContent(content._id);
+
       await contentAPI.delete(content._id);
       toast.success('Content deleted successfully!');
       setIsDeleteModalOpen(false);
-      if (onContentDeleted) {
-        onContentDeleted(content._id);
-      }
+      onContentDeleted?.(content._id);
+      // Ensure calendar view syncs from cache
+      await loadScheduledContent();
     } catch (error) {
       console.error('Error deleting content:', error);
       toast.error('Failed to delete content. Please try again.');
+      // Reload cache to restore if needed
+      await loadScheduledContent();
     } finally {
       setIsDeleting(false);
     }
