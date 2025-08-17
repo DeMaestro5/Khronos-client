@@ -880,9 +880,17 @@ export function UserDataProvider({ children }: { children: React.ReactNode }) {
           return prev;
         }
 
-        const newContent = prev.map((content) =>
-          content._id === contentId ? { ...content, ...updates } : content
-        );
+        const newContent = prev.map((content) => {
+          if (content._id !== contentId) return content;
+          const merged: Content = { ...content, ...updates } as Content;
+          if (updates.metadata) {
+            merged.metadata = {
+              ...content.metadata,
+              ...updates.metadata,
+            } as Content['metadata'];
+          }
+          return merged;
+        });
 
         // Update stats
         const newStats = calculateUserStats(newContent);
