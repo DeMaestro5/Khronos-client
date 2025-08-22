@@ -65,13 +65,6 @@ export default function ProfilePage() {
 
   // Use cached data instead of fetching
   useEffect(() => {
-    console.log('Profile page: Using cached data', {
-      cachedProfile,
-      cachedStats,
-      userContent,
-      contextLoading,
-    });
-
     if (!contextUser) return;
 
     setLoading(contextLoading);

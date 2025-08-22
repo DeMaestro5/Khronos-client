@@ -85,11 +85,6 @@ const TrendsPage: React.FC = () => {
 
   // Use cached trends data instead of fetching directly
   useEffect(() => {
-    console.log('Trends page: Using cached data', {
-      trendsData,
-      userDataLoading,
-    });
-
     if (userDataLoading) {
       setIsLoading(true);
       return;
@@ -142,11 +137,6 @@ const TrendsPage: React.FC = () => {
       JSON.stringify(previousFilters) !== JSON.stringify(filters);
 
     if (filtersChanged) {
-      console.log('Trends page: Filters changed, refreshing data...', {
-        previous: previousFilters,
-        current: filters,
-      });
-
       // Check if there's already an ongoing filter operation
       if (ongoingFilterOperationRef.current) {
         console.log(
