@@ -197,20 +197,11 @@ export default function SignupForm({
     }
 
     try {
-      console.log('Signup request payload:', {
-        firstName: formData.firstName,
-        lastName: formData.lastName,
-        email: formData.email,
-        password: '[REDACTED]', // Don't log actual password
-      });
-
       const response = await authAPI.signup(
         `${formData.firstName} ${formData.lastName}`.trim(),
         formData.email,
         formData.password
       );
-
-      console.log('Signup Response:', response.data);
 
       if (response.data.data?.tokens) {
         AuthUtils.storeTokens(response.data.data.tokens);
