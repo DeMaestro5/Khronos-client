@@ -131,11 +131,6 @@ export default function CalendarComponent({
       (item) => item.status === 'scheduled'
     );
 
-    // Log content for debugging
-    if (content.length > 0) {
-      console.log(`📅 Content for ${dateKey}:`, content);
-    }
-
     return content;
   };
 
@@ -192,19 +187,16 @@ export default function CalendarComponent({
       day
     );
 
-    console.log('📅 Date clicked:', dateKey);
     setSelectedDate(dateKey);
 
     const content = getContentForDate(day);
 
     if (content.length > 0) {
-      console.log('📅 Opening content modal for:', dateKey);
       setIsContentModalOpen(true);
       if (onDateSelect) {
         onDateSelect(dateKey);
       }
     } else {
-      console.log('📅 Opening empty date modal for:', dateKey);
       setIsEmptyModalOpen(true);
     }
   };

@@ -229,7 +229,6 @@ const ContentEditModal: React.FC<ContentEditModalProps> = ({
 
       // Handle priority update
       if (priorityChanged) {
-        console.log('Updating priority to:', formData.priority);
         updatePromises.push(
           contentAPI.updatePriority(contentId, {
             priority: formData.priority,
@@ -248,7 +247,6 @@ const ContentEditModal: React.FC<ContentEditModalProps> = ({
         }
 
         const scheduledDate = `${formData.scheduledDate}T${formData.scheduledTime}:00.000Z`;
-        console.log('Updating schedule to:', scheduledDate);
 
         updatePromises.push(
           contentAPI.updateSchedule(contentId, {
@@ -289,8 +287,6 @@ const ContentEditModal: React.FC<ContentEditModalProps> = ({
       }
 
       const responses = await Promise.all(updatePromises);
-
-      console.log('Update responses:', responses);
 
       // Check if all updates were successful
       // eslint-disable-next-line @typescript-eslint/no-explicit-any

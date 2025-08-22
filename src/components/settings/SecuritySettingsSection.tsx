@@ -708,9 +708,6 @@ const SecuritySettingsSection: React.FC = () => {
 
     setIsSaving(true);
     try {
-      // Note: Server doesn't have security endpoint yet
-      console.log('Security settings to save:', localSettings);
-
       // Simulate API call
       await new Promise((resolve) => setTimeout(resolve, 1000));
 
