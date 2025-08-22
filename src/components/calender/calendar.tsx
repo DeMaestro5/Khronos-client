@@ -63,14 +63,6 @@ export default function CalendarComponent({
   const { addLocalNotification } = useNotifications();
   const { removeContent, updateContent } = useUserData();
 
-  // Log the received scheduled content for debugging
-  console.log('📅 Calendar Component: Received scheduled content:', {
-    totalDates: Object.keys(scheduledContent).length,
-    totalItems: Object.values(scheduledContent).flat().length,
-    dates: Object.keys(scheduledContent).sort(),
-    content: scheduledContent,
-  });
-
   const PlatformIcons: Record<Platform['id'], () => ReactElement> = {
     instagram: () => (
       <div className='w-3 h-3 sm:w-4 sm:h-4 bg-gradient-to-r from-pink-500 to-orange-500 rounded-full shadow-sm' />

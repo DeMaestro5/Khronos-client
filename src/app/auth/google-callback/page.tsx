@@ -23,12 +23,6 @@ function GoogleCallbackContent() {
     setIsProcessing(true);
     const handleCallback = async () => {
       try {
-        // Debug: Log all search parameters
-        console.log(
-          'Google callback search params:',
-          Object.fromEntries(searchParams.entries())
-        );
-
         // Check if we have tokens from backend redirect (new flow)
         const success = searchParams.get('success');
         const accessToken = searchParams.get('accessToken');
