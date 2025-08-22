@@ -121,9 +121,6 @@ export const AIChatProvider: React.FC<{ children: ReactNode }> = ({
       });
 
       if (isOldFormat) {
-        console.log(
-          'Detected old chat data format, clearing and starting fresh...'
-        );
         storage.remove(STORAGE_KEY);
         setState((prev) => ({ ...prev, hasHydrated: true }));
         return;
@@ -239,19 +236,11 @@ export const AIChatProvider: React.FC<{ children: ReactNode }> = ({
   const createNewSession = useCallback(
     async (contentId: string, contentTitle?: string) => {
       try {
-        console.log(
-          'Creating new session for content:',
-          contentId,
-          contentTitle
-        );
-
         const response = await aiChatAPI.startSession(
           contentTitle || `Chat for Content ${contentId}`,
           contentId,
           `AI assistant session for content: ${contentTitle || contentId}`
         );
-
-        console.log('Start session response:', response.data);
 
         // Handle the server response structure: { statusCode, message, data }
         const responseData = response.data;
@@ -260,9 +249,6 @@ export const AIChatProvider: React.FC<{ children: ReactNode }> = ({
         }
 
         const sessionData: StartSessionResponse = responseData.data;
-
-        console.log('Session data:', sessionData);
-        console.log('Conversation starters:', sessionData.conversationStarters);
 
         // Provide default conversation starters if none provided by server
         const defaultConversationStarters = [
@@ -307,8 +293,6 @@ export const AIChatProvider: React.FC<{ children: ReactNode }> = ({
           })(),
           actions: sessionData.ui?.actions || defaultActions,
         };
-
-        console.log('New conversation created:', newConversation);
 
         setState((prev) => {
           const newConversations = {
@@ -644,19 +628,10 @@ export const AIChatProvider: React.FC<{ children: ReactNode }> = ({
       });
 
       try {
-        console.log(
-          'Sending message to session:',
-          currentConversation.sessionId,
-          'Message:',
-          message
-        );
-
         const response = await aiChatAPI.sendMessage(
           currentConversation.sessionId,
           message
         );
-
-        console.log('Send message response:', response.data);
 
         // Handle the server response structure: { statusCode, message, data }
         const responseData = response.data;
@@ -697,14 +672,6 @@ export const AIChatProvider: React.FC<{ children: ReactNode }> = ({
               : null,
           };
         });
-
-        // Log additional response data for debugging
-        if (messageData.suggestions?.length) {
-          console.log('AI Suggestions:', messageData.suggestions);
-        }
-        if (messageData.contentInsights) {
-          console.log('Content Insights:', messageData.contentInsights);
-        }
       } catch (error) {
         console.error('Failed to send message:', error);
         console.error('Send message error details:', {
@@ -778,7 +745,6 @@ export const AIChatProvider: React.FC<{ children: ReactNode }> = ({
       error: null,
     }));
     storage.remove(STORAGE_KEY);
-    console.log('All chat conversations cleared');
   }, []);
 
   const getAllConversations = useCallback((): ContentConversation[] => {

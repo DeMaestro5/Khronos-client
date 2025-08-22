@@ -136,7 +136,6 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       const refreshToken = AuthUtils.getRefreshToken();
 
       if (!refreshToken) {
-        console.log('No refresh token available');
         return false;
       }
 
@@ -156,7 +155,6 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         return true;
       }
 
-      console.log('Invalid refresh response format');
       return false;
     } catch (error) {
       console.error('Token refresh failed:', error);
@@ -189,13 +187,8 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       setAuthState((prev) => ({ ...prev, loading: true, error: null }));
 
       const tokens = AuthUtils.getStoredTokens();
-      console.log(
-        'Checking auth status, tokens:',
-        tokens ? 'present' : 'missing'
-      );
 
       if (!tokens) {
-        console.log('No tokens found, setting unauthenticated');
         setAuthState({
           isAuthenticated: false,
           user: null,
@@ -207,12 +200,8 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
 
       // Check if token is expired and try to refresh
       if (AuthUtils.shouldRefreshToken()) {
-        console.log('Token needs refresh, attempting refresh...');
         const refreshSuccess = await refreshTokens();
         if (!refreshSuccess) {
-          console.log(
-            'Token refresh failed, clearing tokens and redirecting to login'
-          );
           AuthUtils.clearTokens();
           setAuthState({
             isAuthenticated: false,
@@ -230,10 +219,6 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
 
       // Get stored user data
       const storedUser = AuthUtils.getUser();
-      console.log(
-        'Setting authenticated state with user:',
-        storedUser ? 'present' : 'missing'
-      );
 
       setAuthState({
         isAuthenticated: true,
@@ -262,11 +247,9 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       setAuthState((prev) => ({ ...prev, loading: true, error: null }));
 
       const response = await authAPI.login(email, password, rememberMe);
-      console.log('Login response:', response.data);
 
       // Check for the actual response format from the server
       if (response.data?.data?.tokens) {
-        console.log('Storing tokens from login response');
         // Store both tokens and user data
         const tokens = {
           accessToken: response.data.data.tokens.accessToken,
