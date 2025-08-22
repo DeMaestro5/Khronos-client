@@ -197,11 +197,7 @@ export function UserDataProvider({ children }: { children: React.ReactNode }) {
 
       if (cachedProfile && cachedStats && cachedContent) {
         const parsedContent = JSON.parse(cachedContent);
-        console.log(
-          '🔍 DEBUG: Loading cached content:',
-          parsedContent.length,
-          'items'
-        );
+
         setProfileData(JSON.parse(cachedProfile));
         setUserStats(JSON.parse(cachedStats));
         setUserContent(parsedContent);
@@ -394,20 +390,15 @@ export function UserDataProvider({ children }: { children: React.ReactNode }) {
       let content: Content[] = [];
 
       // Handle the contentAPI.getUserContent response structure
-      console.log('🔍 DEBUG: Content response received:', contentResponse.data);
+
       if (contentResponse.data) {
         const apiResponse = contentResponse.data;
-        console.log('🔍 DEBUG: API response structure:', apiResponse);
 
         // Check if this matches your API structure: { statusCode: '10000', message: '...', data: {...} }
         if (
           apiResponse.statusCode === '10000' &&
           apiResponse.data !== undefined
         ) {
-          console.log(
-            '🔍 DEBUG: API response is valid, data:',
-            apiResponse.data
-          );
           const responseData = apiResponse.data;
 
           if (Array.isArray(responseData)) {
@@ -481,8 +472,6 @@ export function UserDataProvider({ children }: { children: React.ReactNode }) {
       }
 
       // Update state
-      console.log('🔍 DEBUG: Setting user content:', content.length, 'items');
-      console.log('🔍 DEBUG: Content sample:', content.slice(0, 2));
       setProfileData(profile);
       setUserStats(stats);
       setUserContent(content);
