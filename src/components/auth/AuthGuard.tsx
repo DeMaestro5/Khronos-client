@@ -15,7 +15,6 @@ export default function AuthGuard({ children }: AuthGuardProps) {
   useEffect(() => {
     // Only redirect if we're done loading and user is not authenticated
     if (!loading && !isAuthenticated) {
-      console.log('User not authenticated, redirecting to login');
       router.push('/auth/login');
     }
   }, [loading, isAuthenticated, router]);

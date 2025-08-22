@@ -139,9 +139,6 @@ const TrendsPage: React.FC = () => {
     if (filtersChanged) {
       // Check if there's already an ongoing filter operation
       if (ongoingFilterOperationRef.current) {
-        console.log(
-          'Trends page: Filter operation already in progress, skipping'
-        );
         return;
       }
 
