@@ -42,7 +42,6 @@ function GoogleCallbackContent() {
 
         // New flow: Backend redirects with tokens
         if (success === 'true' && accessToken && refreshToken) {
-          console.log('Processing new flow with tokens');
           try {
             // Store tokens directly
             const { AuthUtils } = await import('@/src/lib/auth-utils');
@@ -52,18 +51,6 @@ function GoogleCallbackContent() {
               expiresIn: 3600, // Default expiry
             });
             console.log('Tokens stored successfully');
-
-            // Verify tokens are stored
-            const storedTokens = AuthUtils.getStoredTokens();
-            const hasValidTokens = AuthUtils.hasValidTokens();
-            const isExpired = AuthUtils.isTokenExpired();
-            console.log('Token verification:', {
-              storedTokens: !!storedTokens,
-              hasValidTokens,
-              isExpired,
-              accessToken: !!AuthUtils.getAccessToken(),
-              refreshToken: !!AuthUtils.getRefreshToken(),
-            });
 
             // Always fetch user data after successful authentication
             try {
