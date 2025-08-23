@@ -1001,9 +1001,8 @@ export function UserDataProvider({ children }: { children: React.ReactNode }) {
     })();
 
     // Load user data cache
-    console.log('🔍 DEBUG: Cache valid?', isUserDataCacheValid);
+
     if (isUserDataCacheValid) {
-      console.log('🔍 DEBUG: Loading from cache...');
       try {
         const cachedProfile = localStorage.getItem(STORAGE_KEYS.PROFILE_DATA);
         const cachedStats = localStorage.getItem(STORAGE_KEYS.USER_STATS);
@@ -1011,17 +1010,11 @@ export function UserDataProvider({ children }: { children: React.ReactNode }) {
 
         if (cachedProfile && cachedStats && cachedContent) {
           const parsedContent = JSON.parse(cachedContent);
-          console.log(
-            '🔍 DEBUG: Loading cached content:',
-            parsedContent.length,
-            'items'
-          );
           setProfileData(JSON.parse(cachedProfile));
           setUserStats(JSON.parse(cachedStats));
           setUserContent(parsedContent);
         } else {
           // Cache invalid, fetch fresh data
-          console.log('🔍 DEBUG: Cache invalid, fetching fresh data...');
           fetchUserData();
         }
       } catch (error) {
@@ -1029,8 +1022,6 @@ export function UserDataProvider({ children }: { children: React.ReactNode }) {
         fetchUserData();
       }
     } else {
-      // Cache expired or missing, fetch fresh data
-      console.log('🔍 DEBUG: Cache expired, fetching fresh data...');
       fetchUserData();
     }
 

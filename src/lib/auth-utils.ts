@@ -16,12 +16,6 @@ export class AuthUtils {
     if (typeof window === 'undefined') return;
 
     try {
-      console.log('Storing tokens:', {
-        hasAccessToken: !!tokens.accessToken,
-        hasRefreshToken: !!tokens.refreshToken,
-        expiresIn: tokens.expiresIn,
-      });
-
       localStorage.setItem(TOKEN_KEYS.ACCESS_TOKEN, tokens.accessToken);
       localStorage.setItem(TOKEN_KEYS.REFRESH_TOKEN, tokens.refreshToken);
 
@@ -29,7 +23,6 @@ export class AuthUtils {
       if (tokens.expiresIn) {
         const expiryTime = Date.now() + tokens.expiresIn * 1000;
         localStorage.setItem(TOKEN_KEYS.TOKEN_EXPIRY, expiryTime.toString());
-        console.log('Stored token expiry:', new Date(expiryTime));
       } else {
         console.log('No expiresIn provided, not storing expiry');
       }
@@ -113,21 +106,12 @@ export class AuthUtils {
   static isTokenExpired(): boolean {
     const expiry = this.getTokenExpiry();
     if (!expiry) {
-      console.log('No token expiry found');
       return false;
     }
 
     // Consider token expired if it expires within 10 minutes (600000ms) instead of 5 minutes
     const bufferTime = 10 * 60 * 1000;
     const isExpired = Date.now() >= expiry - bufferTime;
-
-    console.log('Token expiry check:', {
-      expiry,
-      now: Date.now(),
-      bufferTime,
-      expiryWithBuffer: expiry - bufferTime,
-      isExpired,
-    });
 
     return isExpired;
   }
@@ -168,16 +152,7 @@ export class AuthUtils {
     const refreshToken = this.getRefreshToken();
     const expiry = this.getTokenExpiry();
 
-    console.log('Getting stored tokens:', {
-      hasAccessToken: !!accessToken,
-      hasRefreshToken: !!refreshToken,
-      expiry,
-      accessTokenLength: accessToken?.length,
-      refreshTokenLength: refreshToken?.length,
-    });
-
     if (!accessToken || !refreshToken) {
-      console.log('Missing tokens, returning null');
       return null;
     }
 
