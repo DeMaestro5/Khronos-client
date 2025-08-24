@@ -387,9 +387,6 @@ const TrendsPage: React.FC = () => {
         onRefresh={async () => {
           // Check if there's already an ongoing refresh operation
           if (ongoingRefreshOperationRef.current) {
-            console.log(
-              'Trends page: Refresh operation already in progress, skipping'
-            );
             return;
           }
 
