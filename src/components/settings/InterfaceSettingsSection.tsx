@@ -300,8 +300,6 @@ const InterfaceSettingsSection: React.FC = () => {
     field: keyof InterfaceSettingsUpdate,
     value: InterfaceSettingsUpdate[keyof InterfaceSettingsUpdate]
   ) => {
-    console.log('🎨 Theme Change:', { field, value, currentTheme });
-
     setLocalSettings((prev) => ({
       ...prev,
       [field]: value,
@@ -362,12 +360,6 @@ const InterfaceSettingsSection: React.FC = () => {
         setHasChanges(false);
         return;
       }
-
-      console.log('💾 Saving Interface Settings:', {
-        changedFields,
-        currentTheme,
-        settingsTheme: settings?.interface?.theme,
-      });
 
       await updateSettings('interface', changedFields);
 
