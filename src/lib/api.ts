@@ -617,6 +617,17 @@ export const aiAPI = {
 // Analytics API methods
 export const analyticsAPI = {
   // Get comprehensive analytics overview (orchestrator)
+
+  syncUser: (options?: {
+    includePlatforms?: string[];
+    concurrency?: number;
+    maxRetries?: number;
+    retryDelayBase?: number;
+    retryJittersMaxMas?: number;
+    remoteBatchSize?: number;
+    bulkWriteChunkSize?: number;
+  }) => api.post('/api/v1/analytics/sync/user', options || {}),
+
   getOverview: () => api.get('/api/v1/analytics/overview'),
 
   // Get real-time dashboard data (orchestrator)
@@ -834,6 +845,71 @@ export const trendsAPI = {
 
   // Get available categories
   getCategories: () => api.get('/api/v1/trends/categories'),
+};
+
+export const integrationsAPI = {
+  instagram: {
+    status: () => api.get('/api/v1/platforms/instagram/status'),
+    connect: (payload: {
+      igBusinnessAccountId: string;
+      igUserAccessToken: string;
+      accountName?: string;
+    }) => api.post('/api/v1/platforms/instagram/connect', payload),
+    disconnect: () => api.delete('/api/v1/platforms/instagram/disconnect'),
+  },
+
+  facebook: {
+    status: () => api.get('/api/v1/platforms/facebook/status'),
+    connect: (payload: {
+      pageId: string;
+      pageAccessToken: string;
+      accountName?: string;
+    }) => api.post('/api/v1/platforms/facebook/connect', payload),
+    disconnect: () => api.delete('/api/v1/platforms/facebook/disconnect'),
+  },
+
+  linkedin: {
+    status: () => api.get('/api/v1/platforms/linkedin/status'),
+    connect: (payload: {
+      memberUrn: string;
+      accessToken: string;
+      accountName?: string;
+    }) => api.post('/api/v1/platforms/linkedin/connect', payload),
+    disconnect: () => api.delete('/api/v1/platforms/linkedin/disconnect'),
+  },
+  youtube: {
+    // In UI: window.location.href = integrationsAPI.youtube.initiate()
+    initiate: () => {
+      const baseUrl =
+        process.env.NEXT_PUBLIC_API_URL ||
+        'https://khronos-api-bp71.onrender.com';
+      return `${baseUrl}/api/v1/platforms/youtube/connect`;
+    },
+    disconnect: () => api.delete('/api/v1/platforms/youtube/disconnect'),
+    // Optional: only if you add /status in backend
+    status: () => api.get('/api/v1/platforms/youtube/status'),
+  },
+
+  twitter: {
+    status: () => api.get('/api/v1/platforms/twitter/status'),
+    connect: (payload: {
+      userId: string;
+      accessToken: string;
+      accessTokenSecret: string;
+      accountName?: string;
+    }) => api.post('/api/v1/platforms/twitter/connect', payload),
+    disconnect: () => api.delete('/api/v1/platforms/twitter/disconnect'),
+  },
+
+  tiktok: {
+    status: () => api.get('/api/v1/platforms/tiktok/status'),
+    connect: (payload: {
+      openId: string;
+      accessToken: string;
+      accountName?: string;
+    }) => api.post('/api/v1/platforms/tiktok/connect', payload),
+    disconnect: () => api.delete('/api/v1/platforms/tiktok/disconnect'),
+  },
 };
 
 export const settingsApi = {
