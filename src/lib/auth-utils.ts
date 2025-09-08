@@ -273,18 +273,69 @@ export class AuthUtils {
 
       const response = await authAPI.googleAuth.callback(code, state);
 
-      if (response.data?.data?.tokens && response.data?.data?.user) {
+      // Robust response validation
+      console.log('Google callback response:', response);
+
+      // Check for response structure
+      if (!response) {
+        throw new Error('No response received from authentication server');
+      }
+
+      if (!response.data) {
+        throw new Error('Invalid response format from authentication server');
+      }
+
+      // Handle different response structures
+      const responseData = response.data;
+
+      // Check for error in response
+      if (responseData.error) {
+        throw new Error(responseData.error);
+      }
+
+      // Check for success with tokens and user (nested in data.data)
+      if (responseData.data?.tokens && responseData.data?.user) {
+        const { tokens, user } = responseData.data;
+
+        // Validate token structure
+        if (!tokens.accessToken || !tokens.refreshToken) {
+          throw new Error('Invalid token structure received from server');
+        }
+
         // Store tokens and user data
-        this.storeAuthData(response.data.data.tokens, response.data.data.user);
+        this.storeAuthData(tokens, user);
 
         return {
           success: true,
-          user: response.data.data.user,
-          tokens: response.data.data.tokens,
+          user,
+          tokens,
         };
-      } else {
-        throw new Error('Invalid response from server');
       }
+
+      // Check for success with tokens and user (direct in data)
+      if (responseData.tokens && responseData.user) {
+        const { tokens, user } = responseData;
+
+        // Validate token structure
+        if (!tokens.accessToken || !tokens.refreshToken) {
+          throw new Error('Invalid token structure received from server');
+        }
+
+        // Store tokens and user data
+        this.storeAuthData(tokens, user);
+
+        return {
+          success: true,
+          user,
+          tokens,
+        };
+      }
+
+      // If we get here, the response structure is unexpected
+      console.error('Unexpected response structure:', responseData);
+      throw new Error(
+        'Authentication server returned unexpected response format'
+      );
     } catch (error) {
       console.error('Google auth callback error:', error);
 

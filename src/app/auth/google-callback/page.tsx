@@ -32,8 +32,25 @@ function GoogleCallbackContent() {
 
         // Handle OAuth errors
         if (error) {
+          console.error('OAuth error from URL params:', error);
           setStatus('error');
-          setMessage(`Authentication failed: ${error}`);
+
+          // Provide user-friendly error messages
+          let userMessage = 'Authentication failed';
+          if (error.includes('auth_failed')) {
+            userMessage =
+              'Authentication was cancelled or failed. Please try again.';
+          } else if (error.includes('Cannot read properties')) {
+            userMessage =
+              'Authentication service is temporarily unavailable. Please try again later.';
+          } else if (error.includes('access_denied')) {
+            userMessage =
+              'Access was denied. Please ensure you grant the necessary permissions.';
+          } else {
+            userMessage = `Authentication failed: ${decodeURIComponent(error)}`;
+          }
+
+          setMessage(userMessage);
           setTimeout(() => {
             router.push('/auth/login');
           }, 3000);
