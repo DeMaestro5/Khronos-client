@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useEffect, useMemo, useRef } from 'react';
+import React, { useEffect, useMemo, useRef, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { toast } from 'react-hot-toast';
 import PageLoading from '@/src/components/ui/page-loading';
@@ -31,7 +31,7 @@ function formatPlatformName(raw: string | null): string {
   }
 }
 
-export default function IntegrationsCallbackPage() {
+function IntegrationsCallbackContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const { addLocalNotification } = useNotifications();
@@ -94,5 +94,23 @@ export default function IntegrationsCallbackPage() {
       showGrid={true}
       gridItems={6}
     />
+  );
+}
+
+export default function IntegrationsCallbackPage() {
+  return (
+    <Suspense
+      fallback={
+        <PageLoading
+          title='Finishing up'
+          subtitle='Completing your connection and taking you back to your analytics...'
+          contentType='analytics'
+          showGrid={true}
+          gridItems={6}
+        />
+      }
+    >
+      <IntegrationsCallbackContent />
+    </Suspense>
   );
 }
