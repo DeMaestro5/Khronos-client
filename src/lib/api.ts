@@ -311,8 +311,42 @@ export const authAPI = {
     },
 
     // Handle Google OAuth callback (no API key required)
-    callback: (code: string, state?: string) =>
-      oauthApi.get('/api/v1/auth/google/callback', { params: { code, state } }),
+    callback: async (code: string, state?: string) => {
+      try {
+        console.log('Making Google OAuth callback request with:', {
+          code: code?.substring(0, 10) + '...',
+          state,
+        });
+
+        const response = await oauthApi.get('/api/v1/auth/google/callback', {
+          params: { code, state },
+          timeout: 30000, // 30 second timeout
+        });
+
+        console.log('Google OAuth callback response status:', response.status);
+        console.log('Google OAuth callback response data:', response.data);
+
+        return response;
+      } catch (error) {
+        console.error('Google OAuth callback API error:', error);
+
+        // Re-throw with better error information
+        if (error && typeof error === 'object' && 'response' in error) {
+          const axiosError = error as {
+            response?: { status?: number; statusText?: string; data?: unknown };
+            config?: { url?: string };
+          };
+          console.error('Axios error details:', {
+            status: axiosError.response?.status,
+            statusText: axiosError.response?.statusText,
+            data: axiosError.response?.data,
+            url: axiosError.config?.url,
+          });
+        }
+
+        throw error;
+      }
+    },
 
     // Get Google auth URL (alternative approach)
     getAuthUrl: () => oauthApi.get('/api/v1/auth/google/url'),
@@ -851,7 +885,7 @@ export const integrationsAPI = {
   instagram: {
     status: () => api.get('/api/v1/platforms/instagram/status'),
     connect: (payload: {
-      igBusinnessAccountId: string;
+      igBusinessAccountId: string;
       igUserAccessToken: string;
       accountName?: string;
     }) => api.post('/api/v1/platforms/instagram/connect', payload),
@@ -878,12 +912,172 @@ export const integrationsAPI = {
     disconnect: () => api.delete('/api/v1/platforms/linkedin/disconnect'),
   },
   youtube: {
-    // In UI: window.location.href = integrationsAPI.youtube.initiate()
-    initiate: () => {
-      const baseUrl =
-        process.env.NEXT_PUBLIC_API_URL ||
-        'https://khronos-api-bp71.onrender.com';
-      return `${baseUrl}/api/v1/platforms/youtube/connect`;
+    // Initiates YouTube OAuth through our local proxy which injects API key and forwards Authorization
+    initiate: async () => {
+      console.log('🚀 Initiating YouTube OAuth...');
+
+      // Get current auth state
+      let token = AuthUtils.getAccessToken();
+      const shouldRefresh = AuthUtils.shouldRefreshToken();
+
+      console.log('Auth state check:', {
+        hasToken: !!token,
+        shouldRefresh,
+        tokenExpired: AuthUtils.isTokenExpired(),
+      });
+
+      // If token should be refreshed, try to refresh it first
+      if (shouldRefresh && typeof window !== 'undefined') {
+        console.log('🔄 Attempting token refresh before YouTube connection...');
+        try {
+          // Import AuthContext to trigger refresh
+          const refreshToken = AuthUtils.getRefreshToken();
+          if (refreshToken) {
+            const refreshResponse = await authAPI.refreshToken(refreshToken);
+            const parsed = extractTokensFromRefreshResponse(
+              refreshResponse.data
+            );
+
+            if (
+              parsed?.accessToken &&
+              parsed?.refreshToken &&
+              parsed?.accessTokenExpiresIn
+            ) {
+              AuthUtils.storeTokens({
+                accessToken: parsed.accessToken,
+                refreshToken: parsed.refreshToken,
+                expiresIn: parsed.accessTokenExpiresIn,
+              });
+              token = parsed.accessToken;
+              console.log('✅ Token refreshed successfully');
+
+              // Dispatch event to update auth context
+              window.dispatchEvent(new CustomEvent('tokensUpdated'));
+            } else {
+              console.warn('⚠️ Token refresh returned invalid data');
+            }
+          }
+        } catch (refreshError) {
+          console.error('❌ Token refresh failed:', refreshError);
+          // Continue with existing token, let the backend handle it
+        }
+      }
+
+      console.log('Final auth token present:', !!token);
+
+      const res = await fetch('/api/platforms/youtube/connect', {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+          ...(token ? { Authorization: `Bearer ${token}` } : {}),
+        },
+      });
+
+      console.log('Proxy response status:', res.status);
+      console.log('Proxy response ok:', res.ok);
+
+      if (!res.ok) {
+        let errorDetails;
+        try {
+          const errorJson = await res.json();
+          errorDetails = errorJson;
+          console.error('❌ Proxy error details:', errorDetails);
+        } catch {
+          errorDetails = await res.text();
+          console.error('❌ Proxy error text:', errorDetails);
+        }
+
+        // Create a more descriptive error message
+        let errorMessage = `Connection failed (${res.status})`;
+
+        if (typeof errorDetails === 'object' && errorDetails.error) {
+          if (
+            errorDetails.error.includes('secretOrPrivateKey must have a value')
+          ) {
+            errorMessage =
+              'YouTube connection service is temporarily unavailable. Please try again later or contact support.';
+          } else if (
+            errorDetails.error.includes('x-api-key') ||
+            errorDetails.error.includes('API key')
+          ) {
+            errorMessage =
+              'Service configuration error. Please contact support.';
+          } else if (
+            errorDetails.error.includes('Unauthorized') ||
+            errorDetails.error.includes('Token is not valid')
+          ) {
+            errorMessage =
+              'Your session has expired. Please refresh the page and try again.';
+          } else if (
+            errorDetails.error.includes('Backend authentication failed')
+          ) {
+            errorMessage =
+              'Authentication failed. Please log out and log back in.';
+          } else {
+            errorMessage = errorDetails.error;
+          }
+        } else if (typeof errorDetails === 'string') {
+          if (errorDetails.includes('secretOrPrivateKey must have a value')) {
+            errorMessage =
+              'YouTube connection service is temporarily unavailable. Please try again later or contact support.';
+          } else if (
+            errorDetails.includes('Token is not valid') ||
+            errorDetails.includes('Unauthorized')
+          ) {
+            errorMessage =
+              'Your session has expired. Please refresh the page and try again.';
+          } else {
+            errorMessage = errorDetails;
+          }
+        }
+
+        throw new Error(errorMessage);
+      }
+
+      let data;
+      try {
+        data = (await res.json()) as {
+          url?: string;
+          error?: string;
+          details?: unknown;
+        };
+        console.log('Proxy response data:', data);
+      } catch (parseError) {
+        console.error('❌ Failed to parse proxy response:', parseError);
+        throw new Error('Invalid response from connection service');
+      }
+
+      if (data.error) {
+        console.error('❌ Proxy returned error:', data.error);
+
+        // Handle specific error cases
+        if (data.error.includes('secretOrPrivateKey must have a value')) {
+          throw new Error(
+            'YouTube connection service is temporarily unavailable. Please try again later or contact support.'
+          );
+        } else if (
+          data.error.includes('Token is not valid') ||
+          data.error.includes('Unauthorized')
+        ) {
+          throw new Error(
+            'Your session has expired. Please refresh the page and try again.'
+          );
+        } else if (data.error.includes('x-api-key')) {
+          throw new Error(
+            'Service configuration error. Please contact support.'
+          );
+        } else {
+          throw new Error(data.error);
+        }
+      }
+
+      if (!data?.url) {
+        console.error('❌ No URL returned from proxy:', data);
+        throw new Error('No connection URL received from service');
+      }
+
+      console.log('✅ Got OAuth URL:', data.url);
+      return data.url;
     },
     disconnect: () => api.delete('/api/v1/platforms/youtube/disconnect'),
     // Optional: only if you add /status in backend

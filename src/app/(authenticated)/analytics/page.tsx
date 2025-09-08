@@ -25,6 +25,9 @@ import PlatformPerformance from '@/src/components/analytics/platform-performance
 import TrendingOpportunities from '@/src/components/analytics/trending-opportunities';
 import PerformanceInsights from '@/src/components/analytics/performance-insights';
 import { useUserData } from '@/src/context/UserDataContext';
+import { toast } from 'react-hot-toast';
+// import { analyticsAPI } from '@/src/lib/api';
+import { Button } from '@/src/components/ui/button';
 
 interface AnalyticsState {
   // Core data sources
@@ -97,6 +100,42 @@ export default function AnalyticsPage() {
     await Promise.all([refreshAnalyticsData(), refreshPlatformData()]);
     setState((prev) => ({ ...prev, refreshing: false }));
   };
+
+  // Why: delegate to the single refresh path after server-side sync
+  // const handleSyncAnalytics = async () => {
+  //   try {
+  //     setState((prev) => ({ ...prev, refreshing: true }));
+  //     await analyticsAPI.syncUser(); // Make sure this returns 200 quickly
+  //     await refreshAll();
+  //   } finally {
+  //     setState((prev) => ({ ...prev, refreshing: false }));
+  //   }
+  // };
+
+  // Why: single, robust refresh pipeline with timeout and proper state toggling
+  async function refreshAll(opts?: { timeoutMs?: number }) {
+    const timeoutMs = opts?.timeoutMs ?? 20000;
+    const withTimeout = <T,>(p: Promise<T>) =>
+      Promise.race([
+        p,
+        new Promise<T>((_, rej) =>
+          setTimeout(() => rej(new Error('Refresh timeout')), timeoutMs)
+        ),
+      ]);
+
+    try {
+      setState((prev) => ({ ...prev, refreshing: true }));
+      await withTimeout(
+        Promise.all([refreshAnalyticsData(), refreshPlatformData()])
+      );
+      toast.success('Analytics synced');
+    } catch (e) {
+      console.error('Refresh failed:', e);
+      toast.error('Failed to sync analytics');
+    } finally {
+      setState((prev) => ({ ...prev, refreshing: false }));
+    }
+  }
 
   // Smart data extraction - use the best available data source or cached content
   const getMetric = (metricName: string): number => {
@@ -329,7 +368,7 @@ export default function AnalyticsPage() {
             Track your content performance and discover growth opportunities
           </p>
         </div>
-        <button
+        {/* <button
           onClick={handleRefresh}
           disabled={state.refreshing}
           className='inline-flex items-center px-4 py-2 bg-accent-primary hover:bg-accent-secondary disabled:opacity-50 text-white rounded-lg transition-colors duration-200'
@@ -338,7 +377,17 @@ export default function AnalyticsPage() {
             className={`w-4 h-4 mr-2 ${state.refreshing ? 'animate-spin' : ''}`}
           />
           {state.refreshing ? 'Refreshing...' : 'Refresh Data'}
-        </button>
+        </button> */}
+        <Button
+          onClick={() => refreshAll()}
+          disabled={state.refreshing}
+          variant='outline'
+        >
+          <RefreshCw
+            className={`w-4 h-4 mr-2 ${state.refreshing ? 'animate-spin' : ''}`}
+          />
+          {state.refreshing ? 'Syncing...' : 'Sync Analytics'}
+        </Button>
       </div>
 
       {/* Key Metrics */}
