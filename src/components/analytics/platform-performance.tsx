@@ -8,6 +8,12 @@ import { integrationsAPI } from '@/src/lib/api';
 import { Button } from '../ui/button';
 import { Badge } from '../ui/badge';
 import PlatformConnectionModal from './PlatformConnectionModal';
+import { toast } from 'react-hot-toast';
+import {
+  getStatuses,
+  type IntegrationKey,
+  normalizePlatformKey,
+} from '@/src/lib/integration-status';
 
 interface PlatformPerformanceProps {
   platforms: PlatformPerformanceType[];
@@ -54,21 +60,16 @@ export default function PlatformPerformance({
   }, []);
 
   async function checkAllConnectionStatuses() {
-    const states: Record<string, boolean> = {};
-    for (const p of platforms) {
-      try {
-        const api = integrationsAPI[p.platform as keyof typeof integrationsAPI];
-        if (api && 'status' in api) {
-          const res = await api.status();
-          states[p.platform] = Boolean(res?.data?.data?.isConnected);
-        } else {
-          states[p.platform] = false;
-        }
-      } catch {
-        states[p.platform] = false;
-      }
+    const keys = platforms
+      .map((p) => normalizePlatformKey(p.platform))
+      .filter((k): k is IntegrationKey => Boolean(k));
+
+    const statuses = await getStatuses(keys);
+    const flattened: Record<string, boolean> = {};
+    for (const [k, v] of Object.entries(statuses)) {
+      flattened[k] = v;
     }
-    setConnectionStates(states);
+    setConnectionStates(flattened);
   }
 
   const openConnect = (platform: string) =>
@@ -81,12 +82,20 @@ export default function PlatformPerformance({
 
   const disconnect = async (platform: string) => {
     try {
-      const api = integrationsAPI[platform as keyof typeof integrationsAPI];
+      const norm = normalizePlatformKey(platform);
+      if (!norm) return;
+
+      const api = integrationsAPI[norm as keyof typeof integrationsAPI];
       if (api && 'disconnect' in api) {
         await api.disconnect();
-        setConnectionStates((s) => ({ ...s, [platform]: false }));
+        setConnectionStates((s) => ({ ...s, [norm]: false }));
+        toast.success(
+          `${norm.charAt(0).toUpperCase() + norm.slice(1)} disconnected`
+        );
       }
-    } catch {}
+    } catch {
+      toast.error('Failed to disconnect. Please try again.');
+    }
   };
 
   const statusVariant = (s: PlatformPerformanceType['status']) =>
@@ -129,7 +138,10 @@ export default function PlatformPerformance({
 
         <div className='grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4'>
           {platforms.map((p, i) => {
-            const isConnected = connectionStates[p.platform] || false;
+            const displayKey = String(p.platform);
+            const apiKey =
+              normalizePlatformKey(displayKey) || displayKey.toLowerCase();
+            const isConnected = connectionStates[apiKey] || false;
 
             return (
               <motion.div
@@ -192,16 +204,16 @@ export default function PlatformPerformance({
                     <Button
                       variant='outline'
                       size='sm'
-                      className='w-full  text-theme-primary'
-                      onClick={() => disconnect(p.platform)}
+                      className='w-full  text-theme-primary cursor-pointer'
+                      onClick={() => disconnect(apiKey)}
                     >
                       Disconnect
                     </Button>
                   ) : (
                     <Button
                       size='sm'
-                      className='w-full text-theme-primary'
-                      onClick={() => openConnect(p.platform.toLowerCase())}
+                      className='w-full text-theme-primary cursor-pointer'
+                      onClick={() => openConnect(apiKey)}
                     >
                       Connect Account
                     </Button>
