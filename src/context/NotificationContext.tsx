@@ -38,13 +38,16 @@ interface NotificationContextType {
   // Pagination and local insertion helpers
   hasMore?: boolean;
   currentPage?: number;
-  addLocalNotification?: (input: {
-    type: Notification['type'];
-    title: string;
-    message: string;
-    priority: Notification['priority'];
-    data?: Record<string, unknown>;
-  }) => void;
+  addLocalNotification?: (
+    input: {
+      type: Notification['type'];
+      title: string;
+      message: string;
+      priority: Notification['priority'];
+      data?: Record<string, unknown>;
+    },
+    opts?: { showToast?: boolean }
+  ) => void;
 }
 
 const NotificationContext = createContext<NotificationContextType | undefined>(
@@ -70,6 +73,13 @@ export function NotificationProvider({
   // Aggregation queue to avoid spamming toasts on bulk events
   const incomingQueueRef = useRef<Notification[]>([]);
   const aggregateTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  // Gate showing toasts until app settles after login
+  const [toastsEnabled, setToastsEnabled] = useState<boolean>(false);
+  const toastsEnabledRef = useRef<boolean>(false);
+
+  useEffect(() => {
+    toastsEnabledRef.current = toastsEnabled;
+  }, [toastsEnabled]);
 
   // Hydrate from cache immediately
   useEffect(() => {
@@ -110,6 +120,18 @@ export function NotificationProvider({
       // ignore storage failures
     }
   }, [notifications, unreadCount]);
+
+  // Enable toasts shortly after initial load completes (avoid login-time popups)
+  useEffect(() => {
+    if (!user) {
+      setToastsEnabled(false);
+      return;
+    }
+    if (!initialLoading) {
+      const t = setTimeout(() => setToastsEnabled(true), 1200);
+      return () => clearTimeout(t);
+    }
+  }, [user, initialLoading]);
 
   const mergeUnique = (
     existing: Notification[],
@@ -278,6 +300,11 @@ export function NotificationProvider({
 
   // Helper: emit aggregated toast for queued items
   const flushAggregatedToasts = useCallback(() => {
+    if (!toastsEnabledRef.current) {
+      // Clear the queue if toasts are disabled to avoid burst later
+      incomingQueueRef.current.splice(0);
+      return;
+    }
     const items = incomingQueueRef.current.splice(0);
     if (items.length === 0) return;
     if (items.length === 1) {
@@ -341,12 +368,14 @@ export function NotificationProvider({
         return updated;
       });
 
-      // queue for aggregated toast
-      incomingQueueRef.current.push(incoming);
-      if (aggregateTimerRef.current) clearTimeout(aggregateTimerRef.current);
-      aggregateTimerRef.current = setTimeout(() => {
-        flushAggregatedToasts();
-      }, 800);
+      // queue for aggregated toast only when enabled
+      if (toastsEnabledRef.current) {
+        incomingQueueRef.current.push(incoming);
+        if (aggregateTimerRef.current) clearTimeout(aggregateTimerRef.current);
+        aggregateTimerRef.current = setTimeout(() => {
+          flushAggregatedToasts();
+        }, 800);
+      }
     });
 
     socket.on('disconnect', () => {
@@ -369,13 +398,16 @@ export function NotificationProvider({
   }, [user, fetchSettings, fetchNotifications]);
 
   const addLocalNotification = useCallback(
-    (input: {
-      type: Notification['type'];
-      title: string;
-      message: string;
-      priority: Notification['priority'];
-      data?: Record<string, unknown>;
-    }) => {
+    (
+      input: {
+        type: Notification['type'];
+        title: string;
+        message: string;
+        priority: Notification['priority'];
+        data?: Record<string, unknown>;
+      },
+      opts?: { showToast?: boolean }
+    ) => {
       const now = new Date().toISOString();
       const local: Notification = {
         _id: `local-${Date.now()}`,
@@ -397,12 +429,15 @@ export function NotificationProvider({
         return updated;
       });
 
-      // also queue the toast using the same aggregator
-      incomingQueueRef.current.push(local);
-      if (aggregateTimerRef.current) clearTimeout(aggregateTimerRef.current);
-      aggregateTimerRef.current = setTimeout(() => {
-        flushAggregatedToasts();
-      }, 300);
+      // optionally queue the toast using the same aggregator
+      const shouldToast = opts?.showToast !== false && toastsEnabledRef.current;
+      if (shouldToast) {
+        incomingQueueRef.current.push(local);
+        if (aggregateTimerRef.current) clearTimeout(aggregateTimerRef.current);
+        aggregateTimerRef.current = setTimeout(() => {
+          flushAggregatedToasts();
+        }, 300);
+      }
     },
     [flushAggregatedToasts]
   );

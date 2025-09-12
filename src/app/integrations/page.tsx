@@ -52,34 +52,42 @@ function IntegrationsCallbackContent() {
 
     if (isSuccess) {
       const message = `You're all set! ${niceName} is now connected. We'll start syncing analytics in the background — this can take a minute.`;
+      // Show a single explicit toast here
       toast.success(message, { icon: '✅' });
-      addLocalNotification?.({
-        type: NotificationType.SYSTEM,
-        title: `${niceName} connected`,
-        message,
-        priority: NotificationPriority.MEDIUM,
-        data: {
-          platform: platform || undefined,
-          action: 'connect',
-          status: 'success',
+      // Record a notification silently (no extra toast)
+      addLocalNotification?.(
+        {
+          type: NotificationType.SYSTEM,
+          title: `${niceName} connected`,
+          message,
+          priority: NotificationPriority.MEDIUM,
+          data: {
+            platform: platform || undefined,
+            action: 'connect',
+            status: 'success',
+          },
         },
-      });
+        { showToast: false }
+      );
     } else {
       const fallback = `We couldn't complete the connection`;
       const reason = error ? decodeURIComponent(error) : '';
       const message = `${fallback} for ${niceName}. ${reason}`.trim();
       toast.error(message || `${fallback} for ${niceName}.`, { icon: '⚠️' });
-      addLocalNotification?.({
-        type: NotificationType.SYSTEM,
-        title: `${niceName} connection failed`,
-        message,
-        priority: NotificationPriority.HIGH,
-        data: {
-          platform: platform || undefined,
-          action: 'connect',
-          status: 'error',
+      addLocalNotification?.(
+        {
+          type: NotificationType.SYSTEM,
+          title: `${niceName} connection failed`,
+          message,
+          priority: NotificationPriority.HIGH,
+          data: {
+            platform: platform || undefined,
+            action: 'connect',
+            status: 'error',
+          },
         },
-      });
+        { showToast: false }
+      );
     }
 
     // Send the user to the analytics dashboard
