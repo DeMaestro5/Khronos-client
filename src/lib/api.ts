@@ -1080,7 +1080,7 @@ export const integrationsAPI = {
       return data.url;
     },
     disconnect: () => api.delete('/api/v1/platforms/youtube/disconnect'),
-    // Optional: only if you add /status in backend
+
     status: () => api.get('/api/v1/platforms/youtube/status'),
   },
 

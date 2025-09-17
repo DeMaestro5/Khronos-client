@@ -61,9 +61,11 @@ export function extractConnectedFlag(response: unknown): boolean {
     r?.status,
   ];
 
-  for (const candidate of candidates) {
-    const connected = parseConnectedValue(candidate);
-    if (connected) return connected;
+  for (const c of candidates) {
+    if (c !== undefined) {
+      const parsed = parseConnectedValue(c);
+      return parsed;
+    }
   }
 
   return false;
@@ -75,9 +77,9 @@ export async function getPlatformStatus(
   try {
     const api = integrationsAPI[platform as keyof typeof integrationsAPI];
     if (!api || !('status' in api)) return false;
-
     const res = await api.status();
-    return extractConnectedFlag(res);
+    const connected = extractConnectedFlag(res);
+    return connected;
   } catch {
     return false;
   }
